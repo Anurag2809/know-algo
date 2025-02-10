@@ -79,10 +79,38 @@ class BinarySearchTree {
                 this.insertNode(node.right, newNode);
             }
         }
-    }
-}</code></pre>
-        </section>
-    </main>
+    }queue.append(1)
+queue.append(2)
+queue.append(3)
+print(queue.popleft())  # Output: 1</code></pre>
+    </section>
+    <section>
+        <h2>Linked Lists</h2>
+        <p>A linked list is a linear data structure where each element is a separate object.</p>
+        <pre><code>class Node:
+    def __init__(self, data):
+        self.data = data
+        self.next = None
+
+class LinkedList:
+    def __init__(self):
+        self.head = None
+
+    def append(self, data):
+        new_node = Node(data)
+        if not self.head:
+            self.head = new_node
+            return
+        last = self.head
+        while last.next:
+            last = last.next
+        last.next = new_node
+
+llist = LinkedList()
+llist.append(1)
+llist.append(2)
+llist.append(3)</code></pre>
+    </section>
     <footer>
         <p>&copy; 2025 Coding Tutorials</p>
     </footer>
