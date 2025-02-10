@@ -52,7 +52,28 @@ array = np.array([1, 2, 3, 4, 5])
 array[0] = 10
 print(array)</code></pre>
     </section>
-    <section>
+    <sec
+<h3>More on Array Manipulation</h3>
+<p>Arrays can be manipulated using various operations:</p>
+<ul>
+<li><strong>Sorting:</strong> Sorting elements in ascending or descending order.</li>
+<li><strong>Searching:</strong> Finding an element in the array.</li>
+<li><strong>Filtering:</strong> Selecting elements based on a condition.</li>
+</ul>
+<pre><code>
+# Sorting an array
+sorted_array = np.sort(array)
+print(sorted_array)  # Output: [1, 2, 3, 4, 5, 6]
+
+# Searching for an element
+index = np.where(array == 3)
+print(index)  # Output: (array([0]),)
+
+# Filtering elements greater than 3
+filtered_array = array[array > 3]
+print(filtered_array)  # Output: [4, 5, 6]
+</code></pre>
+tion>
         <h2>String Manipulation</h2>
         <p>Strings are sequences of characters that can be manipulated.</p>
         <pre><
@@ -83,6 +104,30 @@ print(concatenated)  # Output: "Hello, World!"
 
 # Formatting
 name = "Alice"
+<h3>More on String Manipulation</h3>
+<p>Strings can be manipulated using various operations:</p>
+<ul>
+<li><strong>Replacing:</strong> Replacing a substring with another string.</li>
+<li><strong>Splitting:</strong> Splitting a string into a list of substrings.</li>
+<li><strong>Joining:</strong> Joining a list of strings into a single string.</li>
+</ul>
+<pre><code>
+# Replacing a substring
+text = "Hello, World!"
+replaced_text = text.replace("World", "Python")
+print(replaced_text)  # Output: Hello, Python!
+
+# Splitting a string
+text = "apple,banana,orange"
+fruits = text.split(",")
+print(fruits)  # Output: ['apple', 'banana', 'orange']
+
+# Joining a list of strings
+fruits = ['apple', 'banana', 'orange']
+joined_text = ", ".join(fruits)
+print(joined_text)  # Output: apple, banana, orange
+</code></pre>
+
 greeting = f"Hello, {name}!"
 print(greeting)  # Output: "Hello, Alice!"
 </code></pre>code>text = "Hello, World!"
