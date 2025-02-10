@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked Lists in Python</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Linked Lists in Python</h1>
+    <p>Linked lists are a fundamental data structure in computer science, used to store a collection of elements. This tutorial will cover the basics of linked lists, including types and common operations.</p>
+</body>
+</
+      <h2>Singly Linked Lists</h2>
+    <p>A singly linked list is a collection of nodes where each node contains data and a reference to the next node in the sequence. Here's an example of a node class in Python:</p>
+    <pre><code>class Node:
+    def __init__(self, data=None):
+        self.data = data
+        self.next = None</code></pre>
+h><h2>Doubly Linked Lists</h2>
+    <p>A doubly linked list is similar to a singly linked list, but each node contains references to both the next and previous nodes. This allows for bidirectional traversal. Here's an example of a doubly linked list node class:</p>
+    <pre><code>class DoublyNode:
+    def __init__(self, data=None):
+        self.data = data
+        self.next = None
+        self.prev = None</code></pre>
+    <h2>Circular Linked Lists</h2>
+    <p>In a circular linked list, the last node points back to the first node, forming a circle. This structure can be used in scenarios where a cyclic traversal is needed.</p>
+        <h2>Common Operations</h2>
+    <h3>Insertion</h3>
+    <p>Insertion involves adding a new node to the list. Here's an example of inserting a node at the beginning of a singly linked list:</p>
+    <pre><code>def insert_at_beginning(head, data):
+    new_node = Node(data)
+    new_node.next = head
+    return new_node</code></pre>
+    <h3>Deletion</h3>
+    <p>Deletion involves removing a node from the list. Here's an example of deleting a node from a singly linked list:</p>
+    <pre><code>def delete_node(head, key):
+    temp = head
+    if temp is not None:
+        if temp.data == key:
+            head = temp.next
+            temp = None
+            return head
+    while temp is not None:
+        if temp.data == key:
+            break
+        prev = temp
+        temp = temp.next
+    if temp == None:
+        return head
+    prev.next = temp.next
+    temp = None
+    return head</code></pre>
+    <h3>Traversal</h3>
+    <p>Traversal involves visiting each node in the list. Here's an example of traversing a singly linked list:</p>
+    <pre><code>def traverse(head):
+    current = head
+    while current:
+        print(current.data)
+        current = current.next</code></pre>
+</body>
+</html>
