@@ -32,6 +32,22 @@ let z = x + y;</code></pre>
         <p>Arrays are used to store multiple values in a single variable.</p>
         <pre><code>import numpy as np
 
+<p>Arrays come in different types, such as single-dimensional arrays and multi-dimensional arrays. Common operations on arrays include:</p>
+<ul>
+  <li>Insertion: Adding an element to the array.</li>
+  <li>Deletion: Removing an element from the array.</li>
+  <li>Traversal: Accessing each element of the array.</li>
+</ul>
+<p>Here is an example of a multi-dimensional array:</p>
+<pre><code>import numpy as np
+
+# Creating a 2D array
+array_2d = np.array([[1, 2, 3], [4, 5, 6]])
+
+# Accessing an element
+element = array_2d[0, 1]  # Accesses the element in the first row, second column
+print(element)  # Output: 2
+</code></pre>
 array = np.array([1, 2, 3, 4, 5])
 array[0] = 10
 print(array)</code></pre>
@@ -39,7 +55,30 @@ print(array)</code></pre>
     <section>
         <h2>String Manipulation</h2>
         <p>Strings are sequences of characters that can be manipulated.</p>
-        <pre><code>text = "Hello, World!"
+        <pre><
+<p>String operations include:</p>
+<ul>
+  <li>Slicing: Extracting a substring from a string.</li>
+  <li>Concatenation: Joining two or more strings together.</li>
+  <li>Formatting: Inserting variables into strings.</li>
+</ul>
+<p>Here are examples of these operations:</p>
+<pre><code># Slicing
+text = "Hello, World!"
+substring = text[0:5]  # Extracts "Hello"
+print(substring)
+
+# Concatenation
+text1 = "Hello, "
+text2 = "World!"
+concatenated = text1 + text2
+print(concatenated)  # Output: "Hello, World!"
+
+# Formatting
+name = "Alice"
+greeting = f"Hello, {name}!"
+print(greeting)  # Output: "Hello, Alice!"
+</code></pre>code>text = "Hello, World!"
 print(text.upper())</code></pre>
     </section>/section>
     </main>
