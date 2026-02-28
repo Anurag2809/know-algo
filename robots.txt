@@ -30,4 +30,4 @@ Allow: /
 User-agent: bingbot
 Allow: /
 
-Sitemap: https://anurag2809.github.io/know-algo/sitemap.xml
+Sitemap: https://knowalgo.netlify.app/sitemap.xml
