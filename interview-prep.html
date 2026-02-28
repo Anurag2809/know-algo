@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interview Prep Guide – DSA Study Plan | KnowAlgo</title>
+  <meta name="description" content="Complete coding interview prep guide. 8-week study plan covering all NeetCode 150 and Blind 75 patterns. Curated problems, difficulty ratings, and links to deep-dive explanations.">
+  <meta name="keywords" content="coding interview prep, neetcode 150, blind 75, leetcode study plan, dsa interview guide, data structures algorithms interview, software engineer interview prep">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.github.io/interview-prep.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Interview Prep Guide – DSA Study Plan | KnowAlgo">
+  <meta property="og:description" content="8-week DSA study plan + curated 90-problem list covering all NeetCode 150 & Blind 75 patterns with deep-dive explanations.">
+  <meta property="og:url" content="https://knowalgo.github.io/interview-prep.html">
+  <meta property="og:site_name" content="KnowAlgo">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"TechArticle","headline":"Coding Interview Prep Guide: 8-Week DSA Study Plan","description":"Complete coding interview preparation guide with 8-week study plan, curated problem list, and pattern cheatsheet covering NeetCode 150 and Blind 75.","author":{"@type":"Organization","name":"KnowAlgo"},"publisher":{"@type":"Organization","name":"KnowAlgo","url":"https://knowalgo.github.io/"},"datePublished":"2026-02-28","dateModified":"2026-02-28","keywords":["interview prep","leetcode","neetcode","blind 75","study plan","data structures","algorithms"]}
+  </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2Z1EQCZBXH');</script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <style>
+    :root{--primary:#2563eb;--primary-dark:#1d4ed8;--primary-light:#eff6ff;--secondary:#7c3aed;--accent:#059669;--danger:#dc2626;--warning:#d97706;--bg:#f8fafc;--bg-card:#ffffff;--text:#0f172a;--text-muted:#64748b;--border:#e2e8f0;--code-bg:#1e293b;--toc-width:280px;--header-h:64px;--radius:12px;--shadow:0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06);--shadow-md:0 4px 6px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.05)}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;font-size:16px}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+    a{color:var(--primary);text-decoration:none}a:hover{text-decoration:underline}ul,ol{padding-left:1.5rem}li{margin-bottom:.35rem}
+    .progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(to right,#2563eb,#7c3aed,#059669);z-index:1000;transition:width .1s}
+    .topnav{position:sticky;top:0;z-index:200;background:#fff;border-bottom:1px solid var(--border);height:var(--header-h);display:flex;align-items:center;padding:0 1.5rem;gap:1rem;box-shadow:var(--shadow)}
+    .topnav-logo{font-weight:800;font-size:1.25rem;color:var(--primary);letter-spacing:-.5px}
+    .topnav-sep{color:var(--border)}.topnav-crumb{color:var(--text-muted);font-size:.9rem}
+    .topnav-links{margin-left:auto;display:flex;gap:1rem;align-items:center}
+    .topnav-links a{color:var(--text-muted);font-size:.9rem;font-weight:500}.topnav-links a:hover{color:var(--primary);text-decoration:none}
+    .btn-home{background:var(--primary);color:#fff!important;padding:.35rem .9rem;border-radius:6px;font-size:.85rem!important}.btn-home:hover{background:var(--primary-dark)}
+    .page-layout{display:grid;grid-template-columns:var(--toc-width) 1fr;max-width:1400px;margin:0 auto;min-height:calc(100vh - var(--header-h))}
+    .toc-sidebar{position:sticky;top:var(--header-h);height:calc(100vh - var(--header-h));overflow-y:auto;padding:1.5rem 1rem;border-right:1px solid var(--border);background:#fff}
+    .toc-sidebar::-webkit-scrollbar{width:4px}.toc-sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .toc-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:.75rem}
+    .toc-list{list-style:none;padding:0}.toc-list li{margin-bottom:0}
+    .toc-list a{display:block;padding:.3rem .75rem;border-radius:6px;font-size:.875rem;color:var(--text-muted);transition:all .15s;border-left:2px solid transparent}
+    .toc-list a:hover,.toc-list a.active{color:var(--primary);background:var(--primary-light);border-left-color:var(--primary);text-decoration:none}
+    .toc-divider{border:none;border-top:1px solid var(--border);margin:.75rem 0}
+    .main-content{padding:2rem 2.5rem;max-width:960px}
+    .hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 40%,#7c3aed 70%,#059669 100%);color:white;border-radius:var(--radius);padding:2.5rem;margin-bottom:2.5rem}
+    .hero-badge{display:inline-block;background:rgba(255,255,255,.2);color:#fff;padding:.25rem .75rem;border-radius:99px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem}
+    .hero h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;line-height:1.2;margin-bottom:1rem;letter-spacing:-1px}
+    .hero p{font-size:1.05rem;opacity:.9;max-width:660px;line-height:1.7;margin-bottom:1.5rem}
+    .hero-meta{display:flex;gap:1.5rem;flex-wrap:wrap}.hero-meta span{font-size:.875rem;opacity:.8}
+    .content-section{margin-bottom:3rem;scroll-margin-top:calc(var(--header-h) + 1rem)}
+    .section-label{display:inline-block;background:#f1f5f9;color:#475569;padding:.2rem .7rem;border-radius:99px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem}
+    h2.section-title{font-size:1.75rem;font-weight:800;margin-bottom:1rem;letter-spacing:-.5px}
+    h3{font-size:1.2rem;font-weight:700;margin:1.5rem 0 .75rem;color:var(--text)}p{margin-bottom:1rem}
+    .callout{border-radius:var(--radius);padding:1.25rem 1.5rem;margin:1.5rem 0;border-left:4px solid}
+    .callout-blue{background:#eff6ff;border-color:var(--primary)}.callout-yellow{background:#fefce8;border-color:var(--warning)}
+    .callout-green{background:#f0fdf4;border-color:var(--accent)}.callout-red{background:#fef2f2;border-color:var(--danger)}
+    .callout-purple{background:#f5f3ff;border-color:#7c3aed}
+    .callout strong{display:block;margin-bottom:.4rem}
+    .table-wrapper{overflow-x:auto;margin:1.5rem 0;border-radius:var(--radius);box-shadow:var(--shadow)}
+    table{width:100%;border-collapse:collapse;background:#fff}
+    th{background:#f1f5f9;padding:.75rem 1rem;text-align:left;font-size:.875rem;font-weight:700;color:var(--text);border-bottom:2px solid var(--border)}
+    td{padding:.75rem 1rem;font-size:.875rem;border-bottom:1px solid var(--border);vertical-align:top}
+    tr:last-child td{border-bottom:none}tr:hover td{background:#f8fafc}
+    /* Week cards */
+    .week-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin:1.5rem 0}
+    .week-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+    .week-header{padding:.75rem 1.25rem;display:flex;align-items:center;gap:.75rem;color:#fff;font-weight:700}
+    .week-number{font-size:.75rem;opacity:.85;font-weight:600}
+    .week-title{font-size:.95rem}
+    .week-body{padding:1rem 1.25rem}
+    .week-body ul{list-style:none;padding:0}
+    .week-body li{display:flex;align-items:flex-start;gap:.5rem;padding:.3rem 0;font-size:.875rem;border-bottom:1px solid var(--border)}
+    .week-body li:last-child{border-bottom:none}
+    .topic-link{font-weight:600;color:var(--primary);white-space:nowrap}
+    .prob-count{margin-left:auto;font-size:.75rem;font-weight:700;background:#f1f5f9;padding:.1rem .5rem;border-radius:99px;color:var(--text-muted);white-space:nowrap}
+    /* Problem table */
+    .diff-easy{background:#d1fae5;color:#065f46;font-size:.72rem;font-weight:700;padding:.15rem .5rem;border-radius:99px;white-space:nowrap}
+    .diff-medium{background:#fef3c7;color:#92400e;font-size:.72rem;font-weight:700;padding:.15rem .5rem;border-radius:99px;white-space:nowrap}
+    .diff-hard{background:#fee2e2;color:#991b1b;font-size:.72rem;font-weight:700;padding:.15rem .5rem;border-radius:99px;white-space:nowrap}
+    .blind-tag{background:#eff6ff;color:#1d4ed8;font-size:.7rem;font-weight:700;padding:.1rem .4rem;border-radius:4px}
+    .neet-tag{background:#fdf4ff;color:#7c3aed;font-size:.7rem;font-weight:700;padding:.1rem .4rem;border-radius:4px}
+    /* Pattern cheatsheet */
+    .pattern-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:1.5rem 0}
+    .pattern-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem;box-shadow:var(--shadow)}
+    .pattern-card h4{font-size:.875rem;font-weight:700;margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem}
+    .pattern-icon{font-size:1.1rem}
+    .pattern-card p{font-size:.78rem;color:var(--text-muted);margin:0;line-height:1.5}
+    /* Progress tracker */
+    .tracker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin:1.5rem 0}
+    .tracker-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;text-align:center;box-shadow:var(--shadow)}
+    .tracker-num{font-size:2rem;font-weight:900;line-height:1}
+    .tracker-label{font-size:.8rem;color:var(--text-muted);margin-top:.25rem}
+    .page-footer{background:#0f172a;color:#94a3b8;padding:2.5rem;margin-top:4rem}
+    .footer-links{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}.footer-links a{color:#60a5fa;font-size:.875rem}
+    .footer-copy{font-size:.8rem}
+    /* Category headers for problem table */
+    .cat-row td{background:#f8fafc;font-weight:700;font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);padding:.5rem 1rem}
+    @media(max-width:1000px){.week-grid{grid-template-columns:1fr}.pattern-grid{grid-template-columns:1fr 1fr}.tracker-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:900px){.page-layout{grid-template-columns:1fr}.toc-sidebar{display:none}.main-content{padding:1.5rem}}
+    @media(max-width:600px){.pattern-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+
+<nav class="topnav">
+  <span class="topnav-logo">KnowAlgo</span>
+  <span class="topnav-sep">/</span>
+  <span class="topnav-crumb">Interview Prep</span>
+  <div class="topnav-links">
+    <a href="dp.html">DP</a>
+    <a href="graph.html">Graphs</a>
+    <a href="arrays-strings.html">Arrays</a>
+    <a href="index.html" class="btn-home">All Topics</a>
+  </div>
+</nav>
+
+<div class="page-layout">
+  <!-- TOC -->
+  <aside class="toc-sidebar">
+    <div class="toc-title">On This Page</div>
+    <ul class="toc-list">
+      <li><a href="#philosophy">The Right Mindset</a></li>
+      <li><a href="#plan">8-Week Study Plan</a></li>
+      <li><a href="#patterns">Pattern Cheatsheet</a></li>
+      <li><a href="#problems">Curated Problem List</a></li>
+      <li><a href="#arrays">Arrays & Strings</a></li>
+      <li><a href="#twopointers">Two Pointers / Sliding Window</a></li>
+      <li><a href="#stacks">Stack & Queue</a></li>
+      <li><a href="#trees">Trees & BST</a></li>
+      <li><a href="#heaps">Heap / Priority Queue</a></li>
+      <li><a href="#graphs">Graphs</a></li>
+      <li><a href="#dp-sec">Dynamic Programming</a></li>
+      <li><a href="#intervals-sec">Intervals</a></li>
+      <li><a href="#greedy-sec">Greedy</a></li>
+      <li><a href="#bits">Bit Manipulation</a></li>
+      <li><a href="#other">Other Patterns</a></li>
+      <li><a href="#strategy">Interview Strategy</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-content">
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-badge">Complete Study Guide</div>
+      <h1>Coding Interview Prep</h1>
+      <p>NeetCode 150 and Blind 75 tell you <em>what</em> to practice. We tell you <em>why</em> each pattern works. This guide connects curated problems to deep-dive explanations — use it as your compass, not a checklist.</p>
+      <div class="hero-meta">
+        <span>📅 8-Week Study Plan</span>
+        <span>🎯 90+ Curated Problems</span>
+        <span>🗺 15 Pattern Categories</span>
+        <span>✅ Blind 75 + NeetCode 150 Coverage</span>
+      </div>
+    </div>
+
+    <!-- Philosophy -->
+    <section class="content-section" id="philosophy">
+      <div class="section-label">Mindset First</div>
+      <h2 class="section-title">The Right Mindset</h2>
+
+      <div class="callout callout-blue">
+        <strong>Patterns &gt; Problems. Understanding &gt; Memorization.</strong>
+        Solving 300 random LeetCode problems is far less effective than deeply understanding 15 patterns. The interview will throw you an unseen problem — your pattern recognition is what will save you.
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin:1.5rem 0">
+        <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;">
+          <h4 style="color:#dc2626;margin-bottom:.6rem">❌ Wrong Approach</h4>
+          <ul style="font-size:.875rem;color:var(--text-muted)">
+            <li>Grind 200+ problems in random order</li>
+            <li>Look at the solution after 5 minutes</li>
+            <li>Skip the "why" — just memorize code</li>
+            <li>Only practice Easy and ignore Medium/Hard</li>
+            <li>Never do timed practice</li>
+          </ul>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;">
+          <h4 style="color:#059669;margin-bottom:.6rem">✅ Right Approach</h4>
+          <ul style="font-size:.875rem;color:var(--text-muted)">
+            <li>Master one pattern at a time (use this guide)</li>
+            <li>Struggle for 25–30 min before looking</li>
+            <li>Articulate the pattern in plain English first</li>
+            <li>Do 3–4 Mediums per pattern to solidify it</li>
+            <li>Final week: timed mock interviews</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>How to Use This Guide</h3>
+      <ol>
+        <li><strong>Follow the 8-week plan</strong> — one topic cluster per week, roughly 2 problems per day.</li>
+        <li><strong>Read the KnowAlgo deep dive</strong> for each topic before attempting problems.</li>
+        <li><strong>Attempt every problem yourself</strong> for at least 25 minutes before reading solutions.</li>
+        <li><strong>After solving</strong>, write a 1-sentence summary of the pattern used. This builds retrieval memory.</li>
+        <li><strong>Revisit weak spots</strong> in weeks 7–8 and do timed mock interviews.</li>
+      </ol>
+    </section>
+
+    <!-- 8-Week Plan -->
+    <section class="content-section" id="plan">
+      <div class="section-label">Study Plan</div>
+      <h2 class="section-title">8-Week Study Plan</h2>
+      <p>~2 problems per day, 5 days per week. Weekends are for review and mock interviews. Adjust pacing to your schedule — the order matters more than the speed.</p>
+
+      <div class="week-grid">
+        <!-- Week 1 -->
+        <div class="week-card">
+          <div class="week-header" style="background:linear-gradient(135deg,#1d4ed8,#2563eb)">
+            <div>
+              <div class="week-number">Week 1</div>
+              <div class="week-title">Arrays, Strings & Two Pointers</div>
+            </div>
+          </div>
+          <div class="week-body">
+            <ul>
+              <li><span>Read</span><a class="topic-link" href="arrays-strings.html">arrays-strings.html</a></li>
+              <li><span>Two Pointers</span><span class="prob-count">3 problems</span></li>
+              <li><span>Sliding Window (fixed)</span><span class="prob-count">2 problems</span></li>
+              <li><span>Sliding Window (variable)</span><span class="prob-count">3 problems</span></li>
+              <li><span>Prefix Sum</span><span class="prob-count">2 problems</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Week 2 -->
+        <div class="week-card">
+          <div class="week-header" style="background:linear-gradient(135deg,#0f766e,#059669)">
+            <div>
+              <div class="week-number">Week 2</div>
+              <div class="week-title">Binary Search & Stack/Queue</div>
+            </div>
+          </div>
+          <div class="week-body">
+            <ul>
+              <li><span>Read</span><a class="topic-link" href="arrays-strings.html">arrays-strings.html</a> (Binary Search)</li>
+              <li><span>Read</span><a class="topic-link" href="stack-queue.html">stack-queue.html</a></li>
+              <li><span>Binary Search variants</span><span class="prob-count">3 problems</span></li>
+              <li><span>Monotonic Stack</span><span class="prob-count">3 problems</span></li>
+              <li><span>Queue / Deque</span><span class="prob-count">2 problems</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Week 3 -->
+        <div class="week-card">
+          <div class="week-header" style="background:linear-gradient(135deg,#9a3412,#ea580c)">
+            <div>
+              <div class="week-number">Week 3</div>
+              <div class="week-title">Linked Lists & Hash Maps</div>
+            </div>
+          </div>
+          <div class="week-body">
+            <ul>
+              <li><span>Read</span><a class="topic-link" href="linked-list.html">linked-list.html</a></li>
+              <li><span>Read</span><a class="topic-link" href="hash-map.html">hash-map.html</a></li>
+              <li><span>Fast/Slow Pointers</span><span class="prob-count">3 problems</span></li>
+              <li><span>Reversal patterns</span><span class="prob-count">2 problems</span></li>
+              <li><span>Hash Map patterns</span><span class="prob-count">3 problems</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Week 4 -->
+        <div class="week-card">
+          <div class="week-header" style="background:linear-gradient(135deg,#6d28d9,#7c3aed)">
+            <div>
+              <div class="week-number">Week 4</div>
+              <div class="week-title">Trees, BST & Trie</div>
+            </div>
+          </div>
+          <div class="week-body">
+            <ul>
+              <li><span>Read</span><a class="topic-link" href="binary-tree.html">binary-tree.html</a></li>
+              <li><span>Read</span><a class="topic-link" href="bst.html">bst.html</a></li>
+              <li><span>Read</span><a class="topic-link" href="trie.html">trie.html</a></li>
+              <li><span>Tree DFS/BFS patterns</span><span class="prob-count">5 problems</span></li>
+              <li><span>BST properties</span><span class="prob-count">3 problems</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Week 5 -->
+        <div class="week-card">
+          <div class="week-header" style="background:linear-gradient(135deg,#0e7490,#0891b2)">
+            <div>
+              <div class="week-number">Week 5</div>
+              <div class="week-title">Heap & Graphs (Traversal)</div>
+            </div>
+          </div>
+          <div class="week-body">
+            <ul>
+              <li><span>Read</span><a class="topic-link" href="heap.html">heap.html</a></li>
+              <li><span>Read</span><a class="topic-link" href="graph.html">graph.html</a></li>
+              <li><span>Top-K, merge streams</span><span class="prob-count">3 problems</span></li>
+              <li><span>Graph BFS/DFS + grid</span><span class="prob-count">4 problems</span></li>
+              <li><span>Union-Find</span><span class="prob-count">2 problems</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Week 6 -->
+        <div class="week-card">
+          <div class="week-header" style="background:linear-gradient(135deg,#1e3a5f,#1d4ed8)">
+            <div>
+              <div class="week-number">Week 6</div>
+              <div class="week-title">Weighted Graphs & Dynamic Programming</div>
+            </div>
+          </div>
+          <div class="week-body">
+            <ul>
+              <li><span>Read</span><a class="topic-link" href="graph-algorithms.html">graph-algorithms.html</a></li>
+              <li><span>Read</span><a class="topic-link" href="dp.html">dp.html</a></li>
+              <li><span>Dijkstra, Topo Sort</span><span class="prob-count">2 problems</span></li>
+              <li><span>1D DP (Fibonacci family)</span><span class="prob-count">4 problems</span></li>
+              <li><span>2D DP + LCS/LIS</span><span class="prob-count">3 problems</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Week 7 -->
+        <div class="week-card">
+          <div class="week-header" style="background:linear-gradient(135deg,#065f46,#059669)">
+            <div>
+              <div class="week-number">Week 7</div>
+              <div class="week-title">Backtracking, Intervals, Greedy & Bits</div>
+            </div>
+          </div>
+          <div class="week-body">
+            <ul>
+              <li><span>Read</span><a class="topic-link" href="backtracking.html">backtracking.html</a></li>
+              <li><span>Read</span><a class="topic-link" href="intervals.html">intervals.html</a></li>
+              <li><span>Read</span><a class="topic-link" href="greedy.html">greedy.html</a></li>
+              <li><span>Read</span><a class="topic-link" href="bit-manipulation.html">bit-manipulation.html</a></li>
+              <li><span>Problems across all 4</span><span class="prob-count">8 problems</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Week 8 -->
+        <div class="week-card">
+          <div class="week-header" style="background:linear-gradient(135deg,#7c3aed,#2563eb)">
+            <div>
+              <div class="week-number">Week 8</div>
+              <div class="week-title">Review, Revision & Mock Interviews</div>
+            </div>
+          </div>
+          <div class="week-body">
+            <ul>
+              <li><span>Revisit hardest problems from weeks 1–7</span></li>
+              <li><span>Timed mock (45 min, Medium)</span><span class="prob-count">3×</span></li>
+              <li><span>Timed mock (60 min, Hard)</span><span class="prob-count">2×</span></li>
+              <li><span>Behavioral prep + system design basics</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pattern Cheatsheet -->
+    <section class="content-section" id="patterns">
+      <div class="section-label">Quick Reference</div>
+      <h2 class="section-title">Pattern Recognition Cheatsheet</h2>
+      <p>For each problem, ask: "What pattern does this fit?" Use these trigger phrases to match quickly.</p>
+
+      <div class="pattern-grid">
+        <div class="pattern-card">
+          <h4><span class="pattern-icon">👉</span> Two Pointers</h4>
+          <p>Sorted array, pair with target sum, partitioning, palindrome check, 3Sum family.</p>
+        </div>
+        <div class="pattern-card">
+          <h4><span class="pattern-icon">🪟</span> Sliding Window</h4>
+          <p>Subarray / substring with constraint. "Longest/shortest … that satisfies …"</p>
+        </div>
+        <div class="pattern-card">
+          <h4><span class="pattern-icon">➕</span> Prefix Sum</h4>
+          <p>Subarray sum queries, "count subarrays with sum = k", 2D range sums.</p>
+        </div>
+        <div class="pattern-card">
+          <h4><span class="pattern-icon">🔍</span> Binary Search</h4>
+          <p>Sorted input, "minimum / maximum … that satisfies …", search in rotated array.</p>
+        </div>
+        <div class="pattern-card">
+          <h4><span class="pattern-icon">📚</span> Stack</h4>
+          <p>Matching brackets, next greater/smaller element, monotonic stack, expression eval.</p>
+        </div>
+        <div class="pattern-card">
+          <h4><span class="pattern-icon">🔗</span> Linked List</h4>
+          <p>Detect cycle (Floyd), reverse, merge sorted lists, find kth from end (two runners).</p>
+        </div>
+        <div class="pattern-card">
+          <h4><span class="pattern-icon">🌳</span> Tree DFS</h4>
+          <p>Path sums, subtree problems, level-by-level BFS, serialize/deserialize, LCA.</p>
+        </div>
+        <div class="pattern-card">
+          <h4><span class="pattern-icon">📊</span> Heap</h4>
+          <p>Top-K elements, kth largest/smallest, merge K sorted, scheduling problems.</p>
+        </div>
+        <div class="pattern-card">
+          <h4><span class="pattern-icon">🗺</span> Graph BFS/DFS</h4>
+          <p>Shortest path (unweighted), connected components, islands, cycle detection.</p>
+        </div>
+        <div class="pattern-card">
+          <h4><span class="pattern-icon">💡</span> Dynamic Programming</h4>
+          <p>"Count ways", "min/max cost", overlapping subproblems with optimal substructure.</p>
+        </div>
+        <div class="pattern-card">
+          <h4><span class="pattern-icon">🔙</span> Backtracking</h4>
+          <p>Generate all combinations/permutations/subsets, constraint satisfaction (Sudoku, N-queens).</p>
+        </div>
+        <div class="pattern-card">
+          <h4><span class="pattern-icon">💚</span> Greedy</h4>
+          <p>Locally optimal choices lead to global optimum. Interval scheduling, jump game, task scheduling.</p>
+        </div>
+        <div class="pattern-card">
+          <h4><span class="pattern-icon">📅</span> Intervals</h4>
+          <p>Merge overlapping, count meetings, minimum rooms. Always sort by start time first.</p>
+        </div>
+        <div class="pattern-card">
+          <h4><span class="pattern-icon">⚡</span> Bit Manipulation</h4>
+          <p>Missing/duplicate, single non-duplicate, bit flags, XOR cancellation, efficient power-of-2 ops.</p>
+        </div>
+        <div class="pattern-card">
+          <h4><span class="pattern-icon">📝</span> Trie</h4>
+          <p>Prefix matching, word dictionary, autocomplete, phone book. Always O(m) per insert/search.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Curated Problem List -->
+    <section class="content-section" id="problems">
+      <div class="section-label">Curated List</div>
+      <h2 class="section-title">Curated Problem List</h2>
+
+      <p>These ~90 problems cover every pattern tested in top tech company interviews. Problems tagged <span class="blind-tag">B75</span> appear in Blind 75. Problems tagged <span class="neet-tag">N150</span> are on NeetCode 150. Problems on both lists are high-priority.</p>
+
+      <div class="callout callout-yellow">
+        <strong>Priority Order</strong>
+        Solve problems tagged with both <span class="blind-tag">B75</span> and <span class="neet-tag">N150</span> first — they appear most often in real interviews. Then fill in N150-only problems. Cover B75-only as time allows.
+      </div>
+
+      <!-- ARRAYS & STRINGS -->
+      <div class="table-wrapper" id="arrays">
+        <table>
+          <thead><tr><th>#</th><th>Problem</th><th>Diff</th><th>Pattern</th><th>Tags</th><th>Deep Dive</th></tr></thead>
+          <tbody>
+            <tr class="cat-row"><td colspan="6">Arrays & Strings — Core</td></tr>
+            <tr><td>1</td><td>Two Sum</td><td><span class="diff-easy">Easy</span></td><td>Hash Map</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="hash-map.html">Hash Map →</a></td></tr>
+            <tr><td>2</td><td>Best Time to Buy &amp; Sell Stock</td><td><span class="diff-easy">Easy</span></td><td>Sliding Window / DP</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="arrays-strings.html">Arrays →</a></td></tr>
+            <tr><td>3</td><td>Contains Duplicate</td><td><span class="diff-easy">Easy</span></td><td>Hash Set</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="hash-map.html">Hash Map →</a></td></tr>
+            <tr><td>4</td><td>Product of Array Except Self</td><td><span class="diff-medium">Medium</span></td><td>Prefix/Suffix Product</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="arrays-strings.html">Arrays →</a></td></tr>
+            <tr><td>5</td><td>Maximum Subarray (Kadane's)</td><td><span class="diff-medium">Medium</span></td><td>DP / Greedy</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="dp.html">DP →</a></td></tr>
+            <tr><td>6</td><td>Maximum Product Subarray</td><td><span class="diff-medium">Medium</span></td><td>DP (track min/max)</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="dp.html">DP →</a></td></tr>
+            <tr><td>7</td><td>Find Minimum in Rotated Sorted Array</td><td><span class="diff-medium">Medium</span></td><td>Binary Search</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="arrays-strings.html">Arrays →</a></td></tr>
+            <tr><td>8</td><td>Search in Rotated Sorted Array</td><td><span class="diff-medium">Medium</span></td><td>Binary Search</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="arrays-strings.html">Arrays →</a></td></tr>
+            <tr><td>9</td><td>3Sum</td><td><span class="diff-medium">Medium</span></td><td>Two Pointers</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="arrays-strings.html">Arrays →</a></td></tr>
+            <tr><td>10</td><td>Container With Most Water</td><td><span class="diff-medium">Medium</span></td><td>Two Pointers</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="arrays-strings.html">Arrays →</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TWO POINTERS / SLIDING WINDOW -->
+      <div class="table-wrapper" id="twopointers">
+        <table>
+          <thead><tr><th>#</th><th>Problem</th><th>Diff</th><th>Pattern</th><th>Tags</th><th>Deep Dive</th></tr></thead>
+          <tbody>
+            <tr class="cat-row"><td colspan="6">Two Pointers / Sliding Window</td></tr>
+            <tr><td>11</td><td>Valid Palindrome</td><td><span class="diff-easy">Easy</span></td><td>Two Pointers</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="arrays-strings.html">Arrays →</a></td></tr>
+            <tr><td>12</td><td>Longest Substring Without Repeating Chars</td><td><span class="diff-medium">Medium</span></td><td>Sliding Window (variable)</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="arrays-strings.html">Arrays →</a></td></tr>
+            <tr><td>13</td><td>Longest Repeating Character Replacement</td><td><span class="diff-medium">Medium</span></td><td>Sliding Window</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="arrays-strings.html">Arrays →</a></td></tr>
+            <tr><td>14</td><td>Minimum Window Substring</td><td><span class="diff-hard">Hard</span></td><td>Sliding Window (two maps)</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="arrays-strings.html">Arrays →</a></td></tr>
+            <tr><td>15</td><td>Trapping Rain Water</td><td><span class="diff-hard">Hard</span></td><td>Two Pointers / Prefix Max</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="arrays-strings.html">Arrays →</a></td></tr>
+            <tr><td>16</td><td>Minimum Size Subarray Sum</td><td><span class="diff-medium">Medium</span></td><td>Sliding Window</td><td><span class="neet-tag">N150</span></td><td><a href="arrays-strings.html">Arrays →</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- STACK & QUEUE -->
+      <div class="table-wrapper" id="stacks">
+        <table>
+          <thead><tr><th>#</th><th>Problem</th><th>Diff</th><th>Pattern</th><th>Tags</th><th>Deep Dive</th></tr></thead>
+          <tbody>
+            <tr class="cat-row"><td colspan="6">Stack & Queue</td></tr>
+            <tr><td>17</td><td>Valid Parentheses</td><td><span class="diff-easy">Easy</span></td><td>Stack (matching brackets)</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="stack-queue.html">Stack →</a></td></tr>
+            <tr><td>18</td><td>Min Stack</td><td><span class="diff-medium">Medium</span></td><td>Stack design</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="stack-queue.html">Stack →</a></td></tr>
+            <tr><td>19</td><td>Daily Temperatures</td><td><span class="diff-medium">Medium</span></td><td>Monotonic Stack</td><td><span class="neet-tag">N150</span></td><td><a href="stack-queue.html">Stack →</a></td></tr>
+            <tr><td>20</td><td>Largest Rectangle in Histogram</td><td><span class="diff-hard">Hard</span></td><td>Monotonic Stack</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="stack-queue.html">Stack →</a></td></tr>
+            <tr><td>21</td><td>Sliding Window Maximum</td><td><span class="diff-hard">Hard</span></td><td>Monotonic Deque</td><td><span class="neet-tag">N150</span></td><td><a href="stack-queue.html">Stack →</a></td></tr>
+            <tr><td>22</td><td>Evaluate Reverse Polish Notation</td><td><span class="diff-medium">Medium</span></td><td>Stack (expression)</td><td><span class="neet-tag">N150</span></td><td><a href="stack-queue.html">Stack →</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TREES -->
+      <div class="table-wrapper" id="trees">
+        <table>
+          <thead><tr><th>#</th><th>Problem</th><th>Diff</th><th>Pattern</th><th>Tags</th><th>Deep Dive</th></tr></thead>
+          <tbody>
+            <tr class="cat-row"><td colspan="6">Binary Tree & BST</td></tr>
+            <tr><td>23</td><td>Invert Binary Tree</td><td><span class="diff-easy">Easy</span></td><td>DFS (post-order)</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="binary-tree.html">Tree →</a></td></tr>
+            <tr><td>24</td><td>Maximum Depth of Binary Tree</td><td><span class="diff-easy">Easy</span></td><td>DFS</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="binary-tree.html">Tree →</a></td></tr>
+            <tr><td>25</td><td>Same Tree</td><td><span class="diff-easy">Easy</span></td><td>DFS (parallel)</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="binary-tree.html">Tree →</a></td></tr>
+            <tr><td>26</td><td>Subtree of Another Tree</td><td><span class="diff-easy">Easy</span></td><td>DFS + Same Tree</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="binary-tree.html">Tree →</a></td></tr>
+            <tr><td>27</td><td>Lowest Common Ancestor of BST</td><td><span class="diff-medium">Medium</span></td><td>BST traversal</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="bst.html">BST →</a></td></tr>
+            <tr><td>28</td><td>Binary Tree Level Order Traversal</td><td><span class="diff-medium">Medium</span></td><td>BFS</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="binary-tree.html">Tree →</a></td></tr>
+            <tr><td>29</td><td>Validate Binary Search Tree</td><td><span class="diff-medium">Medium</span></td><td>DFS with range</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="bst.html">BST →</a></td></tr>
+            <tr><td>30</td><td>Kth Smallest Element in BST</td><td><span class="diff-medium">Medium</span></td><td>In-order traversal</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="bst.html">BST →</a></td></tr>
+            <tr><td>31</td><td>Construct Binary Tree from Preorder &amp; Inorder</td><td><span class="diff-medium">Medium</span></td><td>Divide &amp; Conquer</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="binary-tree.html">Tree →</a></td></tr>
+            <tr><td>32</td><td>Binary Tree Maximum Path Sum</td><td><span class="diff-hard">Hard</span></td><td>DFS (return up / update global)</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="binary-tree.html">Tree →</a></td></tr>
+            <tr><td>33</td><td>Serialize and Deserialize Binary Tree</td><td><span class="diff-hard">Hard</span></td><td>DFS / BFS encoding</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="binary-tree.html">Tree →</a></td></tr>
+            <tr><td>34</td><td>Word Search II</td><td><span class="diff-hard">Hard</span></td><td>Trie + Backtracking</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="trie.html">Trie →</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- HEAP -->
+      <div class="table-wrapper" id="heaps">
+        <table>
+          <thead><tr><th>#</th><th>Problem</th><th>Diff</th><th>Pattern</th><th>Tags</th><th>Deep Dive</th></tr></thead>
+          <tbody>
+            <tr class="cat-row"><td colspan="6">Heap / Priority Queue</td></tr>
+            <tr><td>35</td><td>Kth Largest Element in a Stream</td><td><span class="diff-easy">Easy</span></td><td>Min-Heap of size K</td><td><span class="neet-tag">N150</span></td><td><a href="heap.html">Heap →</a></td></tr>
+            <tr><td>36</td><td>Top K Frequent Elements</td><td><span class="diff-medium">Medium</span></td><td>Heap / Bucket Sort</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="heap.html">Heap →</a></td></tr>
+            <tr><td>37</td><td>Find Median from Data Stream</td><td><span class="diff-hard">Hard</span></td><td>Two Heaps (max+min)</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="heap.html">Heap →</a></td></tr>
+            <tr><td>38</td><td>Merge K Sorted Lists</td><td><span class="diff-hard">Hard</span></td><td>Min-Heap merge</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="heap.html">Heap →</a></td></tr>
+            <tr><td>39</td><td>Task Scheduler</td><td><span class="diff-medium">Medium</span></td><td>Greedy / Max-Heap</td><td><span class="neet-tag">N150</span></td><td><a href="greedy.html">Greedy →</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- GRAPHS -->
+      <div class="table-wrapper" id="graphs">
+        <table>
+          <thead><tr><th>#</th><th>Problem</th><th>Diff</th><th>Pattern</th><th>Tags</th><th>Deep Dive</th></tr></thead>
+          <tbody>
+            <tr class="cat-row"><td colspan="6">Graphs</td></tr>
+            <tr><td>40</td><td>Number of Islands</td><td><span class="diff-medium">Medium</span></td><td>Grid DFS/BFS</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="graph.html">Graph →</a></td></tr>
+            <tr><td>41</td><td>Clone Graph</td><td><span class="diff-medium">Medium</span></td><td>BFS + hash map</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="graph.html">Graph →</a></td></tr>
+            <tr><td>42</td><td>Pacific Atlantic Water Flow</td><td><span class="diff-medium">Medium</span></td><td>Multi-source BFS/DFS</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="graph.html">Graph →</a></td></tr>
+            <tr><td>43</td><td>Course Schedule</td><td><span class="diff-medium">Medium</span></td><td>Topological Sort / Cycle Detection</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="graph-algorithms.html">Graph Algo →</a></td></tr>
+            <tr><td>44</td><td>Course Schedule II</td><td><span class="diff-medium">Medium</span></td><td>Topological Sort (Kahn's)</td><td><span class="neet-tag">N150</span></td><td><a href="graph-algorithms.html">Graph Algo →</a></td></tr>
+            <tr><td>45</td><td>Number of Connected Components (Undirected Graph)</td><td><span class="diff-medium">Medium</span></td><td>Union-Find / DFS</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="graph-algorithms.html">Graph Algo →</a></td></tr>
+            <tr><td>46</td><td>Graph Valid Tree</td><td><span class="diff-medium">Medium</span></td><td>Union-Find / DFS cycle detection</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="graph-algorithms.html">Graph Algo →</a></td></tr>
+            <tr><td>47</td><td>Alien Dictionary</td><td><span class="diff-hard">Hard</span></td><td>Topological Sort</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="graph-algorithms.html">Graph Algo →</a></td></tr>
+            <tr><td>48</td><td>Rotting Oranges</td><td><span class="diff-medium">Medium</span></td><td>Multi-source BFS</td><td><span class="neet-tag">N150</span></td><td><a href="graph.html">Graph →</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- DYNAMIC PROGRAMMING -->
+      <div class="table-wrapper" id="dp-sec">
+        <table>
+          <thead><tr><th>#</th><th>Problem</th><th>Diff</th><th>Pattern</th><th>Tags</th><th>Deep Dive</th></tr></thead>
+          <tbody>
+            <tr class="cat-row"><td colspan="6">Dynamic Programming — 1D</td></tr>
+            <tr><td>49</td><td>Climbing Stairs</td><td><span class="diff-easy">Easy</span></td><td>Fibonacci DP</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="dp.html">DP →</a></td></tr>
+            <tr><td>50</td><td>House Robber</td><td><span class="diff-medium">Medium</span></td><td>1D DP (skip or take)</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="dp.html">DP →</a></td></tr>
+            <tr><td>51</td><td>House Robber II (circular)</td><td><span class="diff-medium">Medium</span></td><td>1D DP × 2 runs</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="dp.html">DP →</a></td></tr>
+            <tr><td>52</td><td>Longest Palindromic Substring</td><td><span class="diff-medium">Medium</span></td><td>Expand around center / 2D DP</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="dp.html">DP →</a></td></tr>
+            <tr><td>53</td><td>Palindromic Substrings (count)</td><td><span class="diff-medium">Medium</span></td><td>Expand around center</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="dp.html">DP →</a></td></tr>
+            <tr><td>54</td><td>Decode Ways</td><td><span class="diff-medium">Medium</span></td><td>1D DP (decision tree)</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="dp.html">DP →</a></td></tr>
+            <tr><td>55</td><td>Coin Change</td><td><span class="diff-medium">Medium</span></td><td>1D DP (unbounded knapsack)</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="dp.html">DP →</a></td></tr>
+            <tr><td>56</td><td>Word Break</td><td><span class="diff-medium">Medium</span></td><td>1D DP + Trie</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="dp.html">DP →</a></td></tr>
+            <tr><td>57</td><td>Longest Increasing Subsequence</td><td><span class="diff-medium">Medium</span></td><td>1D DP / O(n log n) patience sort</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="dp.html">DP →</a></td></tr>
+            <tr class="cat-row"><td colspan="6">Dynamic Programming — 2D</td></tr>
+            <tr><td>58</td><td>Unique Paths</td><td><span class="diff-medium">Medium</span></td><td>2D DP (grid)</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="dp.html">DP →</a></td></tr>
+            <tr><td>59</td><td>Longest Common Subsequence</td><td><span class="diff-medium">Medium</span></td><td>2D DP (LCS)</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="dp.html">DP →</a></td></tr>
+            <tr><td>60</td><td>Edit Distance</td><td><span class="diff-medium">Medium</span></td><td>2D DP (LCS variant)</td><td><span class="neet-tag">N150</span></td><td><a href="dp.html">DP →</a></td></tr>
+            <tr><td>61</td><td>0/1 Knapsack</td><td><span class="diff-medium">Medium</span></td><td>2D DP → 1D rolling</td><td><span class="neet-tag">N150</span></td><td><a href="dp.html">DP →</a></td></tr>
+            <tr><td>62</td><td>Burst Balloons</td><td><span class="diff-hard">Hard</span></td><td>Interval DP</td><td><span class="neet-tag">N150</span></td><td><a href="dp.html">DP →</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- INTERVALS -->
+      <div class="table-wrapper" id="intervals-sec">
+        <table>
+          <thead><tr><th>#</th><th>Problem</th><th>Diff</th><th>Pattern</th><th>Tags</th><th>Deep Dive</th></tr></thead>
+          <tbody>
+            <tr class="cat-row"><td colspan="6">Intervals</td></tr>
+            <tr><td>63</td><td>Merge Intervals</td><td><span class="diff-medium">Medium</span></td><td>Sort + Merge</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="intervals.html">Intervals →</a></td></tr>
+            <tr><td>64</td><td>Insert Interval</td><td><span class="diff-medium">Medium</span></td><td>3-phase scan</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="intervals.html">Intervals →</a></td></tr>
+            <tr><td>65</td><td>Non-Overlapping Intervals</td><td><span class="diff-medium">Medium</span></td><td>Greedy (sort by end)</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="intervals.html">Intervals →</a></td></tr>
+            <tr><td>66</td><td>Meeting Rooms II</td><td><span class="diff-medium">Medium</span></td><td>Min-Heap / Sweep Line</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="intervals.html">Intervals →</a></td></tr>
+            <tr><td>67</td><td>Minimum Number of Arrows to Burst Balloons</td><td><span class="diff-medium">Medium</span></td><td>Greedy (sort by end)</td><td><span class="neet-tag">N150</span></td><td><a href="intervals.html">Intervals →</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- GREEDY -->
+      <div class="table-wrapper" id="greedy-sec">
+        <table>
+          <thead><tr><th>#</th><th>Problem</th><th>Diff</th><th>Pattern</th><th>Tags</th><th>Deep Dive</th></tr></thead>
+          <tbody>
+            <tr class="cat-row"><td colspan="6">Greedy</td></tr>
+            <tr><td>68</td><td>Jump Game</td><td><span class="diff-medium">Medium</span></td><td>Greedy reach tracking</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="greedy.html">Greedy →</a></td></tr>
+            <tr><td>69</td><td>Jump Game II</td><td><span class="diff-medium">Medium</span></td><td>BFS levels / greedy</td><td><span class="neet-tag">N150</span></td><td><a href="greedy.html">Greedy →</a></td></tr>
+            <tr><td>70</td><td>Gas Station</td><td><span class="diff-medium">Medium</span></td><td>Greedy (circular restart)</td><td><span class="neet-tag">N150</span></td><td><a href="greedy.html">Greedy →</a></td></tr>
+            <tr><td>71</td><td>Hand of Straights</td><td><span class="diff-medium">Medium</span></td><td>Greedy + sorted counting</td><td><span class="neet-tag">N150</span></td><td><a href="greedy.html">Greedy →</a></td></tr>
+            <tr><td>72</td><td>Partition Labels</td><td><span class="diff-medium">Medium</span></td><td>Greedy (last occurrence)</td><td><span class="neet-tag">N150</span></td><td><a href="greedy.html">Greedy →</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- BIT MANIPULATION -->
+      <div class="table-wrapper" id="bits">
+        <table>
+          <thead><tr><th>#</th><th>Problem</th><th>Diff</th><th>Pattern</th><th>Tags</th><th>Deep Dive</th></tr></thead>
+          <tbody>
+            <tr class="cat-row"><td colspan="6">Bit Manipulation</td></tr>
+            <tr><td>73</td><td>Single Number</td><td><span class="diff-easy">Easy</span></td><td>XOR cancellation</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="bit-manipulation.html">Bits →</a></td></tr>
+            <tr><td>74</td><td>Number of 1 Bits</td><td><span class="diff-easy">Easy</span></td><td>Brian Kernighan</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="bit-manipulation.html">Bits →</a></td></tr>
+            <tr><td>75</td><td>Counting Bits</td><td><span class="diff-easy">Easy</span></td><td>DP recurrence</td><td><span class="neet-tag">N150</span></td><td><a href="bit-manipulation.html">Bits →</a></td></tr>
+            <tr><td>76</td><td>Reverse Bits</td><td><span class="diff-easy">Easy</span></td><td>Extract &amp; place</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="bit-manipulation.html">Bits →</a></td></tr>
+            <tr><td>77</td><td>Missing Number</td><td><span class="diff-easy">Easy</span></td><td>XOR / Gauss sum</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="bit-manipulation.html">Bits →</a></td></tr>
+            <tr><td>78</td><td>Sum of Two Integers (no + operator)</td><td><span class="diff-medium">Medium</span></td><td>Half adder (XOR + AND+shift)</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="bit-manipulation.html">Bits →</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- OTHER PATTERNS -->
+      <div class="table-wrapper" id="other">
+        <table>
+          <thead><tr><th>#</th><th>Problem</th><th>Diff</th><th>Pattern</th><th>Tags</th><th>Deep Dive</th></tr></thead>
+          <tbody>
+            <tr class="cat-row"><td colspan="6">Linked List</td></tr>
+            <tr><td>79</td><td>Reverse Linked List</td><td><span class="diff-easy">Easy</span></td><td>Iterative / Recursive</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="linked-list.html">Linked List →</a></td></tr>
+            <tr><td>80</td><td>Detect Cycle in Linked List</td><td><span class="diff-easy">Easy</span></td><td>Floyd's cycle detection</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="linked-list.html">Linked List →</a></td></tr>
+            <tr><td>81</td><td>Merge Two Sorted Lists</td><td><span class="diff-easy">Easy</span></td><td>Two pointer merge</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="linked-list.html">Linked List →</a></td></tr>
+            <tr><td>82</td><td>Reorder List</td><td><span class="diff-medium">Medium</span></td><td>Find mid + reverse + merge</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="linked-list.html">Linked List →</a></td></tr>
+            <tr><td>83</td><td>Remove Nth Node From End</td><td><span class="diff-medium">Medium</span></td><td>Two-runner pointer</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="linked-list.html">Linked List →</a></td></tr>
+            <tr class="cat-row"><td colspan="6">Hash Map / Design</td></tr>
+            <tr><td>84</td><td>LRU Cache</td><td><span class="diff-medium">Medium</span></td><td>Hash Map + Doubly Linked List</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="hash-map.html">Hash Map →</a></td></tr>
+            <tr><td>85</td><td>Group Anagrams</td><td><span class="diff-medium">Medium</span></td><td>Hash Map with sorted key</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="hash-map.html">Hash Map →</a></td></tr>
+            <tr class="cat-row"><td colspan="6">Backtracking</td></tr>
+            <tr><td>86</td><td>Combination Sum</td><td><span class="diff-medium">Medium</span></td><td>Backtracking (reuse allowed)</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="backtracking.html">Backtracking →</a></td></tr>
+            <tr><td>87</td><td>Subsets</td><td><span class="diff-medium">Medium</span></td><td>Backtracking / bitmask</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="backtracking.html">Backtracking →</a></td></tr>
+            <tr><td>88</td><td>Permutations</td><td><span class="diff-medium">Medium</span></td><td>Backtracking (swap)</td><td><span class="neet-tag">N150</span></td><td><a href="backtracking.html">Backtracking →</a></td></tr>
+            <tr><td>89</td><td>Word Search</td><td><span class="diff-medium">Medium</span></td><td>Grid DFS + backtrack</td><td><span class="blind-tag">B75</span> <span class="neet-tag">N150</span></td><td><a href="backtracking.html">Backtracking →</a></td></tr>
+            <tr><td>90</td><td>N-Queens</td><td><span class="diff-hard">Hard</span></td><td>Backtracking + constraint check</td><td><span class="neet-tag">N150</span></td><td><a href="backtracking.html">Backtracking →</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Interview Strategy -->
+    <section class="content-section" id="strategy">
+      <div class="section-label">Final Advice</div>
+      <h2 class="section-title">Interview Strategy</h2>
+
+      <h3>During the Problem (45-minute interview structure)</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Time</th><th>What to Do</th></tr></thead>
+          <tbody>
+            <tr><td><strong>0–5 min</strong></td><td>Read aloud, clarify constraints (input size, duplicates, edge cases). Ask: "Can I assume…?"</td></tr>
+            <tr><td><strong>5–10 min</strong></td><td>Identify the pattern. State it out loud: "This looks like a sliding window problem because…" Start with brute force verbally.</td></tr>
+            <tr><td><strong>10–30 min</strong></td><td>Code the optimal solution. Talk as you code. Handle edge cases explicitly.</td></tr>
+            <tr><td><strong>30–40 min</strong></td><td>Walk through your code with the example input. Catch bugs before the interviewer does.</td></tr>
+            <tr><td><strong>40–45 min</strong></td><td>State time and space complexity. Discuss trade-offs and possible optimizations.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>When You're Stuck</h3>
+      <div class="callout callout-yellow">
+        <strong>The Pattern Ladder — climb until unstuck:</strong>
+        <ol>
+          <li>Restate the problem in your own words</li>
+          <li>Work through a concrete small example by hand</li>
+          <li>Ask: "What pattern does this remind me of?"</li>
+          <li>Think: "What if I sort the input? What structure becomes apparent?"</li>
+          <li>Think: "What if I start from the end? Or from both ends?"</li>
+          <li>Think: "Can I define a subproblem? (→ DP)"</li>
+          <li>Say out loud: "I'm going to try [approach] — here's why I think it might work"</li>
+        </ol>
+      </div>
+
+      <h3>Complexity Rules of Thumb</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Input Size n</th><th>Expected Time Complexity</th><th>Typical Approach</th></tr></thead>
+          <tbody>
+            <tr><td>n ≤ 20</td><td>O(2ⁿ) or O(n!)</td><td>Backtracking, bitmask DP</td></tr>
+            <tr><td>n ≤ 100</td><td>O(n³)</td><td>3 nested loops, Floyd-Warshall</td></tr>
+            <tr><td>n ≤ 1,000</td><td>O(n²)</td><td>2D DP, brute-force 2 pointers</td></tr>
+            <tr><td>n ≤ 100,000</td><td>O(n log n)</td><td>Sort + binary search, heap, merge sort DP</td></tr>
+            <tr><td>n ≤ 10,000,000</td><td>O(n)</td><td>Sliding window, hash map, prefix sum</td></tr>
+            <tr><td>n ≤ 10¹⁸</td><td>O(log n)</td><td>Binary search, fast exponentiation, math</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-green">
+        <strong>You're Ready When…</strong>
+        <ul>
+          <li>You can solve any Easy in &lt; 10 minutes</li>
+          <li>You can solve 80% of Mediums in 20–25 minutes</li>
+          <li>You can talk through your approach before writing a single line of code</li>
+          <li>You immediately recognize which pattern applies within 2 minutes of reading a problem</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer class="page-footer">
+      <div class="footer-links">
+        <a href="index.html">All Topics</a>
+        <a href="arrays-strings.html">Arrays &amp; Strings</a>
+        <a href="dp.html">Dynamic Programming</a>
+        <a href="backtracking.html">Backtracking</a>
+        <a href="greedy.html">Greedy</a>
+        <a href="intervals.html">Intervals</a>
+        <a href="bit-manipulation.html">Bit Manipulation</a>
+        <a href="graph.html">Graphs</a>
+        <a href="graph-algorithms.html">Graph Algorithms</a>
+        <a href="heap.html">Heap</a>
+        <a href="trie.html">Trie</a>
+        <a href="hash-map.html">Hash Map</a>
+        <a href="linked-list.html">Linked List</a>
+        <a href="binary-tree.html">Binary Tree</a>
+        <a href="bst.html">BST</a>
+        <a href="stack-queue.html">Stack &amp; Queue</a>
+      </div>
+      <div class="footer-copy">© 2026 KnowAlgo — Free DSA education, forever.</div>
+    </footer>
+  </main>
+</div>
+
+<script>
+  window.addEventListener('scroll', () => {
+    const el = document.getElementById('progressBar');
+    const scrollTop = document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    el.style.width = (scrollTop / scrollHeight * 100) + '%';
+  });
+
+  const sections = document.querySelectorAll('.content-section');
+  const tocLinks = document.querySelectorAll('.toc-list a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('active'));
+        const link = document.querySelector(`.toc-list a[href="#${entry.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

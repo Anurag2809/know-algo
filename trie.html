@@ -1,0 +1,2209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trie Data Structure: Complete Guide with LeetCode Solutions | KnowAlgo</title>
+  <meta name="description" content="Master the Trie (Prefix Tree) data structure with deep explanations, Python implementations, visual diagrams, and 6 LeetCode solutions including Word Search II, Implement Trie, and Maximum XOR.">
+  <meta name="keywords" content="trie data structure, prefix tree, trie implementation python, leetcode trie problems, word search trie, autocomplete trie, implement trie leetcode 208, trie tutorial, data structures algorithms">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.github.io/trie.html">
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Trie Data Structure: Complete Guide with LeetCode Solutions">
+  <meta property="og:description" content="Master the Trie (Prefix Tree) with deep explanations, visual diagrams, Python code, and 6 LeetCode solutions.">
+  <meta property="og:url" content="https://knowalgo.github.io/trie.html">
+  <meta property="og:site_name" content="KnowAlgo">
+  <meta property="article:published_time" content="2025-01-01">
+  <meta property="article:modified_time" content="2026-02-26">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Trie Data Structure: Complete Guide with LeetCode Solutions">
+  <meta name="twitter:description" content="Master the Trie with deep explanations and 6 LeetCode solutions.">
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Trie Data Structure: Complete Guide with LeetCode Solutions",
+    "description": "A comprehensive guide to the Trie (Prefix Tree) data structure including implementation, visual diagrams, time complexity analysis, and LeetCode problem solutions.",
+    "author": { "@type": "Organization", "name": "KnowAlgo" },
+    "publisher": { "@type": "Organization", "name": "KnowAlgo" },
+    "datePublished": "2025-01-01",
+    "dateModified": "2026-02-26",
+    "keywords": ["trie", "prefix tree", "data structure", "algorithms", "leetcode"],
+    "articleSection": "Data Structures"
+  }
+  </script>
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <!-- Prism.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    /* ========== CSS VARIABLES ========== */
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #eff6ff;
+      --secondary: #7c3aed;
+      --accent: #059669;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --bg: #f8fafc;
+      --bg-card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #1e293b;
+      --toc-width: 280px;
+      --header-h: 64px;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    /* ========== RESET & BASE ========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    ul, ol { padding-left: 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+
+    /* ========== TOP NAV ========== */
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      gap: 1rem;
+      box-shadow: var(--shadow);
+    }
+    .topnav-logo {
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+    }
+    .topnav-sep { color: var(--border); }
+    .topnav-crumb { color: var(--text-muted); font-size: 0.9rem; }
+    .topnav-links { margin-left: auto; display: flex; gap: 1rem; align-items: center; }
+    .topnav-links a { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
+    .topnav-links a:hover { color: var(--primary); text-decoration: none; }
+    .btn-home {
+      background: var(--primary);
+      color: #fff !important;
+      padding: 0.35rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.85rem !important;
+    }
+    .btn-home:hover { background: var(--primary-dark); }
+
+    /* ========== LAYOUT ========== */
+    .page-layout {
+      display: grid;
+      grid-template-columns: var(--toc-width) 1fr;
+      max-width: 1400px;
+      margin: 0 auto;
+      min-height: calc(100vh - var(--header-h));
+    }
+
+    /* ========== TOC SIDEBAR ========== */
+    .toc-sidebar {
+      position: sticky;
+      top: var(--header-h);
+      height: calc(100vh - var(--header-h));
+      overflow-y: auto;
+      padding: 1.5rem 1rem;
+      border-right: 1px solid var(--border);
+      background: #fff;
+    }
+    .toc-sidebar::-webkit-scrollbar { width: 4px; }
+    .toc-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .toc-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .toc-list { list-style: none; padding: 0; }
+    .toc-list li { margin-bottom: 0; }
+    .toc-list a {
+      display: block;
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      transition: all 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .toc-list a:hover, .toc-list a.active {
+      color: var(--primary);
+      background: var(--primary-light);
+      border-left-color: var(--primary);
+      text-decoration: none;
+    }
+    .toc-list .toc-sub a {
+      padding-left: 1.5rem;
+      font-size: 0.82rem;
+    }
+    .toc-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0.75rem 0;
+    }
+
+    /* ========== MAIN CONTENT ========== */
+    .main-content {
+      padding: 2rem 2.5rem;
+      max-width: 900px;
+    }
+
+    /* ========== HERO ========== */
+    .hero {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #7c3aed 100%);
+      color: white;
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 0.2rem 0.7rem;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 1rem;
+    }
+    .hero h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+    }
+    .hero p {
+      font-size: 1.05rem;
+      opacity: 0.88;
+      max-width: 600px;
+      margin-bottom: 1.25rem;
+    }
+    .hero-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .hero-meta span {
+      font-size: 0.85rem;
+      opacity: 0.8;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    /* ========== SECTIONS ========== */
+    .section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      margin-bottom: 1.75rem;
+      scroll-margin-top: calc(var(--header-h) + 1rem);
+    }
+    .section h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .section h2 .section-icon {
+      font-size: 1.3rem;
+    }
+    .section h3 {
+      font-size: 1.15rem;
+      font-weight: 650;
+      color: var(--text);
+      margin: 1.5rem 0 0.6rem;
+    }
+    .section h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin: 1rem 0 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      font-size: 0.85rem;
+    }
+    .section p { margin-bottom: 0.85rem; color: #334155; }
+    .section p:last-child { margin-bottom: 0; }
+
+    /* ========== CALLOUT BOXES ========== */
+    .callout {
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      border-left: 4px solid;
+      font-size: 0.9rem;
+    }
+    .callout-info { background: #eff6ff; border-color: var(--primary); color: #1e40af; }
+    .callout-tip { background: #f0fdf4; border-color: var(--accent); color: #065f46; }
+    .callout-warning { background: #fffbeb; border-color: var(--warning); color: #92400e; }
+    .callout strong { display: block; margin-bottom: 0.3rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ========== TRIE VISUAL DIAGRAM ========== */
+    .trie-diagram {
+      background: var(--code-bg);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 1.25rem 0;
+      font-family: 'Courier New', Courier, monospace;
+      color: #94a3b8;
+      font-size: 0.875rem;
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+    .trie-diagram .node-root { color: #f8fafc; font-weight: 700; }
+    .trie-diagram .node-char { color: #60a5fa; font-weight: 600; }
+    .trie-diagram .node-end { color: #34d399; font-weight: 700; }
+    .trie-diagram .node-branch { color: #94a3b8; }
+    .trie-diagram .comment { color: #64748b; font-style: italic; }
+
+    /* ========== STEP BY STEP ========== */
+    .steps { counter-reset: step; margin: 1rem 0; }
+    .step {
+      display: grid;
+      grid-template-columns: 2.5rem 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      align-items: start;
+    }
+    .step-num {
+      counter-increment: step;
+      width: 2.5rem;
+      height: 2.5rem;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+    .step-body h4 { margin-top: 0.35rem; color: var(--text); font-size: 1rem; }
+    .step-body p { font-size: 0.9rem; color: var(--text-muted); margin: 0.25rem 0; }
+
+    /* ========== CODE BLOCKS ========== */
+    .code-wrap {
+      position: relative;
+      margin: 1rem 0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .code-header {
+      background: #0f172a;
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .code-lang {
+      font-size: 0.78rem;
+      color: #64748b;
+      font-family: 'Courier New', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .copy-btn {
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      padding: 0.25rem 0.65rem;
+      border-radius: 5px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .copy-btn:hover { background: #334155; color: #e2e8f0; }
+    .copy-btn.copied { color: #34d399; border-color: #34d399; }
+    .code-wrap pre[class*="language-"] {
+      margin: 0;
+      border-radius: 0;
+      border: none;
+      font-size: 0.875rem;
+      max-height: 520px;
+    }
+
+    /* ========== COMPLEXITY TABLE ========== */
+    .table-wrap { overflow-x: auto; margin: 1rem 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th {
+      background: var(--primary);
+      color: #fff;
+      padding: 0.65rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    .badge-good { color: #065f46; background: #d1fae5; padding: 0.15rem 0.5rem; border-radius: 99px; font-size: 0.8rem; font-weight: 600; }
+    .badge-ok { color: #92400e; background: #fef3c7; padding: 0.15rem 0.5rem; border-radius: 99px; font-size: 0.8rem; font-weight: 600; }
+
+    /* ========== LEETCODE CARDS ========== */
+    .lc-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    .lc-header {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border);
+    }
+    .lc-num {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      background: var(--border);
+      padding: 0.2rem 0.5rem;
+      border-radius: 5px;
+      white-space: nowrap;
+    }
+    .lc-title { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+    .lc-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.35rem; }
+    .difficulty {
+      padding: 0.15rem 0.6rem;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .diff-easy { background: #d1fae5; color: #065f46; }
+    .diff-medium { background: #fef3c7; color: #92400e; }
+    .diff-hard { background: #fee2e2; color: #991b1b; }
+    .tag {
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 0.15rem 0.6rem;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .lc-body { padding: 1.5rem; }
+    .lc-body h4 { color: var(--text); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.3px; }
+
+    /* ========== INSIGHT BOXES ========== */
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .insight-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+    .insight-card .ic-icon { font-size: 1.75rem; margin-bottom: 0.5rem; }
+    .insight-card h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.35rem; color: var(--text); }
+    .insight-card p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+
+    /* ========== COMPARISON ========== */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .compare-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .compare-head {
+      padding: 0.65rem 1rem;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .compare-pros .compare-head { background: #d1fae5; color: #065f46; }
+    .compare-cons .compare-head { background: #fee2e2; color: #991b1b; }
+    .compare-body { padding: 0.75rem 1rem; }
+    .compare-body li { font-size: 0.875rem; color: var(--text-muted); }
+
+    /* ========== ANIMATION ========== */
+    .insert-anim {
+      background: var(--code-bg);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      color: #94a3b8;
+      font-family: 'Courier New', monospace;
+      font-size: 0.875rem;
+    }
+    .insert-anim .step-line { display: block; line-height: 1.9; }
+    .insert-anim .highlight { color: #fbbf24; font-weight: 700; }
+    .insert-anim .new-node { color: #34d399; font-weight: 700; }
+    .insert-anim .path { color: #60a5fa; }
+    .insert-anim .end-mark { color: #f87171; font-weight: 700; }
+
+    /* ========== FOOTER ========== */
+    footer {
+      background: #0f172a;
+      color: #94a3b8;
+      text-align: center;
+      padding: 2rem 1rem;
+      font-size: 0.875rem;
+      margin-top: 3rem;
+    }
+    footer a { color: #60a5fa; }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 900px) {
+      .page-layout { grid-template-columns: 1fr; }
+      .toc-sidebar { display: none; }
+      .main-content { padding: 1rem; }
+      .hero h1 { font-size: 1.75rem; }
+      .compare-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .topnav-links .hide-mobile { display: none; }
+      .hero { padding: 1.5rem; }
+    }
+
+    /* ========== INLINE CODE ========== */
+    code:not([class]) {
+      background: #f1f5f9;
+      color: #7c3aed;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.88em;
+      font-family: 'Courier New', monospace;
+    }
+
+    /* ========== PROGRESS BAR ========== */
+    .reading-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      z-index: 999;
+      transition: width 0.1s;
+    }
+
+    /* ========== SVG TREE VISUALS ========== */
+    .trie-svg-wrap {
+      margin: 1.25rem 0;
+      overflow-x: auto;
+      text-align: center;
+    }
+    .trie-svg-wrap svg { max-width: 100%; height: auto; }
+
+    /* Insert step panels — 3 side-by-side states */
+    .insert-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin: 1.25rem 0;
+    }
+    .insert-step {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 0.85rem 0.6rem 0.6rem;
+      text-align: center;
+    }
+    .insert-step-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #64748b;
+      margin-bottom: 0.5rem;
+      font-family: monospace;
+    }
+    .insert-step-label .ins-word { color: #fbbf24; }
+    .insert-step-legend {
+      margin-top: 0.5rem;
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .ins-legend-item {
+      font-size: 0.7rem;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .ins-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .ins-dot-new  { background: #422006; border: 1.5px solid #f59e0b; }
+    .ins-dot-exist { background: #1e3a8a; border: 1.5px solid #3b82f6; }
+    .ins-dot-end  { background: #052e16; border: 1.5px solid #16a34a; }
+
+    /* Binary trie wrapper */
+    .bin-trie-wrap {
+      margin: 1.25rem 0;
+      overflow-x: auto;
+      text-align: center;
+    }
+    .bin-trie-wrap svg { max-width: 100%; height: auto; }
+
+    @media (max-width: 640px) {
+      .insert-steps { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Reading Progress Bar -->
+<div class="reading-progress" id="readingProgress"></div>
+
+<!-- Top Navigation -->
+<nav class="topnav" role="navigation" aria-label="Main navigation">
+  <a href="index.html" class="topnav-logo">KnowAlgo</a>
+  <span class="topnav-sep">/</span>
+  <span class="topnav-crumb">Data Structures</span>
+  <span class="topnav-sep">/</span>
+  <span class="topnav-crumb">Trie</span>
+  <div class="topnav-links">
+    <a href="index.html" class="hide-mobile">Home</a>
+    <a href="index.html" class="btn-home">All Topics</a>
+  </div>
+</nav>
+
+<!-- Page Layout -->
+<div class="page-layout">
+
+  <!-- Table of Contents -->
+  <aside class="toc-sidebar" aria-label="Table of contents">
+    <div class="toc-title">On this page</div>
+    <ul class="toc-list">
+      <li><a href="#what-is-trie">What is a Trie?</a></li>
+      <li><a href="#anatomy">Anatomy of a Trie</a></li>
+      <li class="toc-sub"><a href="#trienode">TrieNode Structure</a></li>
+      <li class="toc-sub"><a href="#visual">Visual Diagram</a></li>
+      <li><a href="#operations">Core Operations</a></li>
+      <li class="toc-sub"><a href="#op-insert">Insert</a></li>
+      <li class="toc-sub"><a href="#op-search">Search</a></li>
+      <li class="toc-sub"><a href="#op-startswith">StartsWith</a></li>
+      <li class="toc-sub"><a href="#op-delete">Delete</a></li>
+      <li><a href="#implementation">Full Implementation</a></li>
+      <li><a href="#complexity">Time &amp; Space Complexity</a></li>
+      <hr class="toc-divider">
+      <li><a href="#leetcode">LeetCode Problems</a></li>
+      <li class="toc-sub"><a href="#lc208">LC 208 – Implement Trie</a></li>
+      <li class="toc-sub"><a href="#lc211">LC 211 – Add &amp; Search Words</a></li>
+      <li class="toc-sub"><a href="#lc212">LC 212 – Word Search II</a></li>
+      <li class="toc-sub"><a href="#lc648">LC 648 – Replace Words</a></li>
+      <li class="toc-sub"><a href="#lc1268">LC 1268 – Search Suggestions</a></li>
+      <li class="toc-sub"><a href="#lc421">LC 421 – Maximum XOR</a></li>
+      <hr class="toc-divider">
+      <li><a href="#applications">Real-World Applications</a></li>
+      <li><a href="#variations">Trie Variations</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content" role="main">
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-badge">Data Structure Deep Dive</div>
+      <h1>Trie (Prefix Tree)</h1>
+      <p>A specialized tree that stores strings character-by-character, enabling O(m) search, insert, and prefix queries — where m is the word length, regardless of how many words are stored.</p>
+      <div class="hero-meta">
+        <span>⏱ 25 min read</span>
+        <span>🎯 6 LeetCode solutions</span>
+        <span>🐍 Python code</span>
+        <span>📊 Complexity analysis</span>
+      </div>
+    </div>
+
+    <!-- ===================== WHAT IS A TRIE ===================== -->
+    <section class="section" id="what-is-trie">
+      <h2><span class="section-icon">🌳</span>What is a Trie?</h2>
+
+      <p>A <strong>Trie</strong> (pronounced "try", from the word re<em>trie</em>val) is a tree-like data structure used to store strings. Unlike a binary search tree where entire strings are stored at nodes, a trie stores strings by decomposing them into individual characters — each character occupies its own node.</p>
+
+      <p>Every path from the root to a marked leaf spells out a word. The key insight: <strong>words with shared prefixes share the same nodes</strong>. This is what makes Tries space-efficient and blazing fast for prefix-based queries.</p>
+
+      <div class="callout callout-info">
+        <strong>The Name</strong>
+        The term "trie" was coined by Edward Fredkin in 1960. It is an infix from the word "retrieval". Despite being spelled "trie", it was originally meant to be pronounced like "tree" — though today most people say "try" to distinguish it from a regular tree.
+      </div>
+
+      <h3>Why not just use a Hash Table?</h3>
+      <p>A hash table gives you O(1) exact lookups — but it can't answer prefix queries. Given the words <code>["apple", "app", "application"]</code>, a hash table cannot efficiently answer: <em>"What words start with 'app'?"</em> A Trie answers this in O(prefix_length) and then enumerates all matches in O(total_matches).</p>
+
+      <h3>Core Strengths of a Trie</h3>
+      <div class="insight-grid">
+        <div class="insight-card">
+          <div class="ic-icon">⚡</div>
+          <h4>O(m) Operations</h4>
+          <p>Insert, search, and prefix check all run in O(m) where m is the word/prefix length. Independent of dictionary size.</p>
+        </div>
+        <div class="insight-card">
+          <div class="ic-icon">🔗</div>
+          <h4>Shared Prefixes</h4>
+          <p>"apple" and "application" share nodes for 'a','p','p','l'. Memory grows with unique characters, not total characters.</p>
+        </div>
+        <div class="insight-card">
+          <div class="ic-icon">🔍</div>
+          <h4>Prefix Enumeration</h4>
+          <p>Find all words starting with a given prefix in O(prefix_len + results). No other data structure does this as naturally.</p>
+        </div>
+        <div class="insight-card">
+          <div class="ic-icon">✂️</div>
+          <h4>Early Pruning</h4>
+          <p>In search problems (like Word Search II), a trie prunes dead-end paths before they are fully explored — huge speedup.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== ANATOMY ===================== -->
+    <section class="section" id="anatomy">
+      <h2><span class="section-icon">🔬</span>Anatomy of a Trie</h2>
+
+      <h3 id="trienode">The TrieNode</h3>
+      <p>Every trie is built from <strong>TrieNode</strong> objects. Each node has exactly two things:</p>
+      <ol>
+        <li><strong>children</strong> — a dictionary (or array of size 26 for lowercase letters) mapping a character to the next TrieNode.</li>
+        <li><strong>is_end_of_word</strong> — a boolean flag that marks whether this node is the final character of a complete word.</li>
+      </ol>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">python</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><code class="language-python">class TrieNode:
+    def __init__(self):
+        # Maps each character to the child TrieNode that follows it.
+        # Using a dict is flexible (supports any alphabet).
+        # Using list[26] is faster but limited to lowercase a-z.
+        self.children: dict[str, TrieNode] = {}
+
+        # True only if this node is the LAST character of a stored word.
+        # This distinguishes "app" (complete word) from the prefix "app"
+        # on the way to "apple" or "application".
+        self.is_end_of_word: bool = False</code></pre>
+      </div>
+
+      <div class="callout callout-tip">
+        <strong>Design Choice: dict vs. list[26]</strong>
+        Use <code>dict</code> when your alphabet is large or unknown (unicode, lowercase + uppercase, etc.). Use <code>list[26]</code> when you only handle lowercase a–z and need maximum speed. The <code>list</code> approach uses <code>ord(char) - ord('a')</code> for indexing.
+      </div>
+
+      <h3 id="visual">Visual Diagram</h3>
+      <p>Let's store five words: <code>"do"</code>, <code>"dog"</code>, <code>"dot"</code>, <code>"go"</code>, <code>"got"</code>. Each circle is one node. <strong>Blue</strong> = prefix-only node. <strong>Green + ✓</strong> = a complete word ends here (<code>is_end_of_word = True</code>).</p>
+
+      <div class="trie-svg-wrap">
+        <svg viewBox="0 0 540 340" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:540px">
+          <rect width="540" height="340" rx="12" fill="#0f172a"/>
+
+          <!-- Shared-prefix highlight boxes -->
+          <rect x="101" y="104" width="58" height="133" rx="8"
+                fill="#1d4ed808" stroke="#1d4ed8" stroke-width="1.5" stroke-dasharray="5 3"/>
+          <rect x="381" y="104" width="58" height="133" rx="8"
+                fill="#1d4ed808" stroke="#1d4ed8" stroke-width="1.5" stroke-dasharray="5 3"/>
+
+          <!-- Edges (drawn first so nodes paint over them) -->
+          <line x1="253" y1="54" x2="147" y2="118" stroke="#334155" stroke-width="2"/>
+          <line x1="287" y1="54" x2="393" y2="118" stroke="#334155" stroke-width="2"/>
+          <line x1="130" y1="148" x2="130" y2="193" stroke="#334155" stroke-width="2"/>
+          <line x1="410" y1="148" x2="410" y2="193" stroke="#334155" stroke-width="2"/>
+          <line x1="118" y1="229" x2="78"  y2="276" stroke="#334155" stroke-width="2"/>
+          <line x1="142" y1="229" x2="182" y2="276" stroke="#334155" stroke-width="2"/>
+          <line x1="410" y1="233" x2="410" y2="276" stroke="#334155" stroke-width="2"/>
+
+          <!-- ROOT -->
+          <circle cx="270" cy="44" r="20" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+          <text x="270" y="48" text-anchor="middle" fill="#64748b"
+                font-size="9" font-family="system-ui,sans-serif" font-weight="700" letter-spacing="0.5">ROOT</text>
+
+          <!-- 'd' — prefix only -->
+          <circle cx="130" cy="128" r="20" fill="#1e3a8a" stroke="#3b82f6" stroke-width="2"/>
+          <text x="130" y="134" text-anchor="middle" fill="#93c5fd"
+                font-size="18" font-weight="700" font-family="ui-monospace,monospace">d</text>
+
+          <!-- 'g' — prefix only -->
+          <circle cx="410" cy="128" r="20" fill="#1e3a8a" stroke="#3b82f6" stroke-width="2"/>
+          <text x="410" y="134" text-anchor="middle" fill="#93c5fd"
+                font-size="18" font-weight="700" font-family="ui-monospace,monospace">g</text>
+
+          <!-- 'o' under d — end of "do" -->
+          <circle cx="130" cy="213" r="20" fill="#052e16" stroke="#16a34a" stroke-width="2.5"/>
+          <text x="130" y="219" text-anchor="middle" fill="#4ade80"
+                font-size="18" font-weight="700" font-family="ui-monospace,monospace">o</text>
+          <circle cx="148" cy="196" r="9" fill="#fbbf24" stroke="#0f172a" stroke-width="1"/>
+          <text x="148" y="200" text-anchor="middle" fill="#1c1917" font-size="8" font-weight="800">✓</text>
+          <text x="98" y="213" text-anchor="end" fill="#475569"
+                font-size="10" font-family="ui-monospace,monospace">"do"</text>
+
+          <!-- 'o' under g — end of "go" -->
+          <circle cx="410" cy="213" r="20" fill="#052e16" stroke="#16a34a" stroke-width="2.5"/>
+          <text x="410" y="219" text-anchor="middle" fill="#4ade80"
+                font-size="18" font-weight="700" font-family="ui-monospace,monospace">o</text>
+          <circle cx="428" cy="196" r="9" fill="#fbbf24" stroke="#0f172a" stroke-width="1"/>
+          <text x="428" y="200" text-anchor="middle" fill="#1c1917" font-size="8" font-weight="800">✓</text>
+          <text x="382" y="213" text-anchor="end" fill="#475569"
+                font-size="10" font-family="ui-monospace,monospace">"go"</text>
+
+          <!-- 'g' leaf — end of "dog" -->
+          <circle cx="66"  cy="296" r="20" fill="#052e16" stroke="#16a34a" stroke-width="2.5"/>
+          <text x="66"  y="302" text-anchor="middle" fill="#4ade80"
+                font-size="18" font-weight="700" font-family="ui-monospace,monospace">g</text>
+          <circle cx="84"  cy="279" r="9" fill="#fbbf24" stroke="#0f172a" stroke-width="1"/>
+          <text x="84"  y="283" text-anchor="middle" fill="#1c1917" font-size="8" font-weight="800">✓</text>
+          <text x="66"  y="326" text-anchor="middle" fill="#475569"
+                font-size="10" font-family="ui-monospace,monospace">"dog"</text>
+
+          <!-- 't' leaf — end of "dot" -->
+          <circle cx="194" cy="296" r="20" fill="#052e16" stroke="#16a34a" stroke-width="2.5"/>
+          <text x="194" y="302" text-anchor="middle" fill="#4ade80"
+                font-size="18" font-weight="700" font-family="ui-monospace,monospace">t</text>
+          <circle cx="212" cy="279" r="9" fill="#fbbf24" stroke="#0f172a" stroke-width="1"/>
+          <text x="212" y="283" text-anchor="middle" fill="#1c1917" font-size="8" font-weight="800">✓</text>
+          <text x="194" y="326" text-anchor="middle" fill="#475569"
+                font-size="10" font-family="ui-monospace,monospace">"dot"</text>
+
+          <!-- 't' leaf — end of "got" -->
+          <circle cx="410" cy="296" r="20" fill="#052e16" stroke="#16a34a" stroke-width="2.5"/>
+          <text x="410" y="302" text-anchor="middle" fill="#4ade80"
+                font-size="18" font-weight="700" font-family="ui-monospace,monospace">t</text>
+          <circle cx="428" cy="279" r="9" fill="#fbbf24" stroke="#0f172a" stroke-width="1"/>
+          <text x="428" y="283" text-anchor="middle" fill="#1c1917" font-size="8" font-weight="800">✓</text>
+          <text x="410" y="326" text-anchor="middle" fill="#475569"
+                font-size="10" font-family="ui-monospace,monospace">"got"</text>
+
+          <!-- Shared-prefix callout text -->
+          <text x="170" y="127" fill="#3b82f6" font-size="9" font-family="sans-serif">shared by</text>
+          <text x="170" y="138" fill="#3b82f6" font-size="9" font-family="sans-serif">do/dog/dot</text>
+          <text x="450" y="127" fill="#3b82f6" font-size="9" font-family="sans-serif">shared by</text>
+          <text x="450" y="138" fill="#3b82f6" font-size="9" font-family="sans-serif">go/got</text>
+
+          <!-- Legend bar -->
+          <rect x="14" y="8" width="510" height="22" rx="5" fill="#1e293b"/>
+          <circle cx="34"  cy="19" r="7" fill="#1e3a8a" stroke="#3b82f6" stroke-width="1.5"/>
+          <text x="46"  y="23" fill="#94a3b8" font-size="10" font-family="sans-serif">Prefix-only node</text>
+          <circle cx="168" cy="19" r="7" fill="#052e16" stroke="#16a34a" stroke-width="1.5"/>
+          <text x="180" y="23" fill="#94a3b8" font-size="10" font-family="sans-serif">End-of-word node</text>
+          <circle cx="318" cy="19" r="7" fill="#fbbf24"/>
+          <text x="330" y="23" fill="#94a3b8" font-size="10" font-family="sans-serif">is_end_of_word = True</text>
+          <rect x="424" y="12" width="92" height="14" rx="3"
+                fill="none" stroke="#1d4ed8" stroke-width="1" stroke-dasharray="3 2"/>
+          <text x="470" y="22" text-anchor="middle" fill="#64748b"
+                font-size="9" font-family="sans-serif">shared prefix</text>
+        </svg>
+      </div>
+
+      <p>Notice that <code>"do"</code>, <code>"dog"</code>, and <code>"dot"</code> all share the <em>same two nodes</em> for <code>d</code> and <code>o</code> — only 7 nodes total store all 5 words (not 13 individual characters). The <code>o</code> node under <code>d</code> has <code>is_end_of_word = True</code> AND has two children — it is simultaneously the end of <code>"do"</code> and a stepping stone to <code>"dog"</code> and <code>"dot"</code>. This dual role is the key subtlety of tries.</p>
+
+      <div class="callout callout-warning">
+        <strong>Common Mistake</strong>
+        Many beginners confuse "no children" with "end of word". A node can be both an end-of-word AND have children (like the 'p' node for "app" above). Always check the <code>is_end_of_word</code> flag, not the absence of children.
+      </div>
+    </section>
+
+    <!-- ===================== OPERATIONS ===================== -->
+    <section class="section" id="operations">
+      <h2><span class="section-icon">⚙️</span>Core Operations</h2>
+
+      <!-- INSERT -->
+      <h3 id="op-insert">1. Insert</h3>
+      <p>To insert a word, walk the trie character by character. At each step, if the current character has no child node, create one. After processing all characters, mark the final node as <code>is_end_of_word = True</code>.</p>
+
+      <!-- 3-panel trie states (tree grows left→right) -->
+      <div class="insert-steps">
+
+        <!-- Panel 1: insert "cat" -->
+        <div class="insert-step">
+          <div class="insert-step-label">① insert <span class="ins-word">"cat"</span></div>
+          <svg viewBox="0 0 246 72" xmlns="http://www.w3.org/2000/svg" width="100%">
+            <!-- edges -->
+            <line x1="34" y1="36" x2="60" y2="36" stroke="#475569" stroke-width="1.5"/>
+            <line x1="96" y1="36" x2="124" y2="36" stroke="#475569" stroke-width="1.5"/>
+            <line x1="160" y1="36" x2="188" y2="36" stroke="#475569" stroke-width="1.5"/>
+            <!-- ROOT -->
+            <circle cx="18" cy="36" r="16" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+            <text x="18" y="39" text-anchor="middle" fill="#475569" font-size="7"
+                  font-family="sans-serif" font-weight="700">root</text>
+            <!-- c — new node (amber) -->
+            <circle cx="78" cy="36" r="18" fill="#422006" stroke="#f59e0b" stroke-width="2"/>
+            <text x="78" y="42" text-anchor="middle" fill="#fde68a"
+                  font-size="17" font-weight="700" font-family="ui-monospace,monospace">c</text>
+            <!-- a — new node -->
+            <circle cx="142" cy="36" r="18" fill="#422006" stroke="#f59e0b" stroke-width="2"/>
+            <text x="142" y="42" text-anchor="middle" fill="#fde68a"
+                  font-size="17" font-weight="700" font-family="ui-monospace,monospace">a</text>
+            <!-- t★ — new end-of-word -->
+            <circle cx="206" cy="36" r="18" fill="#052e16" stroke="#fbbf24" stroke-width="2.5"/>
+            <text x="206" y="42" text-anchor="middle" fill="#4ade80"
+                  font-size="17" font-weight="700" font-family="ui-monospace,monospace">t</text>
+            <circle cx="221" cy="20" r="8" fill="#fbbf24"/>
+            <text x="221" y="24" text-anchor="middle" fill="#1c1917" font-size="7" font-weight="800">✓</text>
+          </svg>
+        </div>
+
+        <!-- Panel 2: insert "car" — c and a already exist, only r is new -->
+        <div class="insert-step">
+          <div class="insert-step-label">② insert <span class="ins-word">"car"</span></div>
+          <svg viewBox="0 0 246 108" xmlns="http://www.w3.org/2000/svg" width="100%">
+            <!-- edges -->
+            <line x1="34" y1="54" x2="60" y2="54" stroke="#475569" stroke-width="1.5"/>
+            <line x1="96" y1="54" x2="124" y2="54" stroke="#475569" stroke-width="1.5"/>
+            <!-- a → t (existing) -->
+            <line x1="158" y1="46" x2="187" y2="30" stroke="#475569" stroke-width="1.5"/>
+            <!-- a → r (new) -->
+            <line x1="158" y1="62" x2="187" y2="80" stroke="#f59e0b" stroke-width="1.5"/>
+            <!-- ROOT -->
+            <circle cx="18" cy="54" r="16" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+            <text x="18" y="57" text-anchor="middle" fill="#475569" font-size="7"
+                  font-family="sans-serif" font-weight="700">root</text>
+            <!-- c — existing (blue) -->
+            <circle cx="78" cy="54" r="18" fill="#1e3a8a" stroke="#3b82f6" stroke-width="2"/>
+            <text x="78" y="60" text-anchor="middle" fill="#93c5fd"
+                  font-size="17" font-weight="700" font-family="ui-monospace,monospace">c</text>
+            <!-- a — existing -->
+            <circle cx="142" cy="54" r="18" fill="#1e3a8a" stroke="#3b82f6" stroke-width="2"/>
+            <text x="142" y="60" text-anchor="middle" fill="#93c5fd"
+                  font-size="17" font-weight="700" font-family="ui-monospace,monospace">a</text>
+            <!-- t★ — existing end-of-word -->
+            <circle cx="205" cy="26" r="16" fill="#052e16" stroke="#16a34a" stroke-width="2.5"/>
+            <text x="205" y="31" text-anchor="middle" fill="#4ade80"
+                  font-size="15" font-weight="700" font-family="ui-monospace,monospace">t</text>
+            <circle cx="217" cy="12" r="7" fill="#fbbf24"/>
+            <text x="217" y="16" text-anchor="middle" fill="#1c1917" font-size="6" font-weight="800">✓</text>
+            <!-- r★ — NEW end-of-word (amber border) -->
+            <circle cx="205" cy="82" r="16" fill="#052e16" stroke="#fbbf24" stroke-width="2.5"/>
+            <text x="205" y="87" text-anchor="middle" fill="#4ade80"
+                  font-size="15" font-weight="700" font-family="ui-monospace,monospace">r</text>
+            <circle cx="217" cy="68" r="7" fill="#fbbf24"/>
+            <text x="217" y="72" text-anchor="middle" fill="#1c1917" font-size="6" font-weight="800">✓</text>
+            <text x="228" y="87" fill="#fbbf24" font-size="8" font-family="sans-serif" font-weight="700">←new</text>
+          </svg>
+        </div>
+
+        <!-- Panel 3: insert "bat" — entire b branch is new -->
+        <div class="insert-step">
+          <div class="insert-step-label">③ insert <span class="ins-word">"bat"</span></div>
+          <svg viewBox="0 0 260 132" xmlns="http://www.w3.org/2000/svg" width="100%">
+            <!-- root → c (existing) -->
+            <line x1="32" y1="58" x2="58" y2="36" stroke="#475569" stroke-width="1.5"/>
+            <!-- root → b (new) -->
+            <line x1="32" y1="74" x2="58" y2="96" stroke="#f59e0b" stroke-width="1.5"/>
+            <!-- c → a-c (existing) -->
+            <line x1="94" y1="32" x2="124" y2="28" stroke="#475569" stroke-width="1.5"/>
+            <!-- a-c → t★ -->
+            <line x1="158" y1="22" x2="186" y2="16" stroke="#475569" stroke-width="1.5"/>
+            <!-- a-c → r★ -->
+            <line x1="158" y1="30" x2="186" y2="42" stroke="#475569" stroke-width="1.5"/>
+            <!-- b → a-b (new) -->
+            <line x1="94" y1="98" x2="124" y2="100" stroke="#f59e0b" stroke-width="1.5"/>
+            <!-- a-b → t★-bat (new) -->
+            <line x1="158" y1="100" x2="186" y2="100" stroke="#f59e0b" stroke-width="1.5"/>
+            <!-- ROOT -->
+            <circle cx="18" cy="66" r="16" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+            <text x="18" y="69" text-anchor="middle" fill="#475569" font-size="7"
+                  font-family="sans-serif" font-weight="700">root</text>
+            <!-- c — existing -->
+            <circle cx="76" cy="28" r="16" fill="#1e3a8a" stroke="#3b82f6" stroke-width="2"/>
+            <text x="76" y="33" text-anchor="middle" fill="#93c5fd"
+                  font-size="14" font-weight="700" font-family="ui-monospace,monospace">c</text>
+            <!-- a (cat branch) — existing -->
+            <circle cx="140" cy="26" r="16" fill="#1e3a8a" stroke="#3b82f6" stroke-width="2"/>
+            <text x="140" y="31" text-anchor="middle" fill="#93c5fd"
+                  font-size="14" font-weight="700" font-family="ui-monospace,monospace">a</text>
+            <!-- t★ — existing -->
+            <circle cx="200" cy="14" r="13" fill="#052e16" stroke="#16a34a" stroke-width="2.5"/>
+            <text x="200" y="19" text-anchor="middle" fill="#4ade80"
+                  font-size="13" font-weight="700" font-family="ui-monospace,monospace">t</text>
+            <!-- r★ — existing -->
+            <circle cx="200" cy="48" r="13" fill="#052e16" stroke="#16a34a" stroke-width="2.5"/>
+            <text x="200" y="53" text-anchor="middle" fill="#4ade80"
+                  font-size="13" font-weight="700" font-family="ui-monospace,monospace">r</text>
+            <!-- b — NEW (amber) -->
+            <circle cx="76" cy="100" r="16" fill="#422006" stroke="#f59e0b" stroke-width="2"/>
+            <text x="76" y="105" text-anchor="middle" fill="#fde68a"
+                  font-size="14" font-weight="700" font-family="ui-monospace,monospace">b</text>
+            <!-- a (bat branch) — NEW -->
+            <circle cx="140" cy="100" r="16" fill="#422006" stroke="#f59e0b" stroke-width="2"/>
+            <text x="140" y="105" text-anchor="middle" fill="#fde68a"
+                  font-size="14" font-weight="700" font-family="ui-monospace,monospace">a</text>
+            <!-- t★ (bat) — NEW end-of-word -->
+            <circle cx="200" cy="100" r="13" fill="#052e16" stroke="#fbbf24" stroke-width="2.5"/>
+            <text x="200" y="105" text-anchor="middle" fill="#4ade80"
+                  font-size="13" font-weight="700" font-family="ui-monospace,monospace">t</text>
+            <!-- b-branch label -->
+            <text x="64" y="124" fill="#fbbf24" font-size="8" font-family="sans-serif" font-weight="700">← new branch</text>
+          </svg>
+        </div>
+
+      </div>
+      <!-- Legend for insert panels -->
+      <div class="insert-step-legend">
+        <div class="ins-legend-item">
+          <span class="ins-dot ins-dot-new"></span> New node (just created)
+        </div>
+        <div class="ins-legend-item">
+          <span class="ins-dot ins-dot-exist"></span> Existing node (reused)
+        </div>
+        <div class="ins-legend-item">
+          <span class="ins-dot ins-dot-end"></span> End-of-word node
+        </div>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">python – insert</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><code class="language-python">def insert(self, word: str) -> None:
+    node = self.root           # Start at the root every time
+
+    for char in word:
+        if char not in node.children:
+            # Character not yet seen from this node: create a fresh TrieNode
+            node.children[char] = TrieNode()
+
+        node = node.children[char]  # Walk down one level
+
+    # After the loop, 'node' sits at the last character of 'word'.
+    # Flag it so we know a complete word ends here.
+    node.is_end_of_word = True
+
+# Time Complexity:  O(m)  where m = len(word)
+# Space Complexity: O(m)  in the worst case (all new nodes)</code></pre>
+      </div>
+
+      <!-- SEARCH -->
+      <h3 id="op-search">2. Search</h3>
+      <p>Walk the trie character by character. If at any point the current character is not a child of the current node, the word is definitely not in the trie — return <code>False</code>. If you reach the end of the word successfully, return <code>node.is_end_of_word</code>. This last check is crucial: we must ensure we landed on a <em>complete word</em>, not just a prefix.</p>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">python – search</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><code class="language-python">def search(self, word: str) -> bool:
+    node = self.root
+
+    for char in word:
+        if char not in node.children:
+            return False          # Dead end — word cannot exist
+        node = node.children[char]
+
+    # We successfully walked the entire word.
+    # But is it a COMPLETE word or just a prefix?
+    # Example: trie contains "apple". Searching "app" walks 3 nodes
+    # successfully, but "app" is NOT stored → return False.
+    return node.is_end_of_word   # True only if a word ends exactly here
+
+# Time Complexity: O(m)
+# Space Complexity: O(1)  (no extra space, just pointer movement)</code></pre>
+      </div>
+
+      <!-- STARTSWITH -->
+      <h3 id="op-startswith">3. StartsWith (Prefix Check)</h3>
+      <p>Identical to search, except we don't check <code>is_end_of_word</code> at the end. If we can walk all the characters of the prefix without hitting a dead end, the prefix exists.</p>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">python – starts_with</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><code class="language-python">def starts_with(self, prefix: str) -> bool:
+    node = self.root
+
+    for char in prefix:
+        if char not in node.children:
+            return False          # Prefix doesn't exist in the trie
+        node = node.children[char]
+
+    # We reached the node at the end of 'prefix'.
+    # We don't care if it's a complete word — any extension counts.
+    return True                   # Prefix exists
+
+# Time Complexity: O(m) where m = len(prefix)
+# Space Complexity: O(1)</code></pre>
+      </div>
+
+      <!-- DELETE -->
+      <h3 id="op-delete">4. Delete</h3>
+      <p>Delete is the trickiest operation because we need to clean up nodes that are no longer needed. The rule: after un-marking a word's end node, if that node has no children (no other words branch through it), we can delete it. We recurse from the bottom up, deleting nodes only when safe.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h4>Recurse to the end of the word</h4>
+            <p>Use a recursive helper that walks to the target word's final node.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h4>Un-mark the end node</h4>
+            <p>Set <code>is_end_of_word = False</code> on the final character's node.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h4>Check if the node can be deleted</h4>
+            <p>A node is safe to delete if it has no children AND is not the end of another word. Return this as a signal to the parent.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h4>Propagate deletion upward</h4>
+            <p>If the parent receives a "delete me" signal and the parent itself has only that one child and is not an end-of-word, delete the parent too — and so on up the chain.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">python – delete</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><code class="language-python">def delete(self, word: str) -> bool:
+    """
+    Delete 'word' from the trie.
+    Returns True if the deletion was successful, False if word not found.
+    """
+    def _delete(node: TrieNode, word: str, depth: int) -> bool:
+        """
+        Returns True if the current node should be deleted by its parent.
+        """
+        # Base case: we've consumed all characters of 'word'
+        if depth == len(word):
+            if not node.is_end_of_word:
+                return False          # Word doesn't exist in trie
+            node.is_end_of_word = False
+            # Delete this node only if it has NO children
+            # (otherwise other words still pass through it)
+            return len(node.children) == 0
+
+        char = word[depth]
+        if char not in node.children:
+            return False              # Word doesn't exist in trie
+
+        # Recurse into the child for the next character
+        should_delete_child = _delete(node.children[char], word, depth + 1)
+
+        if should_delete_child:
+            # Child said "please delete me"
+            del node.children[char]
+            # Now check if WE should also be deleted:
+            # only if we have no remaining children AND we aren't an end-of-word
+            return len(node.children) == 0 and not node.is_end_of_word
+
+        return False
+
+    return _delete(self.root, word, 0)
+
+# Time Complexity:  O(m)
+# Space Complexity: O(m)  due to recursion call stack</code></pre>
+      </div>
+
+      <div class="callout callout-tip">
+        <strong>Delete Example</strong>
+        Trie contains: "app", "apple", "application". Delete "app":
+        Walk to the third 'p'. Set <code>is_end_of_word = False</code>. Does it have children? Yes ('l'). So we do NOT delete the node — we just un-mark it. "apple" and "application" are unaffected.
+      </div>
+    </section>
+
+    <!-- ===================== FULL IMPLEMENTATION ===================== -->
+    <section class="section" id="implementation">
+      <h2><span class="section-icon">💻</span>Full Python Implementation</h2>
+      <p>Here is the complete, production-ready Trie implementation with all operations. Every line is commented to explain the reasoning.</p>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">python – complete trie</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><code class="language-python">class TrieNode:
+    """
+    A single node in the Trie.
+    Each node represents one character on a path from root to leaf.
+    """
+    def __init__(self):
+        self.children: dict[str, 'TrieNode'] = {}
+        self.is_end_of_word: bool = False
+
+
+class Trie:
+    """
+    Trie (Prefix Tree) data structure.
+
+    Supports:
+      - insert(word)       → O(m)
+      - search(word)       → O(m), returns bool
+      - starts_with(pfx)   → O(m), returns bool
+      - get_words(pfx)     → O(m + output), returns list[str]
+      - delete(word)       → O(m), returns bool
+      - count_words()      → O(n * m) total words stored
+
+    where m = word/prefix length, n = number of words.
+    """
+
+    def __init__(self):
+        self.root = TrieNode()
+        self._word_count = 0
+
+    # ──────────────────────────────────────────────
+    # INSERT
+    # ──────────────────────────────────────────────
+    def insert(self, word: str) -> None:
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                node.children[char] = TrieNode()
+            node = node.children[char]
+
+        if not node.is_end_of_word:       # Avoid double-counting duplicates
+            node.is_end_of_word = True
+            self._word_count += 1
+
+    # ──────────────────────────────────────────────
+    # SEARCH (exact match)
+    # ──────────────────────────────────────────────
+    def search(self, word: str) -> bool:
+        node = self._traverse(word)
+        return node is not None and node.is_end_of_word
+
+    # ──────────────────────────────────────────────
+    # PREFIX CHECK
+    # ──────────────────────────────────────────────
+    def starts_with(self, prefix: str) -> bool:
+        return self._traverse(prefix) is not None
+
+    # ──────────────────────────────────────────────
+    # GET ALL WORDS WITH PREFIX  (autocomplete)
+    # ──────────────────────────────────────────────
+    def get_words(self, prefix: str = "") -> list[str]:
+        """Return all words in the trie that start with 'prefix'."""
+        node = self._traverse(prefix)
+        if node is None:
+            return []
+
+        results = []
+        self._dfs(node, prefix, results)
+        return results
+
+    def _dfs(self, node: TrieNode, current: str, results: list[str]) -> None:
+        if node.is_end_of_word:
+            results.append(current)
+        for char, child in node.children.items():
+            self._dfs(child, current + char, results)
+
+    # ──────────────────────────────────────────────
+    # DELETE
+    # ──────────────────────────────────────────────
+    def delete(self, word: str) -> bool:
+        deleted = self._delete(self.root, word, 0)
+        if deleted is not False:
+            self._word_count -= 1
+        return deleted is not False
+
+    def _delete(self, node: TrieNode, word: str, depth: int):
+        if depth == len(word):
+            if not node.is_end_of_word:
+                return False
+            node.is_end_of_word = False
+            return len(node.children) == 0   # Signal: safe to delete this node?
+
+        char = word[depth]
+        if char not in node.children:
+            return False
+
+        should_delete = self._delete(node.children[char], word, depth + 1)
+        if should_delete is False:
+            return False
+
+        if should_delete:
+            del node.children[char]
+            return len(node.children) == 0 and not node.is_end_of_word
+
+        return False
+
+    # ──────────────────────────────────────────────
+    # HELPERS
+    # ──────────────────────────────────────────────
+    def _traverse(self, prefix: str):
+        """Walk the trie for 'prefix'. Return the final node or None."""
+        node = self.root
+        for char in prefix:
+            if char not in node.children:
+                return None
+            node = node.children[char]
+        return node
+
+    def __len__(self) -> int:
+        return self._word_count
+
+
+# ──────────────────────────────────────────────────────
+# USAGE EXAMPLE
+# ──────────────────────────────────────────────────────
+if __name__ == "__main__":
+    trie = Trie()
+
+    words = ["apple", "app", "application", "apply", "apt", "bat", "ball"]
+    for w in words:
+        trie.insert(w)
+
+    print(f"Total words: {len(trie)}")           # 7
+    print(trie.search("app"))                    # True
+    print(trie.search("ap"))                     # False (prefix only)
+    print(trie.starts_with("ap"))               # True
+    print(trie.get_words("app"))                # ['app', 'apple', 'application', 'apply']
+
+    trie.delete("app")
+    print(trie.search("app"))                    # False
+    print(trie.search("apple"))                  # True  (unaffected)</code></pre>
+      </div>
+    </section>
+
+    <!-- ===================== COMPLEXITY ===================== -->
+    <section class="section" id="complexity">
+      <h2><span class="section-icon">📊</span>Time &amp; Space Complexity</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Operation</th>
+              <th>Trie</th>
+              <th>Hash Table</th>
+              <th>Sorted Array (BST)</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Insert</strong></td>
+              <td><span class="badge-good">O(m)</span></td>
+              <td><span class="badge-good">O(m)</span></td>
+              <td><span class="badge-ok">O(m log n)</span></td>
+              <td>m = word length</td>
+            </tr>
+            <tr>
+              <td><strong>Exact Search</strong></td>
+              <td><span class="badge-good">O(m)</span></td>
+              <td><span class="badge-good">O(m)</span></td>
+              <td><span class="badge-ok">O(m log n)</span></td>
+              <td>Hash table wins in practice (lower constant)</td>
+            </tr>
+            <tr>
+              <td><strong>Prefix Search</strong></td>
+              <td><span class="badge-good">O(m)</span></td>
+              <td>❌ Not supported</td>
+              <td><span class="badge-ok">O(m log n)</span></td>
+              <td>Trie's biggest advantage</td>
+            </tr>
+            <tr>
+              <td><strong>Autocomplete</strong></td>
+              <td><span class="badge-good">O(m + k)</span></td>
+              <td>❌ O(n·m) scan</td>
+              <td><span class="badge-ok">O(m log n + k)</span></td>
+              <td>k = number of results</td>
+            </tr>
+            <tr>
+              <td><strong>Delete</strong></td>
+              <td><span class="badge-good">O(m)</span></td>
+              <td><span class="badge-good">O(m)</span></td>
+              <td><span class="badge-ok">O(m log n)</span></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Space Complexity</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Metric</th><th>Value</th><th>Explanation</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Worst case</td>
+              <td><span class="badge-ok">O(N · M)</span></td>
+              <td>N words, each length M, all completely unique (no shared prefixes)</td>
+            </tr>
+            <tr>
+              <td>Best case</td>
+              <td><span class="badge-good">O(M)</span></td>
+              <td>All words share the same prefix — only one path exists</td>
+            </tr>
+            <tr>
+              <td>Typical case</td>
+              <td>Much better than O(N·M)</td>
+              <td>Real dictionaries have massive prefix overlap</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <strong>Memory Overhead Caveat</strong>
+        Each TrieNode object has overhead from Python's dict. For large alphabets or sparse tries, a Radix Tree (Compressed Trie) can dramatically reduce node count. The raw O() analysis doesn't capture Python's per-object overhead.
+      </div>
+    </section>
+
+    <!-- ===================== LEETCODE ===================== -->
+    <section class="section" id="leetcode">
+      <h2><span class="section-icon">🏆</span>LeetCode Problems</h2>
+      <p>These are the six most important LeetCode problems that test Trie understanding, ordered from foundational to advanced. Solving these in order builds the intuition you need.</p>
+
+      <!-- LC 208 -->
+      <div class="lc-card" id="lc208">
+        <div class="lc-header">
+          <div>
+            <div class="lc-num">LC #208</div>
+          </div>
+          <div>
+            <div class="lc-title">Implement Trie (Prefix Tree)</div>
+            <div class="lc-meta">
+              <span class="difficulty diff-medium">Medium</span>
+              <span class="tag">Trie</span>
+              <span class="tag">Design</span>
+              <span class="tag">Hash Table</span>
+            </div>
+          </div>
+        </div>
+        <div class="lc-body">
+          <h4>Problem</h4>
+          <p>Implement a trie with <code>insert</code>, <code>search</code>, and <code>startsWith</code> methods. This is the foundational problem — building the data structure from scratch.</p>
+
+          <h4>Key Insight</h4>
+          <p>The trie class itself can act as the root node. Each instance has <code>children</code> and <code>is_end</code>. This makes the implementation cleaner — no separate root attribute needed.</p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-lang">python – LC 208</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code class="language-python">class Trie:
+    def __init__(self):
+        # The Trie node IS the trie root.
+        # Each instance holds children and a flag.
+        self.children: dict = {}
+        self.is_end: bool = False
+
+    def insert(self, word: str) -> None:
+        node = self
+        for ch in word:
+            if ch not in node.children:
+                node.children[ch] = Trie()  # Create child Trie node
+            node = node.children[ch]
+        node.is_end = True
+
+    def search(self, word: str) -> bool:
+        node = self
+        for ch in word:
+            if ch not in node.children:
+                return False
+            node = node.children[ch]
+        return node.is_end   # Must be a COMPLETE word
+
+    def startsWith(self, prefix: str) -> bool:
+        node = self
+        for ch in prefix:
+            if ch not in node.children:
+                return False
+            node = node.children[ch]
+        return True           # Prefix exists — don't check is_end
+
+# ── Complexity ──────────────────────────────────────
+# Time:  O(m) per operation  (m = length of word/prefix)
+# Space: O(N * M) total      (N = number of words, M = avg length)</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- LC 211 -->
+      <div class="lc-card" id="lc211">
+        <div class="lc-header">
+          <div>
+            <div class="lc-num">LC #211</div>
+          </div>
+          <div>
+            <div class="lc-title">Design Add and Search Words Data Structure</div>
+            <div class="lc-meta">
+              <span class="difficulty diff-medium">Medium</span>
+              <span class="tag">Trie</span>
+              <span class="tag">DFS</span>
+              <span class="tag">Backtracking</span>
+            </div>
+          </div>
+        </div>
+        <div class="lc-body">
+          <h4>Problem</h4>
+          <p>Design a data structure that supports <code>addWord(word)</code> and <code>search(word)</code>. The search method supports the wildcard <code>'.'</code> which matches any single character.</p>
+
+          <h4>Key Insight</h4>
+          <p>Normal trie search is iterative. Once you add <code>'.'</code> wildcards, a single position can branch into ALL children. This forces a recursive DFS. When we hit <code>'.'</code>, we try every child and return <code>True</code> if any path succeeds.</p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-lang">python – LC 211</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code class="language-python">class WordDictionary:
+    def __init__(self):
+        self.children: dict = {}
+        self.is_end: bool = False
+
+    def addWord(self, word: str) -> None:
+        node = self
+        for ch in word:
+            if ch not in node.children:
+                node.children[ch] = WordDictionary()
+            node = node.children[ch]
+        node.is_end = True
+
+    def search(self, word: str) -> bool:
+        # We must use recursion because '.' can branch in multiple directions.
+        node = self
+        for i, ch in enumerate(word):
+            if ch == '.':
+                # '.' matches any character → try all existing children
+                # For each child, recursively search the rest of the word
+                return any(
+                    child.search(word[i + 1:])
+                    for child in node.children.values()
+                )
+            if ch not in node.children:
+                return False
+            node = node.children[ch]
+        return node.is_end
+
+# ── Example ──────────────────────────────────────────
+# wd = WordDictionary()
+# wd.addWord("bad")
+# wd.addWord("dad")
+# wd.addWord("mad")
+# wd.search("pad")   → False
+# wd.search("bad")   → True
+# wd.search(".ad")   → True  ('.' matches 'b', 'd', or 'm')
+# wd.search("b..")   → True  ('.' matches 'a', '..' matches 'ad')
+
+# ── Complexity ──────────────────────────────────────
+# addWord: O(m)
+# search:  O(m) average; O(26^m) worst case (all dots, dense trie)</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- LC 212 -->
+      <div class="lc-card" id="lc212">
+        <div class="lc-header">
+          <div>
+            <div class="lc-num">LC #212</div>
+          </div>
+          <div>
+            <div class="lc-title">Word Search II</div>
+            <div class="lc-meta">
+              <span class="difficulty diff-hard">Hard</span>
+              <span class="tag">Trie</span>
+              <span class="tag">DFS</span>
+              <span class="tag">Backtracking</span>
+              <span class="tag">Matrix</span>
+            </div>
+          </div>
+        </div>
+        <div class="lc-body">
+          <h4>Problem</h4>
+          <p>Given an <code>m × n</code> board of characters and a list of words, find all words that can be constructed from sequentially adjacent cells (horizontally/vertically). Each cell may be used at most once per word.</p>
+
+          <h4>Key Insight — Why Trie beats Brute Force</h4>
+          <p>Naively searching for each word independently is O(words × m × n × 4^L). The Trie approach builds the trie from all words first, then does a single DFS from every cell. At each DFS step, we check if the current character exists in the current trie node — if not, we <strong>prune the entire subtree instantly</strong>. This is the "early termination" that makes Trie so powerful here.</p>
+
+          <div class="callout callout-tip">
+            <strong>Optimization: Delete found words from the trie</strong>
+            After finding a word, remove it from the trie. This prevents finding duplicates AND prunes trie branches that are fully exhausted, making subsequent DFS calls faster.
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-lang">python – LC 212 (optimized)</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code class="language-python">from typing import List
+
+class Solution:
+    def findWords(self, board: List[List[str]], words: List[str]) -> List[str]:
+        ROWS, COLS = len(board), len(board[0])
+
+        # ── Build the Trie from all words ──────────────
+        # We use a plain dict-based trie for speed (no class overhead).
+        # '#' key marks end of word; its value stores the word itself.
+        root = {}
+        for word in words:
+            node = root
+            for ch in word:
+                node = node.setdefault(ch, {})
+            node['#'] = word          # Store the full word at the leaf
+
+        result = []
+
+        # ── DFS from every cell ────────────────────────
+        def dfs(node: dict, r: int, c: int) -> None:
+            ch = board[r][c]
+
+            # This character is not a child of the current trie node → prune
+            if ch not in node:
+                return
+
+            next_node = node[ch]
+
+            # Found a complete word!
+            if '#' in next_node:
+                result.append(next_node.pop('#'))  # pop = remove to avoid duplicates
+
+            # Mark cell as visited by temporarily replacing it
+            board[r][c] = '*'
+
+            # Explore all 4 adjacent cells
+            for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < ROWS and 0 <= nc < COLS and board[nr][nc] != '*':
+                    dfs(next_node, nr, nc)
+
+            # Restore the cell (backtrack)
+            board[r][c] = ch
+
+            # ── Pruning optimization ──────────────────
+            # If next_node is now empty (no more words branch through it),
+            # remove it from the parent. This shrinks the trie over time,
+            # making future DFS calls faster.
+            if not next_node:
+                del node[ch]
+
+        for r in range(ROWS):
+            for c in range(COLS):
+                dfs(root, r, c)
+
+        return result
+
+# ── Complexity ───────────────────────────────────────────
+# Build trie:  O(W * L)  where W = num words, L = max word length
+# DFS:         O(M * N * 4^L)  worst case — Trie pruning reduces this heavily
+# Space:       O(W * L)  for the trie</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- LC 648 -->
+      <div class="lc-card" id="lc648">
+        <div class="lc-header">
+          <div>
+            <div class="lc-num">LC #648</div>
+          </div>
+          <div>
+            <div class="lc-title">Replace Words</div>
+            <div class="lc-meta">
+              <span class="difficulty diff-medium">Medium</span>
+              <span class="tag">Trie</span>
+              <span class="tag">String</span>
+              <span class="tag">Hash Table</span>
+            </div>
+          </div>
+        </div>
+        <div class="lc-body">
+          <h4>Problem</h4>
+          <p>Given a dictionary of root words and a sentence, replace each word in the sentence with the shortest root that is a prefix of that word. If multiple roots are prefixes, use the shortest one.</p>
+          <p>Example: roots = <code>["cat", "bat", "rat"]</code>, sentence = <code>"the cattle was rattled by the battery"</code><br>Output: <code>"the cat was rat by the bat"</code></p>
+
+          <h4>Key Insight</h4>
+          <p>Insert all roots into a Trie. For each word in the sentence, walk the trie character by character. The moment you hit a node marked <code>is_end_of_word = True</code>, you've found the shortest root — return it immediately. No need to walk further.</p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-lang">python – LC 648</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code class="language-python">from typing import List
+
+class Solution:
+    def replaceWords(self, dictionary: List[str], sentence: str) -> str:
+        # Build trie from roots (the dictionary)
+        root = {}
+        for word in dictionary:
+            node = root
+            for ch in word:
+                node = node.setdefault(ch, {})
+            node['#'] = True          # Mark end of root word
+
+        def replace(word: str) -> str:
+            node = root
+            for i, ch in enumerate(word):
+                if ch not in node:
+                    # No root shares this prefix → keep original word
+                    return word
+                node = node[ch]
+                if '#' in node:
+                    # Found the shortest root that prefixes 'word'
+                    # Return only the prefix portion (word[:i+1])
+                    return word[:i + 1]
+            return word               # word itself is not prefixed by any root
+
+        # Process each word in the sentence
+        return ' '.join(replace(word) for word in sentence.split())
+
+# ── Complexity ──────────────────────────────────────
+# Build trie: O(R * L)  where R = num roots, L = max root length
+# Replace:    O(N * W)  where N = sentence words, W = avg word length
+# Total:      O(R*L + N*W)</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- LC 1268 -->
+      <div class="lc-card" id="lc1268">
+        <div class="lc-header">
+          <div>
+            <div class="lc-num">LC #1268</div>
+          </div>
+          <div>
+            <div class="lc-title">Search Suggestions System</div>
+            <div class="lc-meta">
+              <span class="difficulty diff-medium">Medium</span>
+              <span class="tag">Trie</span>
+              <span class="tag">Binary Search</span>
+              <span class="tag">String</span>
+            </div>
+          </div>
+        </div>
+        <div class="lc-body">
+          <h4>Problem</h4>
+          <p>Given a list of products and a search word, return a list of lists — after each character of the search word is typed, return the top 3 products (lexicographically smallest) that start with the typed prefix.</p>
+
+          <h4>Key Insight</h4>
+          <p>Sort products first. Build a Trie where each node stores a list of up to 3 matching words. Since products are sorted before insertion, the first 3 stored at each node are always the 3 lexicographically smallest. After building, answer each prefix query in O(prefix_length).</p>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-lang">python – LC 1268</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code class="language-python">from typing import List
+
+class Solution:
+    def suggestedProducts(
+        self, products: List[str], searchWord: str
+    ) -> List[List[str]]:
+
+        # Sort so that when we insert, the first 3 we see are lexicographically smallest
+        products.sort()
+
+        # Build Trie — each node stores at most 3 suggestions
+        root = {}
+        for product in products:
+            node = root
+            for ch in product:
+                if ch not in node:
+                    # Each node: { char: child_node, '$': [top_3_suggestions] }
+                    node[ch] = {'$': []}
+                node = node[ch]
+                # Only keep the 3 smallest (list is already sorted by insertion order)
+                if len(node['$']) < 3:
+                    node['$'].append(product)
+
+        # Answer each prefix query
+        result = []
+        node = root
+        prefix_broken = False       # Once we leave the trie, all answers are []
+
+        for ch in searchWord:
+            if prefix_broken or ch not in node:
+                result.append([])
+                prefix_broken = True
+            else:
+                node = node[ch]
+                result.append(node['$'])    # Already has top 3
+
+        return result
+
+# ── Complexity ──────────────────────────────────────
+# Sort:       O(P * log P * L)   P = products, L = avg length
+# Build:      O(P * L)
+# Query:      O(|searchWord|)    — just walk the trie
+# Total:      O(P*L*logP + |searchWord|)</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- LC 421 -->
+      <div class="lc-card" id="lc421">
+        <div class="lc-header">
+          <div>
+            <div class="lc-num">LC #421</div>
+          </div>
+          <div>
+            <div class="lc-title">Maximum XOR of Two Numbers in an Array</div>
+            <div class="lc-meta">
+              <span class="difficulty diff-medium">Medium</span>
+              <span class="tag">Bit Manipulation</span>
+              <span class="tag">Binary Trie</span>
+              <span class="tag">Array</span>
+            </div>
+          </div>
+        </div>
+        <div class="lc-body">
+          <h4>Problem</h4>
+          <p>Given an integer array <code>nums</code>, return the maximum result of <code>nums[i] XOR nums[j]</code> where <code>0 ≤ i ≤ j < n</code>.</p>
+
+          <h4>Key Insight — Binary Trie</h4>
+          <p>This is a totally different kind of Trie — a <strong>Binary Trie</strong> that stores the binary representations of numbers (bit by bit, from MSB to LSB). To maximize XOR with a number <code>x</code>, for each bit of <code>x</code>, we want the <em>opposite</em> bit in the other number (since 1 XOR 0 = 1 and 0 XOR 1 = 1). The Binary Trie lets us greedily navigate to the number that maximizes XOR in O(32) time.</p>
+
+          <!-- Binary trie SVG: stores 6 (110) and 5 (101) as 3-bit paths -->
+          <div class="bin-trie-wrap">
+            <svg viewBox="0 0 480 310" xmlns="http://www.w3.org/2000/svg"
+                 width="100%" style="max-width:480px">
+              <rect width="480" height="310" rx="12" fill="#0f172a"/>
+
+              <!-- XOR greedy path highlight: root→1→0→1 (path for 5=101, gives max XOR with 6) -->
+              <polyline points="220,60 220,130 300,200 300,270"
+                        fill="none" stroke="#7c3aed" stroke-width="3"
+                        stroke-dasharray="6 3" stroke-linecap="round" opacity="0.7"/>
+
+              <!-- Depth labels (left margin) -->
+              <text x="14" y="139" fill="#334155" font-size="10"
+                    font-family="ui-monospace,monospace">bit[2]</text>
+              <text x="14" y="209" fill="#334155" font-size="10"
+                    font-family="ui-monospace,monospace">bit[1]</text>
+              <text x="14" y="279" fill="#334155" font-size="10"
+                    font-family="ui-monospace,monospace">bit[0]</text>
+
+              <!-- Edges — root to "1" (MSB, both numbers share this) -->
+              <line x1="220" y1="60" x2="220" y2="110" stroke="#334155" stroke-width="2"/>
+
+              <!-- "1" node → "1" (6's second bit) -->
+              <line x1="208" y1="148" x2="148" y2="190" stroke="#334155" stroke-width="2"/>
+              <!-- edge label -->
+              <text x="167" y="176" fill="#64748b" font-size="11"
+                    font-family="ui-monospace,monospace">1</text>
+
+              <!-- "1" node → "0" (5's second bit) — XOR optimal -->
+              <line x1="232" y1="148" x2="292" y2="190" stroke="#7c3aed" stroke-width="2.5"/>
+              <text x="272" y="176" fill="#a78bfa" font-size="11"
+                    font-family="ui-monospace,monospace">0</text>
+
+              <!-- "1" leaf (6) → "0" end -->
+              <line x1="140" y1="218" x2="140" y2="260" stroke="#334155" stroke-width="2"/>
+              <text x="152" y="246" fill="#64748b" font-size="11"
+                    font-family="ui-monospace,monospace">0</text>
+
+              <!-- "0" node (5's second bit) → "1" end — XOR optimal -->
+              <line x1="300" y1="218" x2="300" y2="260" stroke="#7c3aed" stroke-width="2.5"/>
+              <text x="312" y="246" fill="#a78bfa" font-size="11"
+                    font-family="ui-monospace,monospace">1</text>
+
+              <!-- ROOT -->
+              <circle cx="220" cy="40" r="20" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+              <text x="220" y="44" text-anchor="middle" fill="#64748b"
+                    font-size="9" font-family="sans-serif" font-weight="700">ROOT</text>
+
+              <!-- MSB=1 node (both numbers start with 1) -->
+              <circle cx="220" cy="130" r="20" fill="#1e3a8a" stroke="#3b82f6" stroke-width="2"/>
+              <text x="220" y="136" text-anchor="middle" fill="#93c5fd"
+                    font-size="18" font-weight="700" font-family="ui-monospace,monospace">1</text>
+              <text x="220" y="96" text-anchor="middle" fill="#475569"
+                    font-size="9" font-family="sans-serif">MSB=1 (both nums)</text>
+
+              <!-- bit[1]=1  (number 6 = 1·1·0) -->
+              <circle cx="140" cy="200" r="20" fill="#1e3a8a" stroke="#3b82f6" stroke-width="2"/>
+              <text x="140" y="206" text-anchor="middle" fill="#93c5fd"
+                    font-size="18" font-weight="700" font-family="ui-monospace,monospace">1</text>
+              <text x="104" y="200" text-anchor="end" fill="#475569"
+                    font-size="9" font-family="sans-serif">6's path</text>
+
+              <!-- bit[1]=0  (number 5 = 1·0·1) — XOR prefers this -->
+              <circle cx="300" cy="200" r="20" fill="#312e81" stroke="#818cf8" stroke-width="2.5"/>
+              <text x="300" y="206" text-anchor="middle" fill="#c7d2fe"
+                    font-size="18" font-weight="700" font-family="ui-monospace,monospace">0</text>
+              <text x="330" y="196" fill="#a78bfa" font-size="9"
+                    font-family="sans-serif">5's path</text>
+              <text x="330" y="208" fill="#a78bfa" font-size="9"
+                    font-family="sans-serif">(XOR-optimal)</text>
+
+              <!-- bit[0]=0 ★ — end of 6 (110) -->
+              <circle cx="140" cy="278" r="20" fill="#052e16" stroke="#16a34a" stroke-width="2.5"/>
+              <text x="140" y="284" text-anchor="middle" fill="#4ade80"
+                    font-size="18" font-weight="700" font-family="ui-monospace,monospace">0</text>
+              <circle cx="158" cy="261" r="9" fill="#fbbf24" stroke="#0f172a" stroke-width="1"/>
+              <text x="158" y="265" text-anchor="middle" fill="#1c1917" font-size="8" font-weight="800">✓</text>
+              <text x="140" y="308" text-anchor="middle" fill="#475569"
+                    font-size="10" font-family="ui-monospace,monospace">6 = 110</text>
+
+              <!-- bit[0]=1 ★ — end of 5 (101) -->
+              <circle cx="300" cy="278" r="20" fill="#1e1b4b" stroke="#a78bfa" stroke-width="2.5"/>
+              <text x="300" y="284" text-anchor="middle" fill="#a78bfa"
+                    font-size="18" font-weight="700" font-family="ui-monospace,monospace">1</text>
+              <circle cx="318" cy="261" r="9" fill="#fbbf24" stroke="#0f172a" stroke-width="1"/>
+              <text x="318" y="265" text-anchor="middle" fill="#1c1917" font-size="8" font-weight="800">✓</text>
+              <text x="300" y="308" text-anchor="middle" fill="#a78bfa"
+                    font-size="10" font-family="ui-monospace,monospace">5 = 101</text>
+
+              <!-- Annotation box: greedy XOR walk for num=6 (110) -->
+              <rect x="370" y="100" width="96" height="108" rx="7"
+                    fill="#1e1b4b" stroke="#7c3aed" stroke-width="1.5"/>
+              <text x="418" y="118" text-anchor="middle" fill="#a78bfa"
+                    font-size="9" font-family="sans-serif" font-weight="700">MAX XOR (6)</text>
+              <text x="418" y="133" text-anchor="middle" fill="#64748b"
+                    font-size="8.5" font-family="ui-monospace,monospace">6 = 1 1 0</text>
+              <text x="418" y="148" text-anchor="middle" fill="#c7d2fe"
+                    font-size="8.5" font-family="ui-monospace,monospace">want: 0 0 1</text>
+              <line x1="378" y1="155" x2="458" y2="155" stroke="#334155" stroke-width="1"/>
+              <text x="418" y="168" text-anchor="middle" fill="#94a3b8"
+                    font-size="8" font-family="sans-serif">bit[2]=1 → want 0</text>
+              <text x="418" y="180" text-anchor="middle" fill="#94a3b8"
+                    font-size="8" font-family="sans-serif">  (no 0 child → take 1)</text>
+              <text x="418" y="192" text-anchor="middle" fill="#6ee7b7"
+                    font-size="8" font-family="sans-serif">bit[1]=1 → want 0 ✓</text>
+              <text x="418" y="204" text-anchor="middle" fill="#6ee7b7"
+                    font-size="8" font-family="sans-serif">bit[0]=0 → want 1 ✓</text>
+
+              <!-- Legend -->
+              <rect x="14" y="8" width="340" height="22" rx="5" fill="#1e293b"/>
+              <circle cx="34" cy="19" r="7" fill="#1e3a8a" stroke="#3b82f6" stroke-width="1.5"/>
+              <text x="46" y="23" fill="#94a3b8" font-size="10" font-family="sans-serif">Regular bit node</text>
+              <circle cx="154" cy="19" r="7" fill="#312e81" stroke="#818cf8" stroke-width="1.5"/>
+              <text x="166" y="23" fill="#94a3b8" font-size="10" font-family="sans-serif">XOR-optimal path</text>
+              <line x1="270" y1="19" x2="295" y2="19" stroke="#7c3aed" stroke-width="2"
+                    stroke-dasharray="5 2"/>
+              <text x="300" y="23" fill="#94a3b8" font-size="10" font-family="sans-serif">greedy walk</text>
+            </svg>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-lang">python – LC 421 (Binary Trie)</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code class="language-python">from typing import List
+
+class Solution:
+    def findMaximumXOR(self, nums: List[int]) -> int:
+        # Binary Trie stored as nested dicts
+        # Keys at each node are 0 or 1 (bits)
+        root = {}
+
+        def insert(num: int) -> None:
+            node = root
+            # Process bits from MSB (bit 31) to LSB (bit 0)
+            for i in range(31, -1, -1):
+                bit = (num >> i) & 1      # Extract the i-th bit
+                if bit not in node:
+                    node[bit] = {}
+                node = node[bit]
+
+        def max_xor_with(num: int) -> int:
+            """
+            Find the number in the trie that maximizes XOR with 'num'.
+            Greedy: at each bit position, prefer the OPPOSITE bit.
+            """
+            node = root
+            xor_val = 0
+            for i in range(31, -1, -1):
+                bit = (num >> i) & 1
+                want = 1 - bit            # Opposite bit maximizes XOR
+
+                if want in node:
+                    xor_val |= (1 << i)   # This bit contributes to XOR
+                    node = node[want]
+                else:
+                    node = node[bit]      # Forced to take same bit (XOR = 0 here)
+
+            return xor_val
+
+        # Insert all numbers into the binary trie
+        for num in nums:
+            insert(num)
+
+        # For each number, find its maximum XOR partner in the trie
+        return max(max_xor_with(num) for num in nums)
+
+# ── Complexity ──────────────────────────────────────
+# Build:  O(N * 32) = O(N)
+# Query:  O(N * 32) = O(N)
+# Total:  O(N)  — linear!
+# Space:  O(N * 32) = O(N)  for the binary trie</code></pre>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===================== APPLICATIONS ===================== -->
+    <section class="section" id="applications">
+      <h2><span class="section-icon">🌍</span>Real-World Applications</h2>
+
+      <div class="insight-grid">
+        <div class="insight-card">
+          <div class="ic-icon">🔍</div>
+          <h4>Search Autocomplete</h4>
+          <p>Google, YouTube, and IDEs use trie-based structures to suggest completions as you type. Each keystroke walks one level deeper in the trie.</p>
+        </div>
+        <div class="insight-card">
+          <div class="ic-icon">📝</div>
+          <h4>Spell Checkers</h4>
+          <p>Word processors use tries to validate words and suggest corrections. A dictionary of 200,000 words can be stored and queried in microseconds.</p>
+        </div>
+        <div class="insight-card">
+          <div class="ic-icon">🌐</div>
+          <h4>IP Routing</h4>
+          <p>Network routers use binary tries for longest-prefix matching. An IP address is a 32-bit binary string — the trie finds the best route in O(32).</p>
+        </div>
+        <div class="insight-card">
+          <div class="ic-icon">🎮</div>
+          <h4>Word Games</h4>
+          <p>Scrabble solvers and Boggle solvers use tries to quickly validate words and prune invalid board paths (like in Word Search II).</p>
+        </div>
+        <div class="insight-card">
+          <div class="ic-icon">🔒</div>
+          <h4>T9 / Phone Keyboards</h4>
+          <p>Old-school T9 and modern phone keyboards use tries to predict which word you're typing from a sequence of digit presses.</p>
+        </div>
+        <div class="insight-card">
+          <div class="ic-icon">📦</div>
+          <h4>Package Namespaces</h4>
+          <p>Package managers (npm, pip) use trie-like structures for namespace resolution — quickly finding packages that match a given prefix.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== VARIATIONS ===================== -->
+    <section class="section" id="variations">
+      <h2><span class="section-icon">🔀</span>Trie Variations</h2>
+
+      <h3>1. Compressed Trie (Radix Tree / Patricia Tree)</h3>
+      <p>A regular trie can waste space on long chains of nodes with only one child (e.g., storing "uniqueword" creates 10 nodes, each with one child). A <strong>Compressed Trie</strong> merges these chains into a single edge labeled with the entire substring.</p>
+
+      <div class="compare-grid">
+        <div class="compare-card compare-pros">
+          <div class="compare-head">Regular Trie</div>
+          <div class="compare-body">
+            <ul>
+              <li>Simple implementation</li>
+              <li>Easy to understand</li>
+              <li>One node per character</li>
+              <li>Works with any alphabet</li>
+            </ul>
+          </div>
+        </div>
+        <div class="compare-card compare-cons">
+          <div class="compare-head">Compressed Trie (Radix Tree)</div>
+          <div class="compare-body">
+            <ul>
+              <li>Fewer nodes — less memory</li>
+              <li>Complex split/merge on insert</li>
+              <li>Used in Linux kernel (mount points)</li>
+              <li>Used in route tables</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <h3>2. Binary Trie</h3>
+      <p>Used for <strong>bit manipulation problems</strong>. Instead of 26 character children, each node has only 2 children: 0 and 1. Numbers are stored bit-by-bit from MSB to LSB. Enables O(32) maximum XOR, minimum XOR, and range-based bit queries (as shown in LC 421).</p>
+
+      <h3>3. Ternary Search Tree</h3>
+      <p>A hybrid of a Trie and a Binary Search Tree. Each node has three children: <em>less than</em>, <em>equal to</em>, and <em>greater than</em>. More space-efficient than a regular trie for sparse data. Used in some spell-checker implementations.</p>
+
+      <h3>4. Trie + Frequency Map (for Autocomplete Ranking)</h3>
+      <p>Each trie node stores a frequency count (or a heap of the top-K words). When a word is searched/typed, its frequency increments. Autocomplete returns completions sorted by frequency rather than alphabetically — this is how most real search engines work.</p>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">python – frequency trie (autocomplete with ranking)</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><code class="language-python">import heapq
+from collections import defaultdict
+
+class FrequencyTrieNode:
+    def __init__(self):
+        self.children: dict = {}
+        self.is_end: bool = False
+        self.frequency: int = 0        # How often this word was inserted/searched
+
+class FrequencyTrie:
+    """
+    A trie where each complete word stores a frequency.
+    get_top_k(prefix, k) returns the k most-frequent words starting with prefix.
+    """
+    def __init__(self):
+        self.root = FrequencyTrieNode()
+
+    def insert(self, word: str, freq: int = 1) -> None:
+        node = self.root
+        for ch in word:
+            if ch not in node.children:
+                node.children[ch] = FrequencyTrieNode()
+            node = node.children[ch]
+        node.is_end = True
+        node.frequency += freq         # Accumulate frequency on repeated inserts
+
+    def _collect(self, node, prefix, results):
+        if node.is_end:
+            results.append((-node.frequency, prefix))  # Negate for min-heap trick
+        for ch, child in node.children.items():
+            self._collect(child, prefix + ch, results)
+
+    def get_top_k(self, prefix: str, k: int = 3) -> list[tuple[str, int]]:
+        """Return top-k words by frequency for a given prefix."""
+        node = self.root
+        for ch in prefix:
+            if ch not in node.children:
+                return []
+            node = node.children[ch]
+
+        results = []
+        self._collect(node, prefix, results)
+
+        # Use partial sort (heapq.nsmallest) — O(n + k log n)
+        # Negated frequency, so smallest neg = highest freq
+        top_k = heapq.nsmallest(k, results)
+        return [(word, -freq) for freq, word in top_k]
+
+
+# ── Example ──────────────────────────────────────────
+ft = FrequencyTrie()
+data = [("apple", 5), ("app", 3), ("application", 8),
+        ("apply", 2), ("apt", 1), ("appetite", 6)]
+
+for word, freq in data:
+    ft.insert(word, freq)
+
+print(ft.get_top_k("app", k=3))
+# → [('application', 8), ('apple', 5), ('appetite', 6)]
+# Note: 'appetite' starts with 'app'? No — it starts with 'app', 'e'...
+# Let's trace: 'a','p','p','e','t','i','t','e' — yes 'app' is a prefix of 'appetite'
+# Correct output: [('application', 8), ('appetite', 6), ('apple', 5)]</code></pre>
+      </div>
+
+      <div class="callout callout-info">
+        <strong>Summary: When to Use a Trie</strong>
+        Use a Trie when: (1) you need prefix-based queries, (2) you're building autocomplete or spell-check, (3) you're solving board/grid problems where early path pruning is critical, (4) you're doing bit manipulation problems requiring maximum/minimum XOR. Prefer a Hash Table for simple exact-match lookups with no prefix requirements.
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p>Built with ❤️ by <strong>KnowAlgo</strong> — Data Structures &amp; Algorithms Made Clear</p>
+  <p style="margin-top: 0.5rem;"><a href="index.html">Home</a> · <a href="trie.html">Trie</a></p>
+  <p style="margin-top: 1rem; font-size: 0.8rem; opacity: 0.6;">© 2026 KnowAlgo. Content may be freely used for educational purposes.</p>
+</footer>
+
+<!-- Prism.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+<script>
+  // ── Reading Progress Bar ──────────────────────────
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = total > 0 ? (scrolled / total) * 100 : 0;
+    document.getElementById('readingProgress').style.width = pct + '%';
+  });
+
+  // ── Copy Code Button ──────────────────────────────
+  function copyCode(btn) {
+    const pre = btn.closest('.code-wrap').querySelector('pre');
+    const text = pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'Copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  // ── Active TOC Highlighting ───────────────────────
+  const sections = document.querySelectorAll('[id]');
+  const tocLinks = document.querySelectorAll('.toc-list a[href^="#"]');
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.getAttribute('id');
+          tocLinks.forEach(link => {
+            link.classList.toggle(
+              'active',
+              link.getAttribute('href') === `#${id}`
+            );
+          });
+        }
+      });
+    },
+    { rootMargin: '-60px 0px -70% 0px', threshold: 0 }
+  );
+
+  sections.forEach(sec => observer.observe(sec));
+</script>
+
+</body>
+</html>

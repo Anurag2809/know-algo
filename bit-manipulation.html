@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bit Manipulation – Deep Dive | KnowAlgo</title>
+  <meta name="description" content="Master Bit Manipulation for coding interviews. XOR tricks, bitmasks, Brian Kernighan's algorithm, and 8 LeetCode solutions with Python code.">
+  <meta name="keywords" content="bit manipulation, XOR tricks, bitmask, Brian Kernighan algorithm, single number, counting bits, missing number, leetcode bit manipulation python">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.github.io/bit-manipulation.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Bit Manipulation – Deep Dive | KnowAlgo">
+  <meta property="og:description" content="XOR tricks, bitmasks, Brian Kernighan's algorithm — bit manipulation patterns with Python and 8 LeetCode solutions.">
+  <meta property="og:url" content="https://knowalgo.github.io/bit-manipulation.html">
+  <meta property="og:site_name" content="KnowAlgo">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"TechArticle","headline":"Bit Manipulation: Complete Interview Guide","description":"Comprehensive guide to bit manipulation: XOR properties, bitmask tricks, Brian Kernighan's algorithm, and 8 LeetCode solutions.","author":{"@type":"Organization","name":"KnowAlgo"},"publisher":{"@type":"Organization","name":"KnowAlgo","url":"https://knowalgo.github.io/"},"datePublished":"2026-02-28","dateModified":"2026-02-28","keywords":["bit manipulation","XOR","bitmask","leetcode","algorithms"]}
+  </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2Z1EQCZBXH');</script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <style>
+    :root{--primary:#2563eb;--primary-dark:#1d4ed8;--primary-light:#eff6ff;--secondary:#7c3aed;--accent:#059669;--danger:#dc2626;--warning:#d97706;--bg:#f8fafc;--bg-card:#ffffff;--text:#0f172a;--text-muted:#64748b;--border:#e2e8f0;--code-bg:#1e293b;--toc-width:280px;--header-h:64px;--radius:12px;--shadow:0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06);--shadow-md:0 4px 6px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.05)}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;font-size:16px}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+    a{color:var(--primary);text-decoration:none}a:hover{text-decoration:underline}ul,ol{padding-left:1.5rem}li{margin-bottom:.35rem}
+    .progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(to right,#7c3aed,#2563eb);z-index:1000;transition:width .1s}
+    .topnav{position:sticky;top:0;z-index:200;background:#fff;border-bottom:1px solid var(--border);height:var(--header-h);display:flex;align-items:center;padding:0 1.5rem;gap:1rem;box-shadow:var(--shadow)}
+    .topnav-logo{font-weight:800;font-size:1.25rem;color:var(--primary);letter-spacing:-.5px}
+    .topnav-sep{color:var(--border)}.topnav-crumb{color:var(--text-muted);font-size:.9rem}
+    .topnav-links{margin-left:auto;display:flex;gap:1rem;align-items:center}
+    .topnav-links a{color:var(--text-muted);font-size:.9rem;font-weight:500}.topnav-links a:hover{color:var(--primary);text-decoration:none}
+    .btn-home{background:var(--primary);color:#fff!important;padding:.35rem .9rem;border-radius:6px;font-size:.85rem!important}.btn-home:hover{background:var(--primary-dark)}
+    .page-layout{display:grid;grid-template-columns:var(--toc-width) 1fr;max-width:1400px;margin:0 auto;min-height:calc(100vh - var(--header-h))}
+    .toc-sidebar{position:sticky;top:var(--header-h);height:calc(100vh - var(--header-h));overflow-y:auto;padding:1.5rem 1rem;border-right:1px solid var(--border);background:#fff}
+    .toc-sidebar::-webkit-scrollbar{width:4px}.toc-sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .toc-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:.75rem}
+    .toc-list{list-style:none;padding:0}.toc-list li{margin-bottom:0}
+    .toc-list a{display:block;padding:.3rem .75rem;border-radius:6px;font-size:.875rem;color:var(--text-muted);transition:all .15s;border-left:2px solid transparent}
+    .toc-list a:hover,.toc-list a.active{color:var(--primary);background:var(--primary-light);border-left-color:var(--primary);text-decoration:none}
+    .toc-divider{border:none;border-top:1px solid var(--border);margin:.75rem 0}
+    .main-content{padding:2rem 2.5rem;max-width:900px}
+    .hero{background:linear-gradient(135deg,#0f172a 0%,#4c1d95 50%,#7c3aed 100%);color:white;border-radius:var(--radius);padding:2.5rem;margin-bottom:2.5rem}
+    .hero-badge{display:inline-block;background:rgba(255,255,255,.2);color:#fff;padding:.25rem .75rem;border-radius:99px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem}
+    .hero h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;line-height:1.2;margin-bottom:1rem;letter-spacing:-1px}
+    .hero p{font-size:1.05rem;opacity:.9;max-width:620px;line-height:1.7;margin-bottom:1.5rem}
+    .hero-meta{display:flex;gap:1.5rem;flex-wrap:wrap}.hero-meta span{font-size:.875rem;opacity:.8}
+    .content-section{margin-bottom:3rem;scroll-margin-top:calc(var(--header-h) + 1rem)}
+    .section-label{display:inline-block;background:#f1f5f9;color:#475569;padding:.2rem .7rem;border-radius:99px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem}
+    h2.section-title{font-size:1.75rem;font-weight:800;margin-bottom:1rem;letter-spacing:-.5px}
+    h3{font-size:1.2rem;font-weight:700;margin:1.5rem 0 .75rem;color:var(--text)}p{margin-bottom:1rem}
+    .callout{border-radius:var(--radius);padding:1.25rem 1.5rem;margin:1.5rem 0;border-left:4px solid}
+    .callout-blue{background:#eff6ff;border-color:var(--primary)}.callout-yellow{background:#fefce8;border-color:var(--warning)}
+    .callout-green{background:#f0fdf4;border-color:var(--accent)}.callout-red{background:#fef2f2;border-color:var(--danger)}
+    .callout-purple{background:#f5f3ff;border-color:#7c3aed}
+    .callout strong{display:block;margin-bottom:.4rem}
+    .code-wrapper{position:relative;margin:1.25rem 0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-md)}
+    .code-header{background:#0f172a;padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between}
+    .code-lang{font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+    .copy-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#94a3b8;font-size:.75rem;padding:.25rem .6rem;border-radius:4px;cursor:pointer;transition:all .15s}
+    .copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}.copy-btn.copied{background:#059669;border-color:#059669;color:#fff}
+    pre[class*="language-"]{margin:0!important;border-radius:0!important;font-size:.875rem!important}
+    .diagram{background:var(--code-bg);color:#e2e8f0;padding:1.5rem;border-radius:var(--radius);font-family:'Courier New',Courier,monospace;font-size:.875rem;line-height:1.6;overflow-x:auto;margin:1.25rem 0;white-space:pre}
+    .table-wrapper{overflow-x:auto;margin:1.5rem 0;border-radius:var(--radius);box-shadow:var(--shadow)}
+    table{width:100%;border-collapse:collapse;background:#fff}
+    th{background:#f1f5f9;padding:.75rem 1rem;text-align:left;font-size:.875rem;font-weight:700;color:var(--text);border-bottom:2px solid var(--border)}
+    td{padding:.75rem 1rem;font-size:.875rem;border-bottom:1px solid var(--border);vertical-align:top}
+    tr:last-child td{border-bottom:none}tr:hover td{background:#f8fafc}
+    .complexity-good{color:#059669;font-weight:700}.complexity-ok{color:#d97706;font-weight:700}.complexity-bad{color:#dc2626;font-weight:700}
+    .lc-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.5rem;box-shadow:var(--shadow)}
+    .lc-header{padding:1rem 1.25rem;display:flex;align-items:center;gap:.75rem;border-bottom:1px solid var(--border);background:#f8fafc}
+    .lc-num{font-size:.8rem;font-weight:700;color:var(--text-muted)}.lc-title{font-size:1rem;font-weight:700;color:var(--text);flex:1}
+    .lc-diff{font-size:.75rem;font-weight:700;padding:.15rem .5rem;border-radius:99px}
+    .diff-easy{background:#d1fae5;color:#065f46}.diff-medium{background:#fef3c7;color:#92400e}.diff-hard{background:#fee2e2;color:#991b1b}
+    .lc-body{padding:1.25rem}.lc-meta{display:flex;gap:1rem;margin-top:.75rem;font-size:.8rem;color:var(--text-muted)}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin:1.25rem 0}
+    .box{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+    .box h4{font-size:.9rem;font-weight:700;margin-bottom:.6rem}.box p{font-size:.875rem;color:var(--text-muted);margin:0}
+    .bit-box{display:inline-flex;gap:2px;font-family:'Courier New',monospace;font-size:.85rem}
+    .bit{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:4px;font-weight:700}
+    .bit-1{background:#7c3aed;color:#fff}.bit-0{background:#e2e8f0;color:#64748b}
+    .bit-pos{font-size:.65rem;color:var(--text-muted);text-align:center;margin-top:2px}
+    .page-footer{background:#0f172a;color:#94a3b8;padding:2.5rem;margin-top:4rem}
+    .footer-links{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}.footer-links a{color:#60a5fa;font-size:.875rem}
+    .footer-copy{font-size:.8rem}
+    @media(max-width:900px){.page-layout{grid-template-columns:1fr}.toc-sidebar{display:none}.main-content{padding:1.5rem}}
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+
+<nav class="topnav">
+  <span class="topnav-logo">KnowAlgo</span>
+  <span class="topnav-sep">/</span>
+  <span class="topnav-crumb">Bit Manipulation</span>
+  <div class="topnav-links">
+    <a href="arrays-strings.html">Arrays</a>
+    <a href="dp.html">DP</a>
+    <a href="graph.html">Graphs</a>
+    <a href="index.html" class="btn-home">All Topics</a>
+  </div>
+</nav>
+
+<div class="page-layout">
+  <!-- TOC Sidebar -->
+  <aside class="toc-sidebar">
+    <div class="toc-title">On This Page</div>
+    <ul class="toc-list">
+      <li><a href="#fundamentals">Binary Fundamentals</a></li>
+      <li><a href="#operators">Bit Operators</a></li>
+      <li><a href="#xor">XOR Magic</a></li>
+      <li><a href="#tricks">Bit Tricks Toolkit</a></li>
+      <li><a href="#counting">Counting Set Bits</a></li>
+      <li><a href="#bitmask">Bitmask Patterns</a></li>
+      <li><a href="#complexity">Complexity Reference</a></li>
+      <hr class="toc-divider">
+      <li><a href="#lc136">LC 136 · Single Number</a></li>
+      <li><a href="#lc191">LC 191 · Number of 1 Bits</a></li>
+      <li><a href="#lc338">LC 338 · Counting Bits</a></li>
+      <li><a href="#lc190">LC 190 · Reverse Bits</a></li>
+      <li><a href="#lc268">LC 268 · Missing Number</a></li>
+      <li><a href="#lc371">LC 371 · Sum of Two Integers</a></li>
+      <li><a href="#lc201">LC 201 · Bitwise AND Range</a></li>
+      <li><a href="#lc137">LC 137 · Single Number II</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-badge">Complete Deep Dive</div>
+      <h1>Bit Manipulation</h1>
+      <p>XOR tricks, bitmasks, and bitwise operations — the most underrated interview toolkit. Once you see the patterns, you'll solve "impossible" problems in O(1) space and O(n) time.</p>
+      <div class="hero-meta">
+        <span>⚡ 8 LeetCode Solutions</span>
+        <span>🔢 Binary Fundamentals → Advanced</span>
+        <span>🐍 Python Code</span>
+      </div>
+    </div>
+
+    <!-- Section 1: Binary Fundamentals -->
+    <section class="content-section" id="fundamentals">
+      <div class="section-label">Foundation</div>
+      <h2 class="section-title">Binary Fundamentals</h2>
+
+      <p>Every integer in memory is stored as binary — a sequence of 0s and 1s. Bit manipulation works directly on these bits, bypassing expensive arithmetic operations.</p>
+
+      <div class="diagram">  Decimal 13  →  Binary 1101
+
+  Bit position:   7   6   5   4   3   2   1   0
+  Value:          0   0   0   0   1   1   0   1
+  Weight:       128  64  32  16   8   4   2   1
+
+  13 = 8 + 4 + 1 = 2³ + 2² + 2⁰
+
+  In Python:
+    bin(13)   →  '0b1101'
+    13 &amp; 0xFF  →  keep lowest 8 bits (mask)
+    ~13        →  -14  (two's complement: flip all bits, add 1)
+    -13 in 8-bit two's complement = 11110011</div>
+
+      <div class="callout callout-blue">
+        <strong>Python's Integers Are Unbounded</strong>
+        In Python, integers have arbitrary precision — there's no 32-bit overflow. This differs from C/Java where <code>~x = -(x+1)</code> still holds but you must mask with <code>& 0xFFFFFFFF</code> to simulate 32-bit behavior for problems that specify it.
+      </div>
+
+      <h3>Two's Complement (Signed Integers)</h3>
+      <p>Most languages use two's complement for negative numbers. The key property: to negate x, flip all bits and add 1.</p>
+
+      <div class="diagram">  Positive 5:  0000 0101
+  Negate:
+    Step 1 — flip bits:  1111 1010
+    Step 2 — add 1:      1111 1011  =  -5
+
+  This means:  -x = ~x + 1
+  And:         x + ~x = -1  (all bits set = -1 in two's complement)</div>
+    </section>
+
+    <!-- Section 2: Bit Operators -->
+    <section class="content-section" id="operators">
+      <div class="section-label">Core Tools</div>
+      <h2 class="section-title">Bit Operators</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Operator</th><th>Symbol</th><th>Rule</th><th>Example (5 &amp; 3)</th><th>Use Case</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>AND</td><td><code>&amp;</code></td><td>1 only if both bits are 1</td><td>101 &amp; 011 = 001 = 1</td><td>Mask bits, check if bit is set</td></tr>
+            <tr><td>OR</td><td><code>|</code></td><td>1 if either bit is 1</td><td>101 | 011 = 111 = 7</td><td>Set bits</td></tr>
+            <tr><td>XOR</td><td><code>^</code></td><td>1 if bits differ</td><td>101 ^ 011 = 110 = 6</td><td>Toggle bits, find difference</td></tr>
+            <tr><td>NOT</td><td><code>~</code></td><td>Flip all bits</td><td>~5 = -6</td><td>Complement, negate</td></tr>
+            <tr><td>Left Shift</td><td><code>&lt;&lt;</code></td><td>Shift bits left (×2 per shift)</td><td>5 &lt;&lt; 1 = 10</td><td>Fast multiply by powers of 2</td></tr>
+            <tr><td>Right Shift</td><td><code>&gt;&gt;</code></td><td>Shift bits right (÷2 per shift)</td><td>5 &gt;&gt; 1 = 2</td><td>Fast divide by powers of 2</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="code-wrapper">
+        <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code class="language-python">a, b = 0b1010, 0b1100  # 10, 12
+
+print(bin(a &amp; b))   # 0b1000  = 8   (AND)
+print(bin(a | b))   # 0b1110  = 14  (OR)
+print(bin(a ^ b))   # 0b0110  = 6   (XOR)
+print(bin(~a))      # -0b1011 = -11 (NOT / two's complement)
+
+# Shifts
+print(1 &lt;&lt; 3)  # 8   (2^3)
+print(16 &gt;&gt; 2) # 4   (16 // 4)
+
+# Practical masking (simulate 32-bit unsigned)
+MASK = 0xFFFFFFFF
+x = -1
+print(hex(x &amp; MASK))  # 0xffffffff</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 3: XOR Magic -->
+    <section class="content-section" id="xor">
+      <div class="section-label">Most Powerful Trick</div>
+      <h2 class="section-title">XOR Magic</h2>
+
+      <p>XOR is the most powerful bit manipulation tool for interviews. Memorize these four properties cold:</p>
+
+      <div class="diagram">  XOR Properties:
+  ────────────────────────────────────
+  a ^ 0  = a        (identity)
+  a ^ a  = 0        (self-inverse)
+  a ^ b  = b ^ a    (commutative)
+  (a ^ b) ^ c = a ^ (b ^ c)  (associative)
+
+  Consequence: if you XOR all numbers in a list,
+  every number that appears twice cancels to 0,
+  leaving only the number that appears once.
+
+  Example: [2, 3, 2, 5, 3]
+    0 ^ 2 ^ 3 ^ 2 ^ 5 ^ 3
+    = (2^2) ^ (3^3) ^ 5
+    = 0 ^ 0 ^ 5
+    = 5  ✓</div>
+
+      <h3>XOR Swap (No Temp Variable)</h3>
+      <div class="code-wrapper">
+        <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code class="language-python"># Swap two integers without a temp variable
+a, b = 5, 9
+a ^= b   # a = 5^9 = 12
+b ^= a   # b = 9^12 = 5
+a ^= b   # a = 12^5 = 9
+# Now a=9, b=5  (swapped!)
+
+# But in Python, prefer: a, b = b, a  (cleaner, same speed)</code></pre>
+      </div>
+
+      <h3>XOR to Find Unique Elements</h3>
+      <div class="code-wrapper">
+        <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code class="language-python">from functools import reduce
+
+# Find the one element that appears once (all others appear twice)
+def single_number(nums):
+    return reduce(lambda a, b: a ^ b, nums)
+    # Equivalently: result = 0; for n in nums: result ^= n
+
+# Two unique elements (all others appear twice)
+# Key insight: a^b != 0, so some bit differs between a and b
+# Use that bit to separate nums into two groups, XOR each group
+def single_number_iii(nums):
+    xor = reduce(lambda a, b: a ^ b, nums)  # xor = a ^ b
+    # Isolate the rightmost differing bit
+    diff_bit = xor &amp; (-xor)                 # lowest set bit trick
+    a = 0
+    for n in nums:
+        if n &amp; diff_bit:   # one group has bit set
+            a ^= n
+    b = xor ^ a
+    return [a, b]</code></pre>
+      </div>
+
+      <div class="callout callout-purple">
+        <strong>Interview Tip: XOR Canonical Uses</strong>
+        <ul>
+          <li>Find the single non-duplicate in an array of pairs</li>
+          <li>Detect if two values are different (a ^ b != 0)</li>
+          <li>Toggle a specific bit (x ^ (1 &lt;&lt; i))</li>
+          <li>Compute parity of a number (XOR all bits together)</li>
+          <li>Check if two strings are anagrams or differ by one char</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Section 4: Bit Tricks Toolkit -->
+    <section class="content-section" id="tricks">
+      <div class="section-label">Essential Patterns</div>
+      <h2 class="section-title">Bit Tricks Toolkit</h2>
+
+      <p>These 10 tricks cover 90% of bit manipulation interview problems. Memorize the idiom and the intuition behind each.</p>
+
+      <div class="code-wrapper">
+        <div class="code-header"><span class="code-lang">Python — Bit Tricks Reference</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code class="language-python">n = 42   # example: 0b101010
+
+# ── CHECK ──────────────────────────────────────────────
+# Is bit i set?
+def is_set(n, i):    return (n &gt;&gt; i) &amp; 1
+# Is n even?
+def is_even(n):      return (n &amp; 1) == 0
+# Is n a power of 2? (single bit set, n > 0)
+def is_power2(n):    return n &gt; 0 and (n &amp; (n - 1)) == 0
+
+# ── SET / CLEAR / TOGGLE ───────────────────────────────
+# Set bit i   (turn to 1)
+def set_bit(n, i):   return n | (1 &lt;&lt; i)
+# Clear bit i (turn to 0)
+def clear_bit(n, i): return n &amp; ~(1 &lt;&lt; i)
+# Toggle bit i
+def toggle(n, i):    return n ^ (1 &lt;&lt; i)
+
+# ── LOWEST SET BIT ─────────────────────────────────────
+# Isolate the lowest set bit (Brian Kernighan trick 1)
+def lowest_set_bit(n):  return n &amp; (-n)   # e.g. 12→4, 6→2
+# Clear the lowest set bit (Brian Kernighan trick 2)
+def clear_lowest(n):    return n &amp; (n - 1) # used to count set bits
+
+# ── RANGE TRICKS ───────────────────────────────────────
+# Keep only the lowest k bits
+def mask_k(n, k):    return n &amp; ((1 &lt;&lt; k) - 1)
+# Sign extension: get bit i as sign bit... usually handled by language
+
+# ── ARITHMETIC SHORTCUTS ───────────────────────────────
+multiply_by_2   = lambda n: n &lt;&lt; 1
+divide_by_2     = lambda n: n &gt;&gt; 1
+mod_power_of_2  = lambda n, k: n &amp; (k - 1)  # n % k where k=2^m
+abs_value       = lambda n: (n ^ (n &gt;&gt; 31)) - (n &gt;&gt; 31)  # 32-bit</code></pre>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Trick</th><th>Expression</th><th>Example (n=12=1100)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Check bit i is set</td><td><code>(n &gt;&gt; i) &amp; 1</code></td><td>bit 2: (12&gt;&gt;2)&amp;1 = 1 ✓</td></tr>
+            <tr><td>Set bit i</td><td><code>n | (1 &lt;&lt; i)</code></td><td>set bit 1: 1100|0010 = 1110 = 14</td></tr>
+            <tr><td>Clear bit i</td><td><code>n &amp; ~(1 &lt;&lt; i)</code></td><td>clear bit 2: 1100&amp;1011 = 1000 = 8</td></tr>
+            <tr><td>Toggle bit i</td><td><code>n ^ (1 &lt;&lt; i)</code></td><td>toggle bit 3: 1100^1000 = 0100 = 4</td></tr>
+            <tr><td>Isolate lowest set bit</td><td><code>n &amp; (-n)</code></td><td>12&amp;(-12) = 1100&amp;0100 = 0100 = 4</td></tr>
+            <tr><td>Clear lowest set bit</td><td><code>n &amp; (n-1)</code></td><td>12&amp;11 = 1100&amp;1011 = 1000 = 8</td></tr>
+            <tr><td>Is power of 2?</td><td><code>n &gt; 0 and n&amp;(n-1)==0</code></td><td>8: 1000&amp;0111=0 → True ✓</td></tr>
+            <tr><td>Rightmost 0-bit position</td><td><code>~n &amp; (n+1)</code></td><td>1100: 0011&amp;1101 = 0001 → bit 0</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 5: Counting Set Bits -->
+    <section class="content-section" id="counting">
+      <div class="section-label">Classic Algorithm</div>
+      <h2 class="section-title">Counting Set Bits</h2>
+
+      <h3>Brian Kernighan's Algorithm — O(k) where k = number of set bits</h3>
+      <p>Instead of checking every bit, jump directly to set bits using <code>n &amp; (n-1)</code> which clears the lowest set bit each iteration.</p>
+
+      <div class="diagram">  Count set bits in n = 13 (1101)
+
+  Naive:   check all 32 bits → O(32) = O(1) but slow constant
+  Kernighan: only iterate over SET bits
+
+  Iteration 1:  n = 1101  →  n &amp; (n-1) = 1101 &amp; 1100 = 1100  count=1
+  Iteration 2:  n = 1100  →  n &amp; (n-1) = 1100 &amp; 1011 = 1000  count=2
+  Iteration 3:  n = 1000  →  n &amp; (n-1) = 1000 &amp; 0111 = 0000  count=3
+  n = 0, done!  popcount(13) = 3  ✓</div>
+
+      <div class="code-wrapper">
+        <div class="code-header"><span class="code-lang">Python — Three Ways to Count Bits</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code class="language-python"># Method 1: Brian Kernighan — O(k) per number
+def count_bits_kernighan(n):
+    count = 0
+    while n:
+        n &amp;= n - 1   # clear lowest set bit
+        count += 1
+    return count
+
+# Method 2: Built-in — O(1) in practice
+def count_bits_builtin(n):
+    return bin(n).count('1')
+    # Or: return n.bit_count()  (Python 3.10+)
+
+# Method 3: DP for range [0, n] — O(n) total using recurrence
+# dp[i] = dp[i >> 1] + (i & 1)
+# "the count of i equals count of i//2 plus whether i is odd"
+def count_bits_range(n):
+    dp = [0] * (n + 1)
+    for i in range(1, n + 1):
+        dp[i] = dp[i &gt;&gt; 1] + (i &amp; 1)
+    return dp
+
+# Example: count_bits_range(5) → [0, 1, 1, 2, 1, 2]</code></pre>
+      </div>
+
+      <div class="callout callout-green">
+        <strong>DP Recurrence Intuition</strong>
+        <code>dp[i] = dp[i &gt;&gt; 1] + (i &amp; 1)</code><br>
+        Right-shifting drops the last bit. So <code>i &gt;&gt; 1</code> has already been computed. The remaining question is whether <code>i</code>'s last bit is 1 — checked by <code>i &amp; 1</code>. This makes the DP O(n) with no inner loop.
+      </div>
+
+      <h3>Parity of a Number</h3>
+      <div class="code-wrapper">
+        <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code class="language-python"># Parity = 1 if odd number of set bits, 0 if even
+# Use XOR: each set bit flips parity
+def parity(n):
+    result = 0
+    while n:
+        result ^= 1    # toggle parity
+        n &amp;= n - 1     # clear lowest set bit
+    return result
+
+# Faster O(log W) using XOR folding:
+def parity_fast(n):
+    n ^= n &gt;&gt; 16
+    n ^= n &gt;&gt; 8
+    n ^= n &gt;&gt; 4
+    n ^= n &gt;&gt; 2
+    n ^= n &gt;&gt; 1
+    return n &amp; 1</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 6: Bitmask Patterns -->
+    <section class="content-section" id="bitmask">
+      <div class="section-label">Advanced Application</div>
+      <h2 class="section-title">Bitmask Patterns</h2>
+
+      <p>A bitmask uses an integer to represent a set of boolean flags. Bit <code>i</code> being set means "element i is in the set." This enables O(1) set operations and is essential for DP on subsets.</p>
+
+      <div class="diagram">  Elements: [A, B, C, D]  →  4 bits = 16 possible subsets
+
+  {A, C}   →  0101  = 5
+  {B, D}   →  1010  = 10
+  {A,B,C,D}→  1111  = 15
+  {}       →  0000  = 0
+
+  Add D to {A,C}:     0101 | 1000 = 1101 = {A,C,D}
+  Remove A from {A,C}: 0101 &amp; ~0001 = 0101 &amp; 1110 = 0100 = {C}
+  Check if B in {A,C}: 0101 &amp; 0010 = 0000 → False
+  Union:   {A,C} | {B,D} = 0101 | 1010 = 1111
+  Intersect: {A,C} &amp; {B,D} = 0101 &amp; 1010 = 0000</div>
+
+      <h3>Enumerate All Subsets</h3>
+      <div class="code-wrapper">
+        <div class="code-header"><span class="code-lang">Python — Bitmask Subset Enumeration</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code class="language-python">nums = ['A', 'B', 'C']
+n = len(nums)
+
+# Enumerate all 2^n subsets
+for mask in range(1 &lt;&lt; n):   # 0 to 2^n - 1
+    subset = [nums[i] for i in range(n) if mask &amp; (1 &lt;&lt; i)]
+    print(f"mask={bin(mask):&lt;6} → {subset}")
+# mask=0b0   → []
+# mask=0b1   → ['A']
+# mask=0b10  → ['B']
+# mask=0b11  → ['A', 'B']
+# mask=0b100 → ['C']  ...etc.
+
+# Enumerate all subsets of a given mask (useful in DP)
+def iter_subsets(mask):
+    sub = mask
+    while sub:
+        yield sub
+        sub = (sub - 1) &amp; mask   # next smaller subset
+    yield 0  # include empty set</code></pre>
+      </div>
+
+      <h3>Bitmask DP Example — Traveling Salesman (TSP)</h3>
+      <div class="code-wrapper">
+        <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code class="language-python"># Minimum cost to visit all cities exactly once
+# dp[mask][i] = min cost to visit cities in 'mask', ending at city i
+# Time: O(2^n * n^2)  Space: O(2^n * n)
+def tsp(dist):
+    n = len(dist)
+    INF = float('inf')
+    # Start at city 0
+    dp = [[INF] * n for _ in range(1 &lt;&lt; n)]
+    dp[1][0] = 0  # mask=1 means only city 0 visited, at city 0
+
+    for mask in range(1 &lt;&lt; n):
+        for u in range(n):
+            if not (mask &amp; (1 &lt;&lt; u)) or dp[mask][u] == INF:
+                continue
+            for v in range(n):
+                if mask &amp; (1 &lt;&lt; v):  # already visited
+                    continue
+                new_mask = mask | (1 &lt;&lt; v)
+                dp[new_mask][v] = min(dp[new_mask][v],
+                                     dp[mask][u] + dist[u][v])
+
+    full = (1 &lt;&lt; n) - 1
+    return min(dp[full][i] + dist[i][0] for i in range(n))</code></pre>
+      </div>
+
+      <div class="callout callout-yellow">
+        <strong>When to Use Bitmask DP</strong>
+        Use bitmask DP when n ≤ 20 and you need to track which subset of elements has been used. Classic problems: TSP, minimum cost to assign tasks, word break with all visited words, Hamiltonian path.
+      </div>
+
+      <h3>Bitwise AND of a Range</h3>
+      <p>A classic trick: to find <code>m &amp; (m+1) &amp; ... &amp; n</code>, note that all differing lower bits get zeroed out. The answer is the common prefix of m and n in binary.</p>
+      <div class="code-wrapper">
+        <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code class="language-python"># Bitwise AND of all numbers from m to n
+def range_bitwise_and(m: int, n: int) -> int:
+    shift = 0
+    # Shift both right until they're equal (finding common prefix)
+    while m != n:
+        m &gt;&gt;= 1
+        n &gt;&gt;= 1
+        shift += 1
+    return m &lt;&lt; shift  # shift common prefix back
+
+# Why it works:
+# [5..7] = 101, 110, 111
+# m=5=101, n=7=111  →  shift until equal
+# 5&gt;&gt;1=2, 7&gt;&gt;1=3  → not equal
+# 2&gt;&gt;1=1, 3&gt;&gt;1=1  → equal! shift=2
+# return 1 &lt;&lt; 2 = 4 = 100  ✓ (101 &amp; 110 &amp; 111 = 100 = 4)</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 7: Complexity Reference -->
+    <section class="content-section" id="complexity">
+      <div class="section-label">Reference</div>
+      <h2 class="section-title">Complexity Reference</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Operation</th><th>Time</th><th>Space</th><th>Key Insight</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Check / Set / Clear / Toggle a bit</td><td class="complexity-good">O(1)</td><td class="complexity-good">O(1)</td><td>Single shift + AND/OR/XOR</td></tr>
+            <tr><td>Count set bits (naive)</td><td class="complexity-good">O(W)</td><td class="complexity-good">O(1)</td><td>W = word size (32 or 64)</td></tr>
+            <tr><td>Count set bits (Kernighan)</td><td class="complexity-good">O(k)</td><td class="complexity-good">O(1)</td><td>k = number of set bits</td></tr>
+            <tr><td>Count set bits (built-in)</td><td class="complexity-good">O(1)</td><td class="complexity-good">O(1)</td><td>Hardware popcount instruction</td></tr>
+            <tr><td>Counting Bits for [0..n]</td><td class="complexity-good">O(n)</td><td class="complexity-ok">O(n)</td><td>DP recurrence, no log factor</td></tr>
+            <tr><td>Single Number (XOR)</td><td class="complexity-good">O(n)</td><td class="complexity-good">O(1)</td><td>Pairs cancel; survivor remains</td></tr>
+            <tr><td>Bitmask DP (n elements)</td><td class="complexity-ok">O(2ⁿ · n)</td><td class="complexity-ok">O(2ⁿ · n)</td><td>Feasible only for n ≤ 20</td></tr>
+            <tr><td>Reverse bits</td><td class="complexity-good">O(W)</td><td class="complexity-good">O(1)</td><td>Iterative bit extraction</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- LeetCode Problems -->
+    <section class="content-section" id="lc136">
+      <div class="section-label">LeetCode</div>
+      <h2 class="section-title">LeetCode Problems</h2>
+
+      <!-- LC 136 -->
+      <div class="lc-card">
+        <div class="lc-header">
+          <span class="lc-num">#136</span>
+          <span class="lc-title">Single Number</span>
+          <span class="lc-diff diff-easy">Easy</span>
+        </div>
+        <div class="lc-body">
+          <p>Given a non-empty array where every element appears twice except for one, find that single one. Must be O(n) time and O(1) space.</p>
+          <div class="callout callout-blue">
+            <strong>Pattern: XOR Self-Inverse</strong>
+            XOR every number together. Pairs cancel (a^a=0). The survivor is the answer.
+          </div>
+          <div class="code-wrapper">
+            <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+            <pre><code class="language-python">def singleNumber(nums):
+    # XOR all numbers together; pairs cancel out
+    result = 0
+    for n in nums:
+        result ^= n
+    return result
+
+# One-liner using functools.reduce
+from functools import reduce
+def singleNumber(nums):
+    return reduce(lambda a, b: a ^ b, nums)
+
+# Walkthrough: [4, 1, 2, 1, 2]
+# 0^4=4, 4^1=5, 5^2=7, 7^1=6, 6^2=4 → 4 ✓</code></pre>
+          </div>
+          <div class="lc-meta"><span>⏱ O(n) time</span><span>💾 O(1) space</span><span>🔑 XOR cancellation</span></div>
+        </div>
+      </div>
+
+      <!-- LC 191 -->
+      <div class="lc-card" id="lc191">
+        <div class="lc-header">
+          <span class="lc-num">#191</span>
+          <span class="lc-title">Number of 1 Bits</span>
+          <span class="lc-diff diff-easy">Easy</span>
+        </div>
+        <div class="lc-body">
+          <p>Return the number of '1' bits (popcount / Hamming weight) in the binary representation of a positive integer.</p>
+          <div class="callout callout-blue">
+            <strong>Pattern: Brian Kernighan — Clear Lowest Set Bit</strong>
+            <code>n &amp; (n-1)</code> clears the rightmost 1-bit. Count how many times you do this before n=0.
+          </div>
+          <div class="code-wrapper">
+            <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+            <pre><code class="language-python">def hammingWeight(n: int) -> int:
+    # Brian Kernighan's algorithm
+    count = 0
+    while n:
+        n &amp;= n - 1   # clears the lowest set bit
+        count += 1
+    return count
+
+# Alternative: Python built-ins
+def hammingWeight_v2(n: int) -> int:
+    return bin(n).count('1')
+    # or: return n.bit_count()  (Python 3.10+)
+
+# Trace for n = 13 (1101):
+# 1101 &amp; 1100 = 1100 → count=1
+# 1100 &amp; 1011 = 1000 → count=2
+# 1000 &amp; 0111 = 0000 → count=3  ✓</code></pre>
+          </div>
+          <div class="lc-meta"><span>⏱ O(k) time, k=set bits</span><span>💾 O(1) space</span><span>🔑 n&amp;(n-1) trick</span></div>
+        </div>
+      </div>
+
+      <!-- LC 338 -->
+      <div class="lc-card" id="lc338">
+        <div class="lc-header">
+          <span class="lc-num">#338</span>
+          <span class="lc-title">Counting Bits</span>
+          <span class="lc-diff diff-easy">Easy</span>
+        </div>
+        <div class="lc-body">
+          <p>Return an array <code>ans</code> of length n+1 such that <code>ans[i]</code> is the number of 1's in the binary representation of <code>i</code>, for i in [0, n].</p>
+          <div class="callout callout-green">
+            <strong>Pattern: DP with Right-Shift Recurrence</strong>
+            <code>dp[i] = dp[i &gt;&gt; 1] + (i &amp; 1)</code> — shift removes last bit (already computed), add 1 if last bit was set.
+          </div>
+          <div class="code-wrapper">
+            <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+            <pre><code class="language-python">def countBits(n: int) -> list[int]:
+    dp = [0] * (n + 1)
+    for i in range(1, n + 1):
+        dp[i] = dp[i >> 1] + (i &amp; 1)
+        # dp[i>>1]: bit count of i with last bit removed
+        # (i&1): whether last bit is set
+    return dp
+
+# Example: n = 5
+# i=0: 0
+# i=1: dp[0]+1 = 1    (1 → 1 set bit)
+# i=2: dp[1]+0 = 1    (10 → 1 set bit)
+# i=3: dp[1]+1 = 2    (11 → 2 set bits)
+# i=4: dp[2]+0 = 1    (100 → 1 set bit)
+# i=5: dp[2]+1 = 2    (101 → 2 set bits)
+# → [0, 1, 1, 2, 1, 2]</code></pre>
+          </div>
+          <div class="lc-meta"><span>⏱ O(n) time</span><span>💾 O(n) space</span><span>🔑 DP recurrence</span></div>
+        </div>
+      </div>
+
+      <!-- LC 190 -->
+      <div class="lc-card" id="lc190">
+        <div class="lc-header">
+          <span class="lc-num">#190</span>
+          <span class="lc-title">Reverse Bits</span>
+          <span class="lc-diff diff-easy">Easy</span>
+        </div>
+        <div class="lc-body">
+          <p>Reverse the bits of a given 32-bit unsigned integer.</p>
+          <div class="callout callout-blue">
+            <strong>Pattern: Extract & Place</strong>
+            Extract each bit from the right of n, place it in the corresponding position from the left of the result.
+          </div>
+          <div class="code-wrapper">
+            <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+            <pre><code class="language-python">def reverseBits(n: int) -> int:
+    result = 0
+    for _ in range(32):
+        result = (result &lt;&lt; 1) | (n &amp; 1)  # append LSB of n to result
+        n &gt;&gt;= 1                             # shift n right to process next bit
+    return result
+
+# Trace for n = 0b00000010100101000001111010011100
+# Each iteration: grab LSB of n → push into result
+
+# If called many times, cache with lookup table (divide 32-bit into
+# 4 groups of 8 bits, reverse each byte, concatenate reversed)
+def reverseBits_cached(n: int) -> int:
+    # Reverse 8-bit chunks and recombine
+    def reverse_byte(b):
+        result = 0
+        for _ in range(8):
+            result = (result &lt;&lt; 1) | (b &amp; 1)
+            b &gt;&gt;= 1
+        return result
+    return (reverse_byte(n &amp; 0xFF) &lt;&lt; 24 |
+            reverse_byte((n &gt;&gt; 8) &amp; 0xFF) &lt;&lt; 16 |
+            reverse_byte((n &gt;&gt; 16) &amp; 0xFF) &lt;&lt; 8 |
+            reverse_byte((n &gt;&gt; 24) &amp; 0xFF))</code></pre>
+          </div>
+          <div class="lc-meta"><span>⏱ O(1) — 32 iterations</span><span>💾 O(1) space</span><span>🔑 Extract LSB, build result</span></div>
+        </div>
+      </div>
+
+      <!-- LC 268 -->
+      <div class="lc-card" id="lc268">
+        <div class="lc-header">
+          <span class="lc-num">#268</span>
+          <span class="lc-title">Missing Number</span>
+          <span class="lc-diff diff-easy">Easy</span>
+        </div>
+        <div class="lc-body">
+          <p>Given an array <code>nums</code> containing n distinct numbers in range [0, n], return the one missing number.</p>
+          <div class="callout callout-blue">
+            <strong>Two Patterns</strong>
+            (1) XOR: XOR all indices 0..n and all values; missing number survives. (2) Math: expected sum - actual sum.
+          </div>
+          <div class="code-wrapper">
+            <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+            <pre><code class="language-python"># Method 1: XOR
+def missingNumber_xor(nums):
+    n = len(nums)
+    result = n  # start with n since we loop 0..n-1 below
+    for i, num in enumerate(nums):
+        result ^= i ^ num
+        # Each present number cancels with its index
+        # Missing index survives
+    return result
+
+# Method 2: Gauss sum formula (simpler to remember)
+def missingNumber_math(nums):
+    n = len(nums)
+    expected = n * (n + 1) // 2
+    return expected - sum(nums)
+
+# Both are O(n) time, O(1) space
+# XOR is overflow-safe (better for very large n in languages with fixed int size)</code></pre>
+          </div>
+          <div class="lc-meta"><span>⏱ O(n) time</span><span>💾 O(1) space</span><span>🔑 XOR index vs value</span></div>
+        </div>
+      </div>
+
+      <!-- LC 371 -->
+      <div class="lc-card" id="lc371">
+        <div class="lc-header">
+          <span class="lc-num">#371</span>
+          <span class="lc-title">Sum of Two Integers</span>
+          <span class="lc-diff diff-medium">Medium</span>
+        </div>
+        <div class="lc-body">
+          <p>Calculate the sum of two integers without using <code>+</code> or <code>-</code>.</p>
+          <div class="callout callout-blue">
+            <strong>Pattern: Half Adder Simulation</strong>
+            XOR gives sum without carry. AND+shift gives the carry. Repeat until no carry.
+          </div>
+          <div class="diagram">  Half adder truth table:
+  0+0=0 carry 0 | a^b=0, a&amp;b=0
+  0+1=1 carry 0 | a^b=1, a&amp;b=0
+  1+0=1 carry 0 | a^b=1, a&amp;b=0
+  1+1=0 carry 1 | a^b=0, a&amp;b=1 → carry shifts left by 1
+
+  add(3, 5):   011 ^ 101 = 110 (sum bits), 011 &amp; 101 = 001 → 010 (carry)
+  add(6, 2):   110 ^ 010 = 100 (sum bits), 110 &amp; 010 = 010 → 100 (carry)
+  add(4, 4):   100 ^ 100 = 000 (sum bits), 100 &amp; 100 = 100 → 1000 (carry... wait)
+  add(0, 8):   000 ^ 1000 = 1000, no carry → 8 ✓</div>
+          <div class="code-wrapper">
+            <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+            <pre><code class="language-python">def getSum(a: int, b: int) -> int:
+    # Python has arbitrary precision integers, so we must mask to 32 bits
+    MASK = 0xFFFFFFFF   # 32-bit mask
+    MAX  = 0x7FFFFFFF   # max positive 32-bit int
+
+    while b &amp; MASK:
+        carry = (a &amp; b) &lt;&lt; 1   # carry bits
+        a = a ^ b               # sum without carry
+        b = carry
+        a &amp;= MASK               # keep only 32 bits
+        b &amp;= MASK
+
+    # If a > MAX, it's a negative number in two's complement
+    return a if a &lt;= MAX else ~(a ^ MASK)
+
+# Key insight:
+# XOR  = addition without carry
+# AND  = carry positions
+# Shift carry left by 1 (carry propagates one bit left)
+# Repeat until carry is 0</code></pre>
+          </div>
+          <div class="lc-meta"><span>⏱ O(1) — at most 32 iterations</span><span>💾 O(1) space</span><span>🔑 XOR=sum, AND+shift=carry</span></div>
+        </div>
+      </div>
+
+      <!-- LC 201 -->
+      <div class="lc-card" id="lc201">
+        <div class="lc-header">
+          <span class="lc-num">#201</span>
+          <span class="lc-title">Bitwise AND of Numbers Range</span>
+          <span class="lc-diff diff-medium">Medium</span>
+        </div>
+        <div class="lc-body">
+          <p>Return the bitwise AND of all numbers in range [left, right] inclusive.</p>
+          <div class="callout callout-blue">
+            <strong>Pattern: Common Prefix</strong>
+            Any bit that differs between left and right will hit both 0 and 1 in the range, so ANDing zeros it out. The answer is the common binary prefix of left and right.
+          </div>
+          <div class="code-wrapper">
+            <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+            <pre><code class="language-python">def rangeBitwiseAnd(left: int, right: int) -> int:
+    shift = 0
+    # Shift both right until they share the same prefix (become equal)
+    while left != right:
+        left  &gt;&gt;= 1
+        right &gt;&gt;= 1
+        shift += 1
+    # Shift common prefix back to the original position
+    return left &lt;&lt; shift
+
+# Example: left=5 (101), right=7 (111)
+# 101 != 111 → shift: 10, 11 → shift: 1, 1 → equal! shift=2
+# return 1 &lt;&lt; 2 = 4 = 100
+# Verify: 5&amp;6&amp;7 = 101&amp;110&amp;111 = 100 = 4 ✓
+
+# Alternative: use Brian Kernighan to strip lower bits of right
+def rangeBitwiseAnd_v2(left: int, right: int) -> int:
+    while right > left:
+        right &amp;= right - 1  # strip lowest set bit of right
+    return right</code></pre>
+          </div>
+          <div class="lc-meta"><span>⏱ O(log n)</span><span>💾 O(1) space</span><span>🔑 Common binary prefix</span></div>
+        </div>
+      </div>
+
+      <!-- LC 137 -->
+      <div class="lc-card" id="lc137">
+        <div class="lc-header">
+          <span class="lc-num">#137</span>
+          <span class="lc-title">Single Number II</span>
+          <span class="lc-diff diff-medium">Medium</span>
+        </div>
+        <div class="lc-body">
+          <p>Every element appears exactly three times except for one element which appears exactly once. Find that element. O(1) space required.</p>
+          <div class="callout callout-yellow">
+            <strong>Pattern: Bit Count Modulo 3</strong>
+            For each bit position, count how many numbers have that bit set. The unique number contributes an odd count to each of its set bits mod 3.
+          </div>
+          <div class="code-wrapper">
+            <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+            <pre><code class="language-python">def singleNumber(nums) -> int:
+    # Method 1: Count bits mod 3 at each bit position
+    result = 0
+    for bit in range(32):
+        total = sum((n >> bit) &amp; 1 for n in nums)
+        if total % 3:              # this bit belongs to the unique number
+            result |= (1 &lt;&lt; bit)
+
+    # Handle negative numbers (Python arbitrary precision)
+    if result >= (1 &lt;&lt; 31):
+        result -= (1 &lt;&lt; 32)
+    return result
+
+# Method 2: State machine (O(1) space, no 32-bit loop)
+# Track 'ones' (bits seen 1 mod 3 times) and 'twos' (bits seen 2 mod 3 times)
+def singleNumber_v2(nums) -> int:
+    ones, twos = 0, 0
+    for n in nums:
+        ones = (ones ^ n) &amp; ~twos   # add to 'seen once', remove if in 'twos'
+        twos = (twos ^ n) &amp; ~ones   # add to 'seen twice', remove if in 'ones'
+    return ones  # bits seen exactly once remain in 'ones'
+
+# Why it works: a 2-bit counter per bit position:
+# count 0 → ones=0, twos=0
+# count 1 → ones=1, twos=0
+# count 2 → ones=0, twos=1
+# count 3 → ones=0, twos=0 (resets)  </code></pre>
+          </div>
+          <div class="lc-meta"><span>⏱ O(n) time</span><span>💾 O(1) space</span><span>🔑 Bit count mod 3</span></div>
+        </div>
+      </div>
+
+    </section>
+
+    <footer class="page-footer">
+      <div class="footer-links">
+        <a href="index.html">All Topics</a>
+        <a href="arrays-strings.html">Arrays &amp; Strings</a>
+        <a href="dp.html">Dynamic Programming</a>
+        <a href="backtracking.html">Backtracking</a>
+        <a href="greedy.html">Greedy</a>
+        <a href="intervals.html">Intervals</a>
+        <a href="graph.html">Graphs</a>
+      </div>
+      <div class="footer-copy">© 2026 KnowAlgo — Free DSA education, forever.</div>
+    </footer>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+  // Reading progress bar
+  window.addEventListener('scroll', () => {
+    const el = document.getElementById('progressBar');
+    const scrollTop = document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    el.style.width = (scrollTop / scrollHeight * 100) + '%';
+  });
+
+  // Copy code buttons
+  function copyCode(btn) {
+    const code = btn.closest('.code-wrapper').querySelector('code').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  // TOC active link via IntersectionObserver
+  const sections = document.querySelectorAll('.content-section');
+  const tocLinks = document.querySelectorAll('.toc-list a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('active'));
+        const link = document.querySelector(`.toc-list a[href="#${entry.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

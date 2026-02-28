@@ -1,0 +1,33 @@
+# KnowAlgo — robots.txt
+# This is an educational DSA website. All content is free and open.
+# AI crawlers and search engines are explicitly welcome.
+
+User-agent: *
+Allow: /
+
+# AI crawlers — explicitly welcome
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: bingbot
+Allow: /
+
+Sitemap: https://anurag2809.github.io/know-algo/sitemap.xml

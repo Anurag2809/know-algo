@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Binary Tree & BST: Complete Guide with LeetCode Solutions | KnowAlgo</title>
+  <meta name="description" content="Master Binary Trees and BSTs with deep explanations, all 4 traversals, Python implementations, visual diagrams, and 6 LeetCode solutions including Binary Tree Maximum Path Sum (Hard).">
+  <meta name="keywords" content="binary tree, BST, binary search tree, tree traversal, inorder, preorder, postorder, LCA, DFS, BFS, leetcode binary tree, python tree, data structures">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.github.io/binary-tree.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Binary Tree & BST: Complete Guide with LeetCode Solutions">
+  <meta property="og:description" content="Master Binary Trees with all 4 traversals, BST operations, DFS patterns, and 6 LeetCode solutions.">
+  <meta property="og:url" content="https://knowalgo.github.io/binary-tree.html">
+  <meta property="og:site_name" content="KnowAlgo">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Binary Tree & BST: Complete Guide with LeetCode Solutions">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Binary Tree & BST: Complete Guide with LeetCode Solutions",
+    "description": "Comprehensive guide to binary trees and BSTs including all traversals, DFS patterns, and 6 LeetCode solutions.",
+    "author": { "@type": "Organization", "name": "KnowAlgo" },
+    "publisher": { "@type": "Organization", "name": "KnowAlgo" },
+    "datePublished": "2025-01-01",
+    "dateModified": "2026-02-27",
+    "keywords": ["binary tree", "BST", "tree traversal", "DFS", "BFS", "leetcode", "algorithms"],
+    "articleSection": "Data Structures"
+  }
+  </script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #eff6ff;
+      --secondary: #7c3aed;
+      --accent: #059669;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --bg: #f8fafc;
+      --bg-card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #1e293b;
+      --toc-width: 280px;
+      --header-h: 64px;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    ul, ol { padding-left: 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(to right, #db2777, #7c3aed); z-index: 1000; transition: width 0.1s; }
+
+    .topnav { position: sticky; top: 0; z-index: 200; background: #fff; border-bottom: 1px solid var(--border); height: var(--header-h); display: flex; align-items: center; padding: 0 1.5rem; gap: 1rem; box-shadow: var(--shadow); }
+    .topnav-logo { font-weight: 800; font-size: 1.25rem; color: var(--primary); letter-spacing: -0.5px; }
+    .topnav-sep { color: var(--border); }
+    .topnav-crumb { color: var(--text-muted); font-size: 0.9rem; }
+    .topnav-links { margin-left: auto; display: flex; gap: 1rem; align-items: center; }
+    .topnav-links a { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
+    .topnav-links a:hover { color: var(--primary); text-decoration: none; }
+    .btn-home { background: var(--primary); color: #fff !important; padding: 0.35rem 0.9rem; border-radius: 6px; font-size: 0.85rem !important; }
+    .btn-home:hover { background: var(--primary-dark); }
+
+    .page-layout { display: grid; grid-template-columns: var(--toc-width) 1fr; max-width: 1400px; margin: 0 auto; min-height: calc(100vh - var(--header-h)); }
+
+    .toc-sidebar { position: sticky; top: var(--header-h); height: calc(100vh - var(--header-h)); overflow-y: auto; padding: 1.5rem 1rem; border-right: 1px solid var(--border); background: #fff; }
+    .toc-sidebar::-webkit-scrollbar { width: 4px; }
+    .toc-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .toc-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .toc-list { list-style: none; padding: 0; }
+    .toc-list li { margin-bottom: 0; }
+    .toc-list a { display: block; padding: 0.3rem 0.75rem; border-radius: 6px; font-size: 0.875rem; color: var(--text-muted); transition: all 0.15s; border-left: 2px solid transparent; }
+    .toc-list a:hover, .toc-list a.active { color: var(--primary); background: var(--primary-light); border-left-color: var(--primary); text-decoration: none; }
+    .toc-divider { border: none; border-top: 1px solid var(--border); margin: 0.75rem 0; }
+
+    .main-content { padding: 2rem 2.5rem; max-width: 900px; }
+
+    .hero { background: linear-gradient(135deg, #500724 0%, #db2777 50%, #7c3aed 100%); color: white; border-radius: var(--radius); padding: 2.5rem; margin-bottom: 2.5rem; }
+    .hero-badge { display: inline-block; background: rgba(255,255,255,0.2); color: #fff; padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1rem; }
+    .hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; line-height: 1.2; margin-bottom: 1rem; letter-spacing: -1px; }
+    .hero p { font-size: 1.05rem; opacity: 0.9; max-width: 620px; line-height: 1.7; margin-bottom: 1.5rem; }
+    .hero-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .hero-meta span { font-size: 0.875rem; opacity: 0.8; }
+
+    .content-section { margin-bottom: 3rem; scroll-margin-top: calc(var(--header-h) + 1rem); }
+    .section-label { display: inline-block; background: #fdf4ff; color: #7c3aed; padding: 0.2rem 0.7rem; border-radius: 99px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.6rem; }
+    h2.section-title { font-size: 1.75rem; font-weight: 800; margin-bottom: 1rem; letter-spacing: -0.5px; }
+    h3 { font-size: 1.2rem; font-weight: 700; margin: 1.5rem 0 0.75rem; color: var(--text); }
+    h4 { font-size: 1rem; font-weight: 700; margin: 1.25rem 0 0.5rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+    p { margin-bottom: 1rem; }
+
+    .callout { border-radius: var(--radius); padding: 1.25rem 1.5rem; margin: 1.5rem 0; border-left: 4px solid; }
+    .callout-blue { background: #eff6ff; border-color: var(--primary); }
+    .callout-green { background: #f0fdf4; border-color: var(--accent); }
+    .callout-purple { background: #faf5ff; border-color: var(--secondary); }
+
+    .code-wrapper { position: relative; margin: 1.25rem 0; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-md); }
+    .code-header { background: #0f172a; padding: 0.6rem 1rem; display: flex; align-items: center; justify-content: space-between; }
+    .code-lang { font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .copy-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #94a3b8; font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 4px; cursor: pointer; transition: all 0.15s; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+    .copy-btn.copied { background: #059669; border-color: #059669; color: #fff; }
+    pre[class*="language-"] { margin: 0 !important; border-radius: 0 !important; font-size: 0.875rem !important; }
+
+    .diagram { background: var(--code-bg); color: #e2e8f0; padding: 1.5rem; border-radius: var(--radius); font-family: 'Courier New', Courier, monospace; font-size: 0.875rem; line-height: 1.6; overflow-x: auto; margin: 1.25rem 0; white-space: pre; }
+
+    .table-wrapper { overflow-x: auto; margin: 1.5rem 0; border-radius: var(--radius); box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th { background: #f1f5f9; padding: 0.75rem 1rem; text-align: left; font-size: 0.875rem; font-weight: 700; color: var(--text); border-bottom: 2px solid var(--border); }
+    td { padding: 0.75rem 1rem; font-size: 0.875rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+    .complexity-good { color: #059669; font-weight: 700; }
+    .complexity-ok { color: #d97706; font-weight: 700; }
+    .complexity-bad { color: #dc2626; font-weight: 700; }
+
+    .lc-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
+    .lc-header { padding: 1rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; border-bottom: 1px solid var(--border); background: #f8fafc; }
+    .lc-num { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+    .lc-title { font-size: 1rem; font-weight: 700; color: var(--text); flex: 1; }
+    .lc-diff { font-size: 0.75rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 99px; }
+    .diff-easy { background: #d1fae5; color: #065f46; }
+    .diff-medium { background: #fef3c7; color: #92400e; }
+    .diff-hard { background: #fee2e2; color: #991b1b; }
+    .lc-body { padding: 1.25rem; }
+    .lc-meta { display: flex; gap: 1rem; margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted); }
+
+    .traversal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin: 1.25rem 0; }
+    .traversal-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; text-align: center; }
+    .traversal-card .t-order { font-size: 1.5rem; font-weight: 900; color: var(--primary); margin-bottom: 0.3rem; }
+    .traversal-card .t-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.3rem; }
+    .traversal-card .t-result { font-size: 0.8rem; color: var(--text-muted); font-family: monospace; }
+
+    .page-footer { background: #0f172a; color: #94a3b8; padding: 2.5rem; margin-top: 4rem; }
+    .footer-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .footer-links a { color: #60a5fa; font-size: 0.875rem; }
+    .footer-copy { font-size: 0.8rem; opacity: 0.6; }
+
+    @media (max-width: 768px) {
+      .page-layout { grid-template-columns: 1fr; }
+      .toc-sidebar { display: none; }
+      .main-content { padding: 1.5rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+
+<nav class="topnav">
+  <a href="index.html" class="topnav-logo">KnowAlgo</a>
+  <span class="topnav-sep">/</span>
+  <span class="topnav-crumb">Binary Tree &amp; BST</span>
+  <div class="topnav-links">
+    <a href="trie.html">Trie</a>
+    <a href="heap.html">Heap</a>
+    <a href="index.html" class="btn-home">← Home</a>
+  </div>
+</nav>
+
+<div class="page-layout">
+
+<aside class="toc-sidebar">
+  <div class="toc-title">On this page</div>
+  <ul class="toc-list" id="toc">
+    <li><a href="#what-is">What is a Binary Tree?</a></li>
+    <li><a href="#types">Tree Types</a></li>
+    <li><a href="#traversals">The 4 Traversals</a></li>
+    <li><a href="#bst-ops">BST Operations</a></li>
+    <li><a href="#implementation">Full Implementation</a></li>
+    <li><a href="#patterns">DFS Patterns</a></li>
+    <li><a href="#complexity">Complexity Analysis</a></li>
+    <hr class="toc-divider">
+    <li><a href="#leetcode">LeetCode Problems</a></li>
+    <li><a href="#applications">Applications</a></li>
+  </ul>
+  <hr class="toc-divider">
+  <div class="toc-title">Other Guides</div>
+  <ul class="toc-list">
+    <li><a href="trie.html">→ Trie</a></li>
+    <li><a href="hash-map.html">→ Hash Map</a></li>
+    <li><a href="linked-list.html">→ Linked List</a></li>
+    <li><a href="heap.html">→ Heap</a></li>
+    <li><a href="stack-queue.html">→ Stack &amp; Queue</a></li>
+    <li><a href="graph.html">→ Graph</a></li>
+  </ul>
+</aside>
+
+<main class="main-content" id="main-content">
+
+  <div class="hero">
+    <div class="hero-badge">Data Structures</div>
+    <h1>Binary Tree &amp; BST</h1>
+    <p>The hierarchical data structure that appears in nearly every hard interview problem. Master the 4 traversals, BST operations, and the DFS recursive patterns that unlock problems from easy to hard.</p>
+    <div class="hero-meta">
+      <span>🌲 Hierarchical structure</span>
+      <span>🐍 Python implementation</span>
+      <span>🎯 6 LeetCode problems</span>
+      <span>🔄 DFS/BFS patterns</span>
+    </div>
+  </div>
+
+  <!-- What is a Binary Tree -->
+  <section class="content-section" id="what-is">
+    <div class="section-label">Introduction</div>
+    <h2 class="section-title">What is a Binary Tree?</h2>
+    <p>A binary tree is a hierarchical data structure where each node has at most two children, called <strong>left</strong> and <strong>right</strong>. It's one of the most fundamental structures in computer science — file systems, expression parsers, and databases all use trees internally.</p>
+
+    <div class="diagram">           1          ← root (depth 0)
+          / \
+         2   3       ← depth 1
+        / \ / \
+       4  5 6  7     ← depth 2 (leaves)
+
+  Terminology:
+  - Root: topmost node (no parent) → 1
+  - Leaf: node with no children → 4, 5, 6, 7
+  - Height: longest path from root to leaf → 2
+  - Depth of node: distance from root → depth(6) = 2
+  - Subtree: any node + its descendants</div>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+# Build the tree above manually:
+root = TreeNode(1)
+root.left = TreeNode(2)
+root.right = TreeNode(3)
+root.left.left = TreeNode(4)
+root.left.right = TreeNode(5)
+root.right.left = TreeNode(6)
+root.right.right = TreeNode(7)</code></pre>
+    </div>
+  </section>
+
+  <!-- Tree Types -->
+  <section class="content-section" id="types">
+    <div class="section-label">Variants</div>
+    <h2 class="section-title">Tree Types</h2>
+
+    <div class="callout callout-blue">
+      <strong>Key tree types you'll encounter in interviews</strong>
+      <ul>
+        <li><strong>Full Binary Tree</strong>: every node has exactly 0 or 2 children</li>
+        <li><strong>Complete Binary Tree</strong>: all levels filled except possibly the last (filled left to right) — this is the property heaps use</li>
+        <li><strong>Perfect Binary Tree</strong>: all internal nodes have 2 children, all leaves at same level; n = 2^(h+1) - 1 nodes</li>
+        <li><strong>BST (Binary Search Tree)</strong>: left subtree values &lt; root &lt; right subtree values — enables O(log n) search</li>
+        <li><strong>Balanced BST</strong>: height O(log n), e.g. AVL trees, Red-Black trees — guarantees O(log n) worst case</li>
+      </ul>
+    </div>
+
+    <h3>Degenerate (Skewed) BST — The Worst Case</h3>
+    <div class="diagram">  Inserting sorted values 1,2,3,4,5 into a BST:
+  1
+   \
+    2        ← becomes a linked list!
+     \       height = n-1 = O(n)
+      3      all BST operations degrade to O(n)
+       \
+        4
+         \
+          5</div>
+    <p>This is why self-balancing trees (AVL, Red-Black) exist — they ensure height stays O(log n).</p>
+  </section>
+
+  <!-- Traversals -->
+  <section class="content-section" id="traversals">
+    <div class="section-label">Core Operations</div>
+    <h2 class="section-title">The 4 Traversals</h2>
+
+    <div class="diagram">  Tree for traversal examples:
+         1
+        / \
+       2   3
+      / \
+     4   5
+
+  Preorder  (Root → Left → Right): 1, 2, 4, 5, 3
+  Inorder   (Left → Root → Right): 4, 2, 5, 1, 3  ← sorted for BST!
+  Postorder (Left → Right → Root): 4, 5, 2, 3, 1
+  Level-order (BFS):               1, 2, 3, 4, 5</div>
+
+    <div class="traversal-grid">
+      <div class="traversal-card">
+        <div class="t-order">Pre</div>
+        <div class="t-name">Root First</div>
+        <div class="t-result">1, 2, 4, 5, 3</div>
+      </div>
+      <div class="traversal-card">
+        <div class="t-order">In</div>
+        <div class="t-name">Left-Root-Right</div>
+        <div class="t-result">4, 2, 5, 1, 3 ✓ sorted</div>
+      </div>
+      <div class="traversal-card">
+        <div class="t-order">Post</div>
+        <div class="t-name">Root Last</div>
+        <div class="t-result">4, 5, 2, 3, 1</div>
+      </div>
+      <div class="traversal-card">
+        <div class="t-order">BFS</div>
+        <div class="t-name">Level by Level</div>
+        <div class="t-result">1, 2, 3, 4, 5</div>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">from collections import deque
+
+# RECURSIVE traversals (most concise)
+def preorder(root):     # Root → Left → Right
+    if not root: return []
+    return [root.val] + preorder(root.left) + preorder(root.right)
+
+def inorder(root):      # Left → Root → Right (sorted for BST)
+    if not root: return []
+    return inorder(root.left) + [root.val] + inorder(root.right)
+
+def postorder(root):    # Left → Right → Root
+    if not root: return []
+    return postorder(root.left) + postorder(root.right) + [root.val]
+
+# ITERATIVE Inorder (most common interview follow-up)
+def inorder_iterative(root):
+    result, stack, curr = [], [], root
+    while curr or stack:
+        while curr:           # go as left as possible
+            stack.append(curr)
+            curr = curr.left
+        curr = stack.pop()    # backtrack
+        result.append(curr.val)
+        curr = curr.right     # try right subtree
+    return result
+
+# ITERATIVE Preorder
+def preorder_iterative(root):
+    if not root: return []
+    result, stack = [], [root]
+    while stack:
+        node = stack.pop()
+        result.append(node.val)
+        # Push right first (so left is processed first)
+        if node.right: stack.append(node.right)
+        if node.left: stack.append(node.left)
+    return result
+
+# LEVEL-ORDER (BFS) — returns list of lists, one per level
+def level_order(root):
+    if not root: return []
+    result, queue = [], deque([root])
+    while queue:
+        level = []
+        for _ in range(len(queue)):  # process exactly one level
+            node = queue.popleft()
+            level.append(node.val)
+            if node.left: queue.append(node.left)
+            if node.right: queue.append(node.right)
+        result.append(level)
+    return result</code></pre>
+    </div>
+  </section>
+
+  <!-- BST Operations -->
+  <section class="content-section" id="bst-ops">
+    <div class="section-label">BST Deep Dive</div>
+    <h2 class="section-title">BST Operations</h2>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">class BST:
+    def __init__(self):
+        self.root = None
+
+    def insert(self, val):
+        """Insert val maintaining BST property. O(h) time."""
+        def _insert(node, val):
+            if not node:
+                return TreeNode(val)
+            if val < node.val:
+                node.left = _insert(node.left, val)
+            elif val > node.val:
+                node.right = _insert(node.right, val)
+            # val == node.val: no duplicates
+            return node
+        self.root = _insert(self.root, val)
+
+    def search(self, val) -> bool:
+        """Search for val. O(h) time."""
+        node = self.root
+        while node:
+            if val == node.val: return True
+            elif val < node.val: node = node.left
+            else: node = node.right
+        return False
+
+    def delete(self, val):
+        """Delete val. O(h) time. Three cases:
+        1. Leaf → just remove
+        2. One child → replace with child
+        3. Two children → replace with inorder successor (leftmost in right subtree)
+        """
+        def _delete(node, val):
+            if not node:
+                return None
+            if val < node.val:
+                node.left = _delete(node.left, val)
+            elif val > node.val:
+                node.right = _delete(node.right, val)
+            else:
+                # Found the node to delete
+                if not node.left:       # case 1 or 2 (no left child)
+                    return node.right
+                if not node.right:      # case 2 (no right child)
+                    return node.left
+                # Case 3: two children — find inorder successor
+                successor = node.right
+                while successor.left:
+                    successor = successor.left
+                node.val = successor.val  # copy successor value
+                node.right = _delete(node.right, successor.val)
+            return node
+        self.root = _delete(self.root, val)
+
+    def validate_bst(self, root, lo=float('-inf'), hi=float('inf')) -> bool:
+        """Verify BST property: every node's value is in range (lo, hi)."""
+        if not root:
+            return True
+        if not (lo < root.val < hi):
+            return False
+        return (self.validate_bst(root.left, lo, root.val) and
+                self.validate_bst(root.right, root.val, hi))</code></pre>
+    </div>
+  </section>
+
+  <!-- Full Implementation -->
+  <section class="content-section" id="implementation">
+    <div class="section-label">Reference</div>
+    <h2 class="section-title">Common Tree Utilities</h2>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># Build tree from level-order array (LeetCode format)
+# [1,2,3,None,5,None,4] → standard LeetCode tree input
+def build_tree(vals):
+    if not vals:
+        return None
+    root = TreeNode(vals[0])
+    queue = deque([root])
+    i = 1
+    while queue and i < len(vals):
+        node = queue.popleft()
+        if i < len(vals) and vals[i] is not None:
+            node.left = TreeNode(vals[i])
+            queue.append(node.left)
+        i += 1
+        if i < len(vals) and vals[i] is not None:
+            node.right = TreeNode(vals[i])
+            queue.append(node.right)
+        i += 1
+    return root
+
+# Height of tree
+def height(root):
+    if not root: return 0
+    return 1 + max(height(root.left), height(root.right))
+
+# Count nodes
+def count_nodes(root):
+    if not root: return 0
+    return 1 + count_nodes(root.left) + count_nodes(root.right)
+
+# Check if balanced (every node's left/right subtree heights differ by ≤ 1)
+def is_balanced(root) -> bool:
+    def check_height(node):
+        if not node: return 0
+        lh = check_height(node.left)
+        rh = check_height(node.right)
+        if lh == -1 or rh == -1: return -1   # propagate failure
+        if abs(lh - rh) > 1: return -1
+        return 1 + max(lh, rh)
+    return check_height(root) != -1</code></pre>
+    </div>
+  </section>
+
+  <!-- DFS Patterns -->
+  <section class="content-section" id="patterns">
+    <div class="section-label">Interview Patterns</div>
+    <h2 class="section-title">DFS Patterns for Interviews</h2>
+    <p>Most tree problems follow one of these recursive DFS patterns. Recognizing the pattern is half the battle.</p>
+
+    <h3>Pattern 1: Return value from subtrees</h3>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># Pattern: solve subproblem at each node, use children's results
+def maxDepth(root) -> int:
+    if not root: return 0
+    return 1 + max(maxDepth(root.left), maxDepth(root.right))
+
+def hasPathSum(root, target) -> bool:
+    if not root: return False
+    if not root.left and not root.right:  # leaf
+        return root.val == target
+    return (hasPathSum(root.left, target - root.val) or
+            hasPathSum(root.right, target - root.val))</code></pre>
+    </div>
+
+    <h3>Pattern 2: Pass state down</h3>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># Pattern: pass information from parent to children
+def pathSumAllPaths(root, target):
+    """Find all root-to-leaf paths that sum to target."""
+    result = []
+    def dfs(node, path, remaining):
+        if not node: return
+        path.append(node.val)
+        if not node.left and not node.right and remaining == node.val:
+            result.append(list(path))
+        dfs(node.left, path, remaining - node.val)
+        dfs(node.right, path, remaining - node.val)
+        path.pop()  # backtrack
+    dfs(root, [], target)
+    return result</code></pre>
+    </div>
+
+    <h3>Pattern 3: LCA (Lowest Common Ancestor)</h3>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># Classic LCA for any binary tree (not just BST)
+def lowestCommonAncestor(root, p, q):
+    if not root or root is p or root is q:
+        return root  # base case: found one of the targets
+    left = lowestCommonAncestor(root.left, p, q)
+    right = lowestCommonAncestor(root.right, p, q)
+    if left and right:
+        return root   # p in left subtree, q in right → root is LCA
+    return left or right  # both in same subtree
+
+# LCA for BST — faster using BST property
+def lca_bst(root, p, q):
+    while root:
+        if p.val < root.val and q.val < root.val:
+            root = root.left   # both smaller → go left
+        elif p.val > root.val and q.val > root.val:
+            root = root.right  # both larger → go right
+        else:
+            return root        # split point → LCA found
+    return None</code></pre>
+    </div>
+
+    <h3>Pattern 4: Track global maximum (nonlocal)</h3>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># Pattern: DFS returns local result, updates global max as side effect
+def diameterOfBinaryTree(root) -> int:
+    max_diameter = 0
+    def depth(node):
+        nonlocal max_diameter
+        if not node: return 0
+        left = depth(node.left)
+        right = depth(node.right)
+        max_diameter = max(max_diameter, left + right)  # update global
+        return 1 + max(left, right)
+    depth(root)
+    return max_diameter</code></pre>
+    </div>
+  </section>
+
+  <!-- Complexity -->
+  <section class="content-section" id="complexity">
+    <div class="section-label">Analysis</div>
+    <h2 class="section-title">Complexity Analysis</h2>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Operation</th><th>BST Average</th><th>BST Worst (skewed)</th><th>Balanced BST</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Search</td><td class="complexity-good">O(log n)</td><td class="complexity-bad">O(n)</td><td class="complexity-good">O(log n)</td></tr>
+          <tr><td>Insert</td><td class="complexity-good">O(log n)</td><td class="complexity-bad">O(n)</td><td class="complexity-good">O(log n)</td></tr>
+          <tr><td>Delete</td><td class="complexity-good">O(log n)</td><td class="complexity-bad">O(n)</td><td class="complexity-good">O(log n)</td></tr>
+          <tr><td>Any traversal</td><td class="complexity-bad">O(n)</td><td class="complexity-bad">O(n)</td><td class="complexity-bad">O(n)</td></tr>
+          <tr><td>Space (tree)</td><td class="complexity-ok">O(n)</td><td class="complexity-ok">O(n)</td><td class="complexity-ok">O(n)</td></tr>
+          <tr><td>Space (recursion)</td><td class="complexity-good">O(log n)</td><td class="complexity-bad">O(n)</td><td class="complexity-good">O(log n)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- LeetCode -->
+  <section class="content-section" id="leetcode">
+    <div class="section-label">Practice</div>
+    <h2 class="section-title">LeetCode Problems</h2>
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #104</span>
+        <span class="lc-title">Maximum Depth of Binary Tree</span>
+        <span class="lc-diff diff-easy">Easy</span>
+      </div>
+      <div class="lc-body">
+        <p>Find the maximum depth (number of nodes along the longest path from root to leaf).</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def maxDepth(self, root) -> int:
+    if not root:
+        return 0
+    return 1 + max(self.maxDepth(root.left), self.maxDepth(root.right))</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(h) recursion stack</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #226</span>
+        <span class="lc-title">Invert Binary Tree</span>
+        <span class="lc-diff diff-easy">Easy</span>
+      </div>
+      <div class="lc-body">
+        <p>Invert a binary tree (mirror it). Classic "Homebrew" interview problem.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def invertTree(self, root):
+    if not root:
+        return None
+    # Swap children, then recurse
+    root.left, root.right = self.invertTree(root.right), self.invertTree(root.left)
+    return root</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(h)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #235</span>
+        <span class="lc-title">Lowest Common Ancestor of BST</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Find the LCA of two nodes in a BST. Use the BST property: if both values are smaller, go left; if both larger, go right; otherwise current node is the LCA.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def lowestCommonAncestor(self, root, p, q):
+    while root:
+        if p.val < root.val and q.val < root.val:
+            root = root.left
+        elif p.val > root.val and q.val > root.val:
+            root = root.right
+        else:
+            return root  # split point = LCA
+    return None</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(h)</span><span>💾 Space: O(1)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #102</span>
+        <span class="lc-title">Binary Tree Level Order Traversal</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Return level-order traversal as a list of lists (one list per level). BFS with level-size tracking.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">from collections import deque
+
+def levelOrder(self, root):
+    if not root:
+        return []
+    result, queue = [], deque([root])
+    while queue:
+        level = []
+        for _ in range(len(queue)):  # snapshot current level size
+            node = queue.popleft()
+            level.append(node.val)
+            if node.left: queue.append(node.left)
+            if node.right: queue.append(node.right)
+        result.append(level)
+    return result</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(w) where w = max width</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #98</span>
+        <span class="lc-title">Validate Binary Search Tree</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Verify that a tree is a valid BST. Common mistake: only checking immediate parent. Correct approach: propagate valid range down the tree.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def isValidBST(self, root, lo=float('-inf'), hi=float('inf')) -> bool:
+    if not root:
+        return True
+    if not (lo < root.val < hi):
+        return False
+    return (self.isValidBST(root.left, lo, root.val) and
+            self.isValidBST(root.right, root.val, hi))</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(h)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #124</span>
+        <span class="lc-title">Binary Tree Maximum Path Sum</span>
+        <span class="lc-diff diff-hard">Hard</span>
+      </div>
+      <div class="lc-body">
+        <p>Find the maximum sum path through any nodes (not necessarily root-to-leaf).</p>
+        <p><strong>Key insight</strong>: At each node, the best path can either pass through it (left + node + right) or just extend one branch upward. Track the global max separately.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def maxPathSum(self, root) -> int:
+    self.max_sum = float('-inf')
+
+    def max_gain(node):
+        if not node:
+            return 0
+        # Only include subtree if it contributes positively
+        left_gain = max(max_gain(node.left), 0)
+        right_gain = max(max_gain(node.right), 0)
+        # Price of path through this node (cannot go up both sides at once)
+        path_through = node.val + left_gain + right_gain
+        self.max_sum = max(self.max_sum, path_through)
+        # Return max gain for parent (can only extend one side)
+        return node.val + max(left_gain, right_gain)
+
+    max_gain(root)
+    return self.max_sum</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(h)</span></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Applications -->
+  <section class="content-section" id="applications">
+    <div class="section-label">Real World</div>
+    <h2 class="section-title">Real-World Applications</h2>
+    <ul>
+      <li><strong>File systems</strong>: directory trees (folders contain files and sub-folders)</li>
+      <li><strong>DOM tree</strong>: browser HTML is a tree; React's virtual DOM is a tree</li>
+      <li><strong>Expression trees</strong>: compilers parse mathematical expressions as trees</li>
+      <li><strong>Database B-trees</strong>: MySQL/PostgreSQL indexes use B+ trees (balanced, multi-way)</li>
+      <li><strong>Decision trees</strong>: machine learning models for classification</li>
+      <li><strong>Huffman coding</strong>: frequency-based compression uses a binary tree</li>
+      <li><strong>XML/JSON parsing</strong>: document object models are hierarchical trees</li>
+      <li><strong>Game AI</strong>: minimax trees for chess, tic-tac-toe decision making</li>
+    </ul>
+  </section>
+
+  <footer class="page-footer">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="trie.html">Trie</a>
+      <a href="hash-map.html">Hash Map</a>
+      <a href="linked-list.html">Linked List</a>
+      <a href="binary-tree.html">Binary Tree</a>
+      <a href="heap.html">Heap</a>
+      <a href="stack-queue.html">Stack &amp; Queue</a>
+      <a href="graph.html">Graph</a>
+    </div>
+    <p class="footer-copy">© 2026 KnowAlgo — Data Structures &amp; Algorithms Made Clear</p>
+  </footer>
+
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight) * 100;
+    document.getElementById('progress').style.width = scrolled + '%';
+  });
+  function copyCode(btn) {
+    const code = btn.closest('.code-wrapper').querySelector('code');
+    navigator.clipboard.writeText(code.textContent).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+  const sections = document.querySelectorAll('.content-section[id]');
+  const tocLinks = document.querySelectorAll('.toc-list a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.toc-list a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-64px 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

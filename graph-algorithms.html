@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Graph Algorithms: Dijkstra, Bellman-Ford, Topological Sort, Union-Find | KnowAlgo</title>
+  <meta name="description" content="Master weighted graph algorithms: Dijkstra (positive weights), Bellman-Ford (negative weights), Floyd-Warshall (all-pairs), Topological Sort, Union-Find DSU, and Minimum Spanning Trees with 6 LeetCode solutions.">
+  <meta name="keywords" content="dijkstra algorithm, bellman-ford, floyd-warshall, topological sort, union find, DSU, minimum spanning tree, weighted graph, shortest path, kruskal prim, leetcode graph algorithms">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.github.io/graph-algorithms.html">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Graph Algorithms: Dijkstra, Bellman-Ford, Topological Sort, Union-Find",
+    "description": "Comprehensive guide to weighted graph algorithms and structural graph algorithms with 6 LeetCode solutions.",
+    "author": { "@type": "Organization", "name": "KnowAlgo" },
+    "publisher": { "@type": "Organization", "name": "KnowAlgo" },
+    "datePublished": "2025-01-01",
+    "dateModified": "2026-02-27",
+    "keywords": ["dijkstra", "bellman-ford", "topological sort", "union-find", "graph algorithms", "leetcode"],
+    "articleSection": "Algorithms"
+  }
+  </script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    :root {
+      --primary: #2563eb; --primary-dark: #1d4ed8; --primary-light: #eff6ff;
+      --secondary: #7c3aed; --accent: #059669; --danger: #dc2626; --warning: #d97706;
+      --bg: #f8fafc; --bg-card: #ffffff; --text: #0f172a; --text-muted: #64748b;
+      --border: #e2e8f0; --code-bg: #1e293b; --toc-width: 280px; --header-h: 64px;
+      --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.05);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth;font-size:16px}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+    a{color:var(--primary);text-decoration:none} a:hover{text-decoration:underline}
+    ul,ol{padding-left:1.5rem} li{margin-bottom:.35rem}
+    .progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(to right,#0891b2,#7c3aed);z-index:1000;transition:width .1s}
+    .topnav{position:sticky;top:0;z-index:200;background:#fff;border-bottom:1px solid var(--border);height:var(--header-h);display:flex;align-items:center;padding:0 1.5rem;gap:1rem;box-shadow:var(--shadow)}
+    .topnav-logo{font-weight:800;font-size:1.25rem;color:var(--primary);letter-spacing:-.5px}
+    .topnav-sep{color:var(--border)} .topnav-crumb{color:var(--text-muted);font-size:.9rem}
+    .topnav-links{margin-left:auto;display:flex;gap:1rem;align-items:center}
+    .topnav-links a{color:var(--text-muted);font-size:.9rem;font-weight:500}
+    .topnav-links a:hover{color:var(--primary);text-decoration:none}
+    .btn-home{background:var(--primary);color:#fff!important;padding:.35rem .9rem;border-radius:6px;font-size:.85rem!important}
+    .page-layout{display:grid;grid-template-columns:var(--toc-width) 1fr;max-width:1400px;margin:0 auto;min-height:calc(100vh - var(--header-h))}
+    .toc-sidebar{position:sticky;top:var(--header-h);height:calc(100vh - var(--header-h));overflow-y:auto;padding:1.5rem 1rem;border-right:1px solid var(--border);background:#fff}
+    .toc-sidebar::-webkit-scrollbar{width:4px} .toc-sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .toc-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:.75rem}
+    .toc-list{list-style:none;padding:0} .toc-list li{margin-bottom:0}
+    .toc-list a{display:block;padding:.3rem .75rem;border-radius:6px;font-size:.875rem;color:var(--text-muted);transition:all .15s;border-left:2px solid transparent}
+    .toc-list a:hover,.toc-list a.active{color:var(--primary);background:var(--primary-light);border-left-color:var(--primary);text-decoration:none}
+    .toc-divider{border:none;border-top:1px solid var(--border);margin:.75rem 0}
+    .main-content{padding:2rem 2.5rem;max-width:900px}
+    .hero{background:linear-gradient(135deg,#0c4a6e 0%,#0891b2 40%,#7c3aed 100%);color:white;border-radius:var(--radius);padding:2.5rem;margin-bottom:2.5rem}
+    .hero-badge{display:inline-block;background:rgba(255,255,255,.2);color:#fff;padding:.25rem .75rem;border-radius:99px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem}
+    .hero h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;line-height:1.2;margin-bottom:1rem;letter-spacing:-1px}
+    .hero p{font-size:1.05rem;opacity:.9;max-width:620px;line-height:1.7;margin-bottom:1.5rem}
+    .hero-meta{display:flex;gap:1.5rem;flex-wrap:wrap}
+    .hero-meta span{font-size:.875rem;opacity:.8}
+    .content-section{margin-bottom:3rem;scroll-margin-top:calc(var(--header-h) + 1rem)}
+    .section-label{display:inline-block;background:#ecfeff;color:#0891b2;padding:.2rem .7rem;border-radius:99px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem}
+    h2.section-title{font-size:1.75rem;font-weight:800;margin-bottom:1rem;letter-spacing:-.5px}
+    h3{font-size:1.2rem;font-weight:700;margin:1.5rem 0 .75rem;color:var(--text)}
+    p{margin-bottom:1rem}
+    .callout{border-radius:var(--radius);padding:1.25rem 1.5rem;margin:1.5rem 0;border-left:4px solid}
+    .callout-blue{background:#eff6ff;border-color:var(--primary)}
+    .callout-green{background:#f0fdf4;border-color:var(--accent)}
+    .callout-red{background:#fef2f2;border-color:var(--danger)}
+    .callout-yellow{background:#fefce8;border-color:var(--warning)}
+    .code-wrapper{position:relative;margin:1.25rem 0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-md)}
+    .code-header{background:#0f172a;padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between}
+    .code-lang{font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+    .copy-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#94a3b8;font-size:.75rem;padding:.25rem .6rem;border-radius:4px;cursor:pointer;transition:all .15s}
+    .copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+    .copy-btn.copied{background:#059669;border-color:#059669;color:#fff}
+    pre[class*="language-"]{margin:0!important;border-radius:0!important;font-size:.875rem!important}
+    .diagram{background:var(--code-bg);color:#e2e8f0;padding:1.5rem;border-radius:var(--radius);font-family:'Courier New',Courier,monospace;font-size:.875rem;line-height:1.6;overflow-x:auto;margin:1.25rem 0;white-space:pre}
+    .table-wrapper{overflow-x:auto;margin:1.5rem 0;border-radius:var(--radius);box-shadow:var(--shadow)}
+    table{width:100%;border-collapse:collapse;background:#fff}
+    th{background:#f1f5f9;padding:.75rem 1rem;text-align:left;font-size:.875rem;font-weight:700;color:var(--text);border-bottom:2px solid var(--border)}
+    td{padding:.75rem 1rem;font-size:.875rem;border-bottom:1px solid var(--border);vertical-align:top}
+    tr:last-child td{border-bottom:none} tr:hover td{background:#f8fafc}
+    .complexity-good{color:#059669;font-weight:700} .complexity-ok{color:#d97706;font-weight:700} .complexity-bad{color:#dc2626;font-weight:700}
+    .lc-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.5rem;box-shadow:var(--shadow)}
+    .lc-header{padding:1rem 1.25rem;display:flex;align-items:center;gap:.75rem;border-bottom:1px solid var(--border);background:#f8fafc}
+    .lc-num{font-size:.8rem;font-weight:700;color:var(--text-muted)}
+    .lc-title{font-size:1rem;font-weight:700;color:var(--text);flex:1}
+    .lc-diff{font-size:.75rem;font-weight:700;padding:.15rem .5rem;border-radius:99px}
+    .diff-easy{background:#d1fae5;color:#065f46} .diff-medium{background:#fef3c7;color:#92400e} .diff-hard{background:#fee2e2;color:#991b1b}
+    .lc-body{padding:1.25rem}
+    .lc-meta{display:flex;gap:1rem;margin-top:.75rem;font-size:.8rem;color:var(--text-muted)}
+    .page-footer{background:#0f172a;color:#94a3b8;padding:2.5rem;margin-top:4rem}
+    .footer-links{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+    .footer-links a{color:#60a5fa;font-size:.875rem}
+    .footer-copy{font-size:.8rem;opacity:.6}
+    @media(max-width:768px){.page-layout{grid-template-columns:1fr}.toc-sidebar{display:none}.main-content{padding:1.5rem 1rem}}
+  </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+
+<nav class="topnav">
+  <a href="index.html" class="topnav-logo">KnowAlgo</a>
+  <span class="topnav-sep">/</span>
+  <span class="topnav-crumb">Graph Algorithms</span>
+  <div class="topnav-links">
+    <a href="graph.html">← Graph Traversal</a>
+    <a href="index.html" class="btn-home">Home</a>
+  </div>
+</nav>
+
+<div class="page-layout">
+
+<aside class="toc-sidebar">
+  <div class="toc-title">On this page</div>
+  <ul class="toc-list" id="toc">
+    <li><a href="#weighted">Weighted Graph Primer</a></li>
+    <li><a href="#dijkstra">Dijkstra (positive weights)</a></li>
+    <li><a href="#bellman-ford">Bellman-Ford (negative weights)</a></li>
+    <li><a href="#floyd">Floyd-Warshall (all-pairs)</a></li>
+    <li><a href="#topo">Topological Sort</a></li>
+    <li><a href="#union-find">Union-Find (DSU)</a></li>
+    <li><a href="#mst">Minimum Spanning Tree</a></li>
+    <li><a href="#complexity">Complexity Comparison</a></li>
+    <hr class="toc-divider">
+    <li><a href="#leetcode">LeetCode Problems</a></li>
+  </ul>
+  <hr class="toc-divider">
+  <div class="toc-title">Graph Series</div>
+  <ul class="toc-list">
+    <li><a href="graph.html">→ Graph Traversal</a></li>
+    <li><a href="graph-algorithms.html"><strong>→ Graph Algorithms</strong></a></li>
+  </ul>
+  <hr class="toc-divider">
+  <div class="toc-title">Other Guides</div>
+  <ul class="toc-list">
+    <li><a href="dp.html">→ Dynamic Programming</a></li>
+    <li><a href="heap.html">→ Heap (used in Dijkstra)</a></li>
+  </ul>
+</aside>
+
+<main class="main-content" id="main-content">
+
+  <div class="hero">
+    <div class="hero-badge">Algorithms · Part 2 of 2</div>
+    <h1>Graph Algorithms</h1>
+    <p>Weighted shortest paths, structural ordering, and connectivity. This guide covers Dijkstra (positive weights), Bellman-Ford (negative weights), Topological Sort (DAGs), Union-Find (connectivity), and MST. For BFS/DFS basics, see <a href="graph.html" style="color:#7dd3fc">Graph Traversal →</a></p>
+    <div class="hero-meta">
+      <span>🗺️ Dijkstra / Bellman-Ford</span>
+      <span>📊 Topological Sort</span>
+      <span>🔗 Union-Find DSU</span>
+      <span>🌲 MST</span>
+    </div>
+  </div>
+
+  <!-- Weighted Graph Primer -->
+  <section class="content-section" id="weighted">
+    <div class="section-label">Foundation</div>
+    <h2 class="section-title">Weighted Graph Primer</h2>
+    <p>In a weighted graph, each edge has a numerical cost (distance, time, price). The goal is often to find the cheapest path from one node to another.</p>
+
+    <div class="callout callout-blue">
+      <strong>Algorithm selection guide — the 6 cases</strong>
+      <table style="width:100%;font-size:.85rem;margin-top:.5rem">
+        <tr><th style="background:none;padding:.4rem .5rem;border:1px solid #e2e8f0">Graph type</th><th style="background:none;padding:.4rem .5rem;border:1px solid #e2e8f0">Algorithm</th><th style="background:none;padding:.4rem .5rem;border:1px solid #e2e8f0">Time</th></tr>
+        <tr><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">Unweighted (any direction)</td><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">BFS</td><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">O(V+E)</td></tr>
+        <tr><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">Weighted, all positive, single source</td><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">Dijkstra</td><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">O((V+E) log V)</td></tr>
+        <tr><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">Weighted, positive, DAG</td><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">Topo Sort + DP</td><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">O(V+E)</td></tr>
+        <tr><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">Weighted, may have negative edges</td><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">Bellman-Ford</td><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">O(VE)</td></tr>
+        <tr><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">Negative edges, must detect negative cycle</td><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">Bellman-Ford</td><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">O(VE)</td></tr>
+        <tr><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">All-pairs shortest paths</td><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">Floyd-Warshall</td><td style="padding:.4rem .5rem;border:1px solid #e2e8f0">O(V³)</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- Dijkstra -->
+  <section class="content-section" id="dijkstra">
+    <div class="section-label">Shortest Path</div>
+    <h2 class="section-title">Dijkstra's Algorithm</h2>
+    <p>Greedy algorithm: always expand the unvisited vertex with the smallest known distance. Uses a min-heap for efficiency. <strong>Only works with non-negative edge weights.</strong></p>
+
+    <div class="diagram">  Graph: A→B(4), A→C(1), C→B(2), B→D(1), C→D(5)
+  Find shortest path from A to all nodes.
+
+  Init: dist={A:0, B:∞, C:∞, D:∞}, heap=[(0,A)]
+
+  Pop (0,A): relax A's neighbors
+    B: 0+4=4 &lt; ∞ → dist[B]=4, heap push (4,B)
+    C: 0+1=1 &lt; ∞ → dist[C]=1, heap push (1,C)
+  heap=[(1,C),(4,B)]
+
+  Pop (1,C): relax C's neighbors
+    B: 1+2=3 &lt; 4 → dist[B]=3, heap push (3,B)
+    D: 1+5=6 &lt; ∞ → dist[D]=6, heap push (6,D)
+  heap=[(3,B),(4,B),(6,D)]
+
+  Pop (3,B): relax B's neighbors
+    D: 3+1=4 &lt; 6 → dist[D]=4, heap push (4,D)
+  heap=[(4,B),(4,D),(6,D)]
+
+  Pop (4,B): dist[B]=3 &lt; 4, skip (stale entry)
+  Pop (4,D): done.
+
+  Final: {A:0, C:1, B:3, D:4}</div>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">import heapq
+from collections import defaultdict
+
+def dijkstra(graph, start):
+    """
+    graph: {node: [(neighbor, weight), ...]}  (weighted adjacency list)
+    Returns: {node: min_distance_from_start}
+    """
+    dist = {start: 0}
+    heap = [(0, start)]   # (distance, node)
+
+    while heap:
+        d, node = heapq.heappop(heap)
+
+        # Skip stale heap entries (node already processed with shorter distance)
+        if d > dist.get(node, float('inf')):
+            continue
+
+        for neighbor, weight in graph.get(node, []):
+            new_dist = d + weight
+            if new_dist < dist.get(neighbor, float('inf')):
+                dist[neighbor] = new_dist
+                heapq.heappush(heap, (new_dist, neighbor))
+
+    return dist
+
+# Dijkstra with PATH RECONSTRUCTION
+def dijkstra_with_path(graph, start, end):
+    dist = {start: 0}
+    parent = {start: None}
+    heap = [(0, start)]
+    while heap:
+        d, node = heapq.heappop(heap)
+        if node == end:
+            break
+        if d > dist.get(node, float('inf')):
+            continue
+        for neighbor, weight in graph.get(node, []):
+            new_dist = d + weight
+            if new_dist < dist.get(neighbor, float('inf')):
+                dist[neighbor] = new_dist
+                parent[neighbor] = node
+                heapq.heappush(heap, (new_dist, neighbor))
+    # Reconstruct path
+    path, curr = [], end
+    while curr is not None:
+        path.append(curr)
+        curr = parent.get(curr)
+    return dist.get(end, float('inf')), path[::-1]</code></pre>
+    </div>
+
+    <div class="callout callout-red">
+      <strong>Why Dijkstra fails with negative edges</strong>
+      Dijkstra assumes that once a node is popped from the heap, its distance is final (greedy). With negative edges, a later path could be shorter even after we've "finalized" a node. Use Bellman-Ford when negative weights are possible.
+    </div>
+  </section>
+
+  <!-- Bellman-Ford -->
+  <section class="content-section" id="bellman-ford">
+    <div class="section-label">Negative Weights</div>
+    <h2 class="section-title">Bellman-Ford Algorithm</h2>
+    <p>Relax all edges V-1 times. Any shortest path has at most V-1 edges (assuming no negative cycles). A V-th relaxation that still improves distances indicates a <strong>negative cycle</strong>.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">def bellman_ford(n, edges, start):
+    """
+    n: number of vertices (0 to n-1)
+    edges: list of (u, v, weight)
+    Returns: (dist_dict, has_negative_cycle)
+    """
+    dist = {i: float('inf') for i in range(n)}
+    dist[start] = 0
+
+    # Relax all edges V-1 times
+    for _ in range(n - 1):
+        updated = False
+        for u, v, w in edges:
+            if dist[u] != float('inf') and dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                updated = True
+        if not updated:
+            break  # early termination: no improvement
+
+    # V-th pass: detect negative cycle
+    for u, v, w in edges:
+        if dist[u] != float('inf') and dist[u] + w < dist[v]:
+            return dist, True  # negative cycle exists!
+
+    return dist, False
+
+# SPFA (Shortest Path Faster Algorithm) — practical BFS-based optimization
+# Average O(E), worst O(VE) — often faster than Bellman-Ford in practice
+from collections import deque
+
+def spfa(n, adj, start):
+    """adj: {node: [(neighbor, weight), ...]}"""
+    dist = [float('inf')] * n
+    dist[start] = 0
+    in_queue = [False] * n
+    in_queue[start] = True
+    queue = deque([start])
+    count = [0] * n  # how many times each node enqueued
+
+    while queue:
+        node = queue.popleft()
+        in_queue[node] = False
+        for neighbor, weight in adj.get(node, []):
+            if dist[node] + weight < dist[neighbor]:
+                dist[neighbor] = dist[node] + weight
+                count[neighbor] += 1
+                if count[neighbor] >= n:
+                    return None  # negative cycle
+                if not in_queue[neighbor]:
+                    queue.append(neighbor)
+                    in_queue[neighbor] = True
+    return dist</code></pre>
+    </div>
+  </section>
+
+  <!-- Floyd-Warshall -->
+  <section class="content-section" id="floyd">
+    <div class="section-label">All-Pairs</div>
+    <h2 class="section-title">Floyd-Warshall Algorithm</h2>
+    <p>Find shortest paths between <em>all pairs</em> of vertices in O(V³). Uses dynamic programming: for each intermediate vertex k, check if going through k improves the path from i to j.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">def floyd_warshall(n, edges):
+    """
+    n: number of vertices
+    edges: list of (u, v, weight)
+    Returns: dist[i][j] = shortest path from i to j
+    """
+    INF = float('inf')
+    dist = [[INF] * n for _ in range(n)]
+    for i in range(n):
+        dist[i][i] = 0
+    for u, v, w in edges:
+        dist[u][v] = min(dist[u][v], w)
+
+    # Core: try every vertex k as intermediate
+    for k in range(n):
+        for i in range(n):
+            for j in range(n):
+                if dist[i][k] + dist[k][j] < dist[i][j]:
+                    dist[i][j] = dist[i][k] + dist[k][j]
+
+    # Check for negative cycles: if dist[i][i] < 0, negative cycle exists
+    for i in range(n):
+        if dist[i][i] < 0:
+            return None  # negative cycle
+
+    return dist</code></pre>
+    </div>
+
+    <div class="callout callout-yellow">
+      <strong>When to use Floyd-Warshall vs running Dijkstra from each node</strong>
+      <ul>
+        <li>Floyd-Warshall: O(V³), simple code, handles negative edges (not negative cycles)</li>
+        <li>Running Dijkstra V times: O(V·(V+E)·log V) — better for sparse graphs with many vertices</li>
+        <li>Rule of thumb: Floyd-Warshall for dense graphs or when V is small (&lt;500); repeated Dijkstra for large sparse graphs</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Topological Sort -->
+  <section class="content-section" id="topo">
+    <div class="section-label">DAG Ordering</div>
+    <h2 class="section-title">Topological Sort</h2>
+    <p>A topological ordering of a DAG lists vertices such that for every edge u→v, u comes before v. Requires: <strong>directed</strong> and <strong>acyclic</strong>. Two approaches: Kahn's BFS (in-degree based) and DFS post-order.</p>
+
+    <div class="diagram">  DAG: course prerequisites
+  0→2, 0→3, 1→3, 1→4, 2→5, 3→5, 4→5
+
+  Valid topological orderings:
+  [0,1,2,3,4,5]  or  [1,0,3,2,4,5]  etc.
+  (many valid orderings exist; just need all deps before dependents)</div>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">from collections import deque, defaultdict
+
+# KAHN'S ALGORITHM (BFS + in-degree)
+def topo_sort_kahn(n, edges):
+    """
+    Returns topological order, or [] if cycle exists.
+    edges: list of (u, v) meaning u must come before v.
+    """
+    graph = defaultdict(list)
+    in_degree = [0] * n
+    for u, v in edges:
+        graph[u].append(v)
+        in_degree[v] += 1
+
+    # Start with all nodes having no incoming edges
+    queue = deque([i for i in range(n) if in_degree[i] == 0])
+    result = []
+
+    while queue:
+        node = queue.popleft()
+        result.append(node)
+        for neighbor in graph[node]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+
+    return result if len(result) == n else []  # [] = cycle exists
+
+# DFS POST-ORDER (add to result AFTER exploring all successors)
+def topo_sort_dfs(n, edges):
+    graph = defaultdict(list)
+    for u, v in edges:
+        graph[u].append(v)
+
+    visited = set()
+    order = []
+
+    def dfs(node):
+        visited.add(node)
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                dfs(neighbor)
+        order.append(node)  # add AFTER all neighbors explored
+
+    for node in range(n):
+        if node not in visited:
+            dfs(node)
+
+    return order[::-1]  # reverse post-order = topological order</code></pre>
+    </div>
+  </section>
+
+  <!-- Union-Find -->
+  <section class="content-section" id="union-find">
+    <div class="section-label">Connectivity</div>
+    <h2 class="section-title">Union-Find (Disjoint Set Union)</h2>
+    <p>Efficiently maintains a partition of elements into disjoint sets. Supports two operations: <strong>find</strong> (which set does element belong to?) and <strong>union</strong> (merge two sets). With path compression + union by rank, both operations are nearly O(1) — specifically O(α(n)) where α is the inverse Ackermann function (practically a constant ≤ 4 for any real input).</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">class UnionFind:
+    def __init__(self, n):
+        self.parent = list(range(n))  # initially each element is its own root
+        self.rank = [0] * n           # tree height (for union by rank)
+        self.components = n           # number of connected components
+
+    def find(self, x):
+        """Find root with PATH COMPRESSION (flattens tree). O(α(n))."""
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])  # compress path
+        return self.parent[x]
+
+    def union(self, x, y) -> bool:
+        """Merge sets containing x and y. Returns False if already same set."""
+        px, py = self.find(x), self.find(y)
+        if px == py:
+            return False  # already connected — adding this edge would create a cycle
+        # UNION BY RANK: attach smaller tree under larger tree
+        if self.rank[px] < self.rank[py]:
+            px, py = py, px
+        self.parent[py] = px
+        if self.rank[px] == self.rank[py]:
+            self.rank[px] += 1
+        self.components -= 1
+        return True
+
+    def connected(self, x, y) -> bool:
+        return self.find(x) == self.find(y)
+
+
+# Example uses
+uf = UnionFind(5)
+uf.union(0, 1)     # merge {0} and {1} → {0,1}
+uf.union(1, 2)     # merge {0,1} and {2} → {0,1,2}
+print(uf.connected(0, 2))  # True
+print(uf.connected(0, 3))  # False
+print(uf.components)       # 3  ({0,1,2}, {3}, {4})
+
+# Cycle detection: if union returns False, edge creates a cycle
+def has_cycle(n, edges):
+    uf = UnionFind(n)
+    for u, v in edges:
+        if not uf.union(u, v):
+            return True  # u and v already connected → cycle!
+    return False</code></pre>
+    </div>
+  </section>
+
+  <!-- MST -->
+  <section class="content-section" id="mst">
+    <div class="section-label">Spanning Trees</div>
+    <h2 class="section-title">Minimum Spanning Tree</h2>
+    <p>A spanning tree of a connected undirected graph connects all vertices with exactly V-1 edges and minimum total weight. Two classic algorithms:</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># KRUSKAL'S ALGORITHM: sort edges by weight, add if doesn't create cycle
+# Time: O(E log E) for sorting, O(E·α(V)) for Union-Find
+def kruskal(n, edges):
+    """edges: list of (weight, u, v)"""
+    edges.sort()  # sort by weight
+    uf = UnionFind(n)
+    mst_cost = 0
+    mst_edges = []
+
+    for weight, u, v in edges:
+        if uf.union(u, v):          # no cycle created
+            mst_cost += weight
+            mst_edges.append((u, v, weight))
+            if len(mst_edges) == n - 1:
+                break               # MST complete (V-1 edges)
+
+    return mst_cost, mst_edges
+
+
+# PRIM'S ALGORITHM: greedily add cheapest edge connecting MST to non-MST vertex
+# Time: O((V+E) log V) with min-heap
+def prim(n, adj):
+    """adj: {node: [(neighbor, weight), ...]}"""
+    visited = set()
+    heap = [(0, 0)]   # (cost, start_node)
+    mst_cost = 0
+
+    while heap and len(visited) < n:
+        cost, node = heapq.heappop(heap)
+        if node in visited:
+            continue
+        visited.add(node)
+        mst_cost += cost
+        for neighbor, weight in adj.get(node, []):
+            if neighbor not in visited:
+                heapq.heappush(heap, (weight, neighbor))
+
+    return mst_cost if len(visited) == n else -1  # -1 if disconnected</code></pre>
+    </div>
+  </section>
+
+  <!-- Complexity -->
+  <section class="content-section" id="complexity">
+    <div class="section-label">Analysis</div>
+    <h2 class="section-title">Algorithm Comparison</h2>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Algorithm</th><th>Time</th><th>Space</th><th>Negative weights?</th><th>Use Case</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>BFS</td><td class="complexity-good">O(V+E)</td><td class="complexity-ok">O(V)</td><td>N/A (unweighted)</td><td>Unweighted shortest path</td></tr>
+          <tr><td>Dijkstra</td><td class="complexity-good">O((V+E) log V)</td><td class="complexity-ok">O(V)</td><td>❌ No</td><td>Single-source, positive weights</td></tr>
+          <tr><td>Bellman-Ford</td><td class="complexity-bad">O(VE)</td><td class="complexity-ok">O(V)</td><td>✅ Yes</td><td>Negative weights, detect neg cycles</td></tr>
+          <tr><td>Floyd-Warshall</td><td class="complexity-bad">O(V³)</td><td class="complexity-bad">O(V²)</td><td>✅ Yes</td><td>All-pairs shortest paths</td></tr>
+          <tr><td>Topo Sort (Kahn's)</td><td class="complexity-good">O(V+E)</td><td class="complexity-ok">O(V)</td><td>N/A</td><td>DAG ordering, cycle detection</td></tr>
+          <tr><td>Union-Find</td><td class="complexity-good">O(α(n)) per op</td><td class="complexity-ok">O(V)</td><td>N/A</td><td>Dynamic connectivity, MST</td></tr>
+          <tr><td>Kruskal MST</td><td class="complexity-ok">O(E log E)</td><td class="complexity-ok">O(V)</td><td>N/A</td><td>Minimum spanning tree</td></tr>
+          <tr><td>Prim MST</td><td class="complexity-good">O((V+E) log V)</td><td class="complexity-ok">O(V)</td><td>N/A</td><td>MST, dense graphs</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- LeetCode -->
+  <section class="content-section" id="leetcode">
+    <div class="section-label">Practice</div>
+    <h2 class="section-title">LeetCode Problems</h2>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #743</span><span class="lc-title">Network Delay Time</span><span class="lc-diff diff-medium">Medium</span></div>
+      <div class="lc-body">
+        <p>Find the time until all nodes receive a signal. = Dijkstra single-source shortest path; answer is the max distance to any node.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def networkDelayTime(self, times, n, k):
+    graph = defaultdict(list)
+    for u, v, w in times:
+        graph[u].append((v, w))
+    dist = dijkstra(graph, k)  # from source k
+    if len(dist) == n:
+        return max(dist.values())
+    return -1  # some node unreachable</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O((V+E) log V)</span><span>💾 Space: O(V+E)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #787</span><span class="lc-title">Cheapest Flights Within K Stops</span><span class="lc-diff diff-medium">Medium</span></div>
+      <div class="lc-body">
+        <p>Find cheapest price from src to dst with at most k stops. Modified Bellman-Ford: relax exactly k+1 times, tracking prices after each iteration.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def findCheapestPrice(self, n, flights, src, dst, k):
+    prices = [float('inf')] * n
+    prices[src] = 0
+
+    for _ in range(k + 1):  # k stops = k+1 edges
+        temp = prices[:]    # snapshot: only use prices from PREVIOUS round
+        for u, v, w in flights:
+            if prices[u] != float('inf') and prices[u] + w < temp[v]:
+                temp[v] = prices[u] + w
+        prices = temp
+
+    return prices[dst] if prices[dst] != float('inf') else -1</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(k·E)</span><span>💾 Space: O(V)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #210</span><span class="lc-title">Course Schedule II</span><span class="lc-diff diff-medium">Medium</span></div>
+      <div class="lc-body">
+        <p>Return a valid course ordering respecting prerequisites, or [] if impossible (cycle exists). = Topological sort.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def findOrder(self, numCourses, prerequisites):
+    graph = defaultdict(list)
+    in_degree = [0] * numCourses
+    for a, b in prerequisites:
+        graph[b].append(a)
+        in_degree[a] += 1
+
+    queue = deque([i for i in range(numCourses) if in_degree[i] == 0])
+    result = []
+    while queue:
+        node = queue.popleft()
+        result.append(node)
+        for neighbor in graph[node]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+    return result if len(result) == numCourses else []</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(V+E)</span><span>💾 Space: O(V+E)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #547</span><span class="lc-title">Number of Provinces</span><span class="lc-diff diff-medium">Medium</span></div>
+      <div class="lc-body">
+        <p>Count connected components in an undirected graph given as adjacency matrix. Union-Find is perfectly suited here.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def findCircleNum(self, isConnected):
+    n = len(isConnected)
+    uf = UnionFind(n)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if isConnected[i][j] == 1:
+                uf.union(i, j)
+    return uf.components</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n²·α(n))</span><span>💾 Space: O(n)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #1584</span><span class="lc-title">Min Cost to Connect All Points</span><span class="lc-diff diff-medium">Medium</span></div>
+      <div class="lc-body">
+        <p>Find the minimum cost to connect all points (Manhattan distance as edge weight). = Minimum Spanning Tree with Prim's algorithm.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def minCostConnectPoints(self, points):
+    n = len(points)
+    visited = set()
+    heap = [(0, 0)]  # (cost, point_index)
+    total = 0
+
+    while len(visited) < n:
+        cost, i = heapq.heappop(heap)
+        if i in visited:
+            continue
+        visited.add(i)
+        total += cost
+        for j in range(n):
+            if j not in visited:
+                dist = abs(points[i][0]-points[j][0]) + abs(points[i][1]-points[j][1])
+                heapq.heappush(heap, (dist, j))
+    return total</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n² log n)</span><span>💾 Space: O(n²)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #332</span><span class="lc-title">Reconstruct Itinerary</span><span class="lc-diff diff-hard">Hard</span></div>
+      <div class="lc-body">
+        <p>Find Eulerian path in a directed graph (use all edges exactly once, lexicographically smallest). Hierholzer's algorithm: DFS, add to result only when no more edges to explore.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def findItinerary(self, tickets):
+    graph = defaultdict(list)
+    for src, dst in sorted(tickets, reverse=True):
+        graph[src].append(dst)
+    # Sort reverse so smallest is at back (pop() is O(1))
+
+    result = []
+    stack = ["JFK"]
+    while stack:
+        while graph[stack[-1]]:
+            stack.append(graph[stack[-1]].pop())
+        result.append(stack.pop())  # dead end = add to result
+    return result[::-1]</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(E log E)</span><span>💾 Space: O(V+E)</span></div>
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="page-footer">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="trie.html">Trie</a>
+      <a href="hash-map.html">Hash Map</a>
+      <a href="linked-list.html">Linked List</a>
+      <a href="binary-tree.html">Binary Tree</a>
+      <a href="bst.html">BST</a>
+      <a href="heap.html">Heap</a>
+      <a href="stack-queue.html">Stack &amp; Queue</a>
+      <a href="graph.html">Graph Traversal</a>
+      <a href="graph-algorithms.html">Graph Algorithms</a>
+      <a href="dp.html">Dynamic Programming</a>
+    </div>
+    <p class="footer-copy">© 2026 KnowAlgo — Data Structures &amp; Algorithms Made Clear</p>
+  </footer>
+
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight) * 100;
+    document.getElementById('progress').style.width = scrolled + '%';
+  });
+  function copyCode(btn) {
+    const code = btn.closest('.code-wrapper').querySelector('code');
+    navigator.clipboard.writeText(code.textContent).then(() => {
+      btn.textContent = 'Copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+  const sections = document.querySelectorAll('.content-section[id]');
+  const tocLinks = document.querySelectorAll('.toc-list a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.toc-list a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-64px 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

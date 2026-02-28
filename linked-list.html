@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linked List: Complete Guide with LeetCode Solutions | KnowAlgo</title>
+  <meta name="description" content="Master the Linked List data structure with deep explanations, Python implementations, visual diagrams, and 6 LeetCode solutions including Floyd's cycle detection, two-pointer techniques, and Merge k Sorted Lists.">
+  <meta name="keywords" content="linked list, singly linked list, doubly linked list, floyd cycle detection, two pointer, reverse linked list, leetcode linked list, python linked list, data structures">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.github.io/linked-list.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Linked List: Complete Guide with LeetCode Solutions">
+  <meta property="og:description" content="Master Linked Lists with deep explanations, visual diagrams, Python code, and 6 LeetCode solutions.">
+  <meta property="og:url" content="https://knowalgo.github.io/linked-list.html">
+  <meta property="og:site_name" content="KnowAlgo">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Linked List: Complete Guide with LeetCode Solutions">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Linked List: Complete Guide with LeetCode Solutions",
+    "description": "Comprehensive guide to singly and doubly linked lists including Floyd's cycle detection, two-pointer technique, and 6 LeetCode solutions.",
+    "author": { "@type": "Organization", "name": "KnowAlgo" },
+    "publisher": { "@type": "Organization", "name": "KnowAlgo" },
+    "datePublished": "2025-01-01",
+    "dateModified": "2026-02-27",
+    "keywords": ["linked list", "data structure", "algorithms", "leetcode", "two pointer"],
+    "articleSection": "Data Structures"
+  }
+  </script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #eff6ff;
+      --secondary: #7c3aed;
+      --accent: #059669;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --bg: #f8fafc;
+      --bg-card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #1e293b;
+      --toc-width: 280px;
+      --header-h: 64px;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    ul, ol { padding-left: 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(to right, #d97706, #dc2626); z-index: 1000; transition: width 0.1s; }
+
+    .topnav { position: sticky; top: 0; z-index: 200; background: #fff; border-bottom: 1px solid var(--border); height: var(--header-h); display: flex; align-items: center; padding: 0 1.5rem; gap: 1rem; box-shadow: var(--shadow); }
+    .topnav-logo { font-weight: 800; font-size: 1.25rem; color: var(--primary); letter-spacing: -0.5px; }
+    .topnav-sep { color: var(--border); }
+    .topnav-crumb { color: var(--text-muted); font-size: 0.9rem; }
+    .topnav-links { margin-left: auto; display: flex; gap: 1rem; align-items: center; }
+    .topnav-links a { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
+    .topnav-links a:hover { color: var(--primary); text-decoration: none; }
+    .btn-home { background: var(--primary); color: #fff !important; padding: 0.35rem 0.9rem; border-radius: 6px; font-size: 0.85rem !important; }
+    .btn-home:hover { background: var(--primary-dark); }
+
+    .page-layout { display: grid; grid-template-columns: var(--toc-width) 1fr; max-width: 1400px; margin: 0 auto; min-height: calc(100vh - var(--header-h)); }
+
+    .toc-sidebar { position: sticky; top: var(--header-h); height: calc(100vh - var(--header-h)); overflow-y: auto; padding: 1.5rem 1rem; border-right: 1px solid var(--border); background: #fff; }
+    .toc-sidebar::-webkit-scrollbar { width: 4px; }
+    .toc-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .toc-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .toc-list { list-style: none; padding: 0; }
+    .toc-list li { margin-bottom: 0; }
+    .toc-list a { display: block; padding: 0.3rem 0.75rem; border-radius: 6px; font-size: 0.875rem; color: var(--text-muted); transition: all 0.15s; border-left: 2px solid transparent; }
+    .toc-list a:hover, .toc-list a.active { color: var(--primary); background: var(--primary-light); border-left-color: var(--primary); text-decoration: none; }
+    .toc-divider { border: none; border-top: 1px solid var(--border); margin: 0.75rem 0; }
+
+    .main-content { padding: 2rem 2.5rem; max-width: 900px; }
+
+    .hero { background: linear-gradient(135deg, #7c2d12 0%, #d97706 50%, #dc2626 100%); color: white; border-radius: var(--radius); padding: 2.5rem; margin-bottom: 2.5rem; }
+    .hero-badge { display: inline-block; background: rgba(255,255,255,0.2); color: #fff; padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1rem; }
+    .hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; line-height: 1.2; margin-bottom: 1rem; letter-spacing: -1px; }
+    .hero p { font-size: 1.05rem; opacity: 0.9; max-width: 620px; line-height: 1.7; margin-bottom: 1.5rem; }
+    .hero-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .hero-meta span { font-size: 0.875rem; opacity: 0.8; display: flex; align-items: center; gap: 0.3rem; }
+
+    .content-section { margin-bottom: 3rem; scroll-margin-top: calc(var(--header-h) + 1rem); }
+    .section-label { display: inline-block; background: #fef3c7; color: #92400e; padding: 0.2rem 0.7rem; border-radius: 99px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.6rem; }
+    h2.section-title { font-size: 1.75rem; font-weight: 800; margin-bottom: 1rem; letter-spacing: -0.5px; }
+    h3 { font-size: 1.2rem; font-weight: 700; margin: 1.5rem 0 0.75rem; color: var(--text); }
+    h4 { font-size: 1rem; font-weight: 700; margin: 1.25rem 0 0.5rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+    p { margin-bottom: 1rem; }
+
+    .callout { border-radius: var(--radius); padding: 1.25rem 1.5rem; margin: 1.5rem 0; border-left: 4px solid; }
+    .callout-blue { background: #eff6ff; border-color: var(--primary); }
+    .callout-green { background: #f0fdf4; border-color: var(--accent); }
+    .callout-yellow { background: #fefce8; border-color: var(--warning); }
+
+    .code-wrapper { position: relative; margin: 1.25rem 0; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-md); }
+    .code-header { background: #0f172a; padding: 0.6rem 1rem; display: flex; align-items: center; justify-content: space-between; }
+    .code-lang { font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .copy-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #94a3b8; font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 4px; cursor: pointer; transition: all 0.15s; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+    .copy-btn.copied { background: #059669; border-color: #059669; color: #fff; }
+    pre[class*="language-"] { margin: 0 !important; border-radius: 0 !important; font-size: 0.875rem !important; }
+
+    .diagram { background: var(--code-bg); color: #e2e8f0; padding: 1.5rem; border-radius: var(--radius); font-family: 'Courier New', Courier, monospace; font-size: 0.875rem; line-height: 1.6; overflow-x: auto; margin: 1.25rem 0; white-space: pre; }
+
+    .table-wrapper { overflow-x: auto; margin: 1.5rem 0; border-radius: var(--radius); box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th { background: #f1f5f9; padding: 0.75rem 1rem; text-align: left; font-size: 0.875rem; font-weight: 700; color: var(--text); border-bottom: 2px solid var(--border); }
+    td { padding: 0.75rem 1rem; font-size: 0.875rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+    .complexity-good { color: #059669; font-weight: 700; }
+    .complexity-ok { color: #d97706; font-weight: 700; }
+    .complexity-bad { color: #dc2626; font-weight: 700; }
+
+    .lc-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
+    .lc-header { padding: 1rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; border-bottom: 1px solid var(--border); background: #f8fafc; }
+    .lc-num { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+    .lc-title { font-size: 1rem; font-weight: 700; color: var(--text); flex: 1; }
+    .lc-diff { font-size: 0.75rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 99px; }
+    .diff-easy { background: #d1fae5; color: #065f46; }
+    .diff-medium { background: #fef3c7; color: #92400e; }
+    .diff-hard { background: #fee2e2; color: #991b1b; }
+    .lc-body { padding: 1.25rem; }
+    .lc-meta { display: flex; gap: 1rem; margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted); }
+
+    .page-footer { background: #0f172a; color: #94a3b8; padding: 2.5rem; margin-top: 4rem; }
+    .footer-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .footer-links a { color: #60a5fa; font-size: 0.875rem; }
+    .footer-copy { font-size: 0.8rem; opacity: 0.6; }
+
+    @media (max-width: 768px) {
+      .page-layout { grid-template-columns: 1fr; }
+      .toc-sidebar { display: none; }
+      .main-content { padding: 1.5rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+
+<nav class="topnav">
+  <a href="index.html" class="topnav-logo">KnowAlgo</a>
+  <span class="topnav-sep">/</span>
+  <span class="topnav-crumb">Linked List</span>
+  <div class="topnav-links">
+    <a href="trie.html">Trie</a>
+    <a href="heap.html">Heap</a>
+    <a href="index.html" class="btn-home">← Home</a>
+  </div>
+</nav>
+
+<div class="page-layout">
+
+<aside class="toc-sidebar" aria-label="Table of contents">
+  <div class="toc-title">On this page</div>
+  <ul class="toc-list" id="toc">
+    <li><a href="#what-is">What is a Linked List?</a></li>
+    <li><a href="#types">Types: Singly, Doubly, Circular</a></li>
+    <li><a href="#operations">Core Operations</a></li>
+    <li><a href="#implementation">Python Implementation</a></li>
+    <li><a href="#techniques">Key Techniques</a></li>
+    <li><a href="#complexity">Complexity Analysis</a></li>
+    <hr class="toc-divider">
+    <li><a href="#leetcode">LeetCode Problems</a></li>
+    <li><a href="#applications">Applications</a></li>
+  </ul>
+  <hr class="toc-divider">
+  <div class="toc-title">Other Guides</div>
+  <ul class="toc-list">
+    <li><a href="trie.html">→ Trie</a></li>
+    <li><a href="hash-map.html">→ Hash Map</a></li>
+    <li><a href="binary-tree.html">→ Binary Tree</a></li>
+    <li><a href="heap.html">→ Heap</a></li>
+    <li><a href="stack-queue.html">→ Stack &amp; Queue</a></li>
+    <li><a href="graph.html">→ Graph</a></li>
+  </ul>
+</aside>
+
+<main class="main-content" id="main-content">
+
+  <div class="hero">
+    <div class="hero-badge">Data Structures</div>
+    <h1>Linked List</h1>
+    <p>A chain of nodes connected by pointers. Master the two-pointer technique, Floyd's cycle detection, the dummy-head trick, and the reversal pattern — the core toolkit for all linked list interviews.</p>
+    <div class="hero-meta">
+      <span>🔗 Node-based structure</span>
+      <span>🐍 Python implementation</span>
+      <span>🎯 6 LeetCode problems</span>
+      <span>🏃 Two-pointer techniques</span>
+    </div>
+  </div>
+
+  <!-- What is a Linked List -->
+  <section class="content-section" id="what-is">
+    <div class="section-label">Introduction</div>
+    <h2 class="section-title">What is a Linked List?</h2>
+    <p>A linked list is a linear data structure where each element (node) contains a value and a pointer to the next node. Unlike arrays, linked list elements are not stored in contiguous memory — each node is independently allocated and connected via pointers.</p>
+
+    <div class="diagram">  Singly Linked List:
+
+  head
+   ↓
+  [1 | →] ──→ [2 | →] ──→ [3 | →] ──→ [4 | None]
+                                         ↑
+                                        tail
+
+  Node structure: { val: 1, next: &lt;reference to next node&gt; }</div>
+
+    <div class="callout callout-blue">
+      <strong>Array vs Linked List — When to use which</strong>
+      <ul>
+        <li><strong>Array</strong>: O(1) random access by index, O(n) insert/delete at middle (must shift)</li>
+        <li><strong>Linked List</strong>: O(n) access by index (must traverse), O(1) insert/delete at known position</li>
+        <li><strong>Use linked list when</strong>: frequent insertions/deletions at head or when iterating sequentially</li>
+        <li><strong>Use array when</strong>: need random access or cache performance matters</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Types -->
+  <section class="content-section" id="types">
+    <div class="section-label">Variants</div>
+    <h2 class="section-title">Types: Singly, Doubly, Circular</h2>
+
+    <h3>Singly Linked List</h3>
+    <div class="diagram">  A ──→ B ──→ C ──→ None
+  (can only traverse forward)</div>
+
+    <h3>Doubly Linked List</h3>
+    <div class="diagram">  None ←── A ⇄ B ⇄ C ──→ None
+         (can traverse both directions)
+  Node: { val, prev, next }</div>
+
+    <h3>Circular Linked List</h3>
+    <div class="diagram">  A ──→ B ──→ C ──→ (back to A)
+  (no None; tail.next = head)
+  Useful for: round-robin scheduling, music playlists</div>
+
+    <div class="callout callout-yellow">
+      <strong>Python's collections.deque is a doubly linked list</strong>
+      Python's built-in <code>deque</code> (double-ended queue) is implemented as a doubly linked list internally, providing O(1) append and popleft — perfect for BFS queues and sliding windows.
+    </div>
+  </section>
+
+  <!-- Core Operations -->
+  <section class="content-section" id="operations">
+    <div class="section-label">Operations</div>
+    <h2 class="section-title">Core Operations</h2>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+
+# BUILD a linked list from array: O(n)
+def build(arr):
+    dummy = ListNode(0)
+    curr = dummy
+    for val in arr:
+        curr.next = ListNode(val)
+        curr = curr.next
+    return dummy.next  # 1 -> 2 -> 3 -> None
+
+# TRAVERSE: O(n)
+def traverse(head):
+    result = []
+    curr = head
+    while curr:
+        result.append(curr.val)
+        curr = curr.next
+    return result
+
+# INSERT at HEAD: O(1)
+def insert_head(head, val):
+    node = ListNode(val, head)
+    return node  # new head
+
+# INSERT at TAIL: O(n) without tail pointer
+def insert_tail(head, val):
+    node = ListNode(val)
+    if not head:
+        return node
+    curr = head
+    while curr.next:
+        curr = curr.next
+    curr.next = node
+    return head
+
+# INSERT at position k (0-indexed): O(k)
+def insert_at(head, k, val):
+    dummy = ListNode(0, head)
+    curr = dummy
+    for _ in range(k):
+        if not curr.next:
+            break
+        curr = curr.next
+    curr.next = ListNode(val, curr.next)
+    return dummy.next
+
+# DELETE by value: O(n)
+def delete_val(head, val):
+    dummy = ListNode(0, head)
+    curr = dummy
+    while curr.next:
+        if curr.next.val == val:
+            curr.next = curr.next.next
+            break
+        curr = curr.next
+    return dummy.next  # dummy.next is new head
+
+# LENGTH: O(n)
+def length(head):
+    count = 0
+    while head:
+        count += 1
+        head = head.next
+    return count</code></pre>
+    </div>
+  </section>
+
+  <!-- Full Implementation -->
+  <section class="content-section" id="implementation">
+    <div class="section-label">From Scratch</div>
+    <h2 class="section-title">Python Doubly Linked List</h2>
+    <p>A production-quality doubly linked list using sentinel (dummy) head and tail nodes to eliminate all edge cases. This is the exact pattern used inside Python's <code>collections.OrderedDict</code>.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">class Node:
+    def __init__(self, val=0):
+        self.val = val
+        self.prev = None
+        self.next = None
+
+class DoublyLinkedList:
+    def __init__(self):
+        # Sentinel nodes eliminate edge cases (no null checks needed)
+        self.head = Node()  # dummy head
+        self.tail = Node()  # dummy tail
+        self.head.next = self.tail
+        self.tail.prev = self.head
+        self._size = 0
+
+    def _insert_after(self, node: Node, new_node: Node):
+        """Insert new_node right after node. O(1)"""
+        new_node.prev = node
+        new_node.next = node.next
+        node.next.prev = new_node
+        node.next = new_node
+        self._size += 1
+
+    def _remove(self, node: Node):
+        """Unlink node from list. O(1)"""
+        node.prev.next = node.next
+        node.next.prev = node.prev
+        self._size -= 1
+
+    def append(self, val) -> Node:
+        """Add to tail (before sentinel tail). O(1)"""
+        node = Node(val)
+        self._insert_after(self.tail.prev, node)
+        return node
+
+    def prepend(self, val) -> Node:
+        """Add to head (after sentinel head). O(1)"""
+        node = Node(val)
+        self._insert_after(self.head, node)
+        return node
+
+    def pop(self):
+        """Remove from tail. O(1)"""
+        if self._size == 0:
+            raise IndexError("pop from empty list")
+        node = self.tail.prev
+        self._remove(node)
+        return node.val
+
+    def popleft(self):
+        """Remove from head. O(1)"""
+        if self._size == 0:
+            raise IndexError("pop from empty list")
+        node = self.head.next
+        self._remove(node)
+        return node.val
+
+    def move_to_end(self, node: Node):
+        """Move existing node to tail. O(1). Used in LRU Cache."""
+        self._remove(node)
+        self._insert_after(self.tail.prev, node)
+
+    def __len__(self):
+        return self._size
+
+    def __iter__(self):
+        curr = self.head.next
+        while curr is not self.tail:
+            yield curr.val
+            curr = curr.next
+
+
+# Usage
+dll = DoublyLinkedList()
+dll.append(1)
+dll.append(2)
+node3 = dll.append(3)
+dll.prepend(0)
+print(list(dll))      # [0, 1, 2, 3]
+dll.move_to_end(node3)  # move 3 to end (it's already there)
+dll.pop()             # removes 3
+print(list(dll))      # [0, 1, 2]</code></pre>
+    </div>
+  </section>
+
+  <!-- Key Techniques -->
+  <section class="content-section" id="techniques">
+    <div class="section-label">Interview Toolkit</div>
+    <h2 class="section-title">Key Techniques</h2>
+
+    <h3>1. Dummy Head Pattern</h3>
+    <p>Add a dummy node before the real head. This eliminates special cases for head deletion and simplifies list building.</p>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># WITHOUT dummy: must handle head deletion separately
+def delete_no_dummy(head, val):
+    if head and head.val == val:
+        return head.next  # special case!
+    curr = head
+    while curr and curr.next:
+        if curr.next.val == val:
+            curr.next = curr.next.next
+            return head
+        curr = curr.next
+    return head
+
+# WITH dummy: no special cases needed
+def delete_with_dummy(head, val):
+    dummy = ListNode(0, head)  # dummy.next = head
+    curr = dummy
+    while curr.next:           # treat dummy as "previous node"
+        if curr.next.val == val:
+            curr.next = curr.next.next
+            return dummy.next  # might return new head
+        curr = curr.next
+    return dummy.next</code></pre>
+    </div>
+
+    <h3>2. Two Pointers (Fast &amp; Slow / Runner Technique)</h3>
+    <p>Use two pointers at different speeds or offsets to solve problems in a single pass.</p>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># Find MIDDLE of linked list (slow advances 1, fast advances 2)
+def find_middle(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next        # 1 step
+        fast = fast.next.next   # 2 steps
+    return slow  # at middle when fast reaches end
+
+# Find Kth from END in single pass
+def kth_from_end(head, k):
+    fast = slow = head
+    # Advance fast k steps ahead
+    for _ in range(k):
+        fast = fast.next
+    # Move both until fast reaches end
+    while fast:
+        fast = fast.next
+        slow = slow.next
+    return slow  # slow is now k steps from end
+
+# Find INTERSECTION of two linked lists
+def get_intersection(headA, headB):
+    a, b = headA, headB
+    while a is not b:
+        # Switch to other list's head when reaching end
+        a = a.next if a else headB
+        b = b.next if b else headA
+    return a  # either the intersection node or None</code></pre>
+    </div>
+
+    <h3>3. Floyd's Cycle Detection</h3>
+    <p>Two pointers: slow moves 1 step, fast moves 2 steps. If they meet, there's a cycle. Mathematical proof: the meeting point is always the same distance from the cycle start as the head.</p>
+
+    <div class="diagram">  Linked list with cycle:
+  1 → 2 → 3 → 4 → 5
+              ↑       ↓
+              8 ← 7 ← 6
+
+  Slow: 1,2,3,4,5,6,7,8,3...
+  Fast: 1,3,5,7,3,5,7,3...
+  They meet at node 3!
+
+  Phase 2: reset slow to head, advance both 1 step at a time
+  slow: 1,2,3 → meets fast at 3 = cycle start ✓</div>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">def hasCycle(head) -> bool:
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow is fast:
+            return True
+    return False
+
+def detectCycle(head):
+    """Find the node where the cycle begins."""
+    slow = fast = head
+    # Phase 1: detect cycle
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow is fast:
+            break
+    else:
+        return None  # no cycle
+
+    # Phase 2: find cycle start
+    # Reset one pointer to head; advance both 1 step at a time
+    slow = head
+    while slow is not fast:
+        slow = slow.next
+        fast = fast.next
+    return slow  # cycle start node</code></pre>
+    </div>
+
+    <h3>4. In-Place Reversal</h3>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">def reverse(head):
+    """Reverse entire linked list. O(n) time, O(1) space."""
+    prev = None
+    curr = head
+    while curr:
+        next_node = curr.next  # save next
+        curr.next = prev       # reverse pointer
+        prev = curr            # advance prev
+        curr = next_node       # advance curr
+    return prev  # new head
+
+def reverseRange(head, left, right):
+    """Reverse sublist from position left to right (1-indexed)."""
+    dummy = ListNode(0, head)
+    prev = dummy
+    # Move prev to node just before 'left'
+    for _ in range(left - 1):
+        prev = prev.next
+
+    curr = prev.next
+    for _ in range(right - left):
+        next_node = curr.next
+        curr.next = next_node.next
+        next_node.next = prev.next
+        prev.next = next_node
+    return dummy.next</code></pre>
+    </div>
+  </section>
+
+  <!-- Complexity -->
+  <section class="content-section" id="complexity">
+    <div class="section-label">Analysis</div>
+    <h2 class="section-title">Time &amp; Space Complexity</h2>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Operation</th><th>Singly</th><th>Doubly</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Access by index</td><td class="complexity-bad">O(n)</td><td class="complexity-bad">O(n)</td><td>Must traverse from head</td></tr>
+          <tr><td>Insert at head</td><td class="complexity-good">O(1)</td><td class="complexity-good">O(1)</td><td>Just update pointers</td></tr>
+          <tr><td>Insert at tail</td><td class="complexity-bad">O(n)</td><td class="complexity-good">O(1)*</td><td>*With tail pointer</td></tr>
+          <tr><td>Insert at position</td><td class="complexity-bad">O(n)</td><td class="complexity-bad">O(n)</td><td>O(1) once at position</td></tr>
+          <tr><td>Delete at head</td><td class="complexity-good">O(1)</td><td class="complexity-good">O(1)</td><td>Just move head pointer</td></tr>
+          <tr><td>Delete at tail</td><td class="complexity-bad">O(n)</td><td class="complexity-good">O(1)*</td><td>*Doubly can find prev</td></tr>
+          <tr><td>Search by value</td><td class="complexity-bad">O(n)</td><td class="complexity-bad">O(n)</td><td>Linear scan</td></tr>
+          <tr><td>Space</td><td class="complexity-ok">O(n)</td><td class="complexity-ok">O(n)</td><td>Doubly uses 2x pointers</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- LeetCode -->
+  <section class="content-section" id="leetcode">
+    <div class="section-label">Practice</div>
+    <h2 class="section-title">LeetCode Problems</h2>
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #206</span>
+        <span class="lc-title">Reverse Linked List</span>
+        <span class="lc-diff diff-easy">Easy</span>
+      </div>
+      <div class="lc-body">
+        <p>Reverse a singly linked list. Classic iterative and recursive solutions.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def reverseList(self, head):
+    prev, curr = None, head
+    while curr:
+        nxt = curr.next
+        curr.next = prev
+        prev = curr
+        curr = nxt
+    return prev
+
+# Recursive (elegant but O(n) stack space)
+def reverseList_rec(self, head):
+    if not head or not head.next:
+        return head
+    new_head = self.reverseList_rec(head.next)
+    head.next.next = head
+    head.next = None
+    return new_head</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(1) iterative</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #21</span>
+        <span class="lc-title">Merge Two Sorted Lists</span>
+        <span class="lc-diff diff-easy">Easy</span>
+      </div>
+      <div class="lc-body">
+        <p>Merge two sorted linked lists into one sorted list. Use dummy head to simplify.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def mergeTwoLists(self, l1, l2):
+    dummy = ListNode(0)
+    curr = dummy
+    while l1 and l2:
+        if l1.val <= l2.val:
+            curr.next = l1
+            l1 = l1.next
+        else:
+            curr.next = l2
+            l2 = l2.next
+        curr = curr.next
+    curr.next = l1 or l2  # attach remaining nodes
+    return dummy.next</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n+m)</span><span>💾 Space: O(1)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #141</span>
+        <span class="lc-title">Linked List Cycle</span>
+        <span class="lc-diff diff-easy">Easy</span>
+      </div>
+      <div class="lc-body">
+        <p>Detect if a linked list has a cycle. Must use O(1) extra space (no sets allowed).</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def hasCycle(self, head) -> bool:
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow is fast:  # same node → cycle exists
+            return True
+    return False</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(1)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #19</span>
+        <span class="lc-title">Remove Nth Node From End of List</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Remove the nth node from the end of the list in one pass.</p>
+        <p><strong>Key insight</strong>: Two pointers n+1 apart. When fast reaches the end, slow is at the node before the one to remove.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def removeNthFromEnd(self, head, n: int):
+    dummy = ListNode(0, head)
+    fast = slow = dummy
+    # Move fast n+1 steps ahead (so slow stops at node BEFORE the target)
+    for _ in range(n + 1):
+        fast = fast.next
+    while fast:
+        fast = fast.next
+        slow = slow.next
+    slow.next = slow.next.next  # skip the nth node from end
+    return dummy.next</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(1)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #143</span>
+        <span class="lc-title">Reorder List</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Reorder L0→L1→...→Ln to L0→Ln→L1→Ln-1→L2→Ln-2→... in place.</p>
+        <p><strong>Key insight</strong>: Three steps — find middle, reverse second half, interleave.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def reorderList(self, head) -> None:
+    # Step 1: Find middle
+    slow = fast = head
+    while fast.next and fast.next.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    # Step 2: Reverse second half
+    prev, curr = None, slow.next
+    slow.next = None  # cut list in half
+    while curr:
+        nxt = curr.next
+        curr.next = prev
+        prev = curr
+        curr = nxt
+
+    # Step 3: Interleave first and reversed second half
+    first, second = head, prev
+    while second:
+        tmp1, tmp2 = first.next, second.next
+        first.next = second
+        second.next = tmp1
+        first, second = tmp1, tmp2</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(1)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #23</span>
+        <span class="lc-title">Merge k Sorted Lists</span>
+        <span class="lc-diff diff-hard">Hard</span>
+      </div>
+      <div class="lc-body">
+        <p>Merge k sorted linked lists into one sorted list.</p>
+        <p><strong>Key insight</strong>: Use a min-heap of size k. Always extract the minimum, then add that node's next to the heap.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">import heapq
+
+def mergeKLists(self, lists):
+    # heap items: (val, tie-breaker index, node)
+    heap = []
+    for i, node in enumerate(lists):
+        if node:
+            heapq.heappush(heap, (node.val, i, node))
+
+    dummy = curr = ListNode(0)
+    while heap:
+        val, i, node = heapq.heappop(heap)
+        curr.next = node
+        curr = curr.next
+        if node.next:
+            heapq.heappush(heap, (node.next.val, i, node.next))
+    return dummy.next</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n log k) where n=total nodes, k=number of lists</span><span>💾 Space: O(k)</span></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Applications -->
+  <section class="content-section" id="applications">
+    <div class="section-label">Real World</div>
+    <h2 class="section-title">Real-World Applications</h2>
+    <ul>
+      <li><strong>Python collections.deque</strong>: doubly linked list, used as stack/queue/deque in standard library</li>
+      <li><strong>Browser history</strong>: forward/back navigation (doubly linked list)</li>
+      <li><strong>Undo/redo</strong>: text editors, Photoshop layers (doubly linked list)</li>
+      <li><strong>Music playlists</strong>: circular linked list — "repeat all" wraps to beginning</li>
+      <li><strong>LRU Cache</strong>: doubly linked list + hash map = O(1) access + O(1) recency updates</li>
+      <li><strong>OS process scheduling</strong>: run queue as circular linked list for round-robin</li>
+      <li><strong>Hash table chaining</strong>: each bucket is a linked list of colliding key-value pairs</li>
+      <li><strong>Memory allocators</strong>: free list tracking available memory blocks</li>
+    </ul>
+  </section>
+
+  <footer class="page-footer">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="trie.html">Trie</a>
+      <a href="hash-map.html">Hash Map</a>
+      <a href="linked-list.html">Linked List</a>
+      <a href="binary-tree.html">Binary Tree</a>
+      <a href="heap.html">Heap</a>
+      <a href="stack-queue.html">Stack &amp; Queue</a>
+      <a href="graph.html">Graph</a>
+    </div>
+    <p class="footer-copy">© 2026 KnowAlgo — Data Structures &amp; Algorithms Made Clear</p>
+  </footer>
+
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight) * 100;
+    document.getElementById('progress').style.width = scrolled + '%';
+  });
+  function copyCode(btn) {
+    const code = btn.closest('.code-wrapper').querySelector('code');
+    navigator.clipboard.writeText(code.textContent).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+  const sections = document.querySelectorAll('.content-section[id]');
+  const tocLinks = document.querySelectorAll('.toc-list a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.toc-list a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-64px 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

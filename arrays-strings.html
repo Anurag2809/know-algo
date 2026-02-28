@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arrays & Strings – Deep Dive | KnowAlgo</title>
+  <meta name="description" content="Master Arrays and Strings for coding interviews. Two pointers, sliding window, prefix sums, binary search — all patterns with Python code and 8 LeetCode solutions including Trapping Rain Water (Hard).">
+  <meta name="keywords" content="arrays strings algorithms, two pointers, sliding window, prefix sum, binary search, leetcode arrays, python arrays tutorial, coding interview patterns">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.github.io/arrays-strings.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Arrays & Strings – Deep Dive | KnowAlgo">
+  <meta property="og:description" content="Two pointers, sliding window, prefix sums, binary search — all essential array patterns explained with Python code and 8 LeetCode solutions.">
+  <meta property="og:url" content="https://knowalgo.github.io/arrays-strings.html">
+  <meta property="og:site_name" content="KnowAlgo">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Arrays & Strings – Deep Dive | KnowAlgo">
+  <meta name="twitter:description" content="Two pointers, sliding window, prefix sums, binary search — all patterns explained with Python code and LeetCode solutions.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Arrays & Strings: Complete Interview Guide",
+    "description": "Comprehensive guide to array and string patterns for coding interviews: two pointers, sliding window, prefix sums, binary search.",
+    "author": { "@type": "Organization", "name": "KnowAlgo" },
+    "publisher": { "@type": "Organization", "name": "KnowAlgo", "url": "https://knowalgo.github.io/" },
+    "datePublished": "2026-02-28",
+    "dateModified": "2026-02-28",
+    "keywords": ["arrays", "strings", "two pointers", "sliding window", "prefix sum", "binary search", "leetcode"],
+    "articleSection": "Algorithms"
+  }
+  </script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    :root {
+      --primary: #2563eb; --primary-dark: #1d4ed8; --primary-light: #eff6ff;
+      --secondary: #7c3aed; --accent: #059669; --danger: #dc2626; --warning: #d97706;
+      --bg: #f8fafc; --bg-card: #ffffff; --text: #0f172a; --text-muted: #64748b;
+      --border: #e2e8f0; --code-bg: #1e293b; --toc-width: 280px; --header-h: 64px;
+      --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.05);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth;font-size:16px}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+    a{color:var(--primary);text-decoration:none} a:hover{text-decoration:underline}
+    ul,ol{padding-left:1.5rem} li{margin-bottom:.35rem}
+
+    .progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(to right,#2563eb,#06b6d4);z-index:1000;transition:width .1s}
+    .topnav{position:sticky;top:0;z-index:200;background:#fff;border-bottom:1px solid var(--border);height:var(--header-h);display:flex;align-items:center;padding:0 1.5rem;gap:1rem;box-shadow:var(--shadow)}
+    .topnav-logo{font-weight:800;font-size:1.25rem;color:var(--primary);letter-spacing:-.5px}
+    .topnav-sep{color:var(--border)} .topnav-crumb{color:var(--text-muted);font-size:.9rem}
+    .topnav-links{margin-left:auto;display:flex;gap:1rem;align-items:center}
+    .topnav-links a{color:var(--text-muted);font-size:.9rem;font-weight:500}
+    .topnav-links a:hover{color:var(--primary);text-decoration:none}
+    .btn-home{background:var(--primary);color:#fff!important;padding:.35rem .9rem;border-radius:6px;font-size:.85rem!important}
+    .btn-home:hover{background:var(--primary-dark)}
+    .page-layout{display:grid;grid-template-columns:var(--toc-width) 1fr;max-width:1400px;margin:0 auto;min-height:calc(100vh - var(--header-h))}
+    .toc-sidebar{position:sticky;top:var(--header-h);height:calc(100vh - var(--header-h));overflow-y:auto;padding:1.5rem 1rem;border-right:1px solid var(--border);background:#fff}
+    .toc-sidebar::-webkit-scrollbar{width:4px} .toc-sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .toc-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:.75rem}
+    .toc-list{list-style:none;padding:0} .toc-list li{margin-bottom:0}
+    .toc-list a{display:block;padding:.3rem .75rem;border-radius:6px;font-size:.875rem;color:var(--text-muted);transition:all .15s;border-left:2px solid transparent}
+    .toc-list a:hover,.toc-list a.active{color:var(--primary);background:var(--primary-light);border-left-color:var(--primary);text-decoration:none}
+    .toc-divider{border:none;border-top:1px solid var(--border);margin:.75rem 0}
+    .main-content{padding:2rem 2.5rem;max-width:900px}
+    .hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#0891b2 100%);color:white;border-radius:var(--radius);padding:2.5rem;margin-bottom:2.5rem}
+    .hero-badge{display:inline-block;background:rgba(255,255,255,.2);color:#fff;padding:.25rem .75rem;border-radius:99px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem}
+    .hero h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;line-height:1.2;margin-bottom:1rem;letter-spacing:-1px}
+    .hero p{font-size:1.05rem;opacity:.9;max-width:620px;line-height:1.7;margin-bottom:1.5rem}
+    .hero-meta{display:flex;gap:1.5rem;flex-wrap:wrap}
+    .hero-meta span{font-size:.875rem;opacity:.8}
+    .content-section{margin-bottom:3rem;scroll-margin-top:calc(var(--header-h) + 1rem)}
+    .section-label{display:inline-block;background:#f1f5f9;color:#475569;padding:.2rem .7rem;border-radius:99px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem}
+    h2.section-title{font-size:1.75rem;font-weight:800;margin-bottom:1rem;letter-spacing:-.5px}
+    h3{font-size:1.2rem;font-weight:700;margin:1.5rem 0 .75rem;color:var(--text)}
+    p{margin-bottom:1rem}
+    .callout{border-radius:var(--radius);padding:1.25rem 1.5rem;margin:1.5rem 0;border-left:4px solid}
+    .callout-blue{background:#eff6ff;border-color:var(--primary)}
+    .callout-yellow{background:#fefce8;border-color:var(--warning)}
+    .callout-green{background:#f0fdf4;border-color:var(--accent)}
+    .callout-red{background:#fef2f2;border-color:var(--danger)}
+    .callout strong{display:block;margin-bottom:.4rem}
+    .code-wrapper{position:relative;margin:1.25rem 0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-md)}
+    .code-header{background:#0f172a;padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between}
+    .code-lang{font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+    .copy-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#94a3b8;font-size:.75rem;padding:.25rem .6rem;border-radius:4px;cursor:pointer;transition:all .15s}
+    .copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+    .copy-btn.copied{background:#059669;border-color:#059669;color:#fff}
+    pre[class*="language-"]{margin:0!important;border-radius:0!important;font-size:.875rem!important}
+    .diagram{background:var(--code-bg);color:#e2e8f0;padding:1.5rem;border-radius:var(--radius);font-family:'Courier New',Courier,monospace;font-size:.875rem;line-height:1.6;overflow-x:auto;margin:1.25rem 0;white-space:pre}
+    .table-wrapper{overflow-x:auto;margin:1.5rem 0;border-radius:var(--radius);box-shadow:var(--shadow)}
+    table{width:100%;border-collapse:collapse;background:#fff}
+    th{background:#f1f5f9;padding:.75rem 1rem;text-align:left;font-size:.875rem;font-weight:700;color:var(--text);border-bottom:2px solid var(--border)}
+    td{padding:.75rem 1rem;font-size:.875rem;border-bottom:1px solid var(--border);vertical-align:top}
+    tr:last-child td{border-bottom:none} tr:hover td{background:#f8fafc}
+    .complexity-good{color:#059669;font-weight:700} .complexity-ok{color:#d97706;font-weight:700} .complexity-bad{color:#dc2626;font-weight:700}
+    .lc-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.5rem;box-shadow:var(--shadow)}
+    .lc-header{padding:1rem 1.25rem;display:flex;align-items:center;gap:.75rem;border-bottom:1px solid var(--border);background:#f8fafc}
+    .lc-num{font-size:.8rem;font-weight:700;color:var(--text-muted)}
+    .lc-title{font-size:1rem;font-weight:700;color:var(--text);flex:1}
+    .lc-diff{font-size:.75rem;font-weight:700;padding:.15rem .5rem;border-radius:99px}
+    .diff-easy{background:#d1fae5;color:#065f46} .diff-medium{background:#fef3c7;color:#92400e} .diff-hard{background:#fee2e2;color:#991b1b}
+    .lc-body{padding:1.25rem}
+    .lc-meta{display:flex;gap:1rem;margin-top:.75rem;font-size:.8rem;color:var(--text-muted)}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin:1.25rem 0}
+    .box{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+    .box h4{font-size:.9rem;font-weight:700;margin-bottom:.6rem;color:var(--text)}
+    .box ul{font-size:.875rem;color:var(--text-muted)}
+    .pattern-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:1.25rem 0}
+    .pattern-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem;border-top:3px solid var(--primary)}
+    .pattern-card h4{font-size:.9rem;font-weight:700;margin-bottom:.4rem}
+    .pattern-card p{font-size:.8rem;color:var(--text-muted);margin:0}
+    .pattern-card.green{border-top-color:#059669}
+    .pattern-card.orange{border-top-color:#d97706}
+    .pattern-card.purple{border-top-color:#7c3aed}
+    .pattern-card.red{border-top-color:#dc2626}
+    .page-footer{background:#0f172a;color:#94a3b8;padding:2.5rem;margin-top:4rem}
+    .footer-links{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+    .footer-links a{color:#60a5fa;font-size:.875rem}
+    .footer-copy{font-size:.8rem;opacity:.6}
+    @media(max-width:768px){.page-layout{grid-template-columns:1fr}.toc-sidebar{display:none}.main-content{padding:1.5rem 1rem}.two-col{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+
+<nav class="topnav">
+  <a href="index.html" class="topnav-logo">KnowAlgo</a>
+  <span class="topnav-sep">/</span>
+  <span class="topnav-crumb">Arrays &amp; Strings</span>
+  <div class="topnav-links">
+    <a href="hash-map.html">Hash Map</a>
+    <a href="binary-search.html">Binary Search</a>
+    <a href="index.html" class="btn-home">← Home</a>
+  </div>
+</nav>
+
+<div class="page-layout">
+
+<aside class="toc-sidebar">
+  <div class="toc-title">On this page</div>
+  <ul class="toc-list" id="toc">
+    <li><a href="#two-pointers">Two Pointers</a></li>
+    <li><a href="#sliding-window">Sliding Window</a></li>
+    <li><a href="#prefix-sum">Prefix Sum</a></li>
+    <li><a href="#binary-search">Binary Search</a></li>
+    <li><a href="#string-tricks">String Tricks</a></li>
+    <li><a href="#decision-guide">Pattern Decision Guide</a></li>
+    <li><a href="#complexity">Complexity Reference</a></li>
+    <hr class="toc-divider">
+    <li><a href="#leetcode">LeetCode Problems</a></li>
+  </ul>
+  <hr class="toc-divider">
+  <div class="toc-title">Other Guides</div>
+  <ul class="toc-list">
+    <li><a href="hash-map.html">→ Hash Map</a></li>
+    <li><a href="linked-list.html">→ Linked List</a></li>
+    <li><a href="binary-tree.html">→ Binary Tree</a></li>
+    <li><a href="stack-queue.html">→ Stack &amp; Queue</a></li>
+    <li><a href="dp.html">→ Dynamic Programming</a></li>
+    <li><a href="backtracking.html">→ Backtracking</a></li>
+  </ul>
+</aside>
+
+<main class="main-content" id="main-content">
+
+  <div class="hero">
+    <div class="hero-badge">Algorithms</div>
+    <h1>Arrays &amp; Strings</h1>
+    <p>The foundation of every coding interview. Arrays and strings don't need fancy data structures — they need <em>patterns</em>. Two pointers, sliding window, prefix sums, and binary search together solve the majority of array problems you'll encounter.</p>
+    <div class="hero-meta">
+      <span>👆 Two Pointers</span>
+      <span>🪟 Sliding Window</span>
+      <span>➕ Prefix Sum</span>
+      <span>🔍 Binary Search</span>
+      <span>🎯 8 LeetCode problems</span>
+    </div>
+  </div>
+
+  <!-- Two Pointers -->
+  <section class="content-section" id="two-pointers">
+    <div class="section-label">Pattern 1</div>
+    <h2 class="section-title">Two Pointers</h2>
+    <p>Two pointers is a class of techniques where you maintain two indices into an array and move them based on some condition. The most common variant is <strong>opposite ends</strong>: start <code>lo</code> at index 0 and <code>hi</code> at index n-1, then converge toward the center.</p>
+
+    <div class="callout callout-blue">
+      <strong>When to use Two Pointers (opposite ends):</strong>
+      The array is sorted (or you need a pair/triplet that meets a condition). You want O(n) instead of O(n²) brute force. Classic signals: "find two numbers that sum to X", "maximize area", "move all zeros to end".
+    </div>
+
+    <h3>Opposite Ends: Template</h3>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def two_pointer_opposite(arr):
+    lo, hi = 0, len(arr) - 1
+    while lo < hi:
+        current = compute(arr[lo], arr[hi])
+        if current == target:
+            return (lo, hi)           # found answer
+        elif current < target:
+            lo += 1                   # need larger value → move lo right
+        else:
+            hi -= 1                   # need smaller value → move hi left
+    return None                       # not found</code></pre>
+    </div>
+
+    <h3>Why This Works</h3>
+    <p>At each step, you eliminate at least one element from consideration. If the current sum is too small, moving <code>lo</code> right can only increase it (array is sorted). If too large, moving <code>hi</code> left can only decrease it. This gives O(n) vs O(n²) for the brute-force nested loop.</p>
+
+    <div class="diagram">Example: Two Sum II (sorted array)  [2, 7, 11, 15],  target = 9
+   lo=0  hi=3   sum = 2+15 = 17  > 9  →  hi--
+   lo=0  hi=2   sum = 2+11 = 13  > 9  →  hi--
+   lo=0  hi=1   sum = 2+7  =  9  == 9  ✓  return [1, 2]
+
+Key insight: moving lo right can only increase the sum
+           moving hi left  can only decrease the sum
+→ we never miss the solution</div>
+
+    <h3>Trapping Rain Water Preview</h3>
+    <p>Two pointers also solves "two-sided" accumulation problems. Water trapped at position <code>i</code> = <code>min(left_max, right_max) - height[i]</code>. Instead of precomputing both arrays, two pointers maintain running maxima from each side in O(1) space.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def trap(height):
+    lo, hi = 0, len(height) - 1
+    left_max = right_max = 0
+    water = 0
+    while lo <= hi:
+        if height[lo] <= height[hi]:
+            # water at lo is determined by left_max (right side is >= left)
+            if height[lo] >= left_max:
+                left_max = height[lo]   # new max, no water trapped here
+            else:
+                water += left_max - height[lo]
+            lo += 1
+        else:
+            if height[hi] >= right_max:
+                right_max = height[hi]
+            else:
+                water += right_max - height[hi]
+            hi -= 1
+    return water</code></pre>
+    </div>
+
+    <div class="callout callout-yellow">
+      <strong>Why process the side with smaller height?</strong>
+      Water at <code>lo</code> is bounded by <code>min(left_max, right_max)</code>. If <code>height[lo] &lt;= height[hi]</code>, we know <code>right_max &gt;= height[hi] &gt;= height[lo]</code>, so the bottleneck is definitely <code>left_max</code>. We can safely compute water without knowing the full right max.
+    </div>
+
+    <h3>Same-Direction: Fast &amp; Slow</h3>
+    <p>When both pointers move in the same direction, the technique is often called "fast/slow" or "read/write". It's used for in-place operations:</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python"># Remove duplicates from sorted array in-place (LC #26)
+def removeDuplicates(nums):
+    if not nums:
+        return 0
+    write = 1                         # next write position
+    for read in range(1, len(nums)):
+        if nums[read] != nums[read - 1]:
+            nums[write] = nums[read]  # write only unique elements
+            write += 1
+    return write                      # new logical length
+
+# Move all zeros to end (LC #283) — same pattern
+def moveZeroes(nums):
+    write = 0
+    for read in range(len(nums)):
+        if nums[read] != 0:
+            nums[write] = nums[read]
+            write += 1
+    while write < len(nums):
+        nums[write] = 0
+        write += 1</code></pre>
+    </div>
+  </section>
+
+  <!-- Sliding Window -->
+  <section class="content-section" id="sliding-window">
+    <div class="section-label">Pattern 2</div>
+    <h2 class="section-title">Sliding Window</h2>
+    <p>The sliding window is a two-pointer technique where the two pointers define a <em>contiguous subarray</em>. It transforms O(n²) brute force (try all subarrays) into O(n) by maintaining a running aggregate and only updating on changes at the edges.</p>
+
+    <h3>Fixed-Size Window</h3>
+    <p>When the problem asks for the best subarray of exactly size <code>k</code>, maintain a window of exactly that size. Add the right element, remove the left element.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python"># Maximum sum subarray of size k
+def maxSumFixed(nums, k):
+    # Build first window
+    window_sum = sum(nums[:k])
+    best = window_sum
+
+    # Slide: add right element, remove left element
+    for i in range(k, len(nums)):
+        window_sum += nums[i]         # right element enters
+        window_sum -= nums[i - k]     # left element leaves
+        best = max(best, window_sum)
+    return best
+
+# Fixed window with a frequency map (e.g., anagram detection)
+def findAnagrams(s, p):           # LC #438
+    from collections import Counter
+    need = Counter(p)
+    have = Counter(s[:len(p)])
+    result = []
+    if have == need:
+        result.append(0)
+    for i in range(len(p), len(s)):
+        # add right
+        have[s[i]] += 1
+        # remove left
+        left = s[i - len(p)]
+        have[left] -= 1
+        if have[left] == 0:
+            del have[left]
+        if have == need:
+            result.append(i - len(p) + 1)
+    return result</code></pre>
+    </div>
+
+    <h3>Variable-Size Window</h3>
+    <p>The more powerful variant: expand the right pointer unconditionally, shrink from the left when the window violates a condition. This finds the smallest/largest valid window.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python"># Generic variable sliding window template
+def variableWindow(arr, condition):
+    lo = 0
+    window_state = initialize()       # e.g., sum=0, counter={}, etc.
+    ans = 0
+
+    for hi in range(len(arr)):
+        window_state = add(arr[hi])   # expand window: include arr[hi]
+
+        while not valid(window_state):
+            window_state = remove(arr[lo])
+            lo += 1                   # shrink from left until valid
+
+        ans = max(ans, hi - lo + 1)   # update answer (longest valid window)
+    return ans
+
+# ─────────────────────────────────────────────────────────
+# Longest Repeating Character Replacement (LC #424)
+# Find the longest subarray where we can replace ≤ k chars
+# so all characters are the same.
+# ─────────────────────────────────────────────────────────
+def characterReplacement(s, k):
+    count = [0] * 26
+    max_freq = 0   # max frequency of any single character in current window
+    lo = 0
+    ans = 0
+
+    for hi in range(len(s)):
+        count[ord(s[hi]) - ord('A')] += 1
+        max_freq = max(max_freq, count[ord(s[hi]) - ord('A')])
+
+        # window_size - max_freq = number of chars we need to replace
+        # if this exceeds k, shrink from left
+        if (hi - lo + 1) - max_freq > k:
+            count[ord(s[lo]) - ord('A')] -= 1
+            lo += 1
+        # Note: we don't update max_freq when shrinking — this is intentional!
+        # max_freq only grows, ensuring our answer can only stay or grow.
+        ans = max(ans, hi - lo + 1)
+    return ans</code></pre>
+    </div>
+
+    <div class="callout callout-blue">
+      <strong>The "shrink once" optimization:</strong>
+      In LC #424, we don't recalculate <code>max_freq</code> when shrinking. This is fine because we're tracking the <em>best possible</em> window size seen so far. <code>max_freq</code> never decreases, so the window size never decreases — we're essentially tracking the maximum valid window ever seen. If the window is invalid, we slide (both lo and hi move), which is O(n) total.
+    </div>
+
+    <h3>The "At Most K" Trick</h3>
+    <p>Many "exactly K" problems can be solved via <code>f(atMost K) - f(atMost K-1)</code> where f is easier to compute with the variable window template:</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python"># Subarrays with exactly K distinct integers (LC #992)
+# = atMost(k) - atMost(k-1)
+def subarraysWithKDistinct(nums, k):
+    def atMost(k):
+        count = {}
+        lo = 0
+        ans = 0
+        for hi in range(len(nums)):
+            count[nums[hi]] = count.get(nums[hi], 0) + 1
+            while len(count) > k:
+                count[nums[lo]] -= 1
+                if count[nums[lo]] == 0:
+                    del count[nums[lo]]
+                lo += 1
+            ans += hi - lo + 1     # all subarrays ending at hi, starting [lo..hi]
+        return ans
+    return atMost(k) - atMost(k - 1)</code></pre>
+    </div>
+  </section>
+
+  <!-- Prefix Sum -->
+  <section class="content-section" id="prefix-sum">
+    <div class="section-label">Pattern 3</div>
+    <h2 class="section-title">Prefix Sum</h2>
+    <p>A prefix sum array lets you answer "what is the sum of elements from index <em>l</em> to <em>r</em>?" in O(1) after O(n) preprocessing. It's especially powerful when combined with a hash map to find subarrays with a target sum or property.</p>
+
+    <div class="diagram">nums   = [1,  2, -3,  4,  2]
+index    0   1   2   3   4
+
+pre[0]  = 0            ← sentinel: sum of 0 elements
+pre[1]  = 0 + 1 = 1
+pre[2]  = 1 + 2 = 3
+pre[3]  = 3 + (-3) = 0
+pre[4]  = 0 + 4 = 4
+pre[5]  = 4 + 2 = 6
+
+sum(l, r)  =  pre[r+1] - pre[l]     (0-indexed, inclusive)
+
+sum(1, 3)  =  pre[4] - pre[1]  =  4 - 1  =  3  ✓ (2 + -3 + 4 = 3)</div>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python"># 1-D Prefix Sum
+def buildPrefix(nums):
+    n = len(nums)
+    pre = [0] * (n + 1)          # pre[0] = 0 sentinel
+    for i in range(n):
+        pre[i + 1] = pre[i] + nums[i]
+    return pre
+
+def rangeSum(pre, l, r):         # inclusive, 0-indexed
+    return pre[r + 1] - pre[l]
+
+# ─────────────────────────────────────────────────────────
+# Prefix Sum + Hash Map: subarray sum equals k (LC #560)
+# Key insight: sum(l, r) == k  ←→  pre[r+1] - pre[l] == k
+#                               ←→  pre[l] == pre[r+1] - k
+# So: for each prefix sum p, count how many earlier prefix
+# sums equal (p - k).  That's exactly the number of valid
+# subarrays ending at the current position.
+# ─────────────────────────────────────────────────────────
+def subarraySum(nums, k):
+    seen = {0: 1}                # prefix_sum → count; seed with 0
+    curr = 0
+    ans = 0
+    for x in nums:
+        curr += x                # current prefix sum
+        ans += seen.get(curr - k, 0)   # any prefix that creates a gap of k
+        seen[curr] = seen.get(curr, 0) + 1
+    return ans</code></pre>
+    </div>
+
+    <h3>Product Array (No Division)</h3>
+    <p>Product of Array Except Self (LC #238) uses the same prefix/suffix idea but with multiplication. The trick: left pass gives prefix products, right pass gives suffix products, combining them gives the answer without ever dividing.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def productExceptSelf(nums):
+    n = len(nums)
+    ans = [1] * n
+
+    # Left pass: ans[i] = product of nums[0..i-1]
+    prefix = 1
+    for i in range(n):
+        ans[i] = prefix
+        prefix *= nums[i]
+
+    # Right pass: multiply ans[i] by product of nums[i+1..n-1]
+    suffix = 1
+    for i in range(n - 1, -1, -1):
+        ans[i] *= suffix
+        suffix *= nums[i]
+
+    return ans
+
+# Example: nums = [1, 2, 3, 4]
+# After left pass:  ans = [1, 1, 2, 6]
+# Suffix products:       × [24, 12, 4, 1]
+# Final:                   [24, 12, 8, 6]  ✓</code></pre>
+    </div>
+
+    <h3>2-D Prefix Sum</h3>
+    <p>For grid/matrix problems, 2D prefix sums enable O(1) rectangle sum queries after O(m×n) preprocessing:</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">class NumMatrix:  # LC #304
+    def __init__(self, matrix):
+        m, n = len(matrix), len(matrix[0])
+        # pre[i][j] = sum of rectangle (0,0) to (i-1, j-1)
+        self.pre = [[0] * (n + 1) for _ in range(m + 1)]
+        for r in range(m):
+            for c in range(n):
+                self.pre[r+1][c+1] = (
+                    matrix[r][c]
+                    + self.pre[r][c+1]    # top
+                    + self.pre[r+1][c]    # left
+                    - self.pre[r][c]      # subtract double-counted top-left
+                )
+
+    def sumRegion(self, r1, c1, r2, c2):
+        p = self.pre
+        return (p[r2+1][c2+1]
+                - p[r1][c2+1]             # remove top strip
+                - p[r2+1][c1]             # remove left strip
+                + p[r1][c1])              # add back double-subtracted corner</code></pre>
+    </div>
+  </section>
+
+  <!-- Binary Search -->
+  <section class="content-section" id="binary-search">
+    <div class="section-label">Pattern 4</div>
+    <h2 class="section-title">Binary Search</h2>
+    <p>Binary search works on any <strong>monotone predicate</strong> — not just sorted arrays. The key insight: if the array has a property that splits it cleanly into "No, No, No, Yes, Yes, Yes", binary search can find the first "Yes" in O(log n).</p>
+
+    <div class="callout callout-blue">
+      <strong>The Binary Search Contract:</strong>
+      Binary search requires that the search space is <em>monotone</em> — once the condition becomes true, it stays true (or vice versa). Think of it as the predicate array <code>[F, F, F, T, T, T]</code>. You're finding the boundary between F and T.
+    </div>
+
+    <h3>Template 1: Find Exact Target</h3>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def binarySearch(nums, target):
+    lo, hi = 0, len(nums) - 1
+    while lo <= hi:                       # ← inclusive both ends
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            return mid
+        elif nums[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return -1                             # not found</code></pre>
+    </div>
+
+    <h3>Template 2: Find Left Boundary (first True)</h3>
+    <p>Use when you want the leftmost position satisfying a condition: <code>[F, F, F, T, T, T]</code> → find first T.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def findLeftBoundary(nums, target):
+    lo, hi = 0, len(nums)         # hi = len, not len-1 (handles "insert after all")
+    while lo < hi:                # ← strict: loop ends when lo == hi
+        mid = (lo + hi) // 2
+        if nums[mid] < target:    # mid is in the "False" zone → move lo up
+            lo = mid + 1
+        else:                     # mid might be the answer → preserve it
+            hi = mid
+    return lo                     # lo == hi == first position where nums[lo] >= target
+
+# Example: bisect_left equivalent
+# nums = [1, 2, 4, 4, 5], target = 4
+# lo=0  hi=5  mid=2  nums[2]=4 >= 4  →  hi=2
+# lo=0  hi=2  mid=1  nums[1]=2  < 4  →  lo=2
+# lo=2  hi=2  → return 2  ✓ (first 4 is at index 2)</code></pre>
+    </div>
+
+    <h3>Template 3: Find Right Boundary (last True)</h3>
+    <p>Use when you want the rightmost position satisfying a condition: <code>[T, T, T, F, F, F]</code> → find last T.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def findRightBoundary(nums, target):
+    lo, hi = 0, len(nums) - 1
+    while lo < hi:
+        mid = (lo + hi + 1) // 2  # ← bias mid toward right to avoid infinite loop!
+        if nums[mid] <= target:   # mid might be the answer → preserve it
+            lo = mid
+        else:                     # mid is in the "False" zone → move hi down
+            hi = mid - 1
+    return lo                     # lo == hi == last position where nums[lo] <= target
+
+# WHY bias right? If lo=0, hi=1, mid=(0+1)//2=0, if we set lo=mid=0 → infinite loop!
+# With +1: mid=(0+1+1)//2=1, so lo moves forward.</code></pre>
+    </div>
+
+    <h3>Binary Search on a Rotated Array</h3>
+    <p>Even when an array isn't fully sorted, binary search works if at least one half is always fully sorted. At each step, determine which half is sorted and check if the target lies in it.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python"># LC #153: Find Minimum in Rotated Sorted Array
+# The minimum is where the array "drops". Binary search finds the drop.
+def findMin(nums):
+    lo, hi = 0, len(nums) - 1
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if nums[mid] > nums[hi]:
+            # mid is in the larger left portion → min is in right half
+            lo = mid + 1
+        else:
+            # mid is in the smaller right portion (or mid IS the min)
+            hi = mid
+    return nums[lo]
+
+# Example: [4, 5, 6, 7, 0, 1, 2]
+# lo=0  hi=6  mid=3  nums[3]=7 > nums[6]=2  →  lo=4
+# lo=4  hi=6  mid=5  nums[5]=1 ≤ nums[6]=2  →  hi=5
+# lo=4  hi=5  mid=4  nums[4]=0 ≤ nums[5]=1  →  hi=4
+# lo=4  hi=4  → return nums[4] = 0  ✓
+
+
+# LC #33: Search in Rotated Sorted Array
+# At every mid, one of the two halves is always fully sorted.
+def search(nums, target):
+    lo, hi = 0, len(nums) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            return mid
+        # Left half is sorted
+        if nums[lo] <= nums[mid]:
+            if nums[lo] <= target < nums[mid]:
+                hi = mid - 1           # target in sorted left half
+            else:
+                lo = mid + 1           # target in right half
+        # Right half is sorted
+        else:
+            if nums[mid] < target <= nums[hi]:
+                lo = mid + 1           # target in sorted right half
+            else:
+                hi = mid - 1           # target in left half
+    return -1</code></pre>
+    </div>
+
+    <h3>Binary Search on the Answer</h3>
+    <p>A powerful application: instead of searching in an array, binary search on the <em>answer space</em>. Works when the problem has monotone feasibility — "is X possible?" is easier to check than finding the optimal X directly.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python"># Koko Eating Bananas (LC #875): minimum eating speed to finish in h hours
+# "Can Koko eat all bananas at speed k?" is O(n) to check.
+# Binary search on k from 1 to max(piles).
+def minEatingSpeed(piles, h):
+    import math
+    lo, hi = 1, max(piles)
+    while lo < hi:
+        mid = (lo + hi) // 2
+        hours = sum(math.ceil(p / mid) for p in piles)
+        if hours <= h:        # mid is fast enough → maybe go slower
+            hi = mid
+        else:                 # mid is too slow → need to go faster
+            lo = mid + 1
+    return lo</code></pre>
+    </div>
+  </section>
+
+  <!-- String Tricks -->
+  <section class="content-section" id="string-tricks">
+    <div class="section-label">Pattern 5</div>
+    <h2 class="section-title">String Tricks</h2>
+    <p>Strings in Python are immutable sequences. Most operations are O(n). The key patterns for interview string problems:</p>
+
+    <h3>Anagram &amp; Frequency Problems</h3>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">from collections import Counter
+
+# Are two strings anagrams?
+def isAnagram(s, t):
+    return Counter(s) == Counter(t)    # O(n)
+    # Alternative: return sorted(s) == sorted(t)   O(n log n) — simpler but slower
+
+# Character frequency array (faster for lowercase ASCII)
+def freqArray(s):
+    freq = [0] * 26
+    for c in s:
+        freq[ord(c) - ord('a')] += 1
+    return freq
+
+# Grouping anagrams: sorted string as canonical key (LC #49)
+def groupAnagrams(strs):
+    groups = {}
+    for s in strs:
+        key = tuple(sorted(s))         # canonical form
+        groups.setdefault(key, []).append(s)
+    return list(groups.values())</code></pre>
+    </div>
+
+    <h3>Palindrome Checking</h3>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python"># Simple check
+def isPalindrome(s):
+    return s == s[::-1]               # O(n) time and space
+
+# In-place two-pointer (no extra memory)
+def isPalindromeInPlace(s):
+    lo, hi = 0, len(s) - 1
+    while lo < hi:
+        if s[lo] != s[hi]:
+            return False
+        lo += 1; hi -= 1
+    return True
+
+# Longest palindromic substring: expand around center (LC #5)
+def longestPalindrome(s):
+    def expand(lo, hi):
+        while lo >= 0 and hi < len(s) and s[lo] == s[hi]:
+            lo -= 1; hi += 1
+        return s[lo+1:hi]             # slice after overshooting
+
+    best = ""
+    for i in range(len(s)):
+        odd  = expand(i, i)           # odd-length palindrome
+        even = expand(i, i + 1)       # even-length palindrome
+        best = max(best, odd, even, key=len)
+    return best</code></pre>
+    </div>
+
+    <h3>Efficient String Building</h3>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python"># DON'T: string concatenation in a loop is O(n²)
+result = ""
+for c in chars:
+    result += c                   # creates new string each time!
+
+# DO: collect into list, join at end — O(n)
+parts = []
+for c in chars:
+    parts.append(c)
+result = "".join(parts)           # single allocation
+
+# Reverse words in a string (LC #151)
+def reverseWords(s):
+    return " ".join(s.split()[::-1])   # split handles multiple spaces</code></pre>
+    </div>
+  </section>
+
+  <!-- Decision Guide -->
+  <section class="content-section" id="decision-guide">
+    <div class="section-label">Reference</div>
+    <h2 class="section-title">Pattern Decision Guide</h2>
+    <p>Given a new array/string problem, use this flowchart:</p>
+
+    <div class="pattern-grid">
+      <div class="pattern-card">
+        <h4>👆 Two Pointers</h4>
+        <p>Sorted array + find pair/triplet + target sum<br>Maximize/minimize area or distance<br>In-place deduplication / partition</p>
+      </div>
+      <div class="pattern-card green">
+        <h4>🪟 Sliding Window</h4>
+        <p>Contiguous subarray or substring<br>Fixed size k, or "at most / at least"<br>Character frequency + window constraint</p>
+      </div>
+      <div class="pattern-card orange">
+        <h4>➕ Prefix Sum</h4>
+        <p>Range sum queries on static array<br>"Subarray sum = k" with hash map<br>2D grid sum queries</p>
+      </div>
+      <div class="pattern-card purple">
+        <h4>🔍 Binary Search</h4>
+        <p>Sorted (or rotated sorted) array<br>"Find minimum X satisfying condition"<br>Monotone predicate on answer space</p>
+      </div>
+      <div class="pattern-card red">
+        <h4>🔤 String Frequency</h4>
+        <p>Anagram / permutation detection<br>Character count comparisons<br>Sliding window + char frequency</p>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Problem Signal</th><th>Pattern</th><th>Time</th><th>Space</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Find pair with target sum in sorted array</td><td>Two Pointers</td><td class="complexity-good">O(n)</td><td class="complexity-good">O(1)</td></tr>
+          <tr><td>Max/min subarray of fixed size k</td><td>Sliding Window (fixed)</td><td class="complexity-good">O(n)</td><td class="complexity-good">O(1)</td></tr>
+          <tr><td>Smallest subarray with sum ≥ target</td><td>Sliding Window (variable)</td><td class="complexity-good">O(n)</td><td class="complexity-good">O(1)</td></tr>
+          <tr><td>Longest substring with at most k distinct chars</td><td>Sliding Window + HashMap</td><td class="complexity-good">O(n)</td><td class="complexity-good">O(k)</td></tr>
+          <tr><td>Subarray sum equals k (any positivity)</td><td>Prefix Sum + HashMap</td><td class="complexity-good">O(n)</td><td class="complexity-ok">O(n)</td></tr>
+          <tr><td>Range sum queries on static array</td><td>Prefix Sum array</td><td class="complexity-good">O(1) query</td><td class="complexity-ok">O(n)</td></tr>
+          <tr><td>Search in sorted / rotated sorted array</td><td>Binary Search</td><td class="complexity-good">O(log n)</td><td class="complexity-good">O(1)</td></tr>
+          <tr><td>Minimum valid "speed" / "capacity"</td><td>Binary Search on answer</td><td class="complexity-good">O(n log n)</td><td class="complexity-good">O(1)</td></tr>
+          <tr><td>Is string an anagram / permutation</td><td>Counter / freq array</td><td class="complexity-good">O(n)</td><td class="complexity-good">O(1)*</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:.8rem;color:var(--text-muted)">* O(1) space for fixed character set (26 lowercase letters).</p>
+  </section>
+
+  <!-- Complexity -->
+  <section class="content-section" id="complexity">
+    <div class="section-label">Reference</div>
+    <h2 class="section-title">Complexity Reference</h2>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Operation</th><th>Time</th><th>Space</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Access by index</td><td class="complexity-good">O(1)</td><td class="complexity-good">O(1)</td><td>Direct memory address</td></tr>
+          <tr><td>Append to list</td><td class="complexity-good">O(1) amortized</td><td class="complexity-good">O(1)</td><td>Dynamic array doubling</td></tr>
+          <tr><td>Insert at position i</td><td class="complexity-bad">O(n)</td><td class="complexity-good">O(1)</td><td>Must shift elements</td></tr>
+          <tr><td>String slicing s[l:r]</td><td class="complexity-bad">O(r-l)</td><td class="complexity-bad">O(r-l)</td><td>Creates new string</td></tr>
+          <tr><td>String concatenation</td><td class="complexity-bad">O(n)</td><td class="complexity-bad">O(n)</td><td>Use list + "".join()</td></tr>
+          <tr><td>sort()</td><td class="complexity-ok">O(n log n)</td><td class="complexity-ok">O(n)</td><td>Timsort (Python)</td></tr>
+          <tr><td>Two pointers / sliding window</td><td class="complexity-good">O(n)</td><td class="complexity-good">O(1)</td><td>Each element touched ≤ 2×</td></tr>
+          <tr><td>Binary search</td><td class="complexity-good">O(log n)</td><td class="complexity-good">O(1)</td><td>Iterative</td></tr>
+          <tr><td>Prefix sum build</td><td class="complexity-good">O(n)</td><td class="complexity-ok">O(n)</td><td>One-time precomputation</td></tr>
+          <tr><td>Counter / freq map</td><td class="complexity-good">O(n)</td><td class="complexity-good">O(k)</td><td>k = alphabet size</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- LeetCode Problems -->
+  <section class="content-section" id="leetcode">
+    <div class="section-label">Practice</div>
+    <h2 class="section-title">LeetCode Problems</h2>
+    <p>8 problems covering every pattern — from straightforward one-pass scans to two-hard classics.</p>
+
+    <!-- LC 121 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">#121</span>
+        <span class="lc-title">Best Time to Buy and Sell Stock</span>
+        <span class="lc-diff diff-easy">Easy</span>
+      </div>
+      <div class="lc-body">
+        <p>Given an array where <code>prices[i]</code> is the price on day <code>i</code>, find the maximum profit from one buy and one sell (buy before sell).</p>
+        <p><strong>Insight:</strong> Track the minimum price seen so far. At each day, the best profit = <code>price - min_so_far</code>. One pass suffices — this is essentially a sliding window where the left end is the best buy point.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><code class="language-python">def maxProfit(prices):
+    min_price = float('inf')
+    max_profit = 0
+    for price in prices:
+        min_price = min(min_price, price)
+        max_profit = max(max_profit, price - min_price)
+    return max_profit
+
+# prices = [7, 1, 5, 3, 6, 4]
+# min:     [7, 1, 1, 1, 1, 1]
+# profit:  [0, 0, 4, 2, 5, 3]  → max = 5 ✓</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ O(n) time</span><span>💾 O(1) space</span><span>Pattern: Greedy / Sliding Min</span></div>
+      </div>
+    </div>
+
+    <!-- LC 11 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">#11</span>
+        <span class="lc-title">Container With Most Water</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Given <code>n</code> vertical lines at positions 0..n-1 with heights in array <code>height</code>, find two lines that together with the x-axis form a container with the most water.</p>
+        <p><strong>Insight:</strong> Area = <code>(hi - lo) × min(height[lo], height[hi])</code>. Start with the widest container (lo=0, hi=n-1). The only way to potentially improve is to increase the minimum height — so move the shorter wall inward.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><code class="language-python">def maxArea(height):
+    lo, hi = 0, len(height) - 1
+    best = 0
+    while lo < hi:
+        area = (hi - lo) * min(height[lo], height[hi])
+        best = max(best, area)
+        # Move the shorter wall — moving the taller wall can only
+        # decrease or maintain the limiting factor (min height)
+        # while also decreasing width → guaranteed worse or equal
+        if height[lo] < height[hi]:
+            lo += 1
+        else:
+            hi -= 1
+    return best</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ O(n) time</span><span>💾 O(1) space</span><span>Pattern: Two Pointers (opposite ends)</span></div>
+      </div>
+    </div>
+
+    <!-- LC 238 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">#238</span>
+        <span class="lc-title">Product of Array Except Self</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Return an array where <code>ans[i]</code> equals the product of all elements in <code>nums</code> except <code>nums[i]</code>. Must run in O(n) without division.</p>
+        <p><strong>Insight:</strong> <code>ans[i] = (product of all elements left of i) × (product of all elements right of i)</code>. Two passes: left pass builds prefix products, right pass multiplies in suffix products.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><code class="language-python">def productExceptSelf(nums):
+    n = len(nums)
+    ans = [1] * n
+
+    # Left pass: ans[i] = product of nums[0..i-1]
+    prefix = 1
+    for i in range(n):
+        ans[i] = prefix          # store before multiplying
+        prefix *= nums[i]
+
+    # Right pass: multiply by product of nums[i+1..n-1]
+    suffix = 1
+    for i in range(n - 1, -1, -1):
+        ans[i] *= suffix         # combine prefix and suffix
+        suffix *= nums[i]
+
+    return ans
+
+# nums = [1,  2,  3,  4]
+# left  = [1,  1,  2,  6]   (prefix products)
+# right = [24, 12, 4,  1]   (suffix products)
+# ans   = [24, 12, 8,  6]   ✓</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ O(n) time</span><span>💾 O(1) extra (output array doesn't count)</span><span>Pattern: Prefix/Suffix product</span></div>
+      </div>
+    </div>
+
+    <!-- LC 209 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">#209</span>
+        <span class="lc-title">Minimum Size Subarray Sum</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Given an array of positive integers and target, find the minimum length subarray with sum ≥ target. Return 0 if impossible.</p>
+        <p><strong>Insight:</strong> Variable sliding window. Expand right; whenever sum ≥ target, record the length and shrink from left to find the minimum window satisfying the condition.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><code class="language-python">def minSubArrayLen(target, nums):
+    lo = 0
+    curr_sum = 0
+    ans = float('inf')
+
+    for hi in range(len(nums)):
+        curr_sum += nums[hi]           # expand right
+
+        # as long as sum >= target, try to shrink from left
+        while curr_sum >= target:
+            ans = min(ans, hi - lo + 1)
+            curr_sum -= nums[lo]
+            lo += 1
+
+    return ans if ans != float('inf') else 0
+
+# Works because all elements are positive:
+# removing from left decreases sum, ensuring termination.</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ O(n) time</span><span>💾 O(1) space</span><span>Pattern: Variable Sliding Window</span></div>
+      </div>
+    </div>
+
+    <!-- LC 424 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">#424</span>
+        <span class="lc-title">Longest Repeating Character Replacement</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Given a string <code>s</code> and integer <code>k</code>, you can replace any character in <code>s</code> with any letter at most <code>k</code> times. Return the length of the longest substring containing only one distinct character after replacements.</p>
+        <p><strong>Insight:</strong> In a valid window, <code>(window_size - max_freq) ≤ k</code>. Maintain the max frequency of any single character. If the window becomes invalid, slide it (increment both lo and hi) — we never shrink below the largest valid window seen so far.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><code class="language-python">def characterReplacement(s, k):
+    count = [0] * 26
+    max_freq = 0
+    lo = 0
+    ans = 0
+
+    for hi in range(len(s)):
+        idx = ord(s[hi]) - ord('A')
+        count[idx] += 1
+        max_freq = max(max_freq, count[idx])
+
+        # chars to replace = window_size - max_freq
+        if (hi - lo + 1) - max_freq > k:
+            count[ord(s[lo]) - ord('A')] -= 1
+            lo += 1                    # slide (don't shrink below best)
+
+        ans = max(ans, hi - lo + 1)
+    return ans
+
+# s="AABABBA", k=1
+# When hi=6: window "ABABBA" (size 6), max_freq=3 (A appears 3x)
+# 6 - 3 = 3 > 1, invalid → slide.
+# But window size stays at 5, which was valid earlier.</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ O(n) time</span><span>💾 O(1) space</span><span>Pattern: Sliding Window + Freq Array</span></div>
+      </div>
+    </div>
+
+    <!-- LC 153 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">#153</span>
+        <span class="lc-title">Find Minimum in Rotated Sorted Array</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>A sorted array was rotated at some pivot. Find the minimum element. Assume no duplicates.</p>
+        <p><strong>Insight:</strong> Compare <code>nums[mid]</code> with <code>nums[hi]</code>. If <code>nums[mid] &gt; nums[hi]</code>, the minimum is in the right half (the rotation point is there). Otherwise, it's in the left half including <code>mid</code>.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><code class="language-python">def findMin(nums):
+    lo, hi = 0, len(nums) - 1
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if nums[mid] > nums[hi]:
+            # mid is in the larger left part → min is to the right
+            lo = mid + 1
+        else:
+            # mid is in the smaller right part (or mid is the min)
+            hi = mid
+    return nums[lo]
+
+# [4, 5, 6, 7, 0, 1, 2]:
+# lo=0 hi=6 mid=3 → 7 > 2 → lo=4
+# lo=4 hi=6 mid=5 → 1 ≤ 2 → hi=5
+# lo=4 hi=5 mid=4 → 0 ≤ 1 → hi=4
+# lo=4 hi=4 → return nums[4]=0 ✓</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ O(log n) time</span><span>💾 O(1) space</span><span>Pattern: Binary Search (left boundary)</span></div>
+      </div>
+    </div>
+
+    <!-- LC 33 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">#33</span>
+        <span class="lc-title">Search in Rotated Sorted Array</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Search for a target in a rotated sorted array. Return its index or -1.</p>
+        <p><strong>Insight:</strong> At every <code>mid</code>, one of the two halves is always fully sorted. Determine which half is sorted, then check if the target lies within that range. If yes, search there; otherwise search the other side.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><code class="language-python">def search(nums, target):
+    lo, hi = 0, len(nums) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            return mid
+        # Determine which half is sorted
+        if nums[lo] <= nums[mid]:          # left half is sorted
+            if nums[lo] <= target < nums[mid]:
+                hi = mid - 1              # target in sorted left
+            else:
+                lo = mid + 1              # target in right
+        else:                             # right half is sorted
+            if nums[mid] < target <= nums[hi]:
+                lo = mid + 1              # target in sorted right
+            else:
+                hi = mid - 1              # target in left
+    return -1</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ O(log n) time</span><span>💾 O(1) space</span><span>Pattern: Binary Search (half-sorted)</span></div>
+      </div>
+    </div>
+
+    <!-- LC 42 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">#42</span>
+        <span class="lc-title">Trapping Rain Water</span>
+        <span class="lc-diff diff-hard">Hard</span>
+      </div>
+      <div class="lc-body">
+        <p>Given an elevation map, compute how much water it can trap after rain. The water above position <code>i</code> = <code>min(max_left, max_right) - height[i]</code>.</p>
+        <p><strong>Approach 1 (prefix/suffix arrays):</strong> Precompute <code>left_max[i]</code> and <code>right_max[i]</code>, then answer in one pass. O(n) time, O(n) space.</p>
+        <p><strong>Approach 2 (two pointers):</strong> Maintain running max from each side. Process whichever side has the smaller current height — that side's water is fully determined by its own running max.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><code class="language-python">def trap(height):
+    lo, hi = 0, len(height) - 1
+    left_max = right_max = 0
+    water = 0
+
+    while lo <= hi:
+        if height[lo] <= height[hi]:
+            # water at lo = left_max - height[lo]
+            # (right side is ≥ height[hi] ≥ height[lo], so left_max is bottleneck)
+            if height[lo] >= left_max:
+                left_max = height[lo]     # new max, no water here
+            else:
+                water += left_max - height[lo]
+            lo += 1
+        else:
+            if height[hi] >= right_max:
+                right_max = height[hi]
+            else:
+                water += right_max - height[hi]
+            hi -= 1
+
+    return water
+
+# height = [0,1,0,2,1,0,1,3,2,1,2,1]
+# Expected output: 6</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ O(n) time</span><span>💾 O(1) space</span><span>Pattern: Two Pointers (running max)</span></div>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+</div>
+
+<footer class="page-footer">
+  <div class="footer-links">
+    <a href="index.html">Home</a>
+    <a href="trie.html">Trie</a>
+    <a href="hash-map.html">Hash Map</a>
+    <a href="linked-list.html">Linked List</a>
+    <a href="binary-tree.html">Binary Tree</a>
+    <a href="bst.html">BST</a>
+    <a href="heap.html">Heap</a>
+    <a href="stack-queue.html">Stack &amp; Queue</a>
+    <a href="graph.html">Graph: Traversal</a>
+    <a href="graph-algorithms.html">Graph: Algorithms</a>
+    <a href="dp.html">Dynamic Programming</a>
+    <a href="backtracking.html">Backtracking</a>
+  </div>
+  <p class="footer-copy">© 2026 KnowAlgo — Data Structures &amp; Algorithms Made Clear</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+<script>
+  // Reading progress bar
+  window.addEventListener('scroll', () => {
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = total > 0 ? (window.scrollY / total) * 100 : 0;
+    document.getElementById('progress').style.width = pct + '%';
+  });
+
+  // Copy code button
+  function copyCode(btn) {
+    const code = btn.closest('.code-wrapper').querySelector('code');
+    navigator.clipboard.writeText(code.innerText).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  // TOC active section tracking
+  const tocLinks = document.querySelectorAll('.toc-list a[href^="#"]');
+  const sections = document.querySelectorAll('.content-section[id]');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('active'));
+        const link = document.querySelector(`.toc-list a[href="#${entry.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  sections.forEach(s => obs.observe(s));
+</script>
+
+</body>
+</html>

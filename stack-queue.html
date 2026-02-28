@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stack & Queue: Complete Guide with LeetCode Solutions | KnowAlgo</title>
+  <meta name="description" content="Master Stack and Queue data structures with deep explanations, monotonic stack patterns, sliding window deque, and 6 LeetCode solutions including Largest Rectangle in Histogram (Hard).">
+  <meta name="keywords" content="stack, queue, deque, monotonic stack, LIFO, FIFO, leetcode stack problems, next greater element, sliding window maximum, python stack queue">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.github.io/stack-queue.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Stack & Queue: Complete Guide with LeetCode Solutions">
+  <meta property="og:description" content="Master Stack and Queue with monotonic stack patterns, sliding window deque, and 6 LeetCode solutions.">
+  <meta property="og:url" content="https://knowalgo.github.io/stack-queue.html">
+  <meta property="og:site_name" content="KnowAlgo">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Stack & Queue: Complete Guide with LeetCode Solutions",
+    "description": "Comprehensive guide to Stack and Queue including monotonic stack, sliding window deque, and 6 LeetCode solutions.",
+    "author": { "@type": "Organization", "name": "KnowAlgo" },
+    "publisher": { "@type": "Organization", "name": "KnowAlgo" },
+    "datePublished": "2025-01-01",
+    "dateModified": "2026-02-27",
+    "keywords": ["stack", "queue", "deque", "monotonic stack", "data structure", "algorithms", "leetcode"],
+    "articleSection": "Data Structures"
+  }
+  </script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    :root {
+      --primary: #2563eb; --primary-dark: #1d4ed8; --primary-light: #eff6ff;
+      --secondary: #7c3aed; --accent: #059669; --danger: #dc2626; --warning: #d97706;
+      --bg: #f8fafc; --bg-card: #ffffff; --text: #0f172a; --text-muted: #64748b;
+      --border: #e2e8f0; --code-bg: #1e293b; --toc-width: 280px; --header-h: 64px;
+      --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.05);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth;font-size:16px}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+    a{color:var(--primary);text-decoration:none} a:hover{text-decoration:underline}
+    ul,ol{padding-left:1.5rem} li{margin-bottom:.35rem}
+
+    .progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(to right,#475569,#64748b);z-index:1000;transition:width .1s}
+    .topnav{position:sticky;top:0;z-index:200;background:#fff;border-bottom:1px solid var(--border);height:var(--header-h);display:flex;align-items:center;padding:0 1.5rem;gap:1rem;box-shadow:var(--shadow)}
+    .topnav-logo{font-weight:800;font-size:1.25rem;color:var(--primary);letter-spacing:-.5px}
+    .topnav-sep{color:var(--border)} .topnav-crumb{color:var(--text-muted);font-size:.9rem}
+    .topnav-links{margin-left:auto;display:flex;gap:1rem;align-items:center}
+    .topnav-links a{color:var(--text-muted);font-size:.9rem;font-weight:500}
+    .topnav-links a:hover{color:var(--primary);text-decoration:none}
+    .btn-home{background:var(--primary);color:#fff!important;padding:.35rem .9rem;border-radius:6px;font-size:.85rem!important}
+    .btn-home:hover{background:var(--primary-dark)}
+    .page-layout{display:grid;grid-template-columns:var(--toc-width) 1fr;max-width:1400px;margin:0 auto;min-height:calc(100vh - var(--header-h))}
+    .toc-sidebar{position:sticky;top:var(--header-h);height:calc(100vh - var(--header-h));overflow-y:auto;padding:1.5rem 1rem;border-right:1px solid var(--border);background:#fff}
+    .toc-sidebar::-webkit-scrollbar{width:4px} .toc-sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .toc-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:.75rem}
+    .toc-list{list-style:none;padding:0} .toc-list li{margin-bottom:0}
+    .toc-list a{display:block;padding:.3rem .75rem;border-radius:6px;font-size:.875rem;color:var(--text-muted);transition:all .15s;border-left:2px solid transparent}
+    .toc-list a:hover,.toc-list a.active{color:var(--primary);background:var(--primary-light);border-left-color:var(--primary);text-decoration:none}
+    .toc-divider{border:none;border-top:1px solid var(--border);margin:.75rem 0}
+    .main-content{padding:2rem 2.5rem;max-width:900px}
+    .hero{background:linear-gradient(135deg,#0f172a 0%,#334155 50%,#475569 100%);color:white;border-radius:var(--radius);padding:2.5rem;margin-bottom:2.5rem}
+    .hero-badge{display:inline-block;background:rgba(255,255,255,.2);color:#fff;padding:.25rem .75rem;border-radius:99px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem}
+    .hero h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;line-height:1.2;margin-bottom:1rem;letter-spacing:-1px}
+    .hero p{font-size:1.05rem;opacity:.9;max-width:620px;line-height:1.7;margin-bottom:1.5rem}
+    .hero-meta{display:flex;gap:1.5rem;flex-wrap:wrap}
+    .hero-meta span{font-size:.875rem;opacity:.8}
+    .content-section{margin-bottom:3rem;scroll-margin-top:calc(var(--header-h) + 1rem)}
+    .section-label{display:inline-block;background:#f1f5f9;color:#475569;padding:.2rem .7rem;border-radius:99px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem}
+    h2.section-title{font-size:1.75rem;font-weight:800;margin-bottom:1rem;letter-spacing:-.5px}
+    h3{font-size:1.2rem;font-weight:700;margin:1.5rem 0 .75rem;color:var(--text)}
+    p{margin-bottom:1rem}
+    .callout{border-radius:var(--radius);padding:1.25rem 1.5rem;margin:1.5rem 0;border-left:4px solid}
+    .callout-blue{background:#eff6ff;border-color:var(--primary)}
+    .callout-yellow{background:#fefce8;border-color:var(--warning)}
+    .callout-red{background:#fef2f2;border-color:var(--danger)}
+    .code-wrapper{position:relative;margin:1.25rem 0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-md)}
+    .code-header{background:#0f172a;padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between}
+    .code-lang{font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+    .copy-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#94a3b8;font-size:.75rem;padding:.25rem .6rem;border-radius:4px;cursor:pointer;transition:all .15s}
+    .copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+    .copy-btn.copied{background:#059669;border-color:#059669;color:#fff}
+    pre[class*="language-"]{margin:0!important;border-radius:0!important;font-size:.875rem!important}
+    .diagram{background:var(--code-bg);color:#e2e8f0;padding:1.5rem;border-radius:var(--radius);font-family:'Courier New',Courier,monospace;font-size:.875rem;line-height:1.6;overflow-x:auto;margin:1.25rem 0;white-space:pre}
+    .table-wrapper{overflow-x:auto;margin:1.5rem 0;border-radius:var(--radius);box-shadow:var(--shadow)}
+    table{width:100%;border-collapse:collapse;background:#fff}
+    th{background:#f1f5f9;padding:.75rem 1rem;text-align:left;font-size:.875rem;font-weight:700;color:var(--text);border-bottom:2px solid var(--border)}
+    td{padding:.75rem 1rem;font-size:.875rem;border-bottom:1px solid var(--border);vertical-align:top}
+    tr:last-child td{border-bottom:none} tr:hover td{background:#f8fafc}
+    .complexity-good{color:#059669;font-weight:700} .complexity-ok{color:#d97706;font-weight:700} .complexity-bad{color:#dc2626;font-weight:700}
+    .lc-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.5rem;box-shadow:var(--shadow)}
+    .lc-header{padding:1rem 1.25rem;display:flex;align-items:center;gap:.75rem;border-bottom:1px solid var(--border);background:#f8fafc}
+    .lc-num{font-size:.8rem;font-weight:700;color:var(--text-muted)}
+    .lc-title{font-size:1rem;font-weight:700;color:var(--text);flex:1}
+    .lc-diff{font-size:.75rem;font-weight:700;padding:.15rem .5rem;border-radius:99px}
+    .diff-easy{background:#d1fae5;color:#065f46} .diff-medium{background:#fef3c7;color:#92400e} .diff-hard{background:#fee2e2;color:#991b1b}
+    .lc-body{padding:1.25rem}
+    .lc-meta{display:flex;gap:1rem;margin-top:.75rem;font-size:.8rem;color:var(--text-muted)}
+    .page-footer{background:#0f172a;color:#94a3b8;padding:2.5rem;margin-top:4rem}
+    .footer-links{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+    .footer-links a{color:#60a5fa;font-size:.875rem}
+    .footer-copy{font-size:.8rem;opacity:.6}
+    @media(max-width:768px){.page-layout{grid-template-columns:1fr}.toc-sidebar{display:none}.main-content{padding:1.5rem 1rem}}
+  </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+
+<nav class="topnav">
+  <a href="index.html" class="topnav-logo">KnowAlgo</a>
+  <span class="topnav-sep">/</span>
+  <span class="topnav-crumb">Stack &amp; Queue</span>
+  <div class="topnav-links">
+    <a href="heap.html">Heap</a>
+    <a href="graph.html">Graph</a>
+    <a href="index.html" class="btn-home">← Home</a>
+  </div>
+</nav>
+
+<div class="page-layout">
+
+<aside class="toc-sidebar">
+  <div class="toc-title">On this page</div>
+  <ul class="toc-list" id="toc">
+    <li><a href="#stack">Stack (LIFO)</a></li>
+    <li><a href="#queue">Queue (FIFO)</a></li>
+    <li><a href="#deque">Deque</a></li>
+    <li><a href="#monotonic">Monotonic Stack</a></li>
+    <li><a href="#implementations">Implementations</a></li>
+    <li><a href="#patterns">Interview Patterns</a></li>
+    <li><a href="#complexity">Complexity</a></li>
+    <hr class="toc-divider">
+    <li><a href="#leetcode">LeetCode Problems</a></li>
+    <li><a href="#applications">Applications</a></li>
+  </ul>
+  <hr class="toc-divider">
+  <div class="toc-title">Other Guides</div>
+  <ul class="toc-list">
+    <li><a href="linked-list.html">→ Linked List</a></li>
+    <li><a href="binary-tree.html">→ Binary Tree</a></li>
+    <li><a href="heap.html">→ Heap</a></li>
+    <li><a href="graph.html">→ Graph Traversal</a></li>
+    <li><a href="graph-algorithms.html">→ Graph Algorithms</a></li>
+    <li><a href="dp.html">→ Dynamic Programming</a></li>
+  </ul>
+</aside>
+
+<main class="main-content" id="main-content">
+
+  <div class="hero">
+    <div class="hero-badge">Data Structures</div>
+    <h1>Stack &amp; Queue</h1>
+    <p>LIFO vs FIFO. Two deceptively simple structures that unlock a huge class of problems. The monotonic stack is one of the most powerful — and underrated — patterns in competitive programming and interviews.</p>
+    <div class="hero-meta">
+      <span>📚 LIFO / FIFO</span>
+      <span>🐍 Python deque</span>
+      <span>🎯 6 LeetCode problems</span>
+      <span>📉 Monotonic stack</span>
+    </div>
+  </div>
+
+  <!-- Stack -->
+  <section class="content-section" id="stack">
+    <div class="section-label">Core Structure</div>
+    <h2 class="section-title">Stack (LIFO)</h2>
+    <p>A stack follows <strong>Last In, First Out</strong> — like a stack of plates. You can only add (push) or remove (pop) from the top. Python's list provides an efficient stack with <code>append</code> (push) and <code>pop</code> — both O(1) amortized.</p>
+
+    <div class="diagram">  Push 1, Push 2, Push 3, Pop:
+
+  []  →  [1]  →  [1,2]  →  [1,2,3]  →  [1,2]
+                               ↑ top=3, popped
+
+  Think: stack of plates — always add/remove from the top</div>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># Stack using Python list — the standard approach
+stack = []
+
+# PUSH: O(1) amortized
+stack.append(1)
+stack.append(2)
+stack.append(3)
+
+# PEEK (look at top without removing): O(1)
+top = stack[-1]        # 3
+
+# POP (remove from top): O(1)
+val = stack.pop()      # returns 3, stack = [1, 2]
+
+# IS EMPTY: O(1)
+if not stack:
+    print("empty")
+
+# SIZE: O(1)
+print(len(stack))      # 2
+
+# Common pattern: process until empty
+while stack:
+    item = stack.pop()
+    # process item</code></pre>
+    </div>
+
+    <div class="callout callout-blue">
+      <strong>When to reach for a stack</strong>
+      <ul>
+        <li>You need to <strong>reverse</strong> something (process in LIFO order)</li>
+        <li>You need to <strong>match pairs</strong> (brackets, tags, parentheses)</li>
+        <li>You need to <strong>remember context</strong> while going deeper (DFS, recursive call stack)</li>
+        <li>You see the phrase "nearest/previous/next greater/smaller element"</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Queue -->
+  <section class="content-section" id="queue">
+    <div class="section-label">Core Structure</div>
+    <h2 class="section-title">Queue (FIFO)</h2>
+    <p>A queue follows <strong>First In, First Out</strong> — like a line at a store. You add (enqueue) to the back and remove (dequeue) from the front. Always use <code>collections.deque</code>, never <code>list</code> for queue operations.</p>
+
+    <div class="diagram">  Enqueue 1, Enqueue 2, Enqueue 3, Dequeue:
+
+  []  →  [1]  →  [1,2]  →  [1,2,3]  →  [2,3]
+  front                      front=1 dequeued
+
+  WHY NOT list.pop(0)?
+  list.pop(0) = O(n)  — shifts ALL elements left
+  deque.popleft() = O(1) — doubly linked list, no shifting</div>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">from collections import deque
+
+# Queue using deque — ALWAYS use this, never list for queues
+queue = deque()
+
+# ENQUEUE (add to back): O(1)
+queue.append(1)
+queue.append(2)
+queue.append(3)
+
+# PEEK front: O(1)
+front = queue[0]       # 1
+
+# DEQUEUE (remove from front): O(1)
+val = queue.popleft()  # returns 1, queue = deque([2, 3])
+
+# BFS template (most common queue use)
+def bfs(start, graph):
+    visited = {start}
+    queue = deque([start])
+    while queue:
+        node = queue.popleft()
+        # process node
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)</code></pre>
+    </div>
+  </section>
+
+  <!-- Deque -->
+  <section class="content-section" id="deque">
+    <div class="section-label">Double-Ended</div>
+    <h2 class="section-title">Deque (Double-Ended Queue)</h2>
+    <p>A deque supports O(1) insertions and deletions at <em>both</em> ends. It subsumes both stack and queue. Python's <code>collections.deque</code> is implemented as a doubly linked list and is the go-to for sliding window algorithms.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">from collections import deque
+
+d = deque([1, 2, 3])
+
+# Add/remove from BOTH ends: all O(1)
+d.append(4)       # [1, 2, 3, 4]
+d.appendleft(0)   # [0, 1, 2, 3, 4]
+d.pop()           # [0, 1, 2, 3] → returns 4
+d.popleft()       # [1, 2, 3] → returns 0
+
+# Fixed-size deque (automatically evicts oldest element)
+window = deque(maxlen=3)
+for x in [1, 2, 3, 4, 5]:
+    window.append(x)
+# After loop: deque([3, 4, 5], maxlen=3)
+# → maxlen evicts leftmost when full
+
+# Access both ends: O(1)
+print(d[0], d[-1])    # front and back
+
+# Rotate (move elements from one end to other)
+d.rotate(1)   # rightward: last element moves to front
+d.rotate(-1)  # leftward: first element moves to back</code></pre>
+    </div>
+  </section>
+
+  <!-- Monotonic Stack -->
+  <section class="content-section" id="monotonic">
+    <div class="section-label">Advanced Pattern</div>
+    <h2 class="section-title">Monotonic Stack</h2>
+    <p>A monotonic stack maintains a <strong>sorted invariant</strong> — elements are always increasing or decreasing from bottom to top. It's the key to solving "next greater/smaller element" problems in O(n) instead of O(n²).</p>
+
+    <h3>Monotonic Increasing Stack → Next Greater Element</h3>
+    <div class="diagram">  Array: [2, 1, 5, 3, 4]
+  Goal: for each element, find the next element that is GREATER
+
+  i=0, val=2: stack empty → push 2 → stack=[2]
+  i=1, val=1: 1 &lt; 2 → push 1 → stack=[2,1]
+  i=2, val=5: 5 &gt; 1 → pop 1, NGE[1]=5; 5&gt;2 → pop 2, NGE[2]=5 → push 5 → stack=[5]
+  i=3, val=3: 3 &lt; 5 → push 3 → stack=[5,3]
+  i=4, val=4: 4 &gt; 3 → pop 3, NGE[3]=4 → push 4 → stack=[5,4]
+  Remaining [5,4] never found greater → NGE = -1
+
+  Result: [5, 5, -1, 4, -1]
+
+  KEY: Pop when current &gt; top → the current IS the "next greater" for popped elements</div>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">def next_greater_element(nums):
+    """For each element, find the next larger element. O(n)."""
+    n = len(nums)
+    result = [-1] * n
+    stack = []  # stores INDICES (not values)
+
+    for i in range(n):
+        # Pop all elements that are SMALLER than current
+        while stack and nums[stack[-1]] < nums[i]:
+            idx = stack.pop()
+            result[idx] = nums[i]  # current is the "next greater" for idx
+        stack.append(i)
+    # Remaining elements in stack have no next greater → stay -1
+    return result
+
+def next_smaller_element(nums):
+    """Monotonic decreasing stack."""
+    n = len(nums)
+    result = [-1] * n
+    stack = []
+    for i in range(n):
+        while stack and nums[stack[-1]] > nums[i]:  # flip comparison
+            idx = stack.pop()
+            result[idx] = nums[i]
+        stack.append(i)
+    return result
+
+# CIRCULAR array variant (traverse twice)
+def next_greater_circular(nums):
+    n = len(nums)
+    result = [-1] * n
+    stack = []
+    for i in range(2 * n):  # go around twice
+        while stack and nums[stack[-1]] < nums[i % n]:
+            idx = stack.pop()
+            result[idx] = nums[i % n]
+        if i < n:
+            stack.append(i)
+    return result</code></pre>
+    </div>
+
+    <h3>Monotonic Deque → Sliding Window Maximum</h3>
+    <div class="diagram">  nums=[3,1,2,5,4], k=3  (window size 3)
+  Find max in each window of size k.
+
+  Monotonic DECREASING deque (front = max of current window):
+
+  i=0, val=3: deque=[] → push 0 → deque=[0(3)]
+  i=1, val=1: 1&lt;3 → push 1 → deque=[0(3),1(1)]
+  i=2, val=2: 2&gt;1 → pop 1; 2&lt;3 → push 2 → deque=[0(3),2(2)]
+              window [0,2] complete → max=nums[front]=nums[0]=3
+  i=3, val=5: 5&gt;2 → pop 2; 5&gt;3 → pop 0; push 3 → deque=[3(5)]
+              evict indices outside window → deque=[3(5)]
+              window [1,3] → max=5
+  i=4, val=4: 4&lt;5 → push 4 → deque=[3(5),4(4)]
+              window [2,4] → max=5
+
+  Result: [3, 5, 5]</div>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">from collections import deque
+
+def sliding_window_maximum(nums, k):
+    """
+    Max of each sliding window of size k. O(n) time.
+    Maintain a monotonic decreasing deque of indices.
+    Front is always the index of the current window's maximum.
+    """
+    result = []
+    window = deque()  # stores indices; values are decreasing
+
+    for i, num in enumerate(nums):
+        # Remove indices that are OUT of the current window [i-k+1, i]
+        while window and window[0] < i - k + 1:
+            window.popleft()
+
+        # Remove from back any index whose value is LESS than current
+        # (they can never be the max while current is in the window)
+        while window and nums[window[-1]] < num:
+            window.pop()
+
+        window.append(i)
+
+        # Window is full: record the maximum (front of deque)
+        if i >= k - 1:
+            result.append(nums[window[0]])
+
+    return result</code></pre>
+    </div>
+  </section>
+
+  <!-- Implementations -->
+  <section class="content-section" id="implementations">
+    <div class="section-label">Classic Designs</div>
+    <h2 class="section-title">Classic Stack/Queue Implementations</h2>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># Min Stack: O(1) getMin at all times
+class MinStack:
+    def __init__(self):
+        self.stack = []
+        self.min_stack = []  # parallel stack tracking minimums
+
+    def push(self, val: int) -> None:
+        self.stack.append(val)
+        # Push new minimum (either val or current min)
+        current_min = min(val, self.min_stack[-1] if self.min_stack else val)
+        self.min_stack.append(current_min)
+
+    def pop(self) -> None:
+        self.stack.pop()
+        self.min_stack.pop()
+
+    def top(self) -> int:
+        return self.stack[-1]
+
+    def getMin(self) -> int:
+        return self.min_stack[-1]  # O(1)!
+
+
+# Implement Queue using Two Stacks (LC 232)
+class MyQueue:
+    """
+    in_stack: receives all pushes
+    out_stack: provides pops/peeks (lazily transferred from in_stack)
+    Transfer happens only when out_stack is empty — amortized O(1).
+    """
+    def __init__(self):
+        self.in_stack = []
+        self.out_stack = []
+
+    def push(self, x: int) -> None:
+        self.in_stack.append(x)
+
+    def _transfer(self):
+        if not self.out_stack:
+            while self.in_stack:
+                self.out_stack.append(self.in_stack.pop())
+
+    def pop(self) -> int:
+        self._transfer()
+        return self.out_stack.pop()
+
+    def peek(self) -> int:
+        self._transfer()
+        return self.out_stack[-1]
+
+    def empty(self) -> bool:
+        return not self.in_stack and not self.out_stack
+
+
+# Implement Stack using Two Queues (LC 225)
+class MyStack:
+    def __init__(self):
+        self.queue = deque()
+
+    def push(self, x: int) -> None:
+        self.queue.append(x)
+        # Rotate so new element is at front
+        for _ in range(len(self.queue) - 1):
+            self.queue.append(self.queue.popleft())
+
+    def pop(self) -> int:
+        return self.queue.popleft()
+
+    def top(self) -> int:
+        return self.queue[0]
+
+    def empty(self) -> bool:
+        return not self.queue</code></pre>
+    </div>
+  </section>
+
+  <!-- Patterns -->
+  <section class="content-section" id="patterns">
+    <div class="section-label">Interview Patterns</div>
+    <h2 class="section-title">Pattern Recognition</h2>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># Pattern 1: Matching brackets/pairs
+def is_valid(s: str) -> bool:
+    stack = []
+    pairs = {')': '(', '}': '{', ']': '['}
+    for ch in s:
+        if ch in '([{':
+            stack.append(ch)
+        elif ch in ')]}':
+            if not stack or stack[-1] != pairs[ch]:
+                return False
+            stack.pop()
+    return not stack
+
+# Pattern 2: Previous greater element (think: stock span)
+def stock_span(prices):
+    span = []
+    stack = []  # (price, accumulated_span)
+    for p in prices:
+        curr_span = 1
+        while stack and stack[-1][0] <= p:
+            curr_span += stack.pop()[1]
+        stack.append((p, curr_span))
+        span.append(curr_span)
+    return span
+
+# Pattern 3: Expression evaluation (Reverse Polish Notation)
+def eval_rpn(tokens):
+    stack = []
+    ops = {'+': lambda a,b: a+b, '-': lambda a,b: a-b,
+           '*': lambda a,b: a*b, '/': lambda a,b: int(a/b)}
+    for token in tokens:
+        if token in ops:
+            b, a = stack.pop(), stack.pop()
+            stack.append(ops[token](a, b))
+        else:
+            stack.append(int(token))
+    return stack[0]</code></pre>
+    </div>
+  </section>
+
+  <!-- Complexity -->
+  <section class="content-section" id="complexity">
+    <div class="section-label">Analysis</div>
+    <h2 class="section-title">Complexity Analysis</h2>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Operation</th><th>Stack (list)</th><th>Queue (deque)</th><th>Deque</th><th>Monotonic Stack</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Push / Enqueue</td><td class="complexity-good">O(1)*</td><td class="complexity-good">O(1)</td><td class="complexity-good">O(1)</td><td class="complexity-good">O(1) amortized</td></tr>
+          <tr><td>Pop / Dequeue</td><td class="complexity-good">O(1)</td><td class="complexity-good">O(1)</td><td class="complexity-good">O(1)</td><td class="complexity-good">O(1) amortized</td></tr>
+          <tr><td>Peek</td><td class="complexity-good">O(1)</td><td class="complexity-good">O(1)</td><td class="complexity-good">O(1)</td><td class="complexity-good">O(1)</td></tr>
+          <tr><td>Search</td><td class="complexity-bad">O(n)</td><td class="complexity-bad">O(n)</td><td class="complexity-bad">O(n)</td><td>—</td></tr>
+          <tr><td>NGE over n elements</td><td>—</td><td>—</td><td>—</td><td class="complexity-good">O(n) total</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:.85rem;color:var(--text-muted)">* Python list.append/pop is O(1) amortized due to dynamic resizing.</p>
+
+    <div class="callout callout-yellow">
+      <strong>Why monotonic stack is O(n), not O(n²)</strong>
+      Each element is pushed exactly once and popped at most once. Total operations = 2n → amortized O(1) per element. Even though the inner while loop can pop many elements, those pops don't "repeat" — each element is only ever popped once across the entire traversal.
+    </div>
+  </section>
+
+  <!-- LeetCode -->
+  <section class="content-section" id="leetcode">
+    <div class="section-label">Practice</div>
+    <h2 class="section-title">LeetCode Problems</h2>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #20</span><span class="lc-title">Valid Parentheses</span><span class="lc-diff diff-easy">Easy</span></div>
+      <div class="lc-body">
+        <p>Given a string with <code>(</code>, <code>)</code>, <code>{</code>, <code>}</code>, <code>[</code>, <code>]</code>, determine if it is valid (properly closed and nested).</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def isValid(self, s: str) -> bool:
+    stack = []
+    mapping = {')': '(', '}': '{', ']': '['}
+    for char in s:
+        if char in mapping:
+            top = stack.pop() if stack else '#'
+            if mapping[char] != top:
+                return False
+        else:
+            stack.append(char)
+    return not stack</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(n)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #155</span><span class="lc-title">Min Stack</span><span class="lc-diff diff-medium">Medium</span></div>
+      <div class="lc-body">
+        <p>Design a stack that supports push, pop, top, and <strong>getMin in O(1)</strong>.</p>
+        <p>Solution: maintain a parallel min-tracking stack. Full implementation shown in the "Implementations" section above.</p>
+        <div class="lc-meta"><span>⏱ All ops: O(1)</span><span>💾 Space: O(n)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #739</span><span class="lc-title">Daily Temperatures</span><span class="lc-diff diff-medium">Medium</span></div>
+      <div class="lc-body">
+        <p>For each day, find how many days until a warmer temperature. If none, return 0.</p>
+        <p><strong>Key insight</strong>: Classic "next greater element" using monotonic stack on indices.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def dailyTemperatures(self, temperatures: list[int]) -> list[int]:
+    n = len(temperatures)
+    result = [0] * n
+    stack = []  # indices of days waiting for a warmer day
+
+    for i, temp in enumerate(temperatures):
+        while stack and temperatures[stack[-1]] < temp:
+            idx = stack.pop()
+            result[idx] = i - idx  # distance to warmer day
+        stack.append(i)
+
+    return result</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(n)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #232</span><span class="lc-title">Implement Queue using Stacks</span><span class="lc-diff diff-easy">Easy</span></div>
+      <div class="lc-body">
+        <p>Implement FIFO queue using only stack operations. Amortized O(1) per operation using lazy transfer between two stacks.</p>
+        <p>Full implementation shown in the "Implementations" section above.</p>
+        <div class="lc-meta"><span>⏱ Amortized O(1)</span><span>💾 Space: O(n)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #239</span><span class="lc-title">Sliding Window Maximum</span><span class="lc-diff diff-hard">Hard</span></div>
+      <div class="lc-body">
+        <p>Return the maximum of each sliding window of size k. Naive O(nk) is too slow — use a monotonic deque for O(n).</p>
+        <p>Full implementation shown in the "Monotonic Stack" section above.</p>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(k)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #84</span><span class="lc-title">Largest Rectangle in Histogram</span><span class="lc-diff diff-hard">Hard</span></div>
+      <div class="lc-body">
+        <p>Find the largest rectangle in a histogram. For each bar, find how far left and right it can extend (until a shorter bar is encountered).</p>
+        <p><strong>Key insight</strong>: Monotonic increasing stack. When we pop a bar, the current bar is the right boundary and the new stack top is the left boundary.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def largestRectangleArea(self, heights: list[int]) -> int:
+    # Add sentinel 0s at both ends to flush remaining stack elements
+    heights = [0] + heights + [0]
+    stack = [0]  # indices; monotonic increasing
+    max_area = 0
+
+    for i in range(1, len(heights)):
+        while heights[stack[-1]] > heights[i]:
+            height = heights[stack.pop()]
+            width = i - stack[-1] - 1
+            max_area = max(max_area, height * width)
+        stack.append(i)
+
+    return max_area
+
+# Example walkthrough for [2,1,5,6,2,3]:
+# When we pop height 6 (idx=4), current i=5(h=2):
+#   height=6, left_boundary=stack[-1]=3(h=5), right=5
+#   width = 5-3-1=1, area=6
+# When we pop height 5 (idx=3):
+#   height=5, left_boundary=stack[-1]=2(h=1), right=5
+#   width=5-2-1=2, area=10  ← answer!</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(n)</span></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Applications -->
+  <section class="content-section" id="applications">
+    <div class="section-label">Real World</div>
+    <h2 class="section-title">Real-World Applications</h2>
+    <ul>
+      <li><strong>Stack — call stack</strong>: every function call pushes a frame; return pops it. Stack overflow = too deep recursion</li>
+      <li><strong>Stack — undo/redo</strong>: text editors maintain an undo stack; Ctrl+Z pops the last action</li>
+      <li><strong>Stack — compiler</strong>: expression parsing, syntax checking, code generation</li>
+      <li><strong>Queue — BFS</strong>: web crawlers, social network friend-of-friend search, shortest path in mazes</li>
+      <li><strong>Queue — task scheduling</strong>: printer queue, OS process scheduler (round-robin = circular queue)</li>
+      <li><strong>Queue — event loops</strong>: Node.js event queue, JavaScript's setTimeout/Promise callbacks</li>
+      <li><strong>Deque — sliding window</strong>: real-time analytics (max/min over last N data points)</li>
+      <li><strong>Monotonic stack</strong>: stock span problems, largest rectangle, trapping rain water, next greater element</li>
+    </ul>
+  </section>
+
+  <footer class="page-footer">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="trie.html">Trie</a>
+      <a href="hash-map.html">Hash Map</a>
+      <a href="linked-list.html">Linked List</a>
+      <a href="binary-tree.html">Binary Tree</a>
+      <a href="bst.html">BST</a>
+      <a href="heap.html">Heap</a>
+      <a href="stack-queue.html">Stack &amp; Queue</a>
+      <a href="graph.html">Graph</a>
+      <a href="graph-algorithms.html">Graph Algorithms</a>
+      <a href="dp.html">Dynamic Programming</a>
+    </div>
+    <p class="footer-copy">© 2026 KnowAlgo — Data Structures &amp; Algorithms Made Clear</p>
+  </footer>
+
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight) * 100;
+    document.getElementById('progress').style.width = scrolled + '%';
+  });
+  function copyCode(btn) {
+    const code = btn.closest('.code-wrapper').querySelector('code');
+    navigator.clipboard.writeText(code.textContent).then(() => {
+      btn.textContent = 'Copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+  const sections = document.querySelectorAll('.content-section[id]');
+  const tocLinks = document.querySelectorAll('.toc-list a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.toc-list a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-64px 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

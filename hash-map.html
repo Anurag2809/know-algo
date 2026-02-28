@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hash Map / Hash Table: Complete Guide with LeetCode Solutions | KnowAlgo</title>
+  <meta name="description" content="Master the Hash Map data structure with deep explanations, Python implementations, visual diagrams, and 6 LeetCode solutions including LRU Cache, Group Anagrams, and Minimum Window Substring.">
+  <meta name="keywords" content="hash map, hash table, python dict, hashing, collision resolution, leetcode hash map problems, two sum, lru cache, data structures algorithms">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.github.io/hash-map.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Hash Map / Hash Table: Complete Guide with LeetCode Solutions">
+  <meta property="og:description" content="Master Hash Maps with deep explanations, visual diagrams, Python code, and 6 LeetCode solutions.">
+  <meta property="og:url" content="https://knowalgo.github.io/hash-map.html">
+  <meta property="og:site_name" content="KnowAlgo">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Hash Map / Hash Table: Complete Guide with LeetCode Solutions">
+  <meta name="twitter:description" content="Master Hash Maps with deep explanations and 6 LeetCode solutions.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Hash Map / Hash Table: Complete Guide with LeetCode Solutions",
+    "description": "A comprehensive guide to the Hash Map data structure including implementation, collision resolution, load factors, and LeetCode solutions.",
+    "author": { "@type": "Organization", "name": "KnowAlgo" },
+    "publisher": { "@type": "Organization", "name": "KnowAlgo" },
+    "datePublished": "2025-01-01",
+    "dateModified": "2026-02-27",
+    "keywords": ["hash map", "hash table", "dictionary", "data structure", "algorithms", "leetcode"],
+    "articleSection": "Data Structures"
+  }
+  </script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #eff6ff;
+      --secondary: #7c3aed;
+      --accent: #059669;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --bg: #f8fafc;
+      --bg-card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #1e293b;
+      --toc-width: 280px;
+      --header-h: 64px;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    ul, ol { padding-left: 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+
+    /* Progress bar */
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(to right, #059669, #0891b2); z-index: 1000; transition: width 0.1s; }
+
+    /* Top nav */
+    .topnav { position: sticky; top: 0; z-index: 200; background: #fff; border-bottom: 1px solid var(--border); height: var(--header-h); display: flex; align-items: center; padding: 0 1.5rem; gap: 1rem; box-shadow: var(--shadow); }
+    .topnav-logo { font-weight: 800; font-size: 1.25rem; color: var(--primary); letter-spacing: -0.5px; }
+    .topnav-sep { color: var(--border); }
+    .topnav-crumb { color: var(--text-muted); font-size: 0.9rem; }
+    .topnav-links { margin-left: auto; display: flex; gap: 1rem; align-items: center; }
+    .topnav-links a { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
+    .topnav-links a:hover { color: var(--primary); text-decoration: none; }
+    .btn-home { background: var(--primary); color: #fff !important; padding: 0.35rem 0.9rem; border-radius: 6px; font-size: 0.85rem !important; }
+    .btn-home:hover { background: var(--primary-dark); }
+
+    /* Layout */
+    .page-layout { display: grid; grid-template-columns: var(--toc-width) 1fr; max-width: 1400px; margin: 0 auto; min-height: calc(100vh - var(--header-h)); }
+
+    /* TOC Sidebar */
+    .toc-sidebar { position: sticky; top: var(--header-h); height: calc(100vh - var(--header-h)); overflow-y: auto; padding: 1.5rem 1rem; border-right: 1px solid var(--border); background: #fff; }
+    .toc-sidebar::-webkit-scrollbar { width: 4px; }
+    .toc-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .toc-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .toc-list { list-style: none; padding: 0; }
+    .toc-list li { margin-bottom: 0; }
+    .toc-list a { display: block; padding: 0.3rem 0.75rem; border-radius: 6px; font-size: 0.875rem; color: var(--text-muted); transition: all 0.15s; border-left: 2px solid transparent; }
+    .toc-list a:hover, .toc-list a.active { color: var(--primary); background: var(--primary-light); border-left-color: var(--primary); text-decoration: none; }
+    .toc-divider { border: none; border-top: 1px solid var(--border); margin: 0.75rem 0; }
+
+    /* Main content */
+    .main-content { padding: 2rem 2.5rem; max-width: 900px; }
+
+    /* Hero */
+    .hero { background: linear-gradient(135deg, #064e3b 0%, #059669 50%, #0891b2 100%); color: white; border-radius: var(--radius); padding: 2.5rem; margin-bottom: 2.5rem; }
+    .hero-badge { display: inline-block; background: rgba(255,255,255,0.2); color: #fff; padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1rem; }
+    .hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; line-height: 1.2; margin-bottom: 1rem; letter-spacing: -1px; }
+    .hero p { font-size: 1.05rem; opacity: 0.9; max-width: 620px; line-height: 1.7; margin-bottom: 1.5rem; }
+    .hero-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .hero-meta span { font-size: 0.875rem; opacity: 0.8; display: flex; align-items: center; gap: 0.3rem; }
+
+    /* Sections */
+    .content-section { margin-bottom: 3rem; scroll-margin-top: calc(var(--header-h) + 1rem); }
+    .section-label { display: inline-block; background: #dcfce7; color: #166534; padding: 0.2rem 0.7rem; border-radius: 99px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.6rem; }
+    h2.section-title { font-size: 1.75rem; font-weight: 800; margin-bottom: 1rem; letter-spacing: -0.5px; }
+    h3 { font-size: 1.2rem; font-weight: 700; margin: 1.5rem 0 0.75rem; color: var(--text); }
+    h4 { font-size: 1rem; font-weight: 700; margin: 1.25rem 0 0.5rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+    p { margin-bottom: 1rem; }
+
+    /* Callout boxes */
+    .callout { border-radius: var(--radius); padding: 1.25rem 1.5rem; margin: 1.5rem 0; border-left: 4px solid; }
+    .callout-blue { background: #eff6ff; border-color: var(--primary); }
+    .callout-green { background: #f0fdf4; border-color: var(--accent); }
+    .callout-yellow { background: #fefce8; border-color: var(--warning); }
+    .callout-red { background: #fef2f2; border-color: var(--danger); }
+    .callout strong { display: block; margin-bottom: 0.4rem; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.3px; }
+
+    /* Code blocks */
+    .code-wrapper { position: relative; margin: 1.25rem 0; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-md); }
+    .code-header { background: #0f172a; padding: 0.6rem 1rem; display: flex; align-items: center; justify-content: space-between; }
+    .code-lang { font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .copy-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #94a3b8; font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 4px; cursor: pointer; transition: all 0.15s; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+    .copy-btn.copied { background: #059669; border-color: #059669; color: #fff; }
+    pre[class*="language-"] { margin: 0 !important; border-radius: 0 !important; font-size: 0.875rem !important; }
+
+    /* ASCII diagrams */
+    .diagram { background: var(--code-bg); color: #e2e8f0; padding: 1.5rem; border-radius: var(--radius); font-family: 'Courier New', Courier, monospace; font-size: 0.875rem; line-height: 1.6; overflow-x: auto; margin: 1.25rem 0; white-space: pre; }
+
+    /* Tables */
+    .table-wrapper { overflow-x: auto; margin: 1.5rem 0; border-radius: var(--radius); box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th { background: #f1f5f9; padding: 0.75rem 1rem; text-align: left; font-size: 0.875rem; font-weight: 700; color: var(--text); border-bottom: 2px solid var(--border); }
+    td { padding: 0.75rem 1rem; font-size: 0.875rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+    .complexity-good { color: #059669; font-weight: 700; }
+    .complexity-ok { color: #d97706; font-weight: 700; }
+    .complexity-bad { color: #dc2626; font-weight: 700; }
+
+    /* LC problem cards */
+    .lc-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
+    .lc-header { padding: 1rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; border-bottom: 1px solid var(--border); background: #f8fafc; }
+    .lc-num { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+    .lc-title { font-size: 1rem; font-weight: 700; color: var(--text); flex: 1; }
+    .lc-diff { font-size: 0.75rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 99px; }
+    .diff-easy { background: #d1fae5; color: #065f46; }
+    .diff-medium { background: #fef3c7; color: #92400e; }
+    .diff-hard { background: #fee2e2; color: #991b1b; }
+    .lc-body { padding: 1.25rem; }
+    .lc-meta { display: flex; gap: 1rem; margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted); }
+
+    /* Pattern grid */
+    .pattern-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin: 1.25rem 0; }
+    .pattern-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); }
+    .pattern-card h4 { color: var(--primary); margin: 0 0 0.4rem; font-size: 0.9rem; text-transform: none; letter-spacing: 0; }
+    .pattern-card p { font-size: 0.83rem; color: var(--text-muted); margin: 0; }
+
+    /* Footer */
+    .page-footer { background: #0f172a; color: #94a3b8; padding: 2.5rem; margin-top: 4rem; }
+    .footer-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .footer-links a { color: #60a5fa; font-size: 0.875rem; }
+    .footer-copy { font-size: 0.8rem; opacity: 0.6; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .page-layout { grid-template-columns: 1fr; }
+      .toc-sidebar { display: none; }
+      .main-content { padding: 1.5rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+
+<nav class="topnav">
+  <a href="index.html" class="topnav-logo">KnowAlgo</a>
+  <span class="topnav-sep">/</span>
+  <span class="topnav-crumb">Hash Map</span>
+  <div class="topnav-links">
+    <a href="trie.html" class="hide-mobile">Trie</a>
+    <a href="heap.html" class="hide-mobile">Heap</a>
+    <a href="index.html" class="btn-home">← Home</a>
+  </div>
+</nav>
+
+<div class="page-layout">
+
+<!-- TOC Sidebar -->
+<aside class="toc-sidebar" aria-label="Table of contents">
+  <div class="toc-title">On this page</div>
+  <ul class="toc-list" id="toc">
+    <li><a href="#what-is">What is a Hash Map?</a></li>
+    <li><a href="#hashing">Hash Functions &amp; Collisions</a></li>
+    <li><a href="#operations">Core Operations</a></li>
+    <li><a href="#implementation">Python Implementation</a></li>
+    <li><a href="#chaining">Collision Resolution</a></li>
+    <li><a href="#complexity">Complexity Analysis</a></li>
+    <li><a href="#patterns">Interview Patterns</a></li>
+    <hr class="toc-divider">
+    <li><a href="#leetcode">LeetCode Problems</a></li>
+    <li><a href="#applications">Applications</a></li>
+  </ul>
+  <hr class="toc-divider">
+  <div class="toc-title">Other Guides</div>
+  <ul class="toc-list">
+    <li><a href="trie.html">→ Trie</a></li>
+    <li><a href="linked-list.html">→ Linked List</a></li>
+    <li><a href="binary-tree.html">→ Binary Tree</a></li>
+    <li><a href="heap.html">→ Heap</a></li>
+    <li><a href="stack-queue.html">→ Stack &amp; Queue</a></li>
+    <li><a href="graph.html">→ Graph</a></li>
+  </ul>
+</aside>
+
+<!-- Main Content -->
+<main class="main-content" id="main-content">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">Data Structures</div>
+    <h1>Hash Map / Hash Table</h1>
+    <p>The workhorse of coding interviews. O(1) average-case insert, lookup, and delete. Understanding hash maps unlocks solutions to a huge class of problems that would otherwise be O(n²).</p>
+    <div class="hero-meta">
+      <span>⚡ O(1) average operations</span>
+      <span>🐍 Python dict internals</span>
+      <span>🎯 6 LeetCode problems</span>
+      <span>📊 Collision resolution</span>
+    </div>
+  </div>
+
+  <!-- What is a Hash Map -->
+  <section class="content-section" id="what-is">
+    <div class="section-label">Introduction</div>
+    <h2 class="section-title">What is a Hash Map?</h2>
+    <p>A hash map (also called hash table, dictionary, or associative array) is a data structure that stores key-value pairs and provides O(1) average-case access. It's the backbone of Python's <code>dict</code> and <code>set</code>, Java's <code>HashMap</code>, and JavaScript's <code>Map</code>.</p>
+
+    <div class="diagram">  KEY           HASH FUNCTION        ARRAY (buckets)
+  ─────────     ─────────────────    ──────────────────
+  "apple"  ──→  hash("apple") % 8 = 3 ──→  arr[3] = 5
+  "banana" ──→  hash("banana") % 8 = 1 ──→  arr[1] = 2
+  "cherry" ──→  hash("cherry") % 8 = 6 ──→  arr[6] = 8
+
+  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]
+  Value:   -    2    -    5    -    -    8    -</div>
+
+    <p>The core idea: transform a key into an array index using a hash function, then store the value at that index. This gives O(1) average access because array indexing is O(1).</p>
+
+    <div class="callout callout-blue">
+      <strong>Why O(1) vs alternatives</strong>
+      <ul>
+        <li><strong>Unsorted array</strong>: O(n) search — must scan every element</li>
+        <li><strong>Sorted array</strong>: O(log n) binary search, but O(n) insert/delete</li>
+        <li><strong>BST</strong>: O(log n) for all operations (O(n) worst case without balancing)</li>
+        <li><strong>Hash Map</strong>: O(1) average for all operations — best of all worlds</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Hash Functions -->
+  <section class="content-section" id="hashing">
+    <div class="section-label">Core Concept</div>
+    <h2 class="section-title">Hash Functions &amp; Collisions</h2>
+
+    <h3>What Makes a Good Hash Function?</h3>
+    <p>A good hash function must be:</p>
+    <ul>
+      <li><strong>Deterministic</strong>: same key always produces same hash</li>
+      <li><strong>Uniform distribution</strong>: spreads keys evenly across buckets (minimize collisions)</li>
+      <li><strong>Fast to compute</strong>: O(1) or O(key length)</li>
+      <li><strong>Avalanche effect</strong>: small change in key → big change in hash</li>
+    </ul>
+
+    <h3>Collisions: When Two Keys Map to the Same Index</h3>
+    <div class="diagram">  "listen" → hash % 8 = 3  ──→  arr[3] ???  ←──  "silent" → hash % 8 = 3
+
+  COLLISION: Both keys want arr[3]!
+  Solution: Chaining (linked list at each bucket) or Open Addressing (find next empty slot)</div>
+
+    <h3>Load Factor &amp; Resizing</h3>
+    <p>The <strong>load factor</strong> α = n/m (items stored / total buckets). When α gets too high, collisions increase dramatically.</p>
+    <ul>
+      <li>Python's dict resizes when α > 2/3 (~66%)</li>
+      <li>Java's HashMap resizes when α > 0.75</li>
+      <li>Resize doubles capacity and rehashes all keys: O(n) operation</li>
+      <li>Amortized over all insertions: still O(1) per insert</li>
+    </ul>
+
+    <div class="callout callout-yellow">
+      <strong>The Birthday Paradox &amp; Why Collisions Are Inevitable</strong>
+      With only 23 people in a room, there's a 50% chance two share a birthday (365 days). Similarly, with 23 items in a 365-bucket table (α ≈ 0.063), collisions are already 50% likely. This is why we need collision resolution strategies even at low load factors.
+    </div>
+  </section>
+
+  <!-- Core Operations -->
+  <section class="content-section" id="operations">
+    <div class="section-label">Operations</div>
+    <h2 class="section-title">Core Operations</h2>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># Python dict is a highly optimized hash map
+d = {}
+
+# INSERT: O(1) average
+d["apple"] = 5
+d["banana"] = 2
+d["cherry"] = 8
+
+# LOOKUP: O(1) average
+val = d["apple"]          # KeyError if missing
+val = d.get("apple", 0)   # returns default if missing (safer)
+
+# DELETE: O(1) average
+del d["apple"]            # KeyError if missing
+val = d.pop("apple", 0)   # returns default if missing (safer)
+
+# CHECK EXISTENCE: O(1)
+if "banana" in d:
+    print("found:", d["banana"])
+
+# UPDATE: O(1) average
+d["banana"] += 1
+d.setdefault("grape", 0)   # insert only if key absent
+d.update({"fig": 3, "date": 7})
+
+# ITERATION: O(n)
+for key in d:              # iterate keys
+    print(key)
+for key, val in d.items(): # iterate key-value pairs
+    print(key, val)
+for val in d.values():     # iterate values
+    print(val)
+
+# USEFUL PATTERNS
+freq = {}
+for char in "hello":
+    freq[char] = freq.get(char, 0) + 1
+# {'h': 1, 'e': 1, 'l': 2, 'o': 1}
+
+# collections.Counter (frequency map)
+from collections import Counter
+freq = Counter("hello")         # Counter({'l': 2, 'h': 1, 'e': 1, 'o': 1})
+top2 = freq.most_common(2)      # [('l', 2), ('h', 1)]
+
+# collections.defaultdict (auto-initializes values)
+from collections import defaultdict
+graph = defaultdict(list)
+graph[0].append(1)  # no KeyError even if 0 not yet in dict</code></pre>
+    </div>
+  </section>
+
+  <!-- Full Implementation -->
+  <section class="content-section" id="implementation">
+    <div class="section-label">From Scratch</div>
+    <h2 class="section-title">Python Implementation</h2>
+    <p>Building a hash map from scratch using separate chaining (each bucket holds a linked list of key-value pairs to handle collisions).</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">class HashMap:
+    def __init__(self, capacity=16):
+        self.capacity = capacity
+        self.size = 0
+        self.load_factor = 0.75
+        # Each bucket is a list of (key, value) pairs (chaining)
+        self.buckets = [[] for _ in range(self.capacity)]
+
+    def _hash(self, key):
+        """Map key to bucket index."""
+        return hash(key) % self.capacity
+
+    def put(self, key, value):
+        """Insert or update key-value pair. O(1) average."""
+        idx = self._hash(key)
+        bucket = self.buckets[idx]
+        # Check if key already exists → update
+        for i, (k, v) in enumerate(bucket):
+            if k == key:
+                bucket[i] = (key, value)
+                return
+        # New key → append
+        bucket.append((key, value))
+        self.size += 1
+        # Resize if load factor exceeded
+        if self.size / self.capacity > self.load_factor:
+            self._resize()
+
+    def get(self, key, default=None):
+        """Retrieve value by key. O(1) average."""
+        idx = self._hash(key)
+        for k, v in self.buckets[idx]:
+            if k == key:
+                return v
+        return default
+
+    def remove(self, key):
+        """Delete key-value pair. O(1) average."""
+        idx = self._hash(key)
+        bucket = self.buckets[idx]
+        for i, (k, v) in enumerate(bucket):
+            if k == key:
+                bucket.pop(i)
+                self.size -= 1
+                return True
+        return False  # key not found
+
+    def _resize(self):
+        """Double capacity and rehash all keys. O(n)."""
+        old_buckets = self.buckets
+        self.capacity *= 2
+        self.buckets = [[] for _ in range(self.capacity)]
+        self.size = 0
+        for bucket in old_buckets:
+            for k, v in bucket:
+                self.put(k, v)  # rehash all existing pairs
+
+    def __contains__(self, key):
+        return self.get(key) is not None
+
+    def __len__(self):
+        return self.size
+
+    def keys(self):
+        for bucket in self.buckets:
+            for k, v in bucket:
+                yield k
+
+    def items(self):
+        for bucket in self.buckets:
+            for k, v in bucket:
+                yield k, v
+
+
+# Usage
+hm = HashMap()
+hm.put("name", "Alice")
+hm.put("age", 30)
+print(hm.get("name"))    # "Alice"
+print(hm.get("city", "Unknown"))  # "Unknown"
+hm.remove("age")
+print(len(hm))           # 1</code></pre>
+    </div>
+  </section>
+
+  <!-- Collision Resolution -->
+  <section class="content-section" id="chaining">
+    <div class="section-label">Deep Dive</div>
+    <h2 class="section-title">Collision Resolution Strategies</h2>
+
+    <h3>1. Separate Chaining (used above)</h3>
+    <p>Each bucket contains a list (or linked list) of all key-value pairs that hash to that index.</p>
+    <div class="diagram">  Bucket 3:  [("apple", 5)] → [("silent", 9)] → [("listen", 7)] → None
+                              ↑ all three hash to index 3
+
+  Worst case: all n keys in one bucket → O(n) lookup
+  Average case (good hash function): O(1 + α) ≈ O(1)</div>
+
+    <h3>2. Open Addressing (Linear Probing)</h3>
+    <p>If a bucket is occupied, probe the next bucket (linear, quadratic, or double hashing).</p>
+    <div class="diagram">  Insert "silent" (wants bucket 3, occupied by "apple"):
+  Probe 3 → occupied
+  Probe 4 → empty! → store here
+
+  Index: [0]  [1]  [2]  [apple,5]  [silent,9]  [5]  [6]  [7]
+                          ↑ wanted 3      ↑ stored at 4</div>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">class HashMapLinearProbing:
+    """Open addressing with linear probing."""
+    DELETED = object()  # sentinel for deleted slots
+
+    def __init__(self, capacity=16):
+        self.capacity = capacity
+        self.size = 0
+        self.keys = [None] * capacity
+        self.vals = [None] * capacity
+
+    def _probe(self, key):
+        """Find slot for key using linear probing."""
+        idx = hash(key) % self.capacity
+        while (self.keys[idx] is not None and
+               self.keys[idx] is not self.DELETED and
+               self.keys[idx] != key):
+            idx = (idx + 1) % self.capacity  # wrap around
+        return idx
+
+    def put(self, key, value):
+        idx = self._probe(key)
+        if self.keys[idx] is None or self.keys[idx] is self.DELETED:
+            self.size += 1
+        self.keys[idx] = key
+        self.vals[idx] = value
+
+    def get(self, key, default=None):
+        idx = self._probe(key)
+        if self.keys[idx] == key:
+            return self.vals[idx]
+        return default
+
+    def remove(self, key):
+        idx = self._probe(key)
+        if self.keys[idx] == key:
+            self.keys[idx] = self.DELETED  # mark as deleted
+            self.vals[idx] = None
+            self.size -= 1
+            return True
+        return False</code></pre>
+    </div>
+
+    <div class="callout callout-green">
+      <strong>Chaining vs Open Addressing</strong>
+      <ul>
+        <li><strong>Chaining</strong>: simpler, handles high load factors well, but pointer overhead (cache unfriendly)</li>
+        <li><strong>Linear probing</strong>: cache-friendly (data is contiguous), but clustering degrades performance at high load</li>
+        <li><strong>Python uses</strong>: open addressing with a custom probing sequence (pseudo-random)</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Complexity -->
+  <section class="content-section" id="complexity">
+    <div class="section-label">Analysis</div>
+    <h2 class="section-title">Time &amp; Space Complexity</h2>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Operation</th><th>Average Case</th><th>Worst Case</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Insert</td><td class="complexity-good">O(1)</td><td class="complexity-bad">O(n)</td><td>Worst = all keys collide in one bucket</td></tr>
+          <tr><td>Lookup</td><td class="complexity-good">O(1)</td><td class="complexity-bad">O(n)</td><td>Rare with a good hash function</td></tr>
+          <tr><td>Delete</td><td class="complexity-good">O(1)</td><td class="complexity-bad">O(n)</td><td>Same reasoning as lookup</td></tr>
+          <tr><td>Resize</td><td class="complexity-bad">O(n)</td><td class="complexity-bad">O(n)</td><td>Amortized O(1) per insert</td></tr>
+          <tr><td>Iteration</td><td class="complexity-bad">O(n)</td><td class="complexity-bad">O(n)</td><td>Must scan all buckets</td></tr>
+          <tr><td>Space</td><td class="complexity-ok">O(n)</td><td class="complexity-ok">O(n)</td><td>Plus ~33% overhead for load factor</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-blue">
+      <strong>Why "average case" matters</strong>
+      The worst case requires an adversary who knows your hash function and deliberately creates collisions. In practice (random keys, cryptographic hash), worst case is astronomically unlikely. That's why hash maps are used everywhere despite the theoretical O(n) worst case.
+    </div>
+  </section>
+
+  <!-- Interview Patterns -->
+  <section class="content-section" id="patterns">
+    <div class="section-label">Interview Prep</div>
+    <h2 class="section-title">Interview Patterns</h2>
+
+    <div class="pattern-grid">
+      <div class="pattern-card">
+        <h4>Frequency Counting</h4>
+        <p>Count occurrences of elements. Use <code>Counter</code> or <code>defaultdict(int)</code>. Anagram detection, character frequency, most common element.</p>
+      </div>
+      <div class="pattern-card">
+        <h4>Two-Sum Pattern</h4>
+        <p>Store seen values in a map. For each element, check if its complement exists. Transforms O(n²) nested loops into O(n).</p>
+      </div>
+      <div class="pattern-card">
+        <h4>Grouping / Bucketing</h4>
+        <p>Group items sharing a property. Use <code>defaultdict(list)</code>. Key = canonical form (sorted string, tuple). Value = list of originals.</p>
+      </div>
+      <div class="pattern-card">
+        <h4>Prefix Sum + Map</h4>
+        <p>Track running sums. Check if <code>prefix - k</code> seen before. Subarray sum, number of ways to partition array.</p>
+      </div>
+      <div class="pattern-card">
+        <h4>Sliding Window</h4>
+        <p>Maintain character/element frequency in a window. Expand right, shrink left when constraint violated. Substring problems.</p>
+      </div>
+      <div class="pattern-card">
+        <h4>Memoization</h4>
+        <p>Cache recursive results. <code>@lru_cache</code> or manual dict. Transforms exponential DP into polynomial time.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- LeetCode Problems -->
+  <section class="content-section" id="leetcode">
+    <div class="section-label">Practice</div>
+    <h2 class="section-title">LeetCode Problems</h2>
+
+    <!-- LC 1 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #1</span>
+        <span class="lc-title">Two Sum</span>
+        <span class="lc-diff diff-easy">Easy</span>
+      </div>
+      <div class="lc-body">
+        <p>Given an array of integers and a target, return indices of two numbers that add to target. Each input has exactly one solution.</p>
+        <p><strong>Key insight</strong>: For each number, check if its complement (target - num) has been seen. Store {value: index} in a map.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def twoSum(self, nums: list[int], target: int) -> list[int]:
+    seen = {}  # {value: index}
+    for i, num in enumerate(nums):
+        complement = target - num
+        if complement in seen:
+            return [seen[complement], i]
+        seen[num] = i
+    return []
+
+# Example: nums = [2, 7, 11, 15], target = 9
+# i=0: num=2, complement=7, not in seen → seen={2:0}
+# i=1: num=7, complement=2, IN seen → return [0, 1]</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(n)</span></div>
+      </div>
+    </div>
+
+    <!-- LC 49 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #49</span>
+        <span class="lc-title">Group Anagrams</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Group an array of strings so that anagrams are in the same group.</p>
+        <p><strong>Key insight</strong>: Anagrams have the same characters — use sorted string (or character frequency tuple) as the canonical key.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">from collections import defaultdict
+
+def groupAnagrams(self, strs: list[str]) -> list[list[str]]:
+    groups = defaultdict(list)
+    for s in strs:
+        key = tuple(sorted(s))   # "eat","tea","ate" → ('a','e','t')
+        groups[key].append(s)
+    return list(groups.values())
+
+# O(k) key with character count (avoids sort):
+def groupAnagrams_v2(self, strs):
+    groups = defaultdict(list)
+    for s in strs:
+        count = [0] * 26
+        for c in s:
+            count[ord(c) - ord('a')] += 1
+        groups[tuple(count)].append(s)
+    return list(groups.values())</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n·k log k) where k = max string length</span><span>💾 Space: O(n·k)</span></div>
+      </div>
+    </div>
+
+    <!-- LC 146 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #146</span>
+        <span class="lc-title">LRU Cache</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Design a data structure that follows the Least Recently Used cache policy with O(1) get and put.</p>
+        <p><strong>Key insight</strong>: Combine a hash map (O(1) lookup) with an OrderedDict (tracks recency). The Python <code>OrderedDict</code> supports <code>move_to_end</code> in O(1).</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">from collections import OrderedDict
+
+class LRUCache:
+    def __init__(self, capacity: int):
+        self.cap = capacity
+        self.cache = OrderedDict()  # maintains insertion order
+
+    def get(self, key: int) -> int:
+        if key not in self.cache:
+            return -1
+        self.cache.move_to_end(key)  # mark as recently used
+        return self.cache[key]
+
+    def put(self, key: int, value: int) -> None:
+        if key in self.cache:
+            self.cache.move_to_end(key)
+        self.cache[key] = value
+        if len(self.cache) > self.cap:
+            self.cache.popitem(last=False)  # evict LRU (first item)
+
+# Follow-up: implement without OrderedDict using doubly linked list + dict
+# for true O(1) on all operations (same idea, more code)</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(1) for get and put</span><span>💾 Space: O(capacity)</span></div>
+      </div>
+    </div>
+
+    <!-- LC 560 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #560</span>
+        <span class="lc-title">Subarray Sum Equals K</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Find the number of subarrays that sum to exactly k.</p>
+        <p><strong>Key insight</strong>: prefix[j] - prefix[i] = k means subarray[i+1..j] = k. Track prefix sum frequencies in a map.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def subarraySum(self, nums: list[int], k: int) -> int:
+    count = 0
+    prefix = 0
+    freq = {0: 1}  # prefix sum 0 seen once (empty subarray)
+
+    for num in nums:
+        prefix += num
+        # If (prefix - k) was seen before, those subarrays sum to k
+        count += freq.get(prefix - k, 0)
+        freq[prefix] = freq.get(prefix, 0) + 1
+
+    return count
+
+# Example: nums=[1,1,1], k=2
+# prefix=1: freq={0:1,1:1}, count += freq[1-2]=-1? No, freq[-1]=0
+# Wait: prefix=1, prefix-k=1-2=-1, freq.get(-1,0)=0 → count=0
+# prefix=2: freq={0:1,1:1,2:1}, prefix-k=0, freq[0]=1 → count=1
+# prefix=3: freq={0:1,1:1,2:1,3:1}, prefix-k=1, freq[1]=1 → count=2
+# Result: 2  ✓</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(n)</span></div>
+      </div>
+    </div>
+
+    <!-- LC 3 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #3</span>
+        <span class="lc-title">Longest Substring Without Repeating Characters</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Find the length of the longest substring without repeating characters.</p>
+        <p><strong>Key insight</strong>: Sliding window. Map each character to its last seen index. When a repeat is found, jump the left pointer past the previous occurrence.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def lengthOfLongestSubstring(self, s: str) -> int:
+    last_seen = {}  # {char: last_index}
+    left = 0
+    max_len = 0
+
+    for right, char in enumerate(s):
+        # If char seen and within current window → shrink window
+        if char in last_seen and last_seen[char] >= left:
+            left = last_seen[char] + 1
+        last_seen[char] = right
+        max_len = max(max_len, right - left + 1)
+
+    return max_len
+
+# Example: s = "abcabcbb"
+# right=0,a: last_seen={a:0}, left=0, max=1
+# right=1,b: last_seen={a:0,b:1}, left=0, max=2
+# right=2,c: last_seen={a:0,b:1,c:2}, left=0, max=3
+# right=3,a: a seen at 0 >= left=0 → left=1, last_seen={a:3}, max=3
+# right=4,b: b seen at 1 >= left=1 → left=2, last_seen={b:4}, max=3
+# ...
+# Result: 3 ("abc")</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(min(n, charset))</span></div>
+      </div>
+    </div>
+
+    <!-- LC 76 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">LC #76</span>
+        <span class="lc-title">Minimum Window Substring</span>
+        <span class="lc-diff diff-hard">Hard</span>
+      </div>
+      <div class="lc-body">
+        <p>Find the minimum window in string s that contains all characters of string t.</p>
+        <p><strong>Key insight</strong>: Sliding window with two frequency maps. Track how many characters are "satisfied" (have required count). Shrink window when all characters are covered.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">from collections import Counter
+
+def minWindow(self, s: str, t: str) -> str:
+    if not t or not s:
+        return ""
+
+    need = Counter(t)   # required character counts
+    missing = len(t)    # total characters still needed
+    best_start, best_end = 0, float('inf')
+    left = 0
+
+    for right, char in enumerate(s, 1):
+        # Expand right: add char to window
+        if need[char] > 0:
+            missing -= 1    # satisfied one required character
+        need[char] -= 1
+
+        # When all characters satisfied, try to shrink from left
+        if missing == 0:
+            # Move left pointer past any excess characters
+            while need[s[left]] < 0:
+                need[s[left]] += 1
+                left += 1
+            # Update best window
+            if right - left < best_end - best_start:
+                best_start, best_end = left, right
+            # Shrink: remove left char and look for next valid window
+            need[s[left]] += 1
+            missing += 1
+            left += 1
+
+    return s[best_start:best_end] if best_end != float('inf') else ""</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(|s| + |t|)</span><span>💾 Space: O(|t|)</span></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Applications -->
+  <section class="content-section" id="applications">
+    <div class="section-label">Real World</div>
+    <h2 class="section-title">Real-World Applications</h2>
+    <ul>
+      <li><strong>Database indexing</strong>: Hash indexes for O(1) equality lookups (vs B-tree for range queries)</li>
+      <li><strong>Caching</strong>: Redis, Memcached — distributed hash maps for sub-millisecond retrieval</li>
+      <li><strong>Symbol tables</strong>: Compilers map variable names → memory addresses</li>
+      <li><strong>DNS resolution</strong>: domain name → IP address lookup tables</li>
+      <li><strong>Python internals</strong>: Every Python object's attributes stored in a <code>__dict__</code> hash map</li>
+      <li><strong>Blockchain</strong>: Hash maps for UTXO (Unspent Transaction Output) sets</li>
+      <li><strong>Deduplication</strong>: Track seen URLs (web crawlers), seen events (stream processing)</li>
+      <li><strong>Routing tables</strong>: Network switches map MAC addresses → ports</li>
+    </ul>
+  </section>
+
+  <!-- Footer -->
+  <footer class="page-footer">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="trie.html">Trie</a>
+      <a href="hash-map.html">Hash Map</a>
+      <a href="linked-list.html">Linked List</a>
+      <a href="binary-tree.html">Binary Tree</a>
+      <a href="heap.html">Heap</a>
+      <a href="stack-queue.html">Stack &amp; Queue</a>
+      <a href="graph.html">Graph</a>
+    </div>
+    <p class="footer-copy">© 2026 KnowAlgo — Data Structures &amp; Algorithms Made Clear</p>
+  </footer>
+
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+  // Reading progress bar
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight) * 100;
+    document.getElementById('progress').style.width = scrolled + '%';
+  });
+
+  // Copy code buttons
+  function copyCode(btn) {
+    const code = btn.closest('.code-wrapper').querySelector('code');
+    navigator.clipboard.writeText(code.textContent).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  // TOC active section highlighting
+  const sections = document.querySelectorAll('.content-section[id]');
+  const tocLinks = document.querySelectorAll('.toc-list a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.toc-list a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-64px 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backtracking – Deep Dive | KnowAlgo</title>
+  <meta name="description" content="Master Backtracking for coding interviews. Subsets, permutations, combinations, N-queens, word search, Sudoku — all patterns explained with Python code and 8 LeetCode solutions.">
+  <meta name="keywords" content="backtracking algorithms, recursion, subsets, permutations, combinations, N-queens, word search, sudoku solver, leetcode backtracking, python backtracking">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.github.io/backtracking.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Backtracking – Deep Dive | KnowAlgo">
+  <meta property="og:description" content="Subsets, permutations, combinations, N-queens, Sudoku — backtracking patterns explained with Python code and 8 LeetCode solutions.">
+  <meta property="og:url" content="https://knowalgo.github.io/backtracking.html">
+  <meta property="og:site_name" content="KnowAlgo">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Backtracking – Deep Dive | KnowAlgo">
+  <meta name="twitter:description" content="Subsets, permutations, combinations, N-queens, Sudoku — backtracking explained with Python code and LeetCode solutions.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Backtracking: Complete Interview Guide",
+    "description": "Comprehensive guide to backtracking algorithms: subsets, permutations, combinations, constraint satisfaction, pruning strategies.",
+    "author": { "@type": "Organization", "name": "KnowAlgo" },
+    "publisher": { "@type": "Organization", "name": "KnowAlgo", "url": "https://knowalgo.github.io/" },
+    "datePublished": "2026-02-28",
+    "dateModified": "2026-02-28",
+    "keywords": ["backtracking", "recursion", "subsets", "permutations", "combinations", "N-queens", "leetcode"],
+    "articleSection": "Algorithms"
+  }
+  </script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    :root {
+      --primary: #2563eb; --primary-dark: #1d4ed8; --primary-light: #eff6ff;
+      --secondary: #7c3aed; --accent: #059669; --danger: #dc2626; --warning: #d97706;
+      --bg: #f8fafc; --bg-card: #ffffff; --text: #0f172a; --text-muted: #64748b;
+      --border: #e2e8f0; --code-bg: #1e293b; --toc-width: 280px; --header-h: 64px;
+      --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.05);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth;font-size:16px}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+    a{color:var(--primary);text-decoration:none} a:hover{text-decoration:underline}
+    ul,ol{padding-left:1.5rem} li{margin-bottom:.35rem}
+
+    .progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(to right,#dc2626,#7c3aed);z-index:1000;transition:width .1s}
+    .topnav{position:sticky;top:0;z-index:200;background:#fff;border-bottom:1px solid var(--border);height:var(--header-h);display:flex;align-items:center;padding:0 1.5rem;gap:1rem;box-shadow:var(--shadow)}
+    .topnav-logo{font-weight:800;font-size:1.25rem;color:var(--primary);letter-spacing:-.5px}
+    .topnav-sep{color:var(--border)} .topnav-crumb{color:var(--text-muted);font-size:.9rem}
+    .topnav-links{margin-left:auto;display:flex;gap:1rem;align-items:center}
+    .topnav-links a{color:var(--text-muted);font-size:.9rem;font-weight:500}
+    .topnav-links a:hover{color:var(--primary);text-decoration:none}
+    .btn-home{background:var(--primary);color:#fff!important;padding:.35rem .9rem;border-radius:6px;font-size:.85rem!important}
+    .btn-home:hover{background:var(--primary-dark)}
+    .page-layout{display:grid;grid-template-columns:var(--toc-width) 1fr;max-width:1400px;margin:0 auto;min-height:calc(100vh - var(--header-h))}
+    .toc-sidebar{position:sticky;top:var(--header-h);height:calc(100vh - var(--header-h));overflow-y:auto;padding:1.5rem 1rem;border-right:1px solid var(--border);background:#fff}
+    .toc-sidebar::-webkit-scrollbar{width:4px} .toc-sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .toc-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:.75rem}
+    .toc-list{list-style:none;padding:0} .toc-list li{margin-bottom:0}
+    .toc-list a{display:block;padding:.3rem .75rem;border-radius:6px;font-size:.875rem;color:var(--text-muted);transition:all .15s;border-left:2px solid transparent}
+    .toc-list a:hover,.toc-list a.active{color:var(--primary);background:var(--primary-light);border-left-color:var(--primary);text-decoration:none}
+    .toc-divider{border:none;border-top:1px solid var(--border);margin:.75rem 0}
+    .main-content{padding:2rem 2.5rem;max-width:900px}
+    .hero{background:linear-gradient(135deg,#0f172a 0%,#450a0a 40%,#4c1d95 100%);color:white;border-radius:var(--radius);padding:2.5rem;margin-bottom:2.5rem}
+    .hero-badge{display:inline-block;background:rgba(255,255,255,.2);color:#fff;padding:.25rem .75rem;border-radius:99px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem}
+    .hero h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;line-height:1.2;margin-bottom:1rem;letter-spacing:-1px}
+    .hero p{font-size:1.05rem;opacity:.9;max-width:620px;line-height:1.7;margin-bottom:1.5rem}
+    .hero-meta{display:flex;gap:1.5rem;flex-wrap:wrap}
+    .hero-meta span{font-size:.875rem;opacity:.8}
+    .content-section{margin-bottom:3rem;scroll-margin-top:calc(var(--header-h) + 1rem)}
+    .section-label{display:inline-block;background:#f1f5f9;color:#475569;padding:.2rem .7rem;border-radius:99px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem}
+    h2.section-title{font-size:1.75rem;font-weight:800;margin-bottom:1rem;letter-spacing:-.5px}
+    h3{font-size:1.2rem;font-weight:700;margin:1.5rem 0 .75rem;color:var(--text)}
+    p{margin-bottom:1rem}
+    .callout{border-radius:var(--radius);padding:1.25rem 1.5rem;margin:1.5rem 0;border-left:4px solid}
+    .callout-blue{background:#eff6ff;border-color:var(--primary)}
+    .callout-yellow{background:#fefce8;border-color:var(--warning)}
+    .callout-green{background:#f0fdf4;border-color:var(--accent)}
+    .callout-red{background:#fef2f2;border-color:var(--danger)}
+    .callout-purple{background:#f5f3ff;border-color:#7c3aed}
+    .callout strong{display:block;margin-bottom:.4rem}
+    .code-wrapper{position:relative;margin:1.25rem 0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-md)}
+    .code-header{background:#0f172a;padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between}
+    .code-lang{font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+    .copy-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#94a3b8;font-size:.75rem;padding:.25rem .6rem;border-radius:4px;cursor:pointer;transition:all .15s}
+    .copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+    .copy-btn.copied{background:#059669;border-color:#059669;color:#fff}
+    pre[class*="language-"]{margin:0!important;border-radius:0!important;font-size:.875rem!important}
+    .diagram{background:var(--code-bg);color:#e2e8f0;padding:1.5rem;border-radius:var(--radius);font-family:'Courier New',Courier,monospace;font-size:.875rem;line-height:1.6;overflow-x:auto;margin:1.25rem 0;white-space:pre}
+    .table-wrapper{overflow-x:auto;margin:1.5rem 0;border-radius:var(--radius);box-shadow:var(--shadow)}
+    table{width:100%;border-collapse:collapse;background:#fff}
+    th{background:#f1f5f9;padding:.75rem 1rem;text-align:left;font-size:.875rem;font-weight:700;color:var(--text);border-bottom:2px solid var(--border)}
+    td{padding:.75rem 1rem;font-size:.875rem;border-bottom:1px solid var(--border);vertical-align:top}
+    tr:last-child td{border-bottom:none} tr:hover td{background:#f8fafc}
+    .complexity-good{color:#059669;font-weight:700} .complexity-ok{color:#d97706;font-weight:700} .complexity-bad{color:#dc2626;font-weight:700}
+    .lc-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.5rem;box-shadow:var(--shadow)}
+    .lc-header{padding:1rem 1.25rem;display:flex;align-items:center;gap:.75rem;border-bottom:1px solid var(--border);background:#f8fafc}
+    .lc-num{font-size:.8rem;font-weight:700;color:var(--text-muted)}
+    .lc-title{font-size:1rem;font-weight:700;color:var(--text);flex:1}
+    .lc-diff{font-size:.75rem;font-weight:700;padding:.15rem .5rem;border-radius:99px}
+    .diff-easy{background:#d1fae5;color:#065f46} .diff-medium{background:#fef3c7;color:#92400e} .diff-hard{background:#fee2e2;color:#991b1b}
+    .lc-body{padding:1.25rem}
+    .lc-meta{display:flex;gap:1rem;margin-top:.75rem;font-size:.8rem;color:var(--text-muted)}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin:1.25rem 0}
+    .box{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+    .box h4{font-size:.9rem;font-weight:700;margin-bottom:.6rem}
+    .box ul{font-size:.875rem;color:var(--text-muted)}
+    .pattern-table{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin:1.25rem 0}
+    .pt-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem;border-left:4px solid var(--primary)}
+    .pt-card.red{border-left-color:#dc2626}
+    .pt-card.green{border-left-color:#059669}
+    .pt-card.orange{border-left-color:#d97706}
+    .pt-card.purple{border-left-color:#7c3aed}
+    .pt-card h4{font-size:.9rem;font-weight:700;margin-bottom:.35rem}
+    .pt-card p{font-size:.8rem;color:var(--text-muted);margin:0}
+    .page-footer{background:#0f172a;color:#94a3b8;padding:2.5rem;margin-top:4rem}
+    .footer-links{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+    .footer-links a{color:#60a5fa;font-size:.875rem}
+    .footer-copy{font-size:.8rem;opacity:.6}
+    @media(max-width:768px){.page-layout{grid-template-columns:1fr}.toc-sidebar{display:none}.main-content{padding:1.5rem 1rem}.two-col{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+
+<nav class="topnav">
+  <a href="index.html" class="topnav-logo">KnowAlgo</a>
+  <span class="topnav-sep">/</span>
+  <span class="topnav-crumb">Backtracking</span>
+  <div class="topnav-links">
+    <a href="dp.html">Dynamic Programming</a>
+    <a href="graph.html">Graph</a>
+    <a href="index.html" class="btn-home">← Home</a>
+  </div>
+</nav>
+
+<div class="page-layout">
+
+<aside class="toc-sidebar">
+  <div class="toc-title">On this page</div>
+  <ul class="toc-list" id="toc">
+    <li><a href="#template">The Template</a></li>
+    <li><a href="#subsets">Subsets (Power Set)</a></li>
+    <li><a href="#permutations">Permutations</a></li>
+    <li><a href="#combinations">Combinations</a></li>
+    <li><a href="#grid-backtracking">Grid Backtracking</a></li>
+    <li><a href="#constraint-satisfaction">Constraint Satisfaction</a></li>
+    <li><a href="#pruning">Pruning Strategies</a></li>
+    <li><a href="#complexity">Complexity Reference</a></li>
+    <hr class="toc-divider">
+    <li><a href="#leetcode">LeetCode Problems</a></li>
+  </ul>
+  <hr class="toc-divider">
+  <div class="toc-title">Other Guides</div>
+  <ul class="toc-list">
+    <li><a href="dp.html">→ Dynamic Programming</a></li>
+    <li><a href="graph.html">→ Graph Traversal</a></li>
+    <li><a href="binary-tree.html">→ Binary Tree (DFS)</a></li>
+    <li><a href="arrays-strings.html">→ Arrays &amp; Strings</a></li>
+  </ul>
+</aside>
+
+<main class="main-content" id="main-content">
+
+  <div class="hero">
+    <div class="hero-badge">Algorithms</div>
+    <h1>Backtracking</h1>
+    <p>The systematic "try everything" strategy. Backtracking builds a solution incrementally and <em>abandons</em> a candidate the moment it can't lead to a valid solution. It's brute force — but smart brute force, guided by constraints.</p>
+    <div class="hero-meta">
+      <span>🌳 Decision Tree</span>
+      <span>✂️ Pruning</span>
+      <span>🔄 Choose / Explore / Unchoose</span>
+      <span>🎯 8 LeetCode problems</span>
+    </div>
+  </div>
+
+  <!-- The Template -->
+  <section class="content-section" id="template">
+    <div class="section-label">Foundation</div>
+    <h2 class="section-title">The Backtracking Template</h2>
+    <p>Every backtracking solution has the same three steps, repeated recursively. Think of it as navigating a decision tree: at each node, you make a choice, recurse into the subtree, then undo your choice (backtrack) to try the next option.</p>
+
+    <div class="callout callout-blue">
+      <strong>The three-step loop:</strong>
+      <ol style="margin-top:.5rem">
+        <li><strong>Choose:</strong> Pick the next candidate to try</li>
+        <li><strong>Explore:</strong> Recurse — make the choice and continue building</li>
+        <li><strong>Unchoose:</strong> Undo the choice to restore state for the next candidate</li>
+      </ol>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def backtrack(state, choices):
+    if is_solution(state):
+        record(state)              # base case: valid complete solution found
+        return
+
+    for choice in choices:
+        if is_valid(state, choice):
+            make_choice(state, choice)       # CHOOSE
+            backtrack(state, next_choices)   # EXPLORE
+            undo_choice(state, choice)       # UNCHOOSE (backtrack)</code></pre>
+    </div>
+
+    <h3>The Decision Tree</h3>
+    <p>Every backtracking problem maps to a tree where each node is a partial solution and each edge is a choice. The algorithm does a DFS, collecting all paths that reach a leaf satisfying the constraints.</p>
+
+    <div class="diagram">Example: Subsets of [1, 2, 3]
+
+                    []
+           /        |         \
+        [1]        [2]        [3]
+       /   \        |
+    [1,2] [1,3]   [2,3]
+      |
+  [1,2,3]
+
+Each node = partial solution
+Leaf nodes (when start_index > n) = collected as results
+→ Total 8 subsets (2^3 = 2^n)
+
+Pruning: cut branches that can't lead to valid solutions
+         (e.g., in combination sum, stop if running total > target)</div>
+
+    <div class="callout callout-yellow">
+      <strong>Backtracking vs Dynamic Programming:</strong>
+      Both explore subproblems, but DP <em>stores</em> subproblem results to avoid recomputation (overlapping subproblems). Backtracking doesn't — it explores all branches but prunes invalid ones. Use DP when there's optimal substructure and overlapping subproblems; use backtracking when you need all solutions or the problem has constraints that vary per path.
+    </div>
+  </section>
+
+  <!-- Subsets -->
+  <section class="content-section" id="subsets">
+    <div class="section-label">Pattern 1</div>
+    <h2 class="section-title">Subsets (Power Set)</h2>
+    <p>Generate all subsets of a set. The key insight: for each element, you have a binary choice — include it or exclude it. This gives 2ⁿ subsets total.</p>
+
+    <h3>Approach 1: Include/Exclude at Each Index</h3>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def subsets(nums):            # LC #78
+    result = []
+
+    def backtrack(start, current):
+        result.append(current[:])    # snapshot: every node is a valid subset
+
+        for i in range(start, len(nums)):
+            current.append(nums[i])          # CHOOSE: include nums[i]
+            backtrack(i + 1, current)        # EXPLORE: recurse with next elements
+            current.pop()                    # UNCHOOSE: remove nums[i]
+
+    backtrack(0, [])
+    return result
+
+# nums = [1, 2, 3] → [[], [1], [1,2], [1,2,3], [1,3], [2], [2,3], [3]]
+# Note: start=i+1 ensures we only look forward → no duplicates</code></pre>
+    </div>
+
+    <h3>Subsets with Duplicates</h3>
+    <p>When the input has duplicates (LC #90), sort first, then skip duplicate elements at the same recursion level:</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def subsetsWithDup(nums):      # LC #90
+    nums.sort()                # sort so duplicates are adjacent
+    result = []
+
+    def backtrack(start, current):
+        result.append(current[:])
+        for i in range(start, len(nums)):
+            # Skip duplicate at the same level: if nums[i] == nums[i-1]
+            # and i > start, we already explored this branch
+            if i > start and nums[i] == nums[i - 1]:
+                continue
+            current.append(nums[i])
+            backtrack(i + 1, current)
+            current.pop()
+
+    backtrack(0, [])
+    return result
+
+# nums = [1, 2, 2] → [[], [1], [1,2], [1,2,2], [2], [2,2]]
+# Without skip: [1,2] would appear twice</code></pre>
+    </div>
+
+    <div class="callout callout-green">
+      <strong>The duplicate-skipping rule:</strong>
+      After sorting, identical elements appear consecutively. At any given recursion depth (same <code>start</code> position), if we see <code>nums[i] == nums[i-1]</code> with <code>i &gt; start</code>, we've already explored the branch with <code>nums[i-1]</code> at this position — skipping avoids generating duplicate subsets.
+    </div>
+  </section>
+
+  <!-- Permutations -->
+  <section class="content-section" id="permutations">
+    <div class="section-label">Pattern 2</div>
+    <h2 class="section-title">Permutations</h2>
+    <p>Generate all orderings of a list. Unlike subsets, every element appears exactly once and order matters. A "used" boolean array tracks which elements are already in the current permutation.</p>
+
+    <h3>All Permutations (No Duplicates)</h3>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def permute(nums):             # LC #46
+    result = []
+    used = [False] * len(nums)
+
+    def backtrack(current):
+        if len(current) == len(nums):
+            result.append(current[:])  # complete permutation
+            return
+
+        for i in range(len(nums)):
+            if used[i]:
+                continue               # already placed in current permutation
+            used[i] = True
+            current.append(nums[i])    # CHOOSE
+            backtrack(current)         # EXPLORE
+            current.pop()              # UNCHOOSE
+            used[i] = False
+
+    backtrack([])
+    return result
+
+# Alternative: swap-based (modifies nums in-place, no "used" array)
+def permuteSwap(nums):
+    result = []
+    def backtrack(start):
+        if start == len(nums):
+            result.append(nums[:])
+            return
+        for i in range(start, len(nums)):
+            nums[start], nums[i] = nums[i], nums[start]  # CHOOSE: swap
+            backtrack(start + 1)                          # EXPLORE
+            nums[start], nums[i] = nums[i], nums[start]  # UNCHOOSE: swap back
+    backtrack(0)
+    return result</code></pre>
+    </div>
+
+    <h3>Permutations with Duplicates</h3>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def permuteUnique(nums):       # LC #47
+    nums.sort()
+    result = []
+    used = [False] * len(nums)
+
+    def backtrack(current):
+        if len(current) == len(nums):
+            result.append(current[:])
+            return
+        for i in range(len(nums)):
+            if used[i]:
+                continue
+            # Skip duplicate: if nums[i] == nums[i-1] and nums[i-1] is NOT used,
+            # then we're at the same level and about to generate the same permutation
+            if i > 0 and nums[i] == nums[i - 1] and not used[i - 1]:
+                continue
+            used[i] = True
+            current.append(nums[i])
+            backtrack(current)
+            current.pop()
+            used[i] = False
+
+    backtrack([])
+    return result
+
+# nums=[1,1,2]:  only [1,1,2], [1,2,1], [2,1,1] — not 6 permutations</code></pre>
+    </div>
+
+    <div class="callout callout-yellow">
+      <strong>Why <code>not used[i-1]</code>?</strong>
+      We want to ensure that among duplicate values, we always place the <em>leftmost</em> occurrence first. If <code>nums[i-1]</code> is not currently used, it means we're starting a new branch at the same level — placing <code>nums[i]</code> (a duplicate) here would create an identical arrangement to one we already generated via <code>nums[i-1]</code>.
+    </div>
+  </section>
+
+  <!-- Combinations -->
+  <section class="content-section" id="combinations">
+    <div class="section-label">Pattern 3</div>
+    <h2 class="section-title">Combinations &amp; Combination Sum</h2>
+    <p>Combinations choose <code>k</code> elements from <code>n</code> where order doesn't matter. Combination Sum extends this to allow repeated use of elements to reach a target sum.</p>
+
+    <h3>Basic Combinations (LC #77)</h3>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def combine(n, k):             # LC #77: choose k numbers from [1..n]
+    result = []
+
+    def backtrack(start, current):
+        if len(current) == k:
+            result.append(current[:])
+            return
+        # Pruning: need at least (k - len(current)) more elements
+        # so start can't exceed n - (k - len(current)) + 1
+        remaining = k - len(current)
+        for i in range(start, n - remaining + 2):
+            current.append(i)
+            backtrack(i + 1, current)
+            current.pop()
+
+    backtrack(1, [])
+    return result</code></pre>
+    </div>
+
+    <h3>Combination Sum (Unlimited Reuse)</h3>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def combinationSum(candidates, target):   # LC #39
+    result = []
+
+    def backtrack(start, current, remaining):
+        if remaining == 0:
+            result.append(current[:])  # exact match
+            return
+        if remaining < 0:
+            return                     # overshot — prune
+
+        for i in range(start, len(candidates)):
+            current.append(candidates[i])
+            # i (not i+1) allows reuse of the same element
+            backtrack(i, current, remaining - candidates[i])
+            current.pop()
+
+    backtrack(0, [], target)
+    return result</code></pre>
+    </div>
+
+    <h3>Combination Sum II (No Reuse, with Duplicates)</h3>
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def combinationSum2(candidates, target):  # LC #40
+    candidates.sort()                     # sort to handle duplicates
+    result = []
+
+    def backtrack(start, current, remaining):
+        if remaining == 0:
+            result.append(current[:])
+            return
+        for i in range(start, len(candidates)):
+            if candidates[i] > remaining:
+                break                     # sorted → rest are too large (prune)
+            # Skip duplicates at the same recursion level
+            if i > start and candidates[i] == candidates[i - 1]:
+                continue
+            current.append(candidates[i])
+            backtrack(i + 1, current, remaining - candidates[i])  # i+1: no reuse
+            current.pop()
+
+    backtrack(0, [], target)
+    return result</code></pre>
+    </div>
+
+    <div class="diagram">Combination Sum: candidates=[2,3,6,7], target=7
+
+                    []
+          /    |    |     \
+        [2]   [3]  [6]   [7]✓
+        /|\    |
+      [2][3][6]✓  [3]
+      /|
+    [2][3]✓          ← [2,2,3]=7 ✓
+    /
+  [2]
+  |
+ ...→ [2,2,2,2] sum=8 > 7, PRUNE
+
+Key: when remaining < 0, prune entire subtree</div>
+  </section>
+
+  <!-- Grid Backtracking -->
+  <section class="content-section" id="grid-backtracking">
+    <div class="section-label">Pattern 4</div>
+    <h2 class="section-title">Grid Backtracking</h2>
+    <p>Backtracking on a 2D grid explores paths cell-by-cell. Instead of a "used" array, you temporarily mark cells as visited in the grid itself (to avoid revisiting), then unmark on backtrack.</p>
+
+    <h3>Word Search (LC #79)</h3>
+    <p>Find if a word exists in a grid by walking adjacent cells (up/down/left/right), never reusing the same cell in one path.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def exist(board, word):        # LC #79
+    rows, cols = len(board), len(board[0])
+
+    def dfs(r, c, k):
+        if k == len(word):
+            return True                    # found complete word
+        if not (0 <= r < rows and 0 <= c < cols):
+            return False                   # out of bounds
+        if board[r][c] != word[k]:
+            return False                   # wrong character
+
+        # CHOOSE: mark cell as visited (in-place)
+        temp = board[r][c]
+        board[r][c] = '#'                  # sentinel: won't match any letter
+
+        # EXPLORE: try all 4 directions
+        found = (dfs(r+1, c, k+1) or dfs(r-1, c, k+1) or
+                 dfs(r, c+1, k+1) or dfs(r, c-1, k+1))
+
+        # UNCHOOSE: restore cell
+        board[r][c] = temp
+        return found
+
+    for r in range(rows):
+        for c in range(cols):
+            if dfs(r, c, 0):              # try every starting cell
+                return True
+    return False</code></pre>
+    </div>
+
+    <h3>Why In-Place Marking Works</h3>
+    <p>Overwriting with a sentinel character during recursion and restoring on backtrack gives us O(1) space for the visited state (no auxiliary set). This works because the grid is modified and restored symmetrically along each DFS path.</p>
+
+    <div class="callout callout-blue">
+      <strong>Pruning for Word Search:</strong>
+      Early termination is key. If the current cell doesn't match <code>word[k]</code>, return immediately — don't even explore neighbors. Additionally, if the remaining characters needed exceed the remaining unvisited cells, prune (count remaining cells).
+    </div>
+  </section>
+
+  <!-- Constraint Satisfaction -->
+  <section class="content-section" id="constraint-satisfaction">
+    <div class="section-label">Pattern 5</div>
+    <h2 class="section-title">Constraint Satisfaction</h2>
+    <p>Some problems have <em>global constraints</em> that must be maintained across all positions simultaneously — not just locally within one path. These require checking validity across rows, columns, and regions.</p>
+
+    <h3>N-Queens (LC #51)</h3>
+    <p>Place N queens on an N×N chessboard so no two queens attack each other (same row, column, or diagonal).</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def solveNQueens(n):            # LC #51
+    result = []
+    # Track which columns and diagonals are occupied
+    cols = set()
+    diag1 = set()   # r - c = constant for "/" diagonals
+    diag2 = set()   # r + c = constant for "\" diagonals
+    board = [['.' ] * n for _ in range(n)]
+
+    def backtrack(row):
+        if row == n:
+            result.append(["".join(r) for r in board])
+            return
+
+        for col in range(n):
+            if col in cols or (row - col) in diag1 or (row + col) in diag2:
+                continue               # queen would be attacked → prune
+
+            # CHOOSE: place queen
+            board[row][col] = 'Q'
+            cols.add(col)
+            diag1.add(row - col)
+            diag2.add(row + col)
+
+            backtrack(row + 1)         # EXPLORE: next row
+
+            # UNCHOOSE: remove queen
+            board[row][col] = '.'
+            cols.remove(col)
+            diag1.remove(row - col)
+            diag2.remove(row + col)
+
+    backtrack(0)
+    return result
+
+# Key insight: one queen per row → backtrack row by row
+# Constraint check in O(1) with sets instead of O(n)</code></pre>
+    </div>
+
+    <h3>Sudoku Solver (LC #37)</h3>
+    <p>Fill a 9×9 sudoku board so each row, column, and 3×3 box contains digits 1-9 exactly once.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def solveSudoku(board):        # LC #37 (modifies board in-place)
+    rows = [set() for _ in range(9)]
+    cols = [set() for _ in range(9)]
+    boxes = [set() for _ in range(9)]
+
+    # Pre-populate constraint sets from existing clues
+    for r in range(9):
+        for c in range(9):
+            if board[r][c] != '.':
+                d = board[r][c]
+                rows[r].add(d); cols[c].add(d)
+                boxes[(r // 3) * 3 + c // 3].add(d)
+
+    def backtrack():
+        # Find the next empty cell
+        for r in range(9):
+            for c in range(9):
+                if board[r][c] == '.':
+                    box_id = (r // 3) * 3 + c // 3
+                    for d in '123456789':
+                        if d in rows[r] or d in cols[c] or d in boxes[box_id]:
+                            continue               # digit already used → skip
+                        # CHOOSE
+                        board[r][c] = d
+                        rows[r].add(d); cols[c].add(d); boxes[box_id].add(d)
+                        # EXPLORE
+                        if backtrack():
+                            return True            # propagate success
+                        # UNCHOOSE
+                        board[r][c] = '.'
+                        rows[r].remove(d); cols[c].remove(d); boxes[box_id].remove(d)
+                    return False                   # no valid digit → backtrack
+        return True                                # no empty cell found → solved
+
+    backtrack()</code></pre>
+    </div>
+
+    <div class="callout callout-purple">
+      <strong>Constraint propagation (advanced):</strong>
+      Instead of trying all 9 digits for each cell, pick the cell with the <em>fewest valid choices</em> (MRV — Minimum Remaining Values heuristic). This can reduce the branching factor dramatically. Python's <code>set</code>-based constraint tracking enables O(1) validity checks vs O(n) scanning.
+    </div>
+  </section>
+
+  <!-- Pruning -->
+  <section class="content-section" id="pruning">
+    <div class="section-label">Optimization</div>
+    <h2 class="section-title">Pruning Strategies</h2>
+    <p>Backtracking without pruning is brute force. Pruning is what makes it efficient. Here are the key strategies, ordered from most to least impactful:</p>
+
+    <div class="pattern-table">
+      <div class="pt-card red">
+        <h4>Early Termination</h4>
+        <p>Return immediately when a constraint is violated. Don't wait until the leaf. Example: in combination sum, if <code>remaining &lt; 0</code>, prune immediately.</p>
+      </div>
+      <div class="pt-card green">
+        <h4>Sort + Break</h4>
+        <p>Sort candidates first. When the current candidate exceeds the target, all subsequent candidates also will — so <code>break</code> instead of <code>continue</code>. Turns O(n) loop into O(pruned).</p>
+      </div>
+      <div class="pt-card orange">
+        <h4>Deduplication</h4>
+        <p>Sort + skip duplicate elements at the same recursion level. Prevents generating identical solutions from different orderings of equal elements.</p>
+      </div>
+      <div class="pt-card purple">
+        <h4>Counting Pruning</h4>
+        <p>Check if enough elements remain to complete the solution. In LC #77, stop when <code>start &gt; n - remaining + 1</code>. Eliminates impossible branches early.</p>
+      </div>
+    </div>
+
+    <h3>Palindrome Partitioning: Precomputed Palindrome Table</h3>
+    <p>Instead of checking isPalindrome O(n) at each step, precompute a 2D boolean table in O(n²) so each palindrome check is O(1):</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code class="language-python">def partition(s):              # LC #131: all palindrome partitions
+    n = len(s)
+    # Precompute: is_pal[i][j] = True if s[i..j] is a palindrome
+    is_pal = [[False] * n for _ in range(n)]
+    for i in range(n):
+        is_pal[i][i] = True                    # single chars
+    for length in range(2, n + 1):
+        for i in range(n - length + 1):
+            j = i + length - 1
+            if s[i] == s[j]:
+                is_pal[i][j] = (length == 2) or is_pal[i+1][j-1]
+
+    result = []
+    def backtrack(start, current):
+        if start == n:
+            result.append(current[:])
+            return
+        for end in range(start, n):
+            if is_pal[start][end]:             # O(1) check!
+                current.append(s[start:end+1])
+                backtrack(end + 1, current)
+                current.pop()
+
+    backtrack(0, [])
+    return result</code></pre>
+    </div>
+  </section>
+
+  <!-- Complexity -->
+  <section class="content-section" id="complexity">
+    <div class="section-label">Reference</div>
+    <h2 class="section-title">Complexity Reference</h2>
+    <p>Backtracking complexity is always exponential in the worst case — but pruning reduces the constant factor dramatically in practice.</p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Problem Type</th><th>Time (Worst Case)</th><th>Space</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Subsets of n elements</td><td class="complexity-bad">O(2ⁿ × n)</td><td class="complexity-bad">O(n)</td><td>2ⁿ subsets, each O(n) to copy</td></tr>
+          <tr><td>Permutations of n elements</td><td class="complexity-bad">O(n! × n)</td><td class="complexity-bad">O(n)</td><td>n! permutations, each O(n) to copy</td></tr>
+          <tr><td>Combinations C(n, k)</td><td class="complexity-ok">O(C(n,k) × k)</td><td class="complexity-ok">O(k)</td><td>Much better than n! for small k</td></tr>
+          <tr><td>Combination Sum</td><td class="complexity-bad">O(N^(T/M) × k)</td><td class="complexity-ok">O(T/M)</td><td>T=target, M=min candidate, N=candidates</td></tr>
+          <tr><td>N-Queens</td><td class="complexity-bad">O(n!)</td><td class="complexity-ok">O(n)</td><td>Constraint sets prune ~85% of branches</td></tr>
+          <tr><td>Word Search</td><td class="complexity-bad">O(m×n × 4^L)</td><td class="complexity-ok">O(L)</td><td>L=word length, m×n starting cells</td></tr>
+          <tr><td>Sudoku Solver</td><td class="complexity-bad">O(9^M)</td><td class="complexity-ok">O(1)*</td><td>M=empty cells; in practice much faster</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:.8rem;color:var(--text-muted)">* Excluding the board itself, which is O(81) = O(1) for a fixed 9×9 grid.</p>
+
+    <div class="callout callout-blue">
+      <strong>When NOT to use backtracking:</strong>
+      If the problem asks for <em>count of solutions</em> or <em>optimal value</em> (not the actual solutions themselves), dynamic programming is usually O(n²) or O(n·k) while backtracking is exponential. Example: count of subsets summing to k → DP; actual subsets summing to k → backtracking.
+    </div>
+  </section>
+
+  <!-- LeetCode -->
+  <section class="content-section" id="leetcode">
+    <div class="section-label">Practice</div>
+    <h2 class="section-title">LeetCode Problems</h2>
+    <p>8 problems spanning all backtracking archetypes — from foundational subsets to hard constraint satisfaction.</p>
+
+    <!-- LC 78 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">#78</span>
+        <span class="lc-title">Subsets</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Given an integer array of unique elements, return all possible subsets (the power set).</p>
+        <p><strong>Key:</strong> Record every node (not just leaves) in the decision tree. Use <code>start</code> to only look forward, preventing duplicates.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><code class="language-python">def subsets(nums):
+    result = []
+    def backtrack(start, curr):
+        result.append(curr[:])       # every state is a valid subset
+        for i in range(start, len(nums)):
+            curr.append(nums[i])
+            backtrack(i + 1, curr)
+            curr.pop()
+    backtrack(0, [])
+    return result</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ O(2ⁿ × n)</span><span>💾 O(n) stack depth</span><span>Pattern: Subsets</span></div>
+      </div>
+    </div>
+
+    <!-- LC 46 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">#46</span>
+        <span class="lc-title">Permutations</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Given an array of distinct integers, return all possible permutations.</p>
+        <p><strong>Key:</strong> Use a <code>used</code> array to track which elements are in the current permutation. All elements are candidates at each position (unlike subsets where we only look forward).</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><code class="language-python">def permute(nums):
+    result = []
+    used = [False] * len(nums)
+    def backtrack(curr):
+        if len(curr) == len(nums):
+            result.append(curr[:])
+            return
+        for i in range(len(nums)):
+            if used[i]: continue
+            used[i] = True
+            curr.append(nums[i])
+            backtrack(curr)
+            curr.pop()
+            used[i] = False
+    backtrack([])
+    return result</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ O(n! × n)</span><span>💾 O(n)</span><span>Pattern: Permutations</span></div>
+      </div>
+    </div>
+
+    <!-- LC 39 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">#39</span>
+        <span class="lc-title">Combination Sum</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Find all unique combinations of candidates that sum to the target. The same number may be used unlimited times.</p>
+        <p><strong>Key:</strong> Pass <code>i</code> (not <code>i+1</code>) to the recursive call to allow reuse. Break when <code>candidates[i] &gt; remaining</code> (after sorting) to prune.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><code class="language-python">def combinationSum(candidates, target):
+    candidates.sort()
+    result = []
+    def backtrack(start, curr, remaining):
+        if remaining == 0:
+            result.append(curr[:])
+            return
+        for i in range(start, len(candidates)):
+            if candidates[i] > remaining:
+                break                  # sorted → prune rest
+            curr.append(candidates[i])
+            backtrack(i, curr, remaining - candidates[i])  # i: allow reuse
+            curr.pop()
+    backtrack(0, [], target)
+    return result</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ O(N^(T/M))</span><span>💾 O(T/M) stack depth</span><span>Pattern: Combination Sum (with reuse)</span></div>
+      </div>
+    </div>
+
+    <!-- LC 131 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">#131</span>
+        <span class="lc-title">Palindrome Partitioning</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Partition a string so that every substring is a palindrome. Return all possible partitions.</p>
+        <p><strong>Key:</strong> At each position, try all possible first substrings. If the substring is a palindrome, recurse on the rest. Precompute palindrome check table for O(1) checks.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><code class="language-python">def partition(s):
+    n = len(s)
+    # O(n²) precompute: is_pal[i][j] = s[i..j] is palindrome
+    is_pal = [[False] * n for _ in range(n)]
+    for i in range(n): is_pal[i][i] = True
+    for length in range(2, n + 1):
+        for i in range(n - length + 1):
+            j = i + length - 1
+            is_pal[i][j] = s[i] == s[j] and (length == 2 or is_pal[i+1][j-1])
+
+    result = []
+    def backtrack(start, curr):
+        if start == n:
+            result.append(curr[:])
+            return
+        for end in range(start, n):
+            if is_pal[start][end]:
+                curr.append(s[start:end+1])
+                backtrack(end + 1, curr)
+                curr.pop()
+    backtrack(0, [])
+    return result</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ O(2ⁿ × n)</span><span>💾 O(n²) for palindrome table</span><span>Pattern: Partitioning + precomputed DP</span></div>
+      </div>
+    </div>
+
+    <!-- LC 79 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">#79</span>
+        <span class="lc-title">Word Search</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Given a 2D board and a word, find if the word exists in the grid by moving to adjacent cells. Each cell may only be used once per path.</p>
+        <p><strong>Key:</strong> Mark cells visited by overwriting with a sentinel (<code>'#'</code>). Restore on backtrack. Start DFS from every cell that matches <code>word[0]</code>.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><code class="language-python">def exist(board, word):
+    rows, cols = len(board), len(board[0])
+    def dfs(r, c, k):
+        if k == len(word): return True
+        if not (0 <= r < rows and 0 <= c < cols): return False
+        if board[r][c] != word[k]: return False
+        temp, board[r][c] = board[r][c], '#'   # mark visited
+        found = any(dfs(r+dr, c+dc, k+1) for dr, dc in [(1,0),(-1,0),(0,1),(0,-1)])
+        board[r][c] = temp                      # restore
+        return found
+    return any(dfs(r, c, 0) for r in range(rows) for c in range(cols))</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ O(m×n × 4^L)</span><span>💾 O(L) stack depth</span><span>Pattern: Grid DFS with in-place marking</span></div>
+      </div>
+    </div>
+
+    <!-- LC 51 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">#51</span>
+        <span class="lc-title">N-Queens</span>
+        <span class="lc-diff diff-hard">Hard</span>
+      </div>
+      <div class="lc-body">
+        <p>Place N queens on an N×N chessboard so no two queens attack each other. Return all distinct solutions.</p>
+        <p><strong>Key:</strong> Backtrack row-by-row (one queen per row). Track occupied columns and both diagonal types with sets for O(1) conflict checking. Diagonals: <code>r-c</code> (top-right to bottom-left), <code>r+c</code> (top-left to bottom-right).</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><code class="language-python">def solveNQueens(n):
+    result = []
+    cols, diag1, diag2 = set(), set(), set()
+    board = [['.']*n for _ in range(n)]
+
+    def backtrack(row):
+        if row == n:
+            result.append(["".join(r) for r in board])
+            return
+        for col in range(n):
+            if col in cols or (row-col) in diag1 or (row+col) in diag2:
+                continue                        # attacked → skip
+            board[row][col] = 'Q'
+            cols.add(col); diag1.add(row-col); diag2.add(row+col)
+            backtrack(row + 1)
+            board[row][col] = '.'
+            cols.remove(col); diag1.remove(row-col); diag2.remove(row+col)
+
+    backtrack(0)
+    return result</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ O(n!)</span><span>💾 O(n)</span><span>Pattern: Constraint Satisfaction (row-by-row)</span></div>
+      </div>
+    </div>
+
+    <!-- LC 40 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">#40</span>
+        <span class="lc-title">Combination Sum II</span>
+        <span class="lc-diff diff-medium">Medium</span>
+      </div>
+      <div class="lc-body">
+        <p>Find all unique combinations where each number may only be used once, and candidates may contain duplicates.</p>
+        <p><strong>Key:</strong> Sort first. Use <code>i+1</code> (no reuse). At each level, skip <code>candidates[i] == candidates[i-1]</code> when <code>i &gt; start</code> to avoid duplicate combinations.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><code class="language-python">def combinationSum2(candidates, target):
+    candidates.sort()
+    result = []
+    def backtrack(start, curr, remaining):
+        if remaining == 0:
+            result.append(curr[:])
+            return
+        for i in range(start, len(candidates)):
+            if candidates[i] > remaining: break   # prune
+            if i > start and candidates[i] == candidates[i-1]: continue  # dedup
+            curr.append(candidates[i])
+            backtrack(i + 1, curr, remaining - candidates[i])
+            curr.pop()
+    backtrack(0, [], target)
+    return result</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ O(2ⁿ)</span><span>💾 O(n)</span><span>Pattern: Combination Sum (no reuse + dedup)</span></div>
+      </div>
+    </div>
+
+    <!-- LC 37 -->
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-num">#37</span>
+        <span class="lc-title">Sudoku Solver</span>
+        <span class="lc-diff diff-hard">Hard</span>
+      </div>
+      <div class="lc-body">
+        <p>Fill a 9×9 Sudoku board so that every row, column, and 3×3 box contains the digits 1-9. The board has a unique solution.</p>
+        <p><strong>Key:</strong> Find the next empty cell, try digits 1-9 (skipping those violating constraints), recurse. If no digit works, return False to trigger backtracking. Use sets for O(1) constraint checks.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre><code class="language-python">def solveSudoku(board):
+    rows = [set() for _ in range(9)]
+    cols = [set() for _ in range(9)]
+    boxes = [set() for _ in range(9)]
+    # Pre-populate from existing clues
+    for r in range(9):
+        for c in range(9):
+            if board[r][c] != '.':
+                d = board[r][c]
+                rows[r].add(d); cols[c].add(d)
+                boxes[(r//3)*3 + c//3].add(d)
+
+    def backtrack():
+        for r in range(9):
+            for c in range(9):
+                if board[r][c] != '.': continue
+                box_id = (r//3)*3 + c//3
+                for d in '123456789':
+                    if d in rows[r] or d in cols[c] or d in boxes[box_id]: continue
+                    board[r][c] = d
+                    rows[r].add(d); cols[c].add(d); boxes[box_id].add(d)
+                    if backtrack(): return True
+                    board[r][c] = '.'
+                    rows[r].remove(d); cols[c].remove(d); boxes[box_id].remove(d)
+                return False   # no valid digit for this cell → backtrack
+        return True            # all cells filled
+
+    backtrack()</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ O(9^M) worst case, M=empty cells</span><span>💾 O(1) (fixed 9×9 board)</span><span>Pattern: Constraint Satisfaction (2D)</span></div>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+</div>
+
+<footer class="page-footer">
+  <div class="footer-links">
+    <a href="index.html">Home</a>
+    <a href="trie.html">Trie</a>
+    <a href="hash-map.html">Hash Map</a>
+    <a href="linked-list.html">Linked List</a>
+    <a href="binary-tree.html">Binary Tree</a>
+    <a href="bst.html">BST</a>
+    <a href="heap.html">Heap</a>
+    <a href="stack-queue.html">Stack &amp; Queue</a>
+    <a href="graph.html">Graph: Traversal</a>
+    <a href="graph-algorithms.html">Graph: Algorithms</a>
+    <a href="dp.html">Dynamic Programming</a>
+    <a href="arrays-strings.html">Arrays &amp; Strings</a>
+  </div>
+  <p class="footer-copy">© 2026 KnowAlgo — Data Structures &amp; Algorithms Made Clear</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+<script>
+  window.addEventListener('scroll', () => {
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = total > 0 ? (window.scrollY / total) * 100 : 0;
+    document.getElementById('progress').style.width = pct + '%';
+  });
+
+  function copyCode(btn) {
+    const code = btn.closest('.code-wrapper').querySelector('code');
+    navigator.clipboard.writeText(code.innerText).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  const tocLinks = document.querySelectorAll('.toc-list a[href^="#"]');
+  const sections = document.querySelectorAll('.content-section[id]');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('active'));
+        const link = document.querySelector(`.toc-list a[href="#${entry.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  sections.forEach(s => obs.observe(s));
+</script>
+
+</body>
+</html>

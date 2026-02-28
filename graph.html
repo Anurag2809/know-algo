@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Graph Traversal: BFS, DFS, Grid Algorithms | KnowAlgo</title>
+  <meta name="description" content="Master graph traversal with BFS, DFS, grid-as-graph patterns, cycle detection, and connected components. 6 LeetCode solutions including Number of Islands, Rotting Oranges, and Word Ladder.">
+  <meta name="keywords" content="graph BFS DFS, grid BFS, connected components, cycle detection, number of islands, word ladder, flood fill, leetcode graph problems, python graph">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.github.io/graph.html">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Graph Traversal: BFS, DFS, Grid Algorithms",
+    "description": "Comprehensive guide to graph BFS and DFS traversal, grid problems, cycle detection, connected components, and 6 LeetCode solutions.",
+    "author": { "@type": "Organization", "name": "KnowAlgo" },
+    "publisher": { "@type": "Organization", "name": "KnowAlgo" },
+    "datePublished": "2025-01-01",
+    "dateModified": "2026-02-27",
+    "keywords": ["graph", "BFS", "DFS", "grid", "traversal", "algorithms", "leetcode"],
+    "articleSection": "Algorithms"
+  }
+  </script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    :root {
+      --primary: #2563eb; --primary-dark: #1d4ed8; --primary-light: #eff6ff;
+      --secondary: #7c3aed; --accent: #059669; --danger: #dc2626; --warning: #d97706;
+      --bg: #f8fafc; --bg-card: #ffffff; --text: #0f172a; --text-muted: #64748b;
+      --border: #e2e8f0; --code-bg: #1e293b; --toc-width: 280px; --header-h: 64px;
+      --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.05);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth;font-size:16px}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+    a{color:var(--primary);text-decoration:none} a:hover{text-decoration:underline}
+    ul,ol{padding-left:1.5rem} li{margin-bottom:.35rem}
+    .progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(to right,#7c3aed,#db2777);z-index:1000;transition:width .1s}
+    .topnav{position:sticky;top:0;z-index:200;background:#fff;border-bottom:1px solid var(--border);height:var(--header-h);display:flex;align-items:center;padding:0 1.5rem;gap:1rem;box-shadow:var(--shadow)}
+    .topnav-logo{font-weight:800;font-size:1.25rem;color:var(--primary);letter-spacing:-.5px}
+    .topnav-sep{color:var(--border)} .topnav-crumb{color:var(--text-muted);font-size:.9rem}
+    .topnav-links{margin-left:auto;display:flex;gap:1rem;align-items:center}
+    .topnav-links a{color:var(--text-muted);font-size:.9rem;font-weight:500}
+    .topnav-links a:hover{color:var(--primary);text-decoration:none}
+    .btn-home{background:var(--primary);color:#fff!important;padding:.35rem .9rem;border-radius:6px;font-size:.85rem!important}
+    .page-layout{display:grid;grid-template-columns:var(--toc-width) 1fr;max-width:1400px;margin:0 auto;min-height:calc(100vh - var(--header-h))}
+    .toc-sidebar{position:sticky;top:var(--header-h);height:calc(100vh - var(--header-h));overflow-y:auto;padding:1.5rem 1rem;border-right:1px solid var(--border);background:#fff}
+    .toc-sidebar::-webkit-scrollbar{width:4px} .toc-sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .toc-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:.75rem}
+    .toc-list{list-style:none;padding:0} .toc-list li{margin-bottom:0}
+    .toc-list a{display:block;padding:.3rem .75rem;border-radius:6px;font-size:.875rem;color:var(--text-muted);transition:all .15s;border-left:2px solid transparent}
+    .toc-list a:hover,.toc-list a.active{color:var(--primary);background:var(--primary-light);border-left-color:var(--primary);text-decoration:none}
+    .toc-divider{border:none;border-top:1px solid var(--border);margin:.75rem 0}
+    .main-content{padding:2rem 2.5rem;max-width:900px}
+    .hero{background:linear-gradient(135deg,#2e1065 0%,#7c3aed 50%,#db2777 100%);color:white;border-radius:var(--radius);padding:2.5rem;margin-bottom:2.5rem}
+    .hero-badge{display:inline-block;background:rgba(255,255,255,.2);color:#fff;padding:.25rem .75rem;border-radius:99px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem}
+    .hero h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;line-height:1.2;margin-bottom:1rem;letter-spacing:-1px}
+    .hero p{font-size:1.05rem;opacity:.9;max-width:620px;line-height:1.7;margin-bottom:1.5rem}
+    .hero-meta{display:flex;gap:1.5rem;flex-wrap:wrap}
+    .hero-meta span{font-size:.875rem;opacity:.8}
+    .content-section{margin-bottom:3rem;scroll-margin-top:calc(var(--header-h) + 1rem)}
+    .section-label{display:inline-block;background:#fdf4ff;color:#7c3aed;padding:.2rem .7rem;border-radius:99px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem}
+    h2.section-title{font-size:1.75rem;font-weight:800;margin-bottom:1rem;letter-spacing:-.5px}
+    h3{font-size:1.2rem;font-weight:700;margin:1.5rem 0 .75rem;color:var(--text)}
+    p{margin-bottom:1rem}
+    .callout{border-radius:var(--radius);padding:1.25rem 1.5rem;margin:1.5rem 0;border-left:4px solid}
+    .callout-blue{background:#eff6ff;border-color:var(--primary)}
+    .callout-green{background:#f0fdf4;border-color:var(--accent)}
+    .callout-purple{background:#faf5ff;border-color:var(--secondary)}
+    .code-wrapper{position:relative;margin:1.25rem 0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-md)}
+    .code-header{background:#0f172a;padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between}
+    .code-lang{font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+    .copy-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#94a3b8;font-size:.75rem;padding:.25rem .6rem;border-radius:4px;cursor:pointer;transition:all .15s}
+    .copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+    .copy-btn.copied{background:#059669;border-color:#059669;color:#fff}
+    pre[class*="language-"]{margin:0!important;border-radius:0!important;font-size:.875rem!important}
+    .diagram{background:var(--code-bg);color:#e2e8f0;padding:1.5rem;border-radius:var(--radius);font-family:'Courier New',Courier,monospace;font-size:.875rem;line-height:1.6;overflow-x:auto;margin:1.25rem 0;white-space:pre}
+    .table-wrapper{overflow-x:auto;margin:1.5rem 0;border-radius:var(--radius);box-shadow:var(--shadow)}
+    table{width:100%;border-collapse:collapse;background:#fff}
+    th{background:#f1f5f9;padding:.75rem 1rem;text-align:left;font-size:.875rem;font-weight:700;color:var(--text);border-bottom:2px solid var(--border)}
+    td{padding:.75rem 1rem;font-size:.875rem;border-bottom:1px solid var(--border);vertical-align:top}
+    tr:last-child td{border-bottom:none} tr:hover td{background:#f8fafc}
+    .complexity-good{color:#059669;font-weight:700} .complexity-ok{color:#d97706;font-weight:700} .complexity-bad{color:#dc2626;font-weight:700}
+    .lc-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.5rem;box-shadow:var(--shadow)}
+    .lc-header{padding:1rem 1.25rem;display:flex;align-items:center;gap:.75rem;border-bottom:1px solid var(--border);background:#f8fafc}
+    .lc-num{font-size:.8rem;font-weight:700;color:var(--text-muted)}
+    .lc-title{font-size:1rem;font-weight:700;color:var(--text);flex:1}
+    .lc-diff{font-size:.75rem;font-weight:700;padding:.15rem .5rem;border-radius:99px}
+    .diff-easy{background:#d1fae5;color:#065f46} .diff-medium{background:#fef3c7;color:#92400e} .diff-hard{background:#fee2e2;color:#991b1b}
+    .lc-body{padding:1.25rem}
+    .lc-meta{display:flex;gap:1rem;margin-top:.75rem;font-size:.8rem;color:var(--text-muted)}
+    .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.25rem 0}
+    .compare-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+    .compare-card h4{font-size:.95rem;font-weight:700;margin-bottom:.75rem;color:var(--text)}
+    .compare-card ul{font-size:.85rem;color:var(--text-muted);padding-left:1.25rem}
+    .page-footer{background:#0f172a;color:#94a3b8;padding:2.5rem;margin-top:4rem}
+    .footer-links{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+    .footer-links a{color:#60a5fa;font-size:.875rem}
+    .footer-copy{font-size:.8rem;opacity:.6}
+    @media(max-width:768px){.page-layout{grid-template-columns:1fr}.toc-sidebar{display:none}.main-content{padding:1.5rem 1rem}.compare-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+
+<nav class="topnav">
+  <a href="index.html" class="topnav-logo">KnowAlgo</a>
+  <span class="topnav-sep">/</span>
+  <span class="topnav-crumb">Graph Traversal</span>
+  <div class="topnav-links">
+    <a href="graph-algorithms.html">Graph Algorithms →</a>
+    <a href="index.html" class="btn-home">← Home</a>
+  </div>
+</nav>
+
+<div class="page-layout">
+
+<aside class="toc-sidebar">
+  <div class="toc-title">On this page</div>
+  <ul class="toc-list" id="toc">
+    <li><a href="#what-is">What is a Graph?</a></li>
+    <li><a href="#representations">Representations</a></li>
+    <li><a href="#bfs">BFS (Shortest Path)</a></li>
+    <li><a href="#dfs">DFS (Connectivity)</a></li>
+    <li><a href="#grid">Grid / Matrix Problems</a></li>
+    <li><a href="#cycle">Cycle Detection</a></li>
+    <li><a href="#complexity">Complexity</a></li>
+    <hr class="toc-divider">
+    <li><a href="#leetcode">LeetCode Problems</a></li>
+    <li><a href="#applications">Applications</a></li>
+  </ul>
+  <hr class="toc-divider">
+  <div class="toc-title">Graph Series</div>
+  <ul class="toc-list">
+    <li><a href="graph.html"><strong>→ Graph Traversal</strong></a></li>
+    <li><a href="graph-algorithms.html">→ Graph Algorithms</a></li>
+  </ul>
+  <hr class="toc-divider">
+  <div class="toc-title">Other Guides</div>
+  <ul class="toc-list">
+    <li><a href="binary-tree.html">→ Binary Tree</a></li>
+    <li><a href="stack-queue.html">→ Stack &amp; Queue</a></li>
+    <li><a href="dp.html">→ Dynamic Programming</a></li>
+  </ul>
+</aside>
+
+<main class="main-content" id="main-content">
+
+  <div class="hero">
+    <div class="hero-badge">Algorithms · Part 1 of 2</div>
+    <h1>Graph Traversal</h1>
+    <p>Graphs model anything with pairwise relationships — networks, grids, dependencies. This guide covers the two fundamental traversal strategies (BFS and DFS), grid-as-graph problems, and cycle detection. For weighted shortest paths and advanced algorithms, see <a href="graph-algorithms.html" style="color:#c4b5fd">Graph Algorithms →</a></p>
+    <div class="hero-meta">
+      <span>🕸️ BFS &amp; DFS</span>
+      <span>🔲 Grid / Matrix</span>
+      <span>🎯 6 LeetCode problems</span>
+      <span>🔄 Cycle detection</span>
+    </div>
+  </div>
+
+  <!-- What is a Graph -->
+  <section class="content-section" id="what-is">
+    <div class="section-label">Fundamentals</div>
+    <h2 class="section-title">What is a Graph?</h2>
+    <p>A graph G = (V, E) consists of <strong>vertices</strong> (nodes) and <strong>edges</strong> (connections between nodes). Unlike trees, graphs can have cycles, disconnected components, and edges pointing in any direction.</p>
+
+    <div class="diagram">  Undirected Graph:         Directed Graph (Digraph):
+      0 ── 1                    0 ──→ 1
+     /|    |                    |     |
+    4 |    |                    ↓     ↓
+     \|    |                    2 ──→ 3
+      2 ── 3                    ↑
+                                4
+
+  Weighted (edges have costs):  DAG (Directed Acyclic Graph):
+    0 ──4── 1                   Course prereqs, build systems,
+    |      |                    topological ordering
+    1      2
+    |      |
+    2 ──5── 3</div>
+
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h4>🌲 Tree vs Graph</h4>
+        <ul>
+          <li>Tree: connected, acyclic, n-1 edges for n nodes</li>
+          <li>Graph: may be disconnected, cyclic, any number of edges</li>
+          <li>Every tree is a graph; not every graph is a tree</li>
+        </ul>
+      </div>
+      <div class="compare-card">
+        <h4>🔑 Key Properties</h4>
+        <ul>
+          <li><strong>Directed</strong>: edges have direction (one-way roads)</li>
+          <li><strong>Undirected</strong>: edges are bidirectional (friendships)</li>
+          <li><strong>Weighted</strong>: edges have costs (distances, times)</li>
+          <li><strong>DAG</strong>: directed + no cycles (dependency graphs)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Representations -->
+  <section class="content-section" id="representations">
+    <div class="section-label">Data Model</div>
+    <h2 class="section-title">Graph Representations</h2>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">from collections import defaultdict
+
+# ── ADJACENCY LIST (preferred for most problems) ──────────────────
+# Space: O(V + E)  |  Edge check: O(degree)  |  Iterate neighbors: O(degree)
+
+# Undirected graph: 0-1, 0-2, 0-4, 1-3, 2-3
+graph = defaultdict(list)
+edges = [(0,1),(0,2),(0,4),(1,3),(2,3)]
+for u, v in edges:
+    graph[u].append(v)
+    graph[v].append(u)   # both directions for undirected
+
+# Directed graph: only add one direction
+directed = defaultdict(list)
+for u, v in edges:
+    directed[u].append(v)
+
+# Weighted adjacency list: {node: [(neighbor, weight), ...]}
+weighted = {
+    0: [(1, 4), (2, 1)],
+    1: [(3, 1)],
+    2: [(1, 2), (3, 5)],
+    3: []
+}
+
+# Build from LeetCode-style input
+def build(n, edges, directed=False):
+    graph = defaultdict(list)
+    for u, v in edges:
+        graph[u].append(v)
+        if not directed:
+            graph[v].append(u)
+    return graph
+
+# ── ADJACENCY MATRIX ──────────────────────────────────────────────
+# Space: O(V²)  |  Edge check: O(1)  |  Use for dense graphs
+
+n = 4
+matrix = [[0] * n for _ in range(n)]
+matrix[0][1] = 1   # edge 0→1
+matrix[1][0] = 1   # edge 1→0 (undirected)</code></pre>
+    </div>
+
+    <div class="callout callout-blue">
+      <strong>Which representation to use?</strong>
+      <ul>
+        <li><strong>Adjacency list</strong>: almost always correct for interview problems (sparse graphs, V+E space)</li>
+        <li><strong>Adjacency matrix</strong>: when you need O(1) edge existence check, or graph is dense (lots of edges)</li>
+        <li><strong>Grid (2D array)</strong>: implicit graph — cells are nodes, 4-directional neighbors are edges. No need to build adjacency list explicitly</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- BFS -->
+  <section class="content-section" id="bfs">
+    <div class="section-label">Traversal</div>
+    <h2 class="section-title">BFS — Breadth-First Search</h2>
+    <p>BFS explores level by level using a queue. It finds the <strong>shortest path (in hops) in unweighted graphs</strong>. Every node at distance d is visited before any node at distance d+1.</p>
+
+    <div class="diagram">  Graph: 0-1, 0-2, 0-4, 1-3, 2-3
+  BFS from node 0:
+
+  Queue: [0]         visited: {0}
+  Process 0: add neighbors 1,2,4
+  Queue: [1,2,4]     visited: {0,1,2,4}
+  Process 1: add neighbor 3
+  Queue: [2,4,3]     visited: {0,1,2,4,3}
+  Process 2: neighbors 0,3 already visited
+  Queue: [4,3]
+  Process 4: neighbor 0 already visited
+  Queue: [3]
+  Process 3: all neighbors visited
+
+  Order: 0, 1, 2, 4, 3  (by distance from 0: 0=dist0, 1/2/4=dist1, 3=dist2)</div>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">from collections import deque
+
+# BFS — template
+def bfs(graph, start):
+    visited = {start}
+    queue = deque([start])
+    result = []
+    while queue:
+        node = queue.popleft()
+        result.append(node)
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+    return result
+
+# BFS with SHORTEST PATH distances
+def bfs_distances(graph, start):
+    dist = {start: 0}
+    queue = deque([start])
+    while queue:
+        node = queue.popleft()
+        for neighbor in graph[node]:
+            if neighbor not in dist:
+                dist[neighbor] = dist[node] + 1
+                queue.append(neighbor)
+    return dist
+
+# BFS with PATH RECONSTRUCTION
+def bfs_path(graph, start, end):
+    if start == end:
+        return [start]
+    parent = {start: None}
+    queue = deque([start])
+    while queue:
+        node = queue.popleft()
+        for neighbor in graph[node]:
+            if neighbor not in parent:
+                parent[neighbor] = node
+                if neighbor == end:
+                    # Reconstruct path
+                    path = []
+                    curr = end
+                    while curr is not None:
+                        path.append(curr)
+                        curr = parent[curr]
+                    return path[::-1]
+                queue.append(neighbor)
+    return []  # no path
+
+# MULTI-SOURCE BFS (start from multiple sources simultaneously)
+def multi_source_bfs(grid, sources):
+    """BFS from all sources at once — finds min distance to nearest source."""
+    rows, cols = len(grid), len(grid[0])
+    dist = {}
+    queue = deque()
+    for r, c in sources:
+        dist[(r, c)] = 0
+        queue.append((r, c, 0))
+    while queue:
+        r, c, d = queue.popleft()
+        for dr, dc in [(0,1),(0,-1),(1,0),(-1,0)]:
+            nr, nc = r+dr, c+dc
+            if (0 <= nr < rows and 0 <= nc < cols and
+                    grid[nr][nc] != '#' and (nr,nc) not in dist):
+                dist[(nr, nc)] = d + 1
+                queue.append((nr, nc, d + 1))
+    return dist</code></pre>
+    </div>
+  </section>
+
+  <!-- DFS -->
+  <section class="content-section" id="dfs">
+    <div class="section-label">Traversal</div>
+    <h2 class="section-title">DFS — Depth-First Search</h2>
+    <p>DFS explores as deep as possible along each branch before backtracking. Uses a stack (either the call stack via recursion, or an explicit stack). Key for: connected components, cycle detection, topological sort, and "mark all reachable nodes" problems.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># DFS — Recursive (cleaner, uses call stack)
+def dfs_recursive(graph, node, visited=None):
+    if visited is None:
+        visited = set()
+    visited.add(node)
+    for neighbor in graph[node]:
+        if neighbor not in visited:
+            dfs_recursive(graph, neighbor, visited)
+    return visited
+
+# DFS — Iterative (explicit stack; avoids Python recursion limit)
+def dfs_iterative(graph, start):
+    visited = set()
+    stack = [start]
+    order = []
+    while stack:
+        node = stack.pop()
+        if node not in visited:
+            visited.add(node)
+            order.append(node)
+            for neighbor in graph[node]:
+                if neighbor not in visited:
+                    stack.append(neighbor)
+    return order
+
+# COUNT CONNECTED COMPONENTS
+def count_components(n, edges):
+    graph = defaultdict(list)
+    for u, v in edges:
+        graph[u].append(v)
+        graph[v].append(u)
+    visited = set()
+    count = 0
+    def dfs(node):
+        visited.add(node)
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                dfs(neighbor)
+    for node in range(n):
+        if node not in visited:
+            dfs(node)
+            count += 1
+    return count
+
+# CHECK IF PATH EXISTS between source and destination
+def has_path(graph, src, dst):
+    if src == dst:
+        return True
+    visited = set()
+    def dfs(node):
+        if node == dst:
+            return True
+        visited.add(node)
+        for neighbor in graph[node]:
+            if neighbor not in visited and dfs(neighbor):
+                return True
+        return False
+    return dfs(src)</code></pre>
+    </div>
+
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h4>🌊 BFS — Use when:</h4>
+        <ul>
+          <li>You need the <strong>shortest path</strong> (fewest edges)</li>
+          <li>You need to explore level by level</li>
+          <li>You want the <strong>minimum number of steps</strong></li>
+          <li>Multi-source problems (multiple starting points)</li>
+        </ul>
+      </div>
+      <div class="compare-card">
+        <h4>🌿 DFS — Use when:</h4>
+        <ul>
+          <li>You need to explore <strong>all paths</strong> (backtracking)</li>
+          <li>You need to detect cycles</li>
+          <li>You're doing topological sort</li>
+          <li>You need to <strong>mark entire connected regions</strong></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Grid Problems -->
+  <section class="content-section" id="grid">
+    <div class="section-label">Key Pattern</div>
+    <h2 class="section-title">Grid / Matrix as Graph</h2>
+    <p>2D grids are one of the most common graph problem types. Treat each cell as a node and its 4 (or 8) neighbors as edges. No need to build an explicit adjacency list — just check bounds and conditions inline.</p>
+
+    <div class="diagram">  Grid graph:
+  [1, 1, 0, 0]     1 = land (node), 0 = water (no edge)
+  [1, 1, 0, 0]
+  [0, 0, 1, 0]     Cell (r,c) connects to:
+  [0, 0, 0, 1]     (r-1,c), (r+1,c), (r,c-1), (r,c+1)
+
+  4 connected components of 1s = 3 islands</div>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">DIRS = [(0,1),(0,-1),(1,0),(-1,0)]   # 4-directional (up/down/left/right)
+DIRS8 = [(0,1),(0,-1),(1,0),(-1,0),  # 8-directional (include diagonals)
+         (1,1),(1,-1),(-1,1),(-1,-1)]
+
+def in_bounds(r, c, rows, cols):
+    return 0 <= r < rows and 0 <= c < cols
+
+# DFS on grid — "flood fill" a connected region
+def dfs_grid(grid, r, c, visited):
+    rows, cols = len(grid), len(grid[0])
+    if not in_bounds(r, c, rows, cols):
+        return
+    if (r, c) in visited or grid[r][c] == '0':
+        return
+    visited.add((r, c))
+    for dr, dc in DIRS:
+        dfs_grid(grid, r+dr, c+dc, visited)
+
+# BFS on grid — shortest path with obstacles
+def bfs_shortest_path_grid(grid, start, end):
+    rows, cols = len(grid), len(grid[0])
+    if grid[start[0]][start[1]] == 1 or grid[end[0]][end[1]] == 1:
+        return -1  # start or end is blocked
+    visited = {start}
+    queue = deque([(start, 0)])
+    while queue:
+        (r, c), dist = queue.popleft()
+        if (r, c) == end:
+            return dist
+        for dr, dc in DIRS:
+            nr, nc = r+dr, c+dc
+            if (in_bounds(nr, nc, rows, cols) and
+                    grid[nr][nc] == 0 and
+                    (nr, nc) not in visited):
+                visited.add((nr, nc))
+                queue.append(((nr, nc), dist + 1))
+    return -1  # no path</code></pre>
+    </div>
+  </section>
+
+  <!-- Cycle Detection -->
+  <section class="content-section" id="cycle">
+    <div class="section-label">Key Technique</div>
+    <h2 class="section-title">Cycle Detection</h2>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># UNDIRECTED graph: DFS with parent tracking
+# A cycle exists if we visit a node already visited that is NOT our parent
+def has_cycle_undirected(graph, n):
+    visited = set()
+    def dfs(node, parent):
+        visited.add(node)
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                if dfs(neighbor, node):
+                    return True
+            elif neighbor != parent:  # visited and not our parent → cycle!
+                return True
+        return False
+    for node in range(n):
+        if node not in visited:
+            if dfs(node, -1):
+                return True
+    return False
+
+# DIRECTED graph: DFS with 3-color marking
+# WHITE=0 (unvisited), GRAY=1 (in current path), BLACK=2 (done)
+# Back edge (to GRAY node) = cycle in directed graph
+def has_cycle_directed(graph, n):
+    color = [0] * n  # 0=white, 1=gray, 2=black
+    def dfs(node):
+        color[node] = 1  # mark as in-progress
+        for neighbor in graph[node]:
+            if color[neighbor] == 1:   # back edge → cycle!
+                return True
+            if color[neighbor] == 0:   # unvisited → recurse
+                if dfs(neighbor):
+                    return True
+        color[node] = 2  # mark as finished
+        return False
+    for node in range(n):
+        if color[node] == 0:
+            if dfs(node):
+                return True
+    return False</code></pre>
+    </div>
+  </section>
+
+  <!-- Complexity -->
+  <section class="content-section" id="complexity">
+    <div class="section-label">Analysis</div>
+    <h2 class="section-title">Complexity Analysis</h2>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Algorithm</th><th>Time</th><th>Space</th><th>Use Case</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>BFS</td><td class="complexity-good">O(V + E)</td><td class="complexity-ok">O(V)</td><td>Shortest path (unweighted), level-order</td></tr>
+          <tr><td>DFS</td><td class="complexity-good">O(V + E)</td><td class="complexity-ok">O(V)</td><td>Connectivity, cycles, components</td></tr>
+          <tr><td>Multi-source BFS</td><td class="complexity-good">O(V + E)</td><td class="complexity-ok">O(V)</td><td>Min distance to nearest source</td></tr>
+          <tr><td>Grid BFS/DFS</td><td class="complexity-good">O(m·n)</td><td class="complexity-ok">O(m·n)</td><td>2D grid traversal (m×n grid)</td></tr>
+          <tr><td>Cycle detection</td><td class="complexity-good">O(V + E)</td><td class="complexity-ok">O(V)</td><td>Undirected or directed graphs</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- LeetCode -->
+  <section class="content-section" id="leetcode">
+    <div class="section-label">Practice</div>
+    <h2 class="section-title">LeetCode Problems</h2>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #200</span><span class="lc-title">Number of Islands</span><span class="lc-diff diff-medium">Medium</span></div>
+      <div class="lc-body">
+        <p>Count connected components of '1's in a 2D grid. DFS flood-fill: when we find a '1', DFS to mark its entire island as visited.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def numIslands(self, grid: list[list[str]]) -> int:
+    rows, cols = len(grid), len(grid[0])
+    count = 0
+
+    def dfs(r, c):
+        if r < 0 or r >= rows or c < 0 or c >= cols or grid[r][c] == '0':
+            return
+        grid[r][c] = '0'  # mark visited by sinking the land
+        dfs(r+1,c); dfs(r-1,c); dfs(r,c+1); dfs(r,c-1)
+
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == '1':
+                dfs(r, c)
+                count += 1
+    return count</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(m·n)</span><span>💾 Space: O(m·n) recursion</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #994</span><span class="lc-title">Rotting Oranges</span><span class="lc-diff diff-medium">Medium</span></div>
+      <div class="lc-body">
+        <p>Find minimum minutes until all fresh oranges rot. Rotten oranges spread to neighbors each minute. Multi-source BFS from all initially rotten oranges simultaneously.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def orangesRotting(self, grid: list[list[int]]) -> int:
+    rows, cols = len(grid), len(grid[0])
+    fresh = 0
+    queue = deque()
+
+    # Initialize: collect all rotten oranges, count fresh
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == 2:
+                queue.append((r, c, 0))  # (row, col, minutes)
+            elif grid[r][c] == 1:
+                fresh += 1
+
+    minutes = 0
+    while queue:
+        r, c, t = queue.popleft()
+        for dr, dc in [(0,1),(0,-1),(1,0),(-1,0)]:
+            nr, nc = r+dr, c+dc
+            if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 1:
+                grid[nr][nc] = 2  # rot it
+                fresh -= 1
+                minutes = t + 1
+                queue.append((nr, nc, t+1))
+
+    return minutes if fresh == 0 else -1</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(m·n)</span><span>💾 Space: O(m·n)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #130</span><span class="lc-title">Surrounded Regions</span><span class="lc-diff diff-medium">Medium</span></div>
+      <div class="lc-body">
+        <p>Capture all 'O' regions not connected to the border. Key insight: instead of finding surrounded regions directly, find all O's connected to the border (safe) and flip everything else.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def solve(self, board: list[list[str]]) -> None:
+    rows, cols = len(board), len(board[0])
+
+    def dfs(r, c):
+        if not (0 <= r < rows and 0 <= c < cols) or board[r][c] != 'O':
+            return
+        board[r][c] = 'S'  # mark as "safe" (connected to border)
+        for dr, dc in [(0,1),(0,-1),(1,0),(-1,0)]:
+            dfs(r+dr, c+dc)
+
+    # Step 1: mark all border-connected O's as safe
+    for r in range(rows):
+        for c in [0, cols-1]:
+            if board[r][c] == 'O': dfs(r, c)
+    for c in range(cols):
+        for r in [0, rows-1]:
+            if board[r][c] == 'O': dfs(r, c)
+
+    # Step 2: flip remaining O's to X; restore S to O
+    for r in range(rows):
+        for c in range(cols):
+            if board[r][c] == 'O': board[r][c] = 'X'
+            elif board[r][c] == 'S': board[r][c] = 'O'</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(m·n)</span><span>💾 Space: O(m·n)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #207</span><span class="lc-title">Course Schedule</span><span class="lc-diff diff-medium">Medium</span></div>
+      <div class="lc-body">
+        <p>Can all courses be finished given prerequisites? Equivalent to: does the directed graph have a cycle?</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def canFinish(self, numCourses: int, prerequisites: list[list[int]]) -> bool:
+    graph = defaultdict(list)
+    for a, b in prerequisites:
+        graph[b].append(a)  # b must be taken before a
+
+    # 0=unvisited, 1=in-progress, 2=done
+    state = [0] * numCourses
+
+    def dfs(node):
+        if state[node] == 1: return False  # back edge → cycle
+        if state[node] == 2: return True   # already cleared
+        state[node] = 1
+        for neighbor in graph[node]:
+            if not dfs(neighbor): return False
+        state[node] = 2
+        return True
+
+    return all(dfs(i) for i in range(numCourses) if state[i] == 0)</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(V+E)</span><span>💾 Space: O(V+E)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #695</span><span class="lc-title">Max Area of Island</span><span class="lc-diff diff-medium">Medium</span></div>
+      <div class="lc-body">
+        <p>Find the maximum area of an island. DFS flood-fill returning the count of cells visited.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def maxAreaOfIsland(self, grid: list[list[int]]) -> int:
+    rows, cols = len(grid), len(grid[0])
+
+    def dfs(r, c) -> int:
+        if not (0 <= r < rows and 0 <= c < cols) or grid[r][c] == 0:
+            return 0
+        grid[r][c] = 0  # mark visited
+        return 1 + dfs(r+1,c) + dfs(r-1,c) + dfs(r,c+1) + dfs(r,c-1)
+
+    return max(dfs(r, c) for r in range(rows) for c in range(cols))</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(m·n)</span><span>💾 Space: O(m·n)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #127</span><span class="lc-title">Word Ladder</span><span class="lc-diff diff-hard">Hard</span></div>
+      <div class="lc-body">
+        <p>Find the shortest transformation sequence from beginWord to endWord, changing one letter at a time. This is BFS on an <em>implicit</em> graph where edges connect words differing by one character.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def ladderLength(self, beginWord: str, endWord: str, wordList: list[str]) -> int:
+    wordSet = set(wordList)
+    if endWord not in wordSet:
+        return 0
+    queue = deque([(beginWord, 1)])
+    visited = {beginWord}
+    while queue:
+        word, length = queue.popleft()
+        for i in range(len(word)):
+            for c in 'abcdefghijklmnopqrstuvwxyz':
+                new_word = word[:i] + c + word[i+1:]
+                if new_word == endWord:
+                    return length + 1
+                if new_word in wordSet and new_word not in visited:
+                    visited.add(new_word)
+                    queue.append((new_word, length + 1))
+    return 0</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(M²·N) M=word length, N=dict size</span><span>💾 Space: O(M²·N)</span></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Applications -->
+  <section class="content-section" id="applications">
+    <div class="section-label">Real World</div>
+    <h2 class="section-title">Real-World Applications</h2>
+    <ul>
+      <li><strong>BFS — social networks</strong>: friend-of-friend discovery (LinkedIn "2nd connections"), degrees of separation</li>
+      <li><strong>BFS — GPS</strong>: shortest route in unweighted road networks (number of turns, not distance)</li>
+      <li><strong>BFS — web crawlers</strong>: crawl URLs level by level from a seed URL</li>
+      <li><strong>DFS — maze solving</strong>: find any path through a maze (not necessarily shortest)</li>
+      <li><strong>DFS — garbage collection</strong>: mark all reachable objects from roots</li>
+      <li><strong>DFS — cycle detection</strong>: deadlock detection in OS resource allocation graphs</li>
+      <li><strong>Grid problems</strong>: image segmentation (flood fill in Photoshop), fire simulation, game pathfinding (A*)</li>
+    </ul>
+    <div class="callout callout-purple">
+      <strong>Continue learning: Graph Algorithms</strong>
+      This guide covered traversal (BFS/DFS) on unweighted graphs. For weighted shortest paths (Dijkstra, Bellman-Ford), topological sort, Union-Find, and minimum spanning trees, see <a href="graph-algorithms.html">Graph Algorithms →</a>
+    </div>
+  </section>
+
+  <footer class="page-footer">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="trie.html">Trie</a>
+      <a href="hash-map.html">Hash Map</a>
+      <a href="linked-list.html">Linked List</a>
+      <a href="binary-tree.html">Binary Tree</a>
+      <a href="bst.html">BST</a>
+      <a href="heap.html">Heap</a>
+      <a href="stack-queue.html">Stack &amp; Queue</a>
+      <a href="graph.html">Graph Traversal</a>
+      <a href="graph-algorithms.html">Graph Algorithms</a>
+      <a href="dp.html">Dynamic Programming</a>
+    </div>
+    <p class="footer-copy">© 2026 KnowAlgo — Data Structures &amp; Algorithms Made Clear</p>
+  </footer>
+
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight) * 100;
+    document.getElementById('progress').style.width = scrolled + '%';
+  });
+  function copyCode(btn) {
+    const code = btn.closest('.code-wrapper').querySelector('code');
+    navigator.clipboard.writeText(code.textContent).then(() => {
+      btn.textContent = 'Copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+  const sections = document.querySelectorAll('.content-section[id]');
+  const tocLinks = document.querySelectorAll('.toc-list a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.toc-list a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-64px 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

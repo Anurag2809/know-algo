@@ -1,0 +1,20 @@
+# Claude Code local memory (not source code)
+.claude/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Old/superseded files (kept locally but excluded from deploy)
+# trie2.html

@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Binary Search Tree (BST): Complete Guide with LeetCode Solutions | KnowAlgo</title>
+  <meta name="description" content="Master Binary Search Trees with deep explanations of insert/delete/search, BST validation, kth smallest, BST iterator, and 6 LeetCode solutions including Convert BST to Greater Tree.">
+  <meta name="keywords" content="binary search tree, BST, BST insert delete search, kth smallest BST, BST iterator, validate BST, AVL tree, balanced BST, leetcode BST problems, python BST">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.github.io/bst.html">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Binary Search Tree (BST): Complete Guide with LeetCode Solutions",
+    "description": "Comprehensive guide to BST operations, properties, and 6 LeetCode solutions.",
+    "author": { "@type": "Organization", "name": "KnowAlgo" },
+    "publisher": { "@type": "Organization", "name": "KnowAlgo" },
+    "datePublished": "2025-01-01",
+    "dateModified": "2026-02-27",
+    "keywords": ["BST", "binary search tree", "data structure", "algorithms", "leetcode"],
+    "articleSection": "Data Structures"
+  }
+  </script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    :root {
+      --primary: #2563eb; --primary-dark: #1d4ed8; --primary-light: #eff6ff;
+      --secondary: #7c3aed; --accent: #059669; --danger: #dc2626; --warning: #d97706;
+      --bg: #f8fafc; --bg-card: #ffffff; --text: #0f172a; --text-muted: #64748b;
+      --border: #e2e8f0; --code-bg: #1e293b; --toc-width: 280px; --header-h: 64px;
+      --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.05);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth;font-size:16px}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+    a{color:var(--primary);text-decoration:none} a:hover{text-decoration:underline}
+    ul,ol{padding-left:1.5rem} li{margin-bottom:.35rem}
+    .progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(to right,#16a34a,#2563eb);z-index:1000;transition:width .1s}
+    .topnav{position:sticky;top:0;z-index:200;background:#fff;border-bottom:1px solid var(--border);height:var(--header-h);display:flex;align-items:center;padding:0 1.5rem;gap:1rem;box-shadow:var(--shadow)}
+    .topnav-logo{font-weight:800;font-size:1.25rem;color:var(--primary);letter-spacing:-.5px}
+    .topnav-sep{color:var(--border)} .topnav-crumb{color:var(--text-muted);font-size:.9rem}
+    .topnav-links{margin-left:auto;display:flex;gap:1rem;align-items:center}
+    .topnav-links a{color:var(--text-muted);font-size:.9rem;font-weight:500}
+    .topnav-links a:hover{color:var(--primary);text-decoration:none}
+    .btn-home{background:var(--primary);color:#fff!important;padding:.35rem .9rem;border-radius:6px;font-size:.85rem!important}
+    .page-layout{display:grid;grid-template-columns:var(--toc-width) 1fr;max-width:1400px;margin:0 auto;min-height:calc(100vh - var(--header-h))}
+    .toc-sidebar{position:sticky;top:var(--header-h);height:calc(100vh - var(--header-h));overflow-y:auto;padding:1.5rem 1rem;border-right:1px solid var(--border);background:#fff}
+    .toc-sidebar::-webkit-scrollbar{width:4px} .toc-sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .toc-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:.75rem}
+    .toc-list{list-style:none;padding:0} .toc-list li{margin-bottom:0}
+    .toc-list a{display:block;padding:.3rem .75rem;border-radius:6px;font-size:.875rem;color:var(--text-muted);transition:all .15s;border-left:2px solid transparent}
+    .toc-list a:hover,.toc-list a.active{color:var(--primary);background:var(--primary-light);border-left-color:var(--primary);text-decoration:none}
+    .toc-divider{border:none;border-top:1px solid var(--border);margin:.75rem 0}
+    .main-content{padding:2rem 2.5rem;max-width:900px}
+    .hero{background:linear-gradient(135deg,#14532d 0%,#16a34a 50%,#2563eb 100%);color:white;border-radius:var(--radius);padding:2.5rem;margin-bottom:2.5rem}
+    .hero-badge{display:inline-block;background:rgba(255,255,255,.2);color:#fff;padding:.25rem .75rem;border-radius:99px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem}
+    .hero h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;line-height:1.2;margin-bottom:1rem;letter-spacing:-1px}
+    .hero p{font-size:1.05rem;opacity:.9;max-width:620px;line-height:1.7;margin-bottom:1.5rem}
+    .hero-meta{display:flex;gap:1.5rem;flex-wrap:wrap}
+    .hero-meta span{font-size:.875rem;opacity:.8}
+    .content-section{margin-bottom:3rem;scroll-margin-top:calc(var(--header-h) + 1rem)}
+    .section-label{display:inline-block;background:#f0fdf4;color:#16a34a;padding:.2rem .7rem;border-radius:99px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem}
+    h2.section-title{font-size:1.75rem;font-weight:800;margin-bottom:1rem;letter-spacing:-.5px}
+    h3{font-size:1.2rem;font-weight:700;margin:1.5rem 0 .75rem;color:var(--text)}
+    p{margin-bottom:1rem}
+    .callout{border-radius:var(--radius);padding:1.25rem 1.5rem;margin:1.5rem 0;border-left:4px solid}
+    .callout-blue{background:#eff6ff;border-color:var(--primary)}
+    .callout-green{background:#f0fdf4;border-color:var(--accent)}
+    .callout-yellow{background:#fefce8;border-color:var(--warning)}
+    .code-wrapper{position:relative;margin:1.25rem 0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-md)}
+    .code-header{background:#0f172a;padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between}
+    .code-lang{font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+    .copy-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#94a3b8;font-size:.75rem;padding:.25rem .6rem;border-radius:4px;cursor:pointer;transition:all .15s}
+    .copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+    .copy-btn.copied{background:#059669;border-color:#059669;color:#fff}
+    pre[class*="language-"]{margin:0!important;border-radius:0!important;font-size:.875rem!important}
+    .diagram{background:var(--code-bg);color:#e2e8f0;padding:1.5rem;border-radius:var(--radius);font-family:'Courier New',Courier,monospace;font-size:.875rem;line-height:1.6;overflow-x:auto;margin:1.25rem 0;white-space:pre}
+    .table-wrapper{overflow-x:auto;margin:1.5rem 0;border-radius:var(--radius);box-shadow:var(--shadow)}
+    table{width:100%;border-collapse:collapse;background:#fff}
+    th{background:#f1f5f9;padding:.75rem 1rem;text-align:left;font-size:.875rem;font-weight:700;color:var(--text);border-bottom:2px solid var(--border)}
+    td{padding:.75rem 1rem;font-size:.875rem;border-bottom:1px solid var(--border);vertical-align:top}
+    tr:last-child td{border-bottom:none} tr:hover td{background:#f8fafc}
+    .complexity-good{color:#059669;font-weight:700} .complexity-ok{color:#d97706;font-weight:700} .complexity-bad{color:#dc2626;font-weight:700}
+    .lc-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.5rem;box-shadow:var(--shadow)}
+    .lc-header{padding:1rem 1.25rem;display:flex;align-items:center;gap:.75rem;border-bottom:1px solid var(--border);background:#f8fafc}
+    .lc-num{font-size:.8rem;font-weight:700;color:var(--text-muted)}
+    .lc-title{font-size:1rem;font-weight:700;color:var(--text);flex:1}
+    .lc-diff{font-size:.75rem;font-weight:700;padding:.15rem .5rem;border-radius:99px}
+    .diff-easy{background:#d1fae5;color:#065f46} .diff-medium{background:#fef3c7;color:#92400e} .diff-hard{background:#fee2e2;color:#991b1b}
+    .lc-body{padding:1.25rem}
+    .lc-meta{display:flex;gap:1rem;margin-top:.75rem;font-size:.8rem;color:var(--text-muted)}
+    .page-footer{background:#0f172a;color:#94a3b8;padding:2.5rem;margin-top:4rem}
+    .footer-links{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+    .footer-links a{color:#60a5fa;font-size:.875rem}
+    .footer-copy{font-size:.8rem;opacity:.6}
+    @media(max-width:768px){.page-layout{grid-template-columns:1fr}.toc-sidebar{display:none}.main-content{padding:1.5rem 1rem}}
+  </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+
+<nav class="topnav">
+  <a href="index.html" class="topnav-logo">KnowAlgo</a>
+  <span class="topnav-sep">/</span>
+  <span class="topnav-crumb">Binary Search Tree</span>
+  <div class="topnav-links">
+    <a href="binary-tree.html">Binary Tree</a>
+    <a href="index.html" class="btn-home">← Home</a>
+  </div>
+</nav>
+
+<div class="page-layout">
+
+<aside class="toc-sidebar">
+  <div class="toc-title">On this page</div>
+  <ul class="toc-list" id="toc">
+    <li><a href="#what-is">BST Property</a></li>
+    <li><a href="#operations">Insert / Search / Delete</a></li>
+    <li><a href="#properties">Key Properties</a></li>
+    <li><a href="#successor">Successor &amp; Predecessor</a></li>
+    <li><a href="#balanced">Balanced BSTs</a></li>
+    <li><a href="#complexity">Complexity</a></li>
+    <hr class="toc-divider">
+    <li><a href="#leetcode">LeetCode Problems</a></li>
+    <li><a href="#applications">Applications</a></li>
+  </ul>
+  <hr class="toc-divider">
+  <div class="toc-title">Tree Series</div>
+  <ul class="toc-list">
+    <li><a href="binary-tree.html">→ Binary Tree (traversals)</a></li>
+    <li><a href="bst.html"><strong>→ BST (this page)</strong></a></li>
+    <li><a href="trie.html">→ Trie (prefix tree)</a></li>
+  </ul>
+</aside>
+
+<main class="main-content" id="main-content">
+
+  <div class="hero">
+    <div class="hero-badge">Data Structures</div>
+    <h1>Binary Search Tree</h1>
+    <p>A binary tree with one extra rule: left subtree values &lt; root &lt; right subtree values. This single constraint gives O(log n) search, insert, and delete — and makes inorder traversal produce a sorted sequence.</p>
+    <div class="hero-meta">
+      <span>🌲 BST property</span>
+      <span>🐍 Python implementation</span>
+      <span>🎯 6 LeetCode problems</span>
+      <span>⚖️ Balanced BSTs</span>
+    </div>
+  </div>
+
+  <!-- BST Property -->
+  <section class="content-section" id="what-is">
+    <div class="section-label">Core Property</div>
+    <h2 class="section-title">The BST Property</h2>
+    <p>For every node N in a BST:</p>
+    <ul>
+      <li>All values in the <strong>left subtree</strong> are &lt; N.val</li>
+      <li>All values in the <strong>right subtree</strong> are &gt; N.val</li>
+      <li>Both subtrees are also valid BSTs (recursive definition)</li>
+    </ul>
+
+    <div class="diagram">  Valid BST:                  NOT a valid BST:
+        8                           8
+       / \                         / \
+      3   10                      3   10
+     / \    \                    / \    \
+    1   6    14                 1   6    14
+       / \   /                     / \   /
+      4   7 13                    4   7  3  ← WRONG! 3 < 8 but right of 8's subtree
+
+  Key insight: BST property applies to the ENTIRE subtree, not just immediate children.
+  Node 3 (right child of 8) must have ALL descendants > 8, not just its direct parent.</div>
+
+    <div class="callout callout-green">
+      <strong>The inorder traversal trick</strong>
+      Inorder traversal (Left → Root → Right) of a valid BST produces values in <strong>sorted ascending order</strong>. This is the single most important BST property for interview problems. If you inorder-traverse and it's not sorted, the tree is invalid.
+    </div>
+  </section>
+
+  <!-- Operations -->
+  <section class="content-section" id="operations">
+    <div class="section-label">Core Operations</div>
+    <h2 class="section-title">Insert / Search / Delete</h2>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python">class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+# SEARCH: O(h) — binary search on tree
+def search(root, val):
+    if not root or root.val == val:
+        return root
+    if val < root.val:
+        return search(root.left, val)
+    return search(root.right, val)
+
+# Iterative search (O(1) space)
+def search_iter(root, val):
+    while root:
+        if val == root.val: return root
+        root = root.left if val < root.val else root.right
+    return None
+
+# INSERT: O(h) — find the right spot, create new leaf
+def insert(root, val):
+    if not root:
+        return TreeNode(val)
+    if val < root.val:
+        root.left = insert(root.left, val)
+    elif val > root.val:
+        root.right = insert(root.right, val)
+    # val == root.val: no duplicates (or handle as needed)
+    return root
+
+# DELETE: O(h) — three cases
+def delete(root, val):
+    if not root:
+        return None
+    if val < root.val:
+        root.left = delete(root.left, val)
+    elif val > root.val:
+        root.right = delete(root.right, val)
+    else:
+        # Case 1: leaf → just remove
+        if not root.left and not root.right:
+            return None
+        # Case 2: one child → replace with that child
+        if not root.left:
+            return root.right
+        if not root.right:
+            return root.left
+        # Case 3: two children → replace with inorder successor
+        # (smallest value in right subtree)
+        successor = root.right
+        while successor.left:
+            successor = successor.left
+        root.val = successor.val          # copy successor value up
+        root.right = delete(root.right, successor.val)  # delete successor
+    return root</code></pre>
+    </div>
+  </section>
+
+  <!-- Key Properties -->
+  <section class="content-section" id="properties">
+    <div class="section-label">Unique Properties</div>
+    <h2 class="section-title">BST-Specific Algorithms</h2>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># VALIDATE BST: propagate valid range (lo, hi) down the tree
+def isValidBST(root, lo=float('-inf'), hi=float('inf')) -> bool:
+    if not root:
+        return True
+    if not (lo < root.val < hi):
+        return False
+    return (isValidBST(root.left, lo, root.val) and
+            isValidBST(root.right, root.val, hi))
+
+# KTH SMALLEST: inorder traversal stops at k-th element
+def kthSmallest(root, k: int) -> int:
+    # Approach 1: collect inorder, return k-th (O(n) space)
+    # Approach 2: iterative inorder with early exit (O(h) space)
+    stack = []
+    curr = root
+    count = 0
+    while curr or stack:
+        while curr:
+            stack.append(curr)
+            curr = curr.left
+        curr = stack.pop()
+        count += 1
+        if count == k:
+            return curr.val
+        curr = curr.right
+    return -1
+
+# KTH LARGEST: reverse inorder (Right → Root → Left)
+def kthLargest(root, k: int) -> int:
+    stack = []
+    curr = root
+    count = 0
+    while curr or stack:
+        while curr:
+            stack.append(curr)
+            curr = curr.right    # go right first
+        curr = stack.pop()
+        count += 1
+        if count == k:
+            return curr.val
+        curr = curr.left         # then left
+    return -1
+
+# RANGE SUM: sum all values in [low, high] using BST property for pruning
+def rangeSumBST(root, low: int, high: int) -> int:
+    if not root:
+        return 0
+    total = 0
+    if low <= root.val <= high:
+        total += root.val
+    if root.val > low:    # only explore left if some values there are >= low
+        total += rangeSumBST(root.left, low, high)
+    if root.val < high:   # only explore right if some values there are <= high
+        total += rangeSumBST(root.right, low, high)
+    return total
+
+# FLOOR: largest value ≤ target
+def floor(root, target):
+    result = None
+    while root:
+        if root.val == target:
+            return root.val
+        elif root.val < target:
+            result = root.val   # potential answer, try to find larger
+            root = root.right
+        else:
+            root = root.left
+    return result
+
+# CEILING: smallest value ≥ target
+def ceiling(root, target):
+    result = None
+    while root:
+        if root.val == target:
+            return root.val
+        elif root.val > target:
+            result = root.val   # potential answer, try to find smaller
+            root = root.left
+        else:
+            root = root.right
+    return result</code></pre>
+    </div>
+  </section>
+
+  <!-- Successor / Predecessor -->
+  <section class="content-section" id="successor">
+    <div class="section-label">Navigation</div>
+    <h2 class="section-title">Inorder Successor &amp; Predecessor</h2>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># INORDER SUCCESSOR: next larger value
+# Case 1: node has right child → leftmost node in right subtree
+# Case 2: no right child → nearest ancestor for which node is in left subtree
+def inorder_successor(root, p):
+    successor = None
+    while root:
+        if p.val < root.val:
+            successor = root   # root could be successor
+            root = root.left   # look for smaller valid successor
+        else:
+            root = root.right  # p is in right subtree, go right
+    return successor
+
+# INORDER PREDECESSOR: next smaller value
+def inorder_predecessor(root, p):
+    predecessor = None
+    while root:
+        if p.val > root.val:
+            predecessor = root # root could be predecessor
+            root = root.right  # look for larger valid predecessor
+        else:
+            root = root.left
+    return predecessor
+
+# BST ITERATOR (LC 173): inorder iterator O(h) space
+class BSTIterator:
+    def __init__(self, root):
+        self.stack = []
+        self._push_left(root)
+
+    def _push_left(self, node):
+        while node:
+            self.stack.append(node)
+            node = node.left
+
+    def next(self) -> int:
+        node = self.stack.pop()
+        self._push_left(node.right)
+        return node.val
+
+    def hasNext(self) -> bool:
+        return bool(self.stack)</code></pre>
+    </div>
+  </section>
+
+  <!-- Balanced BSTs -->
+  <section class="content-section" id="balanced">
+    <div class="section-label">Self-Balancing</div>
+    <h2 class="section-title">Balanced BSTs &amp; Python's sortedcontainers</h2>
+
+    <div class="callout callout-yellow">
+      <strong>The problem with unbalanced BSTs</strong>
+      A sorted input like [1,2,3,4,5] inserts into a BST as a linked list (each node has only a right child). Height = n, so all operations degrade to O(n). This is why self-balancing BSTs exist.
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre class="language-python"><code class="language-python"># AVL Tree: rotations after every insert/delete to maintain height balance
+# Red-Black Tree: used in C++ std::map, Java TreeMap
+# Both guarantee O(log n) for all operations
+
+# Python doesn't have a built-in balanced BST, but sortedcontainers provides one
+# Install: pip install sortedcontainers
+from sortedcontainers import SortedList, SortedDict, SortedSet
+
+sl = SortedList([3, 1, 4, 1, 5, 9, 2, 6])
+print(sl)           # SortedList([1, 1, 2, 3, 4, 5, 6, 9])
+sl.add(7)           # O(log n) insert
+sl.remove(1)        # O(log n) remove first occurrence
+print(sl[0])        # O(log n) min
+print(sl[-1])       # O(log n) max
+idx = sl.bisect_left(5)  # O(log n) floor index
+
+# SortedList is a skip-list backed sorted array
+# Great for: Order Statistics, Range Queries, Sliding Window with order
+
+# Example: find median in a stream using SortedList
+class MedianFinder:
+    def __init__(self):
+        self.data = SortedList()
+
+    def addNum(self, num: int) -> None:
+        self.data.add(num)    # O(log n)
+
+    def findMedian(self) -> float:
+        n = len(self.data)
+        mid = n // 2
+        if n % 2 == 1:
+            return self.data[mid]
+        return (self.data[mid-1] + self.data[mid]) / 2</code></pre>
+    </div>
+  </section>
+
+  <!-- Complexity -->
+  <section class="content-section" id="complexity">
+    <div class="section-label">Analysis</div>
+    <h2 class="section-title">Complexity Analysis</h2>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Operation</th><th>BST Average</th><th>BST Worst (skewed)</th><th>Balanced BST</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Search</td><td class="complexity-good">O(log n)</td><td class="complexity-bad">O(n)</td><td class="complexity-good">O(log n)</td></tr>
+          <tr><td>Insert</td><td class="complexity-good">O(log n)</td><td class="complexity-bad">O(n)</td><td class="complexity-good">O(log n)</td></tr>
+          <tr><td>Delete</td><td class="complexity-good">O(log n)</td><td class="complexity-bad">O(n)</td><td class="complexity-good">O(log n)</td></tr>
+          <tr><td>Min / Max</td><td class="complexity-good">O(log n)</td><td class="complexity-bad">O(n)</td><td class="complexity-good">O(log n)</td></tr>
+          <tr><td>Successor / Predecessor</td><td class="complexity-good">O(log n)</td><td class="complexity-bad">O(n)</td><td class="complexity-good">O(log n)</td></tr>
+          <tr><td>Inorder traversal</td><td class="complexity-bad">O(n)</td><td class="complexity-bad">O(n)</td><td class="complexity-bad">O(n)</td></tr>
+          <tr><td>Space</td><td class="complexity-ok">O(n)</td><td class="complexity-ok">O(n)</td><td class="complexity-ok">O(n)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- LeetCode -->
+  <section class="content-section" id="leetcode">
+    <div class="section-label">Practice</div>
+    <h2 class="section-title">LeetCode Problems</h2>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #700</span><span class="lc-title">Search in a Binary Search Tree</span><span class="lc-diff diff-easy">Easy</span></div>
+      <div class="lc-body">
+        <p>Find a node with given value in a BST. Use BST property for O(h) search instead of O(n).</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def searchBST(self, root, val: int):
+    while root:
+        if val == root.val: return root
+        root = root.left if val < root.val else root.right
+    return None</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(h)</span><span>💾 Space: O(1)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #230</span><span class="lc-title">Kth Smallest Element in a BST</span><span class="lc-diff diff-medium">Medium</span></div>
+      <div class="lc-body">
+        <p>Find the kth smallest value. Key insight: inorder traversal of BST gives sorted order.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def kthSmallest(self, root, k: int) -> int:
+    stack, curr, count = [], root, 0
+    while curr or stack:
+        while curr:
+            stack.append(curr)
+            curr = curr.left
+        curr = stack.pop()
+        count += 1
+        if count == k:
+            return curr.val
+        curr = curr.right</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(h + k)</span><span>💾 Space: O(h)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #108</span><span class="lc-title">Convert Sorted Array to BST</span><span class="lc-diff diff-easy">Easy</span></div>
+      <div class="lc-body">
+        <p>Build a height-balanced BST from a sorted array. Divide and conquer: always pick the middle element as root.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def sortedArrayToBST(self, nums: list[int]):
+    def build(lo, hi):
+        if lo > hi:
+            return None
+        mid = (lo + hi) // 2
+        node = TreeNode(nums[mid])
+        node.left = build(lo, mid - 1)
+        node.right = build(mid + 1, hi)
+        return node
+    return build(0, len(nums) - 1)</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(log n)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #173</span><span class="lc-title">Binary Search Tree Iterator</span><span class="lc-diff diff-medium">Medium</span></div>
+      <div class="lc-body">
+        <p>Implement an iterator for BST that yields values in sorted order. O(h) average space by simulating inorder with an explicit stack.</p>
+        <p>Full implementation shown in the "Inorder Successor" section above.</p>
+        <div class="lc-meta"><span>⏱ next(): amortized O(1)</span><span>💾 Space: O(h)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #653</span><span class="lc-title">Two Sum IV – Input is a BST</span><span class="lc-diff diff-easy">Easy</span></div>
+      <div class="lc-body">
+        <p>Find if two nodes sum to target. Use BST iterator from both ends (like two-pointer on sorted array).</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def findTarget(self, root, k: int) -> bool:
+    # Collect inorder (sorted) and use two pointers
+    vals = []
+    def inorder(node):
+        if node:
+            inorder(node.left)
+            vals.append(node.val)
+            inorder(node.right)
+    inorder(root)
+    left, right = 0, len(vals) - 1
+    while left < right:
+        s = vals[left] + vals[right]
+        if s == k: return True
+        elif s < k: left += 1
+        else: right -= 1
+    return False</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(n)</span></div>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header"><span class="lc-num">LC #538</span><span class="lc-title">Convert BST to Greater Tree</span><span class="lc-diff diff-medium">Medium</span></div>
+      <div class="lc-body">
+        <p>Replace each node's value with the sum of all values greater than it. Reverse inorder (Right → Root → Left) with a running sum.</p>
+        <div class="code-wrapper">
+          <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+          <pre class="language-python"><code class="language-python">def convertBST(self, root):
+    self.suffix_sum = 0
+    def reverse_inorder(node):
+        if not node:
+            return
+        reverse_inorder(node.right)     # visit larger values first
+        self.suffix_sum += node.val
+        node.val = self.suffix_sum      # replace with cumulative sum
+        reverse_inorder(node.left)
+    reverse_inorder(root)
+    return root</code></pre>
+        </div>
+        <div class="lc-meta"><span>⏱ Time: O(n)</span><span>💾 Space: O(h)</span></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Applications -->
+  <section class="content-section" id="applications">
+    <div class="section-label">Real World</div>
+    <h2 class="section-title">Real-World Applications</h2>
+    <ul>
+      <li><strong>Database indexes</strong>: B+ trees (multi-way balanced BSTs) power MySQL/PostgreSQL range queries</li>
+      <li><strong>C++ std::map / std::set</strong>: Red-Black trees, guaranteed O(log n)</li>
+      <li><strong>Java TreeMap / TreeSet</strong>: Red-Black tree, ordered key-value store</li>
+      <li><strong>Python sortedcontainers</strong>: SortedList/SortedDict for competitive programming</li>
+      <li><strong>File systems</strong>: directory entries sorted for binary search (some implementations)</li>
+      <li><strong>Network routing</strong>: longest-prefix matching via tries and BSTs</li>
+      <li><strong>Interval scheduling</strong>: augmented BSTs store intervals + max endpoint for O(log n) overlap queries</li>
+    </ul>
+  </section>
+
+  <footer class="page-footer">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="trie.html">Trie</a>
+      <a href="hash-map.html">Hash Map</a>
+      <a href="linked-list.html">Linked List</a>
+      <a href="binary-tree.html">Binary Tree</a>
+      <a href="bst.html">BST</a>
+      <a href="heap.html">Heap</a>
+      <a href="stack-queue.html">Stack &amp; Queue</a>
+      <a href="graph.html">Graph Traversal</a>
+      <a href="graph-algorithms.html">Graph Algorithms</a>
+      <a href="dp.html">Dynamic Programming</a>
+    </div>
+    <p class="footer-copy">© 2026 KnowAlgo — Data Structures &amp; Algorithms Made Clear</p>
+  </footer>
+
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight) * 100;
+    document.getElementById('progress').style.width = scrolled + '%';
+  });
+  function copyCode(btn) {
+    const code = btn.closest('.code-wrapper').querySelector('code');
+    navigator.clipboard.writeText(code.textContent).then(() => {
+      btn.textContent = 'Copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+  const sections = document.querySelectorAll('.content-section[id]');
+  const tocLinks = document.querySelectorAll('.toc-list a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.toc-list a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-64px 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
