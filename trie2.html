@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Deep Dive into Trie Data Structure (Python Implementation)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+    h1, h2, h3 { color: #333; }
+    pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    code { font-family: Consolas, "Courier New", monospace; }
+  </style>
+  <!-- Include Highlight.js for code syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+</head>
+<body>
+
+  <h1>Deep Dive into Trie Data Structure (Python Implementation)</h1>
+
+  <section>
+    <h2>Introduction</h2>
+    <p>
+      A <strong>Trie</strong> (or prefix tree) is a tree-based data structure that stores a set (or associative array) of keys—typically strings—by decomposing them into individual characters.
+      Each node represents a prefix; the root is an empty string, and each edge adds a character.
+    </p>
+    <p>
+      With operations like insertion, search, and deletion running in O(m) time (where <em>m</em> is the length of the key), Tries excel at tasks involving prefix-based queries.
+      They are particularly useful in autocomplete systems, spell checkers, and network routing (e.g., IP routing via longest prefix match).
+    </p>
+  </section>
+
+  <section>
+    <h2>Real-World Applications</h2>
+    <ul>
+      <li><strong>Autocomplete:</strong> Quickly suggest words based on user input by traversing to the prefix node and enumerating completions.</li>
+      <li><strong>Spell Checking:</strong> Validate whether a word exists in a large dictionary efficiently.</li>
+      <li><strong>IP Routing:</strong> Routers use tries to match IP address prefixes and determine the appropriate routing path.</li>
+      <li><strong>Dictionary Validation:</strong> Used in text editors and word games to verify word existence.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Python Implementation of Trie</h2>
+    <p>
+      Below is a simple and clear Python implementation of the Trie data structure. Each method is commented to explain the functionality.
+    </p>
+    <pre><code class="language-python">
+# Define the Trie Node
+class TrieNode:
+    def __init__(self):
+        # Dictionary to hold children nodes: key is character, value is TrieNode
+        self.children = {}
+        # Flag to indicate the end of a word
+        self.is_end_of_word = False
+
+# Define the Trie Data Structure
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+    
+    def insert(self, word: str) -> None:
+        """
+        Insert a word into the trie.
+        """
+        node = self.root
+        for char in word:
+            # If the character is not already a child, create a new node
+            if char not in node.children:
+                node.children[char] = TrieNode()
+            node = node.children[char]
+        # Mark the final node as the end of the word
+        node.is_end_of_word = True
+
+    def search(self, word: str) -> bool:
+        """
+        Search for a word in the trie.
+        Returns True if the word exists, otherwise False.
+        """
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                return False  # Character path doesn't exist, word not found
+            node = node.children[char]
+        return node.is_end_of_word  # Ensure the word is complete
+
+    def starts_with(self, prefix: str) -> bool:
+        """
+        Check if any word in the trie starts with the given prefix.
+        """
+        node = self.root
+        for char in prefix:
+            if char not in node.children:
+                return False  # Prefix path doesn't exist
+            node = node.children[char]
+        return True
+
+    def delete(self, word: str) -> bool:
+        """
+        Delete a word from the trie.
+        Returns True if deletion was successful, otherwise False.
+        """
+        def _delete(node: TrieNode, word: str, index: int) -> bool:
+            # Base case: reached the end of the word
+            if index == len(word):
+                if not node.is_end_of_word:
+                    return False  # Word doesn't exist
+                node.is_end_of_word = False
+                # If node has no children, it can be removed
+                return len(node.children) == 0
+            char = word[index]
+            if char not in node.children:
+                return False  # Word doesn't exist
+            should_delete_child = _delete(node.children[char], word, index + 1)
+            if should_delete_child:
+                # Remove the mapping for the character
+                del node.children[char]
+                # Return True if node is not the end of another word and has no other children
+                return len(node.children) == 0 and not node.is_end_of_word
+            return False
+
+        return _delete(self.root, word, 0)
+
+# Example usage of the Trie
+if __name__ == "__main__":
+    trie = Trie()
+    trie.insert("hello")
+    trie.insert("helium")
+    print("Search for 'hello':", trie.search("hello"))      # Expected True
+    print("Search for 'hel':", trie.search("hel"))          # Expected False, 'hel' is a prefix only
+    print("Starts with 'hel':", trie.starts_with("hel"))    # Expected True
+    trie.delete("helium")
+    print("Search for 'helium' after deletion:", trie.search("helium"))  # Expected False
+    </code></pre>
+  </section>
+
+  <section>
+    <h2>Advanced DSA Problems Using Trie in Python</h2>
+    <p>
+      Tries are a popular topic in coding interviews and algorithm challenges. Below are several advanced problems solved using the Trie.
+    </p>
+
+    <h3>1. Longest Common Prefix</h3>
+    <p>
+      <strong>Problem:</strong> Given an array of strings, determine the longest common prefix shared among them.
+    </p>
+    <p>
+      <strong>Approach:</strong> Insert all words into the trie. Then, traverse from the root while there is only one child and the node is not the end of a word.
+    </p>
+    <pre><code class="language-python">
+def longest_common_prefix(words):
+    if not words:
+        return ""
+    
+    # Build the trie with all words
+    trie = Trie()
+    for word in words:
+        trie.insert(word)
+    
+    prefix = ""
+    node = trie.root
+    # Continue down the trie until branching occurs or end of word is reached
+    while node and not node.is_end_of_word and len(node.children) == 1:
+        char = next(iter(node.children))
+        prefix += char
+        node = node.children[char]
+    return prefix
+
+# Example usage:
+words_list = ["flower", "flow", "flight"]
+print("Longest common prefix:", longest_common_prefix(words_list))  # Output: "fl"
+    </code></pre>
+
+    <h3>2. Autocomplete System</h3>
+    <p>
+      <strong>Problem:</strong> Given a dictionary of words and a prefix, return all words starting with that prefix.
+    </p>
+    <p>
+      <strong>Approach:</strong> Traverse the trie to the node corresponding to the prefix and then perform a DFS to collect all descendant words.
+    </p>
+    <pre><code class="language-python">
+def autocomplete(trie, prefix):
+    # Helper function to perform DFS and collect words
+    def dfs(node, current_word, words_found):
+        if node.is_end_of_word:
+            words_found.append(current_word)
+        for char, child in node.children.items():
+            dfs(child, current_word + char, words_found)
+    
+    node = trie.root
+    for char in prefix:
+        if char not in node.children:
+            return []  # No words with the given prefix
+        node = node.children[char]
+    
+    words_found = []
+    dfs(node, prefix, words_found)
+    return words_found
+
+# Example usage:
+words_dict = ["dog", "deer", "deal", "dove", "dodge"]
+trie_auto = Trie()
+for word in words_dict:
+    trie_auto.insert(word)
+
+print("Autocomplete suggestions for 'do':", autocomplete(trie_auto, "do"))
+    </code></pre>
+
+    <h3>3. Replacing Words Using a Prefix Dictionary</h3>
+    <p>
+      <strong>Problem:</strong> Given a dictionary of root words and a sentence, replace each word in the sentence with the shortest root word that is a prefix of that word.
+    </p>
+    <p>
+      <strong>Approach:</strong> Build a trie with the root words. For each word in the sentence, traverse the trie until a node marked as the end of a word is found; if none is found, keep the original word.
+    </p>
+    <pre><code class="language-python">
+def replace_words(dictionary, sentence):
+    # Build the trie from the dictionary of roots
+    trie = Trie()
+    for root in dictionary:
+        trie.insert(root)
+    
+    def replace_word(word):
+        node = trie.root
+        replacement = ""
+        for char in word:
+            if char not in node.children:
+                break
+            replacement += char
+            node = node.children[char]
+            if node.is_end_of_word:
+                return replacement  # Found the shortest root
+        return word  # No matching root found
+    
+    # Replace each word in the sentence
+    replaced_words = [replace_word(word) for word in sentence.split()]
+    return " ".join(replaced_words)
+
+# Example usage:
+roots = ["cat", "bat", "rat"]
+sentence = "the cattle was rattled by the battery"
+print("Replaced sentence:", replace_words(roots, sentence))
+    </code></pre>
+
+    <h3>4. Stream Checker (Trie with a Sliding Window)</h3>
+    <p>
+      <strong>Problem:</strong> Given a continuous stream of characters, determine if any suffix of the stream forms a word in the given dictionary.
+    </p>
+    <p>
+      <strong>Approach:</strong> Insert the <em>reversed</em> words into the trie. As characters stream in, maintain a running sequence (in reverse order) and traverse the trie to check for any matching word.
+    </p>
+    <pre><code class="language-python">
+class StreamChecker:
+    def __init__(self, words):
+        # Build a trie of reversed words for efficient suffix checking
+        self.trie = Trie()
+        for word in words:
+            self.trie.insert(word[::-1])
+        self.stream = ""
+    
+    def query(self, letter: str) -> bool:
+        # Prepend the new letter to the stream (to keep the order reversed)
+        self.stream = letter + self.stream
+        node = self.trie.root
+        for char in self.stream:
+            if char not in node.children:
+                return False
+            node = node.children[char]
+            if node.is_end_of_word:
+                return True
+        return False
+
+# Example usage:
+stream_checker = StreamChecker(["cd", "f", "kl"])
+print("Query 'a':", stream_checker.query("a"))  # False
+print("Query 'b':", stream_checker.query("b"))  # False
+print("Query 'c':", stream_checker.query("c"))  # False
+print("Query 'd':", stream_checker.query("d"))  # True, since "cd" is found
+    </code></pre>
+  </section>
+
+  <section>
+    <h2>Trie in Parallel with Other Data Structures</h2>
+    <p>
+      While Tries are excellent for prefix-based searches, combining them with other data structures can unlock even more functionality:
+    </p>
+    <ul>
+      <li>
+        <strong>Trie + Hash Map:</strong>  
+        Enhance each trie node by storing extra information (e.g., frequency counts, metadata, or links to full records) using a hash map. This combination is useful in ranking autocomplete suggestions based on frequency.
+      </li>
+      <li>
+        <strong>Trie + Heap (Priority Queue):</strong>  
+        In an autocomplete system, each trie node could maintain a heap (or priority queue) of the top <em>K</em> suggestions, allowing quick retrieval of the most relevant words.
+      </li>
+      <li>
+        <strong>Trie vs. Hash Tables:</strong>  
+        Although hash tables offer O(1) lookup for complete words, they do not support prefix queries. A combined approach can use a hash table for exact matches and a trie for prefix-based queries.
+      </li>
+      <li>
+        <strong>Trie with Graph Algorithms:</strong>  
+        For problems like word ladders or transformation sequences, a trie can be used alongside BFS/DFS to prune search spaces by quickly discarding non-existent prefixes.
+      </li>
+    </ul>
+    <p>
+      The choice to combine a trie with another data structure depends on the problem's requirements and can lead to significant performance improvements.
+    </p>
+  </section>
+
+  <section>
+    <h2>Conclusion</h2>
+    <p>
+      This document provided a deep dive into the Trie data structure using Python. We covered the fundamentals, implemented core operations, solved advanced problems, and discussed how to use the trie alongside other data structures.
+      Understanding these concepts is invaluable for tackling complex problems in both academic settings and real-world applications.
+    </p>
+  </section>
+
+  <!-- Include Highlight.js script -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+
+</body>
+</html>
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Deep Dive into Trie Data Structure with Parallel Data Structures (Python)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+    h1, h2, h3 { color: #333; }
+    pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    code { font-family: Consolas, "Courier New", monospace; }
+    ul { margin-left: 20px; }
+    section { margin-bottom: 30px; }
+  </style>
+  <!-- Include Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+</head>
+<body>
+
+  <h1>Deep Dive into Trie Data Structure with Parallel Data Structures (Python)</h1>
+
+  <!-- Introduction -->
+  <section>
+    <h2>Introduction</h2>
+    <p>
+      A <strong>Trie</strong> (or prefix tree) is a tree-based data structure that stores keys (usually strings) by decomposing them into individual characters.
+      Each node represents a prefix; the root is an empty string, and each edge adds a character.
+    </p>
+    <p>
+      Tries support fast insertion, search, and deletion (all O(m), where m is the length of the key), making them ideal for applications like autocomplete, spell checking, and IP routing.
+    </p>
+  </section>
+
+  <!-- Real-World Applications -->
+  <section>
+    <h2>Real-World Applications</h2>
+    <ul>
+      <li><strong>Autocomplete:</strong> Suggest words as the user types by traversing to the node representing the current prefix.</li>
+      <li><strong>Spell Checking:</strong> Quickly verify if a word exists in a large dictionary.</li>
+      <li><strong>IP Routing:</strong> Find the longest prefix match in a routing table.</li>
+      <li><strong>Dictionary Validation:</strong> Validate words or filter out disallowed words in text processing.</li>
+    </ul>
+  </section>
+
+  <!-- Basic Python Implementation -->
+  <section>
+    <h2>Python Implementation of Trie</h2>
+    <p>
+      Below is a clear, well-commented Python implementation of a basic Trie supporting insertion, search, prefix checking, and deletion.
+    </p>
+    <pre><code class="language-python">
+# Basic Trie Node definition
+class TrieNode:
+    def __init__(self):
+        self.children = {}            # Dictionary to store child nodes
+        self.is_end_of_word = False   # Flag to indicate a complete word
+
+# Basic Trie Data Structure
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+    
+    def insert(self, word: str) -> None:
+        """Insert a word into the trie."""
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                node.children[char] = TrieNode()  # Create new node if path doesn't exist
+            node = node.children[char]
+        node.is_end_of_word = True
+    
+    def search(self, word: str) -> bool:
+        """Return True if the word exists in the trie."""
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                return False  # Character path missing: word not found
+            node = node.children[char]
+        return node.is_end_of_word
+    
+    def starts_with(self, prefix: str) -> bool:
+        """Return True if any word in the trie starts with the given prefix."""
+        node = self.root
+        for char in prefix:
+            if char not in node.children:
+                return False
+            node = node.children[char]
+        return True
+    
+    def delete(self, word: str) -> bool:
+        """
+        Delete a word from the trie.
+        Returns True if deletion was successful.
+        """
+        def _delete(node: TrieNode, word: str, index: int) -> bool:
+            if index == len(word):
+                if not node.is_end_of_word:
+                    return False  # Word not found
+                node.is_end_of_word = False
+                return len(node.children) == 0  # True if node has no children
+            char = word[index]
+            if char not in node.children:
+                return False  # Word not found
+            should_delete_child = _delete(node.children[char], word, index + 1)
+            if should_delete_child:
+                del node.children[char]
+                return len(node.children) == 0 and not node.is_end_of_word
+            return False
+        return _delete(self.root, word, 0)
+
+# Example usage:
+if __name__ == "__main__":
+    trie = Trie()
+    trie.insert("hello")
+    trie.insert("helium")
+    print("Search 'hello':", trie.search("hello"))  # True
+    print("Search 'hel':", trie.search("hel"))      # False (prefix only)
+    print("Starts with 'hel':", trie.starts_with("hel"))  # True
+    trie.delete("helium")
+    print("Search 'helium' after deletion:", trie.search("helium"))  # False
+    </code></pre>
+  </section>
+
+  <!-- Advanced Problems Using Trie -->
+  <section>
+    <h2>Advanced Problems Using Trie in Python</h2>
+    <p>
+      Tries are often used to solve more complex problems. Below are a few examples:
+    </p>
+    
+    <h3>1. Longest Common Prefix</h3>
+    <p>
+      <strong>Problem:</strong> Given an array of strings, find the longest common prefix.
+    </p>
+    <pre><code class="language-python">
+def longest_common_prefix(words):
+    if not words:
+        return ""
+    trie = Trie()
+    for word in words:
+        trie.insert(word)
+    prefix = ""
+    node = trie.root
+    # Traverse as long as there is only one child and no complete word
+    while node and not node.is_end_of_word and len(node.children) == 1:
+        char = next(iter(node.children))
+        prefix += char
+        node = node.children[char]
+    return prefix
+
+# Example:
+words_list = ["flower", "flow", "flight"]
+print("Longest common prefix:", longest_common_prefix(words_list))  # Output: "fl"
+    </code></pre>
+
+    <h3>2. Autocomplete System</h3>
+    <p>
+      <strong>Problem:</strong> Given a dictionary and a prefix, return all words that start with that prefix.
+    </p>
+    <pre><code class="language-python">
+def autocomplete(trie, prefix):
+    def dfs(node, current_word, words_found):
+        if node.is_end_of_word:
+            words_found.append(current_word)
+        for char, child in node.children.items():
+            dfs(child, current_word + char, words_found)
+    
+    node = trie.root
+    for char in prefix:
+        if char not in node.children:
+            return []  # No words with this prefix
+        node = node.children[char]
+    
+    suggestions = []
+    dfs(node, prefix, suggestions)
+    return suggestions
+
+# Example:
+words_dict = ["dog", "deer", "deal", "dove", "dodge"]
+trie_auto = Trie()
+for word in words_dict:
+    trie_auto.insert(word)
+print("Autocomplete for 'do':", autocomplete(trie_auto, "do"))
+    </code></pre>
+
+    <h3>3. Replacing Words Using a Prefix Dictionary</h3>
+    <p>
+      <strong>Problem:</strong> Given a dictionary of root words and a sentence, replace each word in the sentence with the shortest root that is a prefix.
+    </p>
+    <pre><code class="language-python">
+def replace_words(dictionary, sentence):
+    trie = Trie()
+    for root in dictionary:
+        trie.insert(root)
+    
+    def replace(word):
+        node = trie.root
+        prefix = ""
+        for char in word:
+            if char not in node.children:
+                break
+            prefix += char
+            node = node.children[char]
+            if node.is_end_of_word:
+                return prefix  # Return the root word found
+        return word  # No root found; return original word
+    
+    return " ".join(replace(word) for word in sentence.split())
+
+# Example:
+roots = ["cat", "bat", "rat"]
+sentence = "the cattle was rattled by the battery"
+print("Replaced sentence:", replace_words(roots, sentence))
+    </code></pre>
+
+    <h3>4. Stream Checker (Using a Reversed Trie)</h3>
+    <p>
+      <strong>Problem:</strong> Given a stream of characters, determine if any suffix of the stream forms a word in the dictionary.
+    </p>
+    <pre><code class="language-python">
+class StreamChecker:
+    def __init__(self, words):
+        # Build a trie of reversed words for efficient suffix checking
+        self.trie = Trie()
+        for word in words:
+            self.trie.insert(word[::-1])
+        self.stream = ""
+    
+    def query(self, letter: str) -> bool:
+        self.stream = letter + self.stream  # Prepend new letter
+        node = self.trie.root
+        for char in self.stream:
+            if char not in node.children:
+                return False
+            node = node.children[char]
+            if node.is_end_of_word:
+                return True
+        return False
+
+# Example:
+stream_checker = StreamChecker(["cd", "f", "kl"])
+print("Query 'a':", stream_checker.query("a"))  # False
+print("Query 'b':", stream_checker.query("b"))  # False
+print("Query 'c':", stream_checker.query("c"))  # False
+print("Query 'd':", stream_checker.query("d"))  # True (matches "cd")
+    </code></pre>
+  </section>
+
+  <!-- Trie in Parallel with Other Data Structures -->
+  <section>
+    <h2>Trie in Parallel with Other Data Structures</h2>
+    <p>
+      While tries excel at prefix-based searches, combining them with other data structures can greatly enhance functionality:
+    </p>
+    <ul>
+      <li>
+        <strong>Trie + Hash Map:</strong>  
+        Enhance each trie node by storing extra metadata (e.g., frequency counts) in a hash map. This helps rank autocomplete suggestions by usage frequency.
+      </li>
+      <li>
+        <strong>Trie + Heap (Priority Queue):</strong>  
+        Maintain a heap at each node to store the top K suggestions (based on frequency or relevance) for quick retrieval.
+      </li>
+      <li>
+        <strong>Trie vs. Hash Tables:</strong>  
+        While hash tables provide O(1) lookups for complete keys, they do not support prefix queries. A hybrid approach can use a hash table for exact matches and a trie for prefix-based searches.
+      </li>
+      <li>
+        <strong>Trie with Graph Algorithms:</strong>  
+        In problems such as word ladders or transformation sequences, a trie can be used with BFS/DFS to quickly discard paths that cannot form valid words.
+      </li>
+    </ul>
+    
+    <h3>A. Trie + Hash Map Example</h3>
+    <p>
+      In this example, each trie node stores a frequency count (using a hash map) to rank suggestions.
+    </p>
+    <pre><code class="language-python">
+class TrieNodeWithFreq:
+    def __init__(self):
+        self.children = {}
+        self.is_end_of_word = False
+        self.frequency = 0  # Frequency count for the word ending here
+
+class TrieWithFreq:
+    def __init__(self):
+        self.root = TrieNodeWithFreq()
+    
+    def insert(self, word: str) -> None:
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                node.children[char] = TrieNodeWithFreq()
+            node = node.children[char]
+        node.is_end_of_word = True
+        node.frequency += 1  # Increase frequency for this word
+    
+    def autocomplete(self, prefix: str):
+        """Return words starting with prefix along with their frequencies."""
+        def dfs(node, current_word, results):
+            if node.is_end_of_word:
+                results.append((current_word, node.frequency))
+            for char, child in node.children.items():
+                dfs(child, current_word + char, results)
+        
+        node = self.root
+        for char in prefix:
+            if char not in node.children:
+                return []  # No words with this prefix
+            node = node.children[char]
+        
+        suggestions = []
+        dfs(node, prefix, suggestions)
+        # Sort suggestions by frequency in descending order
+        return sorted(suggestions, key=lambda x: -x[1])
+
+# Example usage:
+trie_freq = TrieWithFreq()
+for word in ["apple", "app", "application", "apple", "appetite"]:
+    trie_freq.insert(word)
+
+print("Autocomplete suggestions for 'app':", trie_freq.autocomplete("app"))
+    </code></pre>
+    
+    <h3>B. Trie + Heap (Priority Queue) Example</h3>
+    <p>
+      Here, each node maintains a heap of top suggestions. This simplified example uses Python’s <code>heapq</code> to store suggestions.
+    </p>
+    <pre><code class="language-python">
+import heapq
+
+class TrieNodeWithHeap:
+    def __init__(self):
+        self.children = {}
+        self.is_end_of_word = False
+        # Heap to store suggestions as (-frequency, word) for max-heap behavior
+        self.top_suggestions = []
+
+class TrieWithHeap:
+    def __init__(self, k=3):
+        self.root = TrieNodeWithHeap()
+        self.k = k  # Number of top suggestions to maintain
+    
+    def insert(self, word: str, frequency: int = 1) -> None:
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                node.children[char] = TrieNodeWithHeap()
+            node = node.children[char]
+            # Maintain a heap of top suggestions at this node
+            heapq.heappush(node.top_suggestions, (-frequency, word))
+            # Keep only top K elements in the heap
+            if len(node.top_suggestions) > self.k:
+                heapq.heappop(node.top_suggestions)
+        node.is_end_of_word = True
+    
+    def get_top_suggestions(self, prefix: str):
+        node = self.root
+        for char in prefix:
+            if char not in node.children:
+                return []
+            node = node.children[char]
+        # Return the words sorted by frequency (highest first)
+        return [word for freq, word in sorted(node.top_suggestions, reverse=True)]
+    
+# Example usage:
+trie_heap = TrieWithHeap(k=3)
+trie_heap.insert("hello", 5)
+trie_heap.insert("helium", 3)
+trie_heap.insert("help", 8)
+trie_heap.insert("helicopter", 2)
+print("Top suggestions for 'hel':", trie_heap.get_top_suggestions("hel"))
+    </code></pre>
+    
+    <h3>C. Trie vs. Hash Tables</h3>
+    <p>
+      While a hash table provides O(1) lookup for exact keys, it does not allow for prefix queries. A common approach is to use:
+    </p>
+    <ul>
+      <li>A hash table for quickly checking exact matches.</li>
+      <li>A trie for retrieving all keys that share a given prefix.</li>
+    </ul>
+    <p>
+      Combining these can be useful in applications like auto-correction or when both exact and prefix searches are needed.
+    </p>
+    
+    <h3>D. Trie with Graph Algorithms</h3>
+    <p>
+      In problems such as word ladders or transformation sequences, a trie can be used to quickly prune search spaces.
+      For example, when searching for valid intermediate words, a trie can discard paths that do not lead to any dictionary word.
+      Combined with BFS or DFS, this can dramatically improve performance.
+    </p>
+  </section>
+
+  <!-- Conclusion -->
+  <section>
+    <h2>Conclusion</h2>
+    <p>
+      This comprehensive guide covered the fundamentals of the Trie data structure in Python and demonstrated its use in solving a variety of advanced problems.
+      We also explored how combining a trie with other data structures like hash maps and heaps can enhance functionality, as well as the benefits of using tries alongside graph algorithms.
+    </p>
+    <p>
+      Understanding these concepts is essential for tackling complex algorithmic challenges in both academic and real-world applications.
+    </p>
+  </section>
+
+  <!-- Include Highlight.js script -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+
+</body>
+</html>
