@@ -353,6 +353,14 @@
       margin-bottom: 1rem;
     }
 
+    /* ── On the Horizon ─────────────────────────── */
+    .horizon-section { background: #f1f5f9; padding: 3rem 1.5rem; }
+    .horizon-tag { background: #e2e8f0; color: #94a3b8; }
+    .horizon-heading { opacity: 0.45; }
+    .horizon-grid { opacity: 0.38; pointer-events: none; user-select: none; }
+    .horizon-card { border-style: dashed; border-color: #cbd5e1; }
+    .horizon-card:hover { transform: none; box-shadow: none; }
+
     /* ── Responsive ─────────────────────────────── */
     @media (max-width: 640px) {
       .nav-links .hide-mobile { display: none; }
@@ -370,7 +378,7 @@
     <div class="nav-links">
       <a href="#topics" class="hide-mobile">Topics</a>
       <a href="#about" class="hide-mobile">About</a>
-      <a href="trie.html" class="nav-cta">Start Learning →</a>
+      <a href="interview-prep.html" class="nav-cta">Start Learning →</a>
     </div>
   </nav>
 </header>
@@ -388,7 +396,7 @@
     Every topic includes visual diagrams, Python implementations, and real LeetCode solutions.
   </p>
   <div class="hero-btns">
-    <a href="trie.html" class="btn-primary">Start with Trie →</a>
+    <a href="interview-prep.html" class="btn-primary">Interview Prep Guide →</a>
     <a href="#topics" class="btn-secondary">Browse All Topics</a>
   </div>
 </section>
@@ -749,6 +757,98 @@
           </div>
         </div>
       </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════ ON THE HORIZON ════════════════════ -->
+<section id="horizon" class="horizon-section">
+  <div class="section-inner">
+    <div class="section-tag horizon-tag">On the Horizon</div>
+    <h2 class="section-title horizon-heading">More Knowledge Areas</h2>
+    <p class="section-subtitle horizon-heading">
+      Expanding beyond DSA. Each area will become its own collection of deep-dive guides — coming later.
+    </p>
+    <div class="cards-grid horizon-grid">
+
+      <div class="topic-card horizon-card">
+        <div class="card-banner" style="height:6px;background:#cbd5e1"></div>
+        <div class="card-body">
+          <span class="card-icon">🏗️</span>
+          <div class="card-title">System Design</div>
+          <div class="card-desc">Scalability, distributed systems, load balancing, caching, databases, and real-world architecture trade-offs.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">Distributed</span><span class="ctag">Scalability</span></div>
+            <span class="card-status status-soon">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="topic-card horizon-card">
+        <div class="card-banner" style="height:6px;background:#cbd5e1"></div>
+        <div class="card-body">
+          <span class="card-icon">🔧</span>
+          <div class="card-title">Low Level Design</div>
+          <div class="card-desc">Design patterns, SOLID principles, OOP fundamentals, and building extensible systems from the ground up.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">Design Patterns</span><span class="ctag">OOP</span></div>
+            <span class="card-status status-soon">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="topic-card horizon-card">
+        <div class="card-banner" style="height:6px;background:#cbd5e1"></div>
+        <div class="card-body">
+          <span class="card-icon">🤖</span>
+          <div class="card-title">ML Algorithms</div>
+          <div class="card-desc">Core machine learning algorithms explained from first principles — regression, trees, clustering, SVMs, and more.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">Supervised</span><span class="ctag">Unsupervised</span></div>
+            <span class="card-status status-soon">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="topic-card horizon-card">
+        <div class="card-banner" style="height:6px;background:#cbd5e1"></div>
+        <div class="card-body">
+          <span class="card-icon">🧠</span>
+          <div class="card-title">ML System Design</div>
+          <div class="card-desc">Feature stores, model serving, training pipelines, monitoring, and MLOps patterns for production ML systems.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">MLOps</span><span class="ctag">Model Serving</span></div>
+            <span class="card-status status-soon">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="topic-card horizon-card">
+        <div class="card-banner" style="height:6px;background:#cbd5e1"></div>
+        <div class="card-body">
+          <span class="card-icon">✨</span>
+          <div class="card-title">AI &amp; Gen AI</div>
+          <div class="card-desc">LLMs, RAG architectures, agents, prompt engineering, fine-tuning, and building AI-native applications.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">LLMs</span><span class="ctag">RAG</span><span class="ctag">Agents</span></div>
+            <span class="card-status status-soon">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="topic-card horizon-card">
+        <div class="card-banner" style="height:6px;background:#cbd5e1"></div>
+        <div class="card-body">
+          <span class="card-icon">🔬</span>
+          <div class="card-title">Research &amp; Ideas</div>
+          <div class="card-desc">Personal research notes, experiment write-ups, and ideas worth sharing — the messy, exploratory work in progress.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">Research</span><span class="ctag">Ideas</span></div>
+            <span class="card-status status-soon">Coming Soon</span>
+          </div>
+        </div>
+      </div>
 
     </div>
   </div>
