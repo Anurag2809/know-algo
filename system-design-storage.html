@@ -1547,24 +1547,52 @@ Conflict: Postgres always wins — ES is rebuilt from Postgres at any time
     <div class="notes-sticky">
     <div class="notes-heading">Clarifications</div>
     <div class="note-item" data-section="sql">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">SQL Databases</div></div>
-      <div class="note-body">SQL stores data in tables (rows + columns) with relationships via foreign keys. The killer feature: ACID transactions — if step 1 and step 2 must both succeed or both fail, SQL guarantees it. PostgreSQL handles millions of rows before you need to worry about scaling.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">ACID Explained</div></div>
+      <div class="note-body">A = Atomicity: all steps of a transaction succeed or all fail (no partial updates). C = Consistency: the DB moves from one valid state to another — no constraint violations. I = Isolation: concurrent transactions don't interfere (a read doesn't see a half-written transaction). D = Durability: once committed, data survives crashes. ACID is what makes banks trust databases.</div>
+    </div>
+    <div class="note-item" data-section="sql">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">OLTP vs OLAP</div></div>
+      <div class="note-body">OLTP (Online Transaction Processing): many small, fast read/write operations — your app's main database (users logging in, orders being placed). Optimized for row-based access. OLAP (Online Analytical Processing): complex queries scanning millions of rows (monthly revenue by region). Optimized for column-based access. Never run analytics queries on your OLTP DB in production — use a separate warehouse.</div>
     </div>
     <div class="note-item" data-section="nosql-kv">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Key-Value Stores</div></div>
-      <div class="note-body">Key-value stores are like a giant dictionary: look up any value by its key in O(1). No complex queries, no joins. DynamoDB, Redis, Memcached. Best for: sessions, carts, real-time counters. Worst for: anything requiring filtering by non-key fields.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">BASE (vs ACID)</div></div>
+      <div class="note-body">NoSQL databases often trade ACID for BASE: BA = Basically Available (the system always returns a response, even if stale), S = Soft state (data may change over time without input, due to eventual consistency), E = Eventual consistency (replicas will converge to the same value eventually). BASE allows higher availability and performance at the cost of strict consistency.</div>
+    </div>
+    <div class="note-item" data-section="nosql-document">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Document vs Relational</div></div>
+      <div class="note-body">Relational: data in rigid tables with foreign keys. Changing schema requires migrations. Document (MongoDB, Firestore): data stored as JSON-like documents. Flexible schema — each document can have different fields. Great for hierarchical data (a post with nested comments). Bad for: highly relational data (many-to-many relationships are awkward without JOINs).</div>
+    </div>
+    <div class="note-item" data-section="nosql-wide">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Wide-Column: Cassandra Basics</div></div>
+      <div class="note-body">Cassandra stores data like a table, but you design the schema around your queries. The partition key determines which server stores the data. The clustering key determines sort order within a partition. You must know your access patterns upfront — Cassandra is optimized for specific queries, not flexible ad-hoc queries. Used by Netflix, Instagram, Apple for massive write throughput.</div>
     </div>
     <div class="note-item" data-section="sharding">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Database Sharding</div></div>
-      <div class="note-body">Sharding splits one huge table across multiple servers. 1 billion users → 10 shards × 100 million each. The pain point: cross-shard queries (e.g., "find all US users who joined this week") must contact every shard and merge results — expensive.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Shard Key Selection</div></div>
+      <div class="note-body">The shard key determines how data is distributed across shards. Bad shard key = hotspot (one shard handles 80% of traffic). Example of a bad key: user status (most users are "active" → one shard overloaded). Good key: user_id with consistent hashing → even distribution. Rule: shard key should have HIGH cardinality (many unique values) and be frequently used in queries.</div>
     </div>
     <div class="note-item" data-section="replication">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Replication</div></div>
-      <div class="note-body">Replication copies data to multiple servers. Primary handles writes; replicas handle reads. Benefit: read scaling + failover. Trade-off: replication lag — replicas can be milliseconds behind. A write followed immediately by a read might hit a stale replica.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">WAL (Write-Ahead Log)</div></div>
+      <div class="note-body">WAL = Write-Ahead Log. Before PostgreSQL writes data to disk, it first logs the intended change to the WAL. If the server crashes mid-write, it replays the WAL on restart to recover. Replication works by streaming the WAL from primary to replicas — replicas apply the same log entries. This is why "streaming replication" is fast and consistent.</div>
+    </div>
+    <div class="note-item" data-section="replication">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">MVCC (Multi-Version Concurrency Control)</div></div>
+      <div class="note-body">MVCC lets readers and writers not block each other. Instead of locking a row when reading, the DB keeps multiple versions of each row. A read transaction sees the snapshot from when it started. A write creates a new version. Readers never block writers; writers never block readers. PostgreSQL and MySQL InnoDB use MVCC — it's why you can do SELECT while a transaction is updating the same rows.</div>
     </div>
     <div class="note-item" data-section="indexing">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Database Indexes</div></div>
-      <div class="note-body">An index is like a book's index — find matching rows without scanning the whole table. Without an index on "email", finding one user in 100M rows scans all 100M. With an index: milliseconds. Cost: every write must also update the index.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">B-Tree vs LSM Tree</div></div>
+      <div class="note-body">B-Tree (PostgreSQL, MySQL): tree structure optimized for reads. Data stored in sorted order on disk. Fast reads and point lookups. Writes update in place — can cause write amplification. LSM Tree (Cassandra, RocksDB, LevelDB): writes go to memory first (fast), then flush to disk sorted. Reads may need to check multiple levels. Excellent write throughput. Used when write-heavy workloads dominate.</div>
+    </div>
+    <div class="note-item" data-section="indexing">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Composite & Covering Index</div></div>
+      <div class="note-body">Composite index: index on multiple columns — (user_id, created_at) speeds up "WHERE user_id = X ORDER BY created_at". The order of columns matters. Covering index: the index contains ALL columns needed by the query — the DB never reads the actual table row (index-only scan). Example: index on (user_id, email, name) covers SELECT email, name WHERE user_id = X without touching the table.</div>
+    </div>
+    <div class="note-item" data-section="timeseries">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Time-Series Databases</div></div>
+      <div class="note-body">Time-series data = measurements over time: CPU usage every 10s, stock prices every millisecond. Regular databases struggle because: data arrives in time order (good for append), queries always filter by time range, and you need to downsample (store per-second for a day, per-minute for a month). InfluxDB, TimescaleDB (PostgreSQL extension), Prometheus (for metrics) are purpose-built for this.</div>
+    </div>
+    <div class="note-item" data-section="blob">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Object vs Block vs File Storage</div></div>
+      <div class="note-body">Object storage (S3, GCS): store files as objects with metadata. Cheap, infinitely scalable, HTTP-accessible. Cannot edit in place — must overwrite the whole object. Perfect for images, videos, backups. Block storage (EBS): acts like a hard drive attached to a server. Fast random access. Used for databases. File storage (EFS, NFS): shared file system mounted by multiple servers. Used for shared config files, media processing.</div>
     </div>
     </div>
   </aside>

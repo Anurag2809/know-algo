@@ -1474,24 +1474,52 @@ def handle_webhook():
     <div class="notes-sticky">
     <div class="notes-heading">Clarifications</div>
     <div class="note-item" data-section="rest">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">REST APIs</div></div>
-      <div class="note-body">REST uses HTTP verbs (GET/POST/PUT/DELETE) on noun URLs (/users, /orders). It's stateless — each request carries all context needed. Most public APIs are REST because it's simple, well-understood, and cacheable. "RESTful" is a convention, not a strict spec.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">HTTP Methods</div></div>
+      <div class="note-body">GET: retrieve data — must be safe (no side effects) and idempotent. POST: create a resource — not idempotent (two POSTs create two resources). PUT: replace a full resource — idempotent. PATCH: partially update a resource. DELETE: remove a resource — idempotent. Rule of thumb: PUT/DELETE/GET should be idempotent; POST is not.</div>
+    </div>
+    <div class="note-item" data-section="rest">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Idempotency</div></div>
+      <div class="note-body">An operation is idempotent if calling it once vs. 100 times produces the same result. GET /users/1 is idempotent. DELETE /users/1 is idempotent (first call deletes, subsequent calls get 404 — same final state). POST /orders is NOT idempotent — each call creates a new order. Critical for retries: if a network request fails, safe to retry only idempotent operations.</div>
+    </div>
+    <div class="note-item" data-section="rest">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">HTTP Status Codes</div></div>
+      <div class="note-body">2xx = success: 200 OK, 201 Created, 204 No Content. 3xx = redirect: 301 Permanent, 302 Temporary. 4xx = client error (your fault): 400 Bad Request, 401 Unauthorized (not logged in), 403 Forbidden (logged in but no permission), 404 Not Found, 409 Conflict, 429 Too Many Requests. 5xx = server error (our fault): 500 Internal Server Error, 503 Service Unavailable.</div>
     </div>
     <div class="note-item" data-section="graphql">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">GraphQL</div></div>
-      <div class="note-body">GraphQL lets the client ask for exactly the fields it needs — no over-fetching (20 fields when you need 3) or under-fetching (needing 3 API calls to get related data). Trade-off: harder to cache than REST, and N+1 query problems need explicit batching.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">GraphQL N+1 Problem</div></div>
+      <div class="note-body">N+1: fetching 10 posts triggers 10 separate DB queries to get each post's author — 1 query for posts + N queries for authors = N+1 queries. In REST, this is solved by JOINs. In GraphQL, solvers (resolvers) run independently, so naive implementations hit the DB once per item. Fix: DataLoader — batches all author lookups into one query using an in-memory queue that flushes between event loop ticks.</div>
     </div>
     <div class="note-item" data-section="grpc">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">gRPC</div></div>
-      <div class="note-body">gRPC uses Protocol Buffers (binary) instead of JSON (text). Binary is ~5–10× smaller and faster to parse. It also supports streaming — the server pushes a stream of updates, not just one response. Used for internal service-to-service calls where latency matters.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Protocol Buffers (Protobuf)</div></div>
+      <div class="note-body">Protobuf is a binary serialization format. You define your data schema in a .proto file, and a code generator creates typed classes in your language. JSON: {"user_id": 1234, "name": "Alice"} = 28 bytes as text. Same data in Protobuf: ~5 bytes binary. 5–10x smaller and 10–100x faster to serialize/deserialize. Trade-off: not human-readable, requires schema file to decode.</div>
+    </div>
+    <div class="note-item" data-section="grpc">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">HTTP/2 vs HTTP/1.1</div></div>
+      <div class="note-body">HTTP/1.1: one request per connection at a time (without pipelining). Browsers open 6 parallel connections to work around this. HTTP/2: multiplexing — multiple requests/responses over one TCP connection simultaneously. gRPC requires HTTP/2. HTTP/2 also adds header compression and server push. HTTP/3 replaces TCP with QUIC (UDP-based) for even less connection setup latency.</div>
     </div>
     <div class="note-item" data-section="websocket">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">WebSockets</div></div>
-      <div class="note-body">WebSockets keep a persistent connection open so either side can send messages any time — unlike HTTP where the server can only respond. Used for chat, live dashboards, multiplayer games. Scaling challenge: one user's connection lives on one server permanently (sticky sessions).</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">WebSocket vs SSE vs Long Polling</div></div>
+      <div class="note-body">Long polling: client sends a request, server holds it open until there's data or timeout, then client immediately polls again. Works everywhere, wastes connections. SSE (Server-Sent Events): server pushes events to client over HTTP. One-directional (server → client only), simpler than WebSocket. WebSocket: fully bidirectional persistent connection. Use SSE for notifications/feeds (client doesn't send data); WebSocket for chat or gaming (bidirectional).</div>
+    </div>
+    <div class="note-item" data-section="webhooks">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Webhooks vs Polling</div></div>
+      <div class="note-body">Polling: your server asks an external API "do you have updates?" every N seconds. Simple but wasteful. Webhook: the external API calls YOUR endpoint when something happens. Efficient — you're notified only when there's data. Challenge: your endpoint must be publicly accessible, must handle retries (external service will retry if your server is down), and must verify the request is genuine (HMAC signature).</div>
     </div>
     <div class="note-item" data-section="api-gateway">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">API Gateway</div></div>
-      <div class="note-body">An API gateway is a single entry point in front of all services. It handles auth, rate limiting, SSL, routing, and logging — so individual services don't each implement those. Think of it as a security guard + traffic director at the building entrance.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Reverse Proxy vs API Gateway</div></div>
+      <div class="note-body">Reverse proxy (Nginx, HAProxy): forwards requests to backend servers. Handles SSL termination, caching, load balancing. No awareness of your API semantics. API Gateway (Kong, AWS API Gateway, Envoy): a smart reverse proxy that additionally handles auth (JWT validation), rate limiting, request transformation, response aggregation, analytics, and developer portal. Every microservices architecture needs one.</div>
+    </div>
+    <div class="note-item" data-section="security">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">JWT (JSON Web Token)</div></div>
+      <div class="note-body">A JWT is three Base64-encoded parts separated by dots: Header.Payload.Signature. Header: algorithm used (RS256). Payload: claims — user_id, role, expiry time. Signature: cryptographic proof that the token hasn't been tampered with. The server verifies the signature on every request without hitting the database. Stateless auth. Risk: JWTs can't be invalidated before expiry — use short TTLs (15 minutes) and refresh tokens.</div>
+    </div>
+    <div class="note-item" data-section="security">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">OAuth 2.0 Flow</div></div>
+      <div class="note-body">OAuth 2.0 lets a user grant your app access to their data on another service without sharing their password. Example: "Log in with Google." Steps: 1) Your app redirects user to Google with a scope. 2) User consents. 3) Google redirects back with an authorization code. 4) Your server exchanges the code for an access token. 5) Use the token to call Google APIs. The user never gives you their Google password.</div>
+    </div>
+    <div class="note-item" data-section="service-to-service">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">mTLS (Mutual TLS)</div></div>
+      <div class="note-body">Regular TLS: client verifies the server's certificate (you trust the bank's website). mTLS: both sides verify each other's certificates. In microservices, each service has its own certificate. Service A proves to Service B that it's really Service A, not a malicious insider. Used in zero-trust architectures and service meshes (Istio manages mTLS automatically between all pods).</div>
     </div>
     </div>
   </aside>

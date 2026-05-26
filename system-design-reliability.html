@@ -1242,24 +1242,48 @@ groups:
     <div class="notes-sticky">
     <div class="notes-heading">Clarifications</div>
     <div class="note-item" data-section="slo-sli-sla">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">SLO / SLI / SLA</div></div>
-      <div class="note-body">SLI = the metric you measure (e.g., % requests succeeding). SLO = the target (e.g., 99.9%). SLA = the legal contract with consequences if SLO is missed. Error budget = 100% − SLO. If you burn through it too fast, freeze new deployments until the budget recovers.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">MTTR vs MTBF</div></div>
+      <div class="note-body">MTBF (Mean Time Between Failures): average time between incidents. Higher = more reliable. MTTR (Mean Time To Recovery/Repair): average time to restore service after an incident. Lower = faster recovery. Both matter: a system with MTBF of 1 year but MTTR of 3 days is worse than one with MTBF of 1 month but MTTR of 5 minutes. Optimize both; don't just prevent failures — also get fast at recovering.</div>
+    </div>
+    <div class="note-item" data-section="slo-sli-sla">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">RTO vs RPO</div></div>
+      <div class="note-body">RTO (Recovery Time Objective): maximum acceptable downtime. "We must be back online within 4 hours." Drives: hot standby vs cold standby, replication strategy. RPO (Recovery Point Objective): maximum acceptable data loss. "We can lose at most 1 hour of data." Drives: backup frequency, replication lag limits. Lower RTO/RPO = more expensive infrastructure. Define these before designing your disaster recovery plan.</div>
     </div>
     <div class="note-item" data-section="nines">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">The Nines</div></div>
-      <div class="note-body">99% = 3.6 days downtime/year. 99.9% = 8.7 hours. 99.99% = 52 minutes. 99.999% = 5 minutes. Each extra 9 is ~10× harder and more expensive. Most services need 99.9%–99.99%. Ask: what's the actual business cost per hour of downtime vs. the cost of achieving 99.999%?</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Error Budget</div></div>
+      <div class="note-body">Error budget = 100% − SLO. If your SLO is 99.9%, your error budget is 0.1% = 8.7 hours/year. This budget belongs to engineering — spend it on risky deployments, experiments, and new features. If the budget is exhausted (too many incidents), freeze deployments until it refills. If the budget is underused, you're being too conservative — ship more. Error budgets turn SLOs into a management tool, not just a metric.</div>
+    </div>
+    <div class="note-item" data-section="failure-modes">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Four Golden Signals</div></div>
+      <div class="note-body">From Google's SRE book: Latency (how long requests take — track p50, p99, p999, not just averages), Traffic (how many requests per second), Errors (rate of failed requests — 5xx, timeouts), Saturation (how "full" your service is — CPU %, memory %, queue depth). Monitor all four. An anomaly in any one is a leading indicator of an incident.</div>
     </div>
     <div class="note-item" data-section="circuit-breaker">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Circuit Breaker</div></div>
-      <div class="note-body">Named after electrical circuit breakers. When enough calls to a downstream service fail, the circuit "opens" — new calls fail immediately without trying. After a wait, a few test calls go through ("half-open"). If they succeed, the circuit "closes" again. Prevents one slow service from dragging everything else down.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Circuit Breaker States</div></div>
+      <div class="note-body">CLOSED (normal): requests pass through, failures counted. OPEN (failing): requests immediately rejected without trying the downstream service — fast failure instead of slow failure. After a timeout, moves to HALF-OPEN. HALF-OPEN (testing recovery): a few test requests pass through. If they succeed, circuit CLOSES again. If they fail, circuit OPENS again. Libraries: Resilience4j (Java), polly (.NET), pybreaker (Python).</div>
     </div>
     <div class="note-item" data-section="bulkhead">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Bulkhead Isolation</div></div>
-      <div class="note-body">Named after watertight compartments in a ship — one flooding doesn't sink it. In software: give each downstream dependency its own thread pool or connection pool. If payments is slow and exhausts its pool, the user profile service still has its own pool and keeps working.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Thread Pool Isolation</div></div>
+      <div class="note-body">Without bulkheads: one slow downstream service exhausts the shared thread pool, blocking ALL other requests too. With bulkheads: each downstream service gets its own bounded thread pool (e.g., 20 threads for payments, 20 for inventory). If payments is slow and all 20 payment threads are waiting, inventory threads are unaffected. Hystrix (Netflix, now deprecated) popularized this. Now done with Resilience4j or Envoy.</div>
+    </div>
+    <div class="note-item" data-section="retry-timeout">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Retry Storms</div></div>
+      <div class="note-body">Retry storms happen when many clients simultaneously retry failed requests, multiplying load on an already struggling service. Example: 1000 clients fail, all retry after 1 second → service gets 1000 simultaneous retries → overwhelmed again → all retry → cascading failure. Fix: exponential backoff (1s, 2s, 4s, 8s...) + jitter (add random 0–1s to each delay so retries spread out in time).</div>
+    </div>
+    <div class="note-item" data-section="health-checks">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Liveness vs Readiness vs Startup Probes</div></div>
+      <div class="note-body">Kubernetes has three probe types. Liveness: is the pod alive? If it fails, Kubernetes kills and restarts the pod. Readiness: is the pod ready to receive traffic? If it fails, the pod is removed from the load balancer (but not restarted). Startup: is the app still initializing? Prevents liveness from killing pods that take a long time to start. Always implement all three in production services.</div>
     </div>
     <div class="note-item" data-section="chaos">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Chaos Engineering</div></div>
-      <div class="note-body">Chaos engineering deliberately causes failures in production to find weaknesses before real incidents do. Netflix's Chaos Monkey randomly kills servers. The philosophy: your system WILL fail eventually — better to discover how during a planned experiment than unexpectedly at 3 AM.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Blast Radius</div></div>
+      <div class="note-body">Blast radius = how much of your system can break if an experiment or change goes wrong. Chaos engineering principle: start small. First test: kill one pod in staging. Later: kill one availability zone in prod. Never: kill all instances globally. Keep blast radius small and increase gradually as confidence builds. Use feature flags to limit impact and have a kill switch ready before starting any experiment.</div>
+    </div>
+    <div class="note-item" data-section="multi-region">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Active-Passive vs Active-Active</div></div>
+      <div class="note-body">Active-passive: one region handles all traffic; the other is a standby that takes over if primary fails. Simpler, but failover takes time (DNS propagation, database promotion) and standby capacity is wasted. Active-active: both regions handle traffic simultaneously. Zero downtime failover. Harder: need to handle data consistency across regions, avoid double-writes, and route users to the right region.</div>
+    </div>
+    <div class="note-item" data-section="multi-region">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">DNS Failover</div></div>
+      <div class="note-body">DNS failover: your DNS record points to Region A. If Region A health checks fail, the DNS record automatically updates to point to Region B. Challenge: DNS TTL. If TTL is 300 seconds, users who cached the old IP are stuck pointing at the failing region for up to 5 minutes. Use low TTL (30–60s) for services that need fast failover. AWS Route 53 health checks can trigger failover within 1 minute.</div>
     </div>
     </div>
   </aside>

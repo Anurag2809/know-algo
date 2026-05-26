@@ -1281,36 +1281,56 @@ model.fit(X, y)</code></pre>
     <div class="notes-sticky">
     <div class="notes-heading">Clarifications</div>
     <div class="note-item" data-section="fundamentals">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Batch vs Stream</div></div>
-      <div class="note-body">"Bounded" data has an end (a file, yesterday's logs). "Unbounded" data is a live stream with no end. Watermarks tell the engine "time has advanced this far" — without them, you'd wait forever to close a time window. Streaming is ~10× more expensive to operate than batch.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Bounded vs Unbounded Data</div></div>
+      <div class="note-body">"Bounded" data has a defined beginning and end — a file, a database table, yesterday's logs. "Unbounded" data is a continuous stream with no end — live click events, sensor readings, stock prices. Batch processing works with bounded data. Stream processing works with unbounded data. Many real-world datasets look unbounded (live events) but must be processed with batch semantics (daily reports) — that's the core tension.</div>
+    </div>
+    <div class="note-item" data-section="fundamentals">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Event Time vs Processing Time</div></div>
+      <div class="note-body">Event time: when the event actually occurred (stored in the event payload). Processing time: when your pipeline sees the event. A mobile app event created at 11:59 PM might reach your pipeline at 1:00 AM due to an offline phone. If you use processing time for hourly aggregations, that event goes in the 1 AM bucket, not the 11 PM bucket — wrong result. Always prefer event time for analytics; use processing time only for simple alerting.</div>
+    </div>
+    <div class="note-item" data-section="fundamentals">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Watermarks</div></div>
+      <div class="note-body">A watermark W(t) is the engine's assertion: "I've seen all events with event_time < t." When W(t) advances past a window's end time, the engine closes that window and emits results. Without watermarks, the engine doesn't know when a time window is "done" — it'd wait forever. Choosing the right max-lateness (how long to wait for late data) is the key tuning parameter: too low = late data dropped; too high = high latency.</div>
     </div>
     <div class="note-item" data-section="architectures">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Lambda vs Kappa</div></div>
-      <div class="note-body">Lambda ≠ AWS Lambda. Named after lambda calculus (combining two functions). The problem: you implement the same business logic twice — once in Spark batch, once in Flink stream. Kappa simplifies to one stream job that replays Kafka from offset 0 for historical reprocessing.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Lambda vs Kappa Trade-offs</div></div>
+      <div class="note-body">Lambda: two separate systems (batch + stream) with a serving layer that merges results. The batch system corrects any errors in the stream system's fast-but-approximate results. Operational nightmare: two codebases doing the same thing. Kappa: one stream system. For reprocessing (fixing historical data), replay Kafka from offset 0 with a new job version. Requirement: Kafka must retain full history — can be expensive at petabyte scale.</div>
     </div>
     <div class="note-item" data-section="etl-elt">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">ETL vs ELT</div></div>
-      <div class="note-body">ETL transforms before loading (separate compute cluster). ELT loads raw data first, transforms inside the warehouse using SQL. ELT won because cloud warehouses (BigQuery, Snowflake) have cheap compute. dbt = "data build tool" — just SQL SELECT statements materialized as tables.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">dbt Models</div></div>
+      <div class="note-body">dbt organizes SQL transformations into three layers: Staging (stg_*): raw data cleaned and typed, one model per source table. Intermediate (int_*): joins and business logic. Marts (fct_*, dim_*): final fact and dimension tables consumed by BI tools. Each model is a SELECT statement. dbt resolves dependencies using ref() — ref("stg_orders") creates a dependency edge, and dbt runs models in the correct order.</div>
     </div>
     <div class="note-item" data-section="spark">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Apache Spark</div></div>
-      <div class="note-body">Spark's breakthrough: keep intermediate data in memory between processing steps instead of writing to disk (unlike Hadoop MapReduce). A "shuffle" = data moving across machines for GROUP BY or JOIN. Shuffles are the #1 bottleneck — they send data over the network.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Spark RDD vs DataFrame</div></div>
+      <div class="note-body">RDD (Resilient Distributed Dataset): low-level API, treat data as distributed Python objects. Flexible but optimizer-blind — Spark can't optimize your code. DataFrame: high-level API with a schema. Spark's Catalyst optimizer can reorder operations, push filters down, choose join strategies. Always prefer DataFrame/Dataset API over RDD. SparkSQL: run SQL queries on DataFrames. Photon (Databricks): C++ vectorized engine that runs DataFrames faster.</div>
+    </div>
+    <div class="note-item" data-section="spark">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Spark Shuffle</div></div>
+      <div class="note-body">Shuffle = redistributing data across machines so that rows with the same key end up on the same machine (required for GROUP BY, JOIN, DISTINCT). This sends data over the network — the most expensive operation in Spark. Avoid unnecessary shuffles by: filtering data early (push WHERE before JOIN), using broadcast joins for small tables (sends the small table to every executor instead of shuffling the big one), and persisting DataFrames that are reused.</div>
     </div>
     <div class="note-item" data-section="flink">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Apache Flink</div></div>
-      <div class="note-body">Flink processes one event at a time, not micro-batches. "Windows" group events by time (all purchases in 10 minutes). "State" is per-key memory between events (running count per user). "Checkpoint" = save state to S3 so recovery restarts without reprocessing all history from scratch.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Flink State & Checkpointing</div></div>
+      <div class="note-body">Flink keeps "state" per key — like a per-user running count that persists between events. For large state, Flink uses RocksDB (a disk-backed key-value store embedded in each TaskManager) instead of heap memory. Checkpointing: every N seconds (e.g., 60s), Flink takes a consistent snapshot of all state and saves to S3. If a job crashes, it restarts from the last checkpoint — losing at most N seconds of work.</div>
+    </div>
+    <div class="note-item" data-section="flink">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Flink Windows</div></div>
+      <div class="note-body">Tumbling window: fixed-size, non-overlapping slices of time — [0–10min], [10–20min]. Each event belongs to exactly one window. Sliding window: overlapping slices — [0–10min], [5–15min], [10–20min]. One event may appear in multiple windows. Session window: groups events separated by less than a gap duration (e.g., 30min idle = new session). Tumbling is most common for aggregations; session for user behavior analytics.</div>
     </div>
     <div class="note-item" data-section="lakehouse">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Data Lakehouse</div></div>
-      <div class="note-body">A lakehouse = data lake (cheap S3 storage) + warehouse features (ACID transactions, time travel, schema enforcement). Parquet is a columnar file format — reads only the columns you need. Iceberg/Delta add a metadata layer so S3 files behave like a proper database table.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Parquet vs Avro vs ORC</div></div>
+      <div class="note-body">Parquet: columnar format — great for analytics queries that read only a few columns from many rows. Standard for data lakes. Avro: row-based format — better for streaming (writing one record at a time), Kafka serialization, and schema evolution. ORC: columnar format used by Hive, slightly better compression than Parquet in some benchmarks. Rule: Parquet for storage and analytics; Avro for Kafka messages and event streams.</div>
+    </div>
+    <div class="note-item" data-section="lakehouse">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Iceberg Time Travel</div></div>
+      <div class="note-body">Iceberg keeps a history of all snapshots (every write creates a new snapshot). Time travel: SELECT * FROM table AS OF TIMESTAMP '2024-01-15' — returns data as it was at that point in time. Uses: auditing, debugging ("what did the data look like when the model trained?"), comparing before/after a pipeline run. Snapshots are retained for a configurable period (default 5 days); older ones are expired by maintenance jobs.</div>
     </div>
     <div class="note-item" data-section="orchestration">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Orchestration & DAGs</div></div>
-      <div class="note-body">DAG = Directed Acyclic Graph — a task dependency map with no loops: "task B runs after task A." Airflow doesn't run your computation; it schedules and monitors it. Backfill = re-running past dates after adding a new pipeline that needs years of history computed.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Airflow vs Prefect vs Dagster</div></div>
+      <div class="note-body">Airflow (2015): most widely deployed, massive operator ecosystem, but scheduler can be a bottleneck and DAG definition is code-heavy. Prefect (2018): Python-native, dynamic workflows (DAGs defined at runtime), better error messages, hybrid cloud execution. Dagster (2019): asset-centric — you define "what data assets exist" not just "what tasks run." Built-in data quality testing and lineage. New projects in 2024: Dagster or Prefect. Existing Airflow: upgrade to Airflow 2.x.</div>
     </div>
     <div class="note-item" data-section="quality">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Data Lineage</div></div>
-      <div class="note-body">Data lineage = the family tree of a dashboard number. "This metric → this warehouse table → built from these raw tables → loaded from this database." Without lineage, when a number looks wrong you can't trace where it came from. The data equivalent of a stack trace.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Schema Evolution</div></div>
+      <div class="note-body">Schema evolution = changing the structure of your data over time (adding columns, renaming fields). Backward-compatible change: add a nullable column — old consumers don't break. Breaking change: rename a column — consumers expecting the old name fail. Kafka Schema Registry (Confluent) enforces compatibility rules: BACKWARD = new schema can read old data; FORWARD = old schema can read new data; FULL = both. Always check compatibility before deploying a schema change.</div>
     </div>
     </div>
   </aside>

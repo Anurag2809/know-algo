@@ -1438,20 +1438,52 @@ return {current, 1}  -- allowed</code></pre>
     <div class="notes-sticky">
     <div class="notes-heading">Clarifications</div>
     <div class="note-item" data-section="load-balancing">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Load Balancing</div></div>
-      <div class="note-body">A load balancer routes requests across multiple servers — like multiple checkout lanes sharing a queue. Without it, one server handles everything while others sit idle. It also detects unhealthy servers and stops sending them traffic.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">TCP vs UDP</div></div>
+      <div class="note-body">TCP (Transmission Control Protocol) guarantees ordered, reliable delivery — think of it like certified mail. UDP (User Datagram Protocol) is faster but unreliable — like dropping a postcard, no guarantee it arrives. Most web traffic uses TCP. Load balancers operating at Layer 4 route TCP/UDP by IP+port; Layer 7 load balancers read HTTP headers to make smarter decisions.</div>
+    </div>
+    <div class="note-item" data-section="load-balancing">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">ALB vs NLB (AWS)</div></div>
+      <div class="note-body">ALB = Application Load Balancer — operates at Layer 7 (HTTP). Reads URLs, headers, and cookies to route traffic. Slightly slower but smarter. NLB = Network Load Balancer — operates at Layer 4 (TCP/UDP). Blindingly fast (millions of req/s), preserves source IP, used for gaming, IoT, gRPC. For most web apps: ALB. For extreme throughput: NLB.</div>
+    </div>
+    <div class="note-item" data-section="load-balancing">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Load Balancing Algorithms</div></div>
+      <div class="note-body">Round-robin: send request 1 to server A, 2 to B, 3 to C, repeat. Simple but ignores server load. Least-connections: route to whichever server has fewest active connections — better for uneven workloads. Weighted: server A gets 70% of traffic (more powerful hardware). IP hash: same client IP always hits the same server — used for sticky sessions without cookies.</div>
+    </div>
+    <div class="note-item" data-section="load-balancing">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Health Checks</div></div>
+      <div class="note-body">A load balancer sends periodic pings to each server (e.g., HTTP GET /health every 5 seconds). If a server fails 3 consecutive checks, it's removed from the pool. When it recovers and passes checks, it's added back. Without health checks, the load balancer sends traffic to dead servers and users get errors.</div>
     </div>
     <div class="note-item" data-section="rate-limiting">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Rate Limiting</div></div>
-      <div class="note-body">Rate limiting caps how many requests a client can make per time window. Without it, one misbehaving client could flood your service and crash it for everyone. The "token bucket" refills at a steady rate — you can burst briefly, then you're throttled.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Token Bucket vs Leaky Bucket</div></div>
+      <div class="note-body">Token Bucket: imagine a bucket that refills at a fixed rate (e.g., 10 tokens/second, max 100). Each request consumes one token. If empty, request is rejected. Allows bursting up to bucket size. Leaky Bucket: requests pour in at any rate but leak out at a fixed rate — smooths traffic to a constant output rate. Token bucket is more common in APIs because it allows short bursts.</div>
+    </div>
+    <div class="note-item" data-section="rate-limiting">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Sliding Window Counter</div></div>
+      <div class="note-body">Fixed window: count requests per minute. Problem: a user sends 100 req at 0:59 and 100 more at 1:01 — technically 200 req in 2 seconds but both windows show 100. Sliding window: track exact timestamps of each request and count those in the last 60 seconds. More accurate but uses more memory. Redis sorted sets make sliding windows efficient.</div>
+    </div>
+    <div class="note-item" data-section="rate-limiting">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What to Rate Limit By</div></div>
+      <div class="note-body">By IP address: anonymous users, DDoS prevention. Simple but easily bypassed (VPNs, shared IPs in offices). By user ID / API key: authenticated users get their own quota. By endpoint: stricter limits on expensive operations (POST /search) than cheap ones (GET /status). Production systems layer multiple: global IP limit + per-user limit + per-endpoint limit.</div>
     </div>
     <div class="note-item" data-section="consistent-hashing">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Consistent Hashing</div></div>
-      <div class="note-body">Normal hashing: remove a server → almost every cache key remaps → mass cache misses. Consistent hashing: servers sit on a "ring" so removing one only remaps ~1/N keys. This is why Redis Cluster, Cassandra, and DynamoDB use it.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">The Hash Ring</div></div>
+      <div class="note-body">Imagine a clock face (0–360°). Hash each server to a position on the ring. To route a request, hash the request key and find the nearest server clockwise. Adding a server: only the requests between it and the previous server reroute — not everyone. Without consistent hashing, adding one server to N remaps N/(N+1) of all keys.</div>
+    </div>
+    <div class="note-item" data-section="consistent-hashing">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Virtual Nodes</div></div>
+      <div class="note-body">Problem with basic consistent hashing: with 3 servers, each occupies 1/3 of the ring but actual positions may be uneven, causing one server to handle 50% of traffic. Fix: virtual nodes — each physical server gets 150 virtual positions on the ring. Load is distributed far more evenly. Cassandra defaults to 256 virtual nodes per server.</div>
     </div>
     <div class="note-item" data-section="auto-scaling">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Auto-Scaling</div></div>
-      <div class="note-body">Scaling takes minutes (spin up a VM) but spikes happen in seconds. That's why you scale proactively based on predicted load, not just reactively when alarms fire. Cooldown periods prevent rapid add/remove oscillation.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Scale-Out vs Scale-Up</div></div>
+      <div class="note-body">Scale-up (vertical): make one server bigger — more CPU, more RAM. Simple, no code changes, but has a ceiling (you can't add infinite RAM to one machine) and has a single point of failure. Scale-out (horizontal): add more servers. More complex (needs load balancer, stateless design) but unlimited ceiling and no single point of failure. Cloud systems prefer scale-out.</div>
+    </div>
+    <div class="note-item" data-section="auto-scaling">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">HPA, VPA, KEDA (Kubernetes)</div></div>
+      <div class="note-body">HPA = Horizontal Pod Autoscaler: scales pod count based on CPU/memory or custom metrics. VPA = Vertical Pod Autoscaler: adjusts CPU/memory requests for existing pods. KEDA = Kubernetes Event-Driven Autoscaler: scales based on queue depth, Kafka consumer lag, or any external metric. Most production Kubernetes uses HPA with KEDA for event-driven workloads.</div>
+    </div>
+    <div class="note-item" data-section="auto-scaling">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">ASG / Auto Scaling Group (AWS)</div></div>
+      <div class="note-body">An ASG is an AWS group of EC2 instances that automatically adds or removes servers based on CloudWatch alarms (CPU > 70% → add one server, CPU < 30% → remove one). Define: min size, max size, desired capacity. Pair with an ALB to automatically add new instances to the load balancer pool. Equivalent: GCP Managed Instance Groups, Azure VM Scale Sets.</div>
     </div>
     </div>
   </aside>

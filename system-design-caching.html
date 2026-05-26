@@ -1235,24 +1235,52 @@ Characteristics:
     <div class="notes-sticky">
     <div class="notes-heading">Clarifications</div>
     <div class="note-item" data-section="l1-cache">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">In-Process Cache (L1)</div></div>
-      <div class="note-body">L1 is memory inside your app process — a Python dict or Java HashMap. Zero network hops = nanosecond reads. Downside: local to one server. If 10 app servers each have L1, a warm cache on server A is invisible to server B.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is a Cache?</div></div>
+      <div class="note-body">A cache is a fast storage layer that saves the result of expensive operations (DB queries, API calls, complex computations) so future requests get the result instantly instead of re-doing the work. The trade-off: cached data may be stale (out of date). Good caches have strategies for when to expire or invalidate data.</div>
     </div>
     <div class="note-item" data-section="l2-cache">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Redis / Shared Cache (L2)</div></div>
-      <div class="note-body">Redis is a shared cache outside your app. All 10 servers query the same Redis — one server warms the cache that all others benefit from. Slower than L1 (milliseconds over the network), but shared across your whole fleet.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Redis vs Memcached</div></div>
+      <div class="note-body">Both are in-memory key-value caches, but Redis is a superset. Redis adds: data structures (lists, sorted sets, hashes), persistence (survive restarts), pub/sub messaging, Lua scripting, and cluster mode. Memcached: simpler, slightly faster for pure get/set, multi-threaded. In 2024, almost everyone uses Redis. Memcached is legacy unless you have a very specific reason.</div>
+    </div>
+    <div class="note-item" data-section="l2-cache">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Redis Persistence: RDB vs AOF</div></div>
+      <div class="note-body">Redis is in-memory, so it loses data on crash unless configured for persistence. RDB (Redis Database): snapshot of all data every N minutes. Fast restarts, some data loss between snapshots. AOF (Append-Only File): log every write command. Slower restarts, near-zero data loss. Production: run both — AOF for durability, RDB for fast recovery.</div>
+    </div>
+    <div class="note-item" data-section="l3-cdn">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">CDN: What Is It?</div></div>
+      <div class="note-body">CDN = Content Delivery Network. A global network of servers ("edge servers") positioned close to users. Instead of every user downloading your JavaScript bundle from your server in Virginia, users in Tokyo get it from a CDN edge server in Tokyo — 10ms instead of 200ms. Cloudflare, AWS CloudFront, Fastly, and Akamai are the major CDN providers.</div>
+    </div>
+    <div class="note-item" data-section="l3-cdn">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Edge Server vs Origin Server</div></div>
+      <div class="note-body">Origin server: your actual backend server where your app runs. Edge server: a CDN server geographically close to the user that stores cached copies of your content. When a user requests a file, the CDN checks its edge server first (cache hit = fast). If not cached (cache miss), the edge fetches from origin, caches it, and returns it. Subsequent requests to that edge are instant.</div>
     </div>
     <div class="note-item" data-section="cache-aside">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Cache-Aside Pattern</div></div>
-      <div class="note-body">Your code checks the cache first. On a miss: fetch from DB, store in cache, return result. Simple and explicit. The risk: if many requests miss simultaneously on a cold cache, they all hit the DB at once ("stampede").</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Cache Hit vs Cache Miss</div></div>
+      <div class="note-body">Cache hit: the data is in the cache → return immediately (fast). Cache miss: the data is NOT in the cache → fetch from DB, store in cache, return (slow for this first request). Hit rate = hits / (hits + misses). A well-tuned cache has >95% hit rate. Low hit rate means your cache isn't effective — usually a TTL too short or cache too small.</div>
+    </div>
+    <div class="note-item" data-section="write-strategies">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Write-Through vs Write-Back</div></div>
+      <div class="note-body">Write-through: write to cache AND database at the same time. Data is always consistent, but writes are slow (wait for both). Write-back (write-behind): write to cache only, then asynchronously flush to DB later. Writes are fast, but if the cache crashes before flushing, you lose data. Write-through for financial data; write-back for logs or analytics where some loss is acceptable.</div>
     </div>
     <div class="note-item" data-section="invalidation">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Cache Invalidation</div></div>
-      <div class="note-body">"There are only two hard things in CS: cache invalidation and naming things." Forgetting to invalidate means users see stale data. TTL automates expiry but allows some staleness. The right TTL balances freshness against database load.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">TTL (Time To Live)</div></div>
+      <div class="note-body">TTL = how long a cached entry lives before expiring. After TTL expires, the next request is a cache miss and fetches fresh data. Short TTL (seconds): fresh data but more DB load. Long TTL (hours/days): stale data risk but fewer DB hits. There's no universal right answer — pick TTL based on how often the underlying data actually changes.</div>
+    </div>
+    <div class="note-item" data-section="eviction">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">LRU / LFU / FIFO</div></div>
+      <div class="note-body">When the cache is full and a new item arrives, something must be evicted. LRU (Least Recently Used): evict the item not accessed for the longest time. Most common — works well for most workloads. LFU (Least Frequently Used): evict the item accessed the fewest times total. Better for skewed access patterns. FIFO: evict the oldest item regardless of access. Simple but often wrong choice.</div>
     </div>
     <div class="note-item" data-section="stampede">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Cache Stampede</div></div>
-      <div class="note-body">A stampede: a popular cache entry expires → thousands of requests simultaneously miss the cache → all hit the database at once. Fix: probabilistic early expiration (refresh before TTL), or a mutex so only one request refreshes while others wait.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Cache Warming</div></div>
+      <div class="note-body">Cold cache: after a deploy or server restart, the cache is empty. Every request is a miss → DB is hammered → service may be slow or crash. Cache warming = pre-loading the cache with data before going live. Strategies: replay recent traffic logs, batch-load hot keys on startup, or use a separate warming process that runs before traffic is routed to the new instance.</div>
+    </div>
+    <div class="note-item" data-section="cdn-patterns">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Cache-Control HTTP Header</div></div>
+      <div class="note-body">The Cache-Control header tells browsers and CDNs how to cache a response. max-age=3600 = cache for 1 hour. no-cache = always revalidate with server before using cache. no-store = never cache (sensitive data). public = CDNs can cache this. private = only the browser should cache (user-specific data). This is how you control CDN behavior per-resource without touching CDN config.</div>
+    </div>
+    <div class="note-item" data-section="stampede">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Hot Key Problem</div></div>
+      <div class="note-body">A hot key is a single cache key that gets millions of requests per second (e.g., a celebrity's profile). Even Redis can struggle with a single key getting too much traffic. Solutions: local in-process cache for ultra-hot keys (L1 cache for the celebrity's data), key replication (store the same data under N keys and randomly pick one), or add a short sleep before the request to spread timing.</div>
     </div>
     </div>
   </aside>

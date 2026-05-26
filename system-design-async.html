@@ -1329,24 +1329,48 @@ class OrderSagaOrchestrator:
     <div class="notes-sticky">
     <div class="notes-heading">Clarifications</div>
     <div class="note-item" data-section="queue-vs-stream">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Queue vs Event Stream</div></div>
-      <div class="note-body">A queue is a to-do list: each message is consumed once, then deleted. A stream (Kafka) is a permanent log: messages are kept and multiple consumers independently read from any point. Queue = task distribution. Stream = event sourcing and audit trails.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Message Broker vs Event Broker</div></div>
+      <div class="note-body">Message broker (RabbitMQ, SQS): focus on routing messages to consumers. Message deleted after acknowledged. Good for task queues where each task is done by one worker. Event broker (Kafka, Kinesis): focus on durable, replayable event logs. Messages kept for days/weeks. Multiple consumer groups read independently. Good for event sourcing, audit logs, and feeding multiple systems.</div>
     </div>
     <div class="note-item" data-section="kafka">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Apache Kafka</div></div>
-      <div class="note-body">Kafka is a distributed, append-only log. Each "topic" has numbered entries (offsets). Consumers track their own position — they can rewind to replay events. Kafka retains messages for days or weeks. Unlike traditional queues, consumed messages are NOT deleted.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Kafka Partitions & Consumer Groups</div></div>
+      <div class="note-body">A Kafka topic is split into N partitions. Each partition is an ordered, append-only log on one broker. Consumer groups: a group of consumers that jointly consume all partitions — each partition is assigned to exactly one consumer in the group. Scale throughput: add partitions → add consumers. Rule: you can have AT MOST as many consumers as partitions (extra consumers are idle).</div>
+    </div>
+    <div class="note-item" data-section="kafka">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Kafka Offset & Acknowledgment</div></div>
+      <div class="note-body">Offset = the position of a message in a partition (like line number in a file). Consumers track their offset to know what they've processed. acks=0: producer doesn't wait for broker confirmation (fastest, data loss possible). acks=1: leader broker acknowledges (fast, leader crash = data loss). acks=all: all replicas must acknowledge (slowest, strongest guarantee). acks=all is required for "at-least-once" delivery.</div>
+    </div>
+    <div class="note-item" data-section="sqs">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">SQS: Visibility Timeout & DLQ</div></div>
+      <div class="note-body">SQS Visibility Timeout: when a consumer receives a message, it's hidden from other consumers for N seconds (default 30). If the consumer doesn't delete it within that time, SQS makes it visible again (assumes the consumer crashed). Set timeout slightly longer than your max processing time. DLQ (Dead Letter Queue): if a message fails N times (maxReceiveCount), SQS moves it to the DLQ for investigation instead of endlessly retrying.</div>
     </div>
     <div class="note-item" data-section="delivery">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Delivery Guarantees</div></div>
-      <div class="note-body">At-most-once: fire-and-forget, message may be lost. At-least-once: retry on failure, may deliver duplicates — your consumer must be idempotent (processing twice = same result as once). Exactly-once: hardest, needs coordination. Most real systems choose at-least-once + idempotent consumers.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Idempotent Consumer</div></div>
+      <div class="note-body">At-least-once delivery means duplicates happen. Your consumer MUST be idempotent — processing the same message twice must produce the same result as processing it once. Strategies: check if message ID was already processed (deduplication table), use upsert instead of insert (UPDATE ... ON CONFLICT), or design operations that are naturally idempotent (setting a value vs incrementing it).</div>
     </div>
-    <div class="note-item" data-section="saga">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Saga Pattern</div></div>
-      <div class="note-body">A saga replaces one database transaction spanning multiple services with a sequence of local transactions, each with a compensating action (undo). If step 3 fails, unwind steps 2 and 1. Choreography: services react to events. Orchestration: a central coordinator calls each step.</div>
+    <div class="note-item" data-section="delivery">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Dead Letter Queue (DLQ)</div></div>
+      <div class="note-body">A DLQ is a separate queue that receives messages that fail processing after N retries. Instead of infinite retries (which can block the main queue), failed messages are moved to the DLQ for human investigation. Every production queue should have a DLQ. Set up alerts for DLQ depth > 0. Common cause of DLQ accumulation: schema change in producer that breaks the consumer.</div>
+    </div>
+    <div class="note-item" data-section="pubsub">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Fan-Out Pattern</div></div>
+      <div class="note-body">Fan-out: one event triggers multiple independent consumers. Example: user signup → send welcome email + create billing record + set up analytics profile. Pub/sub: producer publishes to a topic; N consumers subscribe independently. In AWS: SNS (notification service) + SQS (one queue per subscriber). In Kafka: one topic, multiple consumer groups. Each consumer group reads all messages independently.</div>
     </div>
     <div class="note-item" data-section="backpressure">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Backpressure</div></div>
-      <div class="note-body">Backpressure is when a slow consumer signals a fast producer to slow down. Without it, messages accumulate faster than consumed, memory fills up, the consumer crashes. Like traffic lights preventing gridlock — the fix is at the source. Alert when consumer lag grows unbounded.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Consumer Lag</div></div>
+      <div class="note-body">Consumer lag = how far behind the consumer is from the latest message in the queue/topic. In Kafka, lag = latest offset − consumer's current offset. Lag of 0 = consumer is keeping up. Lag growing = consumer is too slow. Alert on lag > some threshold. Root causes: consumer too slow (add consumers/partitions), message size too large, downstream service too slow. Tools: Kafka consumer lag metrics, Burrow.</div>
+    </div>
+    <div class="note-item" data-section="saga">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Choreography vs Orchestration</div></div>
+      <div class="note-body">Choreography (event-driven): each service listens for events and publishes its own events. No central coordinator. Pros: services are loosely coupled. Cons: hard to see the overall flow, distributed tracing needed. Orchestration (saga orchestrator): one service coordinates all steps explicitly, calling each service in order. Pros: easy to see the flow. Cons: orchestrator becomes a dependency. Choreography for simple flows; orchestration for complex business processes.</div>
+    </div>
+    <div class="note-item" data-section="outbox">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Dual-Write Problem</div></div>
+      <div class="note-body">Dual-write: updating a database AND publishing a message in the same operation. Problem: what if the DB write succeeds but the Kafka publish fails? Or vice versa? Data is now inconsistent. Fix: Transactional Outbox — write the event to an "outbox" table in the same DB transaction as the business data. A separate process (Debezium/CDC) reads the outbox and publishes to Kafka. Now both are always in sync.</div>
+    </div>
+    <div class="note-item" data-section="outbox">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">CDC (Change Data Capture)</div></div>
+      <div class="note-body">CDC = Change Data Capture. Instead of your application explicitly publishing events, CDC reads the database's internal change log (WAL in PostgreSQL, binlog in MySQL) and automatically publishes every INSERT/UPDATE/DELETE to a stream. Debezium is the most common CDC tool — it tails the DB log and publishes changes to Kafka. Useful for syncing databases, building event streams without modifying application code.</div>
     </div>
     </div>
   </aside>

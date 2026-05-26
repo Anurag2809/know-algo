@@ -1154,24 +1154,48 @@ Reconnect → merge:
     <div class="notes-sticky">
     <div class="notes-heading">Clarifications</div>
     <div class="note-item" data-section="cap">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">CAP Theorem</div></div>
-      <div class="note-body">During a network partition (servers can't communicate), choose: Consistency (return only up-to-date data, or fail) or Availability (return data even if possibly stale). "CA" isn't a real choice — you can't guarantee both during a partition. In normal operation, you can have both.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Network Partition</div></div>
+      <div class="note-body">A partition = a network failure that prevents some servers from communicating with others. Example: AWS us-east-1 and us-west-2 lose connectivity between them. Both regions still run, but can't sync. CAP says: during a partition you must choose — do you keep serving requests with potentially stale data (Availability), or do you refuse to serve until the partition heals (Consistency)?</div>
+    </div>
+    <div class="note-item" data-section="cap">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">CP vs AP Systems</div></div>
+      <div class="note-body">CP systems (Consistency + Partition tolerance): during a partition, refuse requests rather than return stale data. Example: ZooKeeper, etcd — they stop serving reads if they can't confirm quorum. AP systems (Availability + Partition tolerance): during a partition, keep serving even if data might be stale. Example: Cassandra, DynamoDB (default) — always respond, eventual consistency. Choose based on your use case: banking = CP, social media likes = AP.</div>
     </div>
     <div class="note-item" data-section="consistency-models">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Consistency Models</div></div>
-      <div class="note-body">Linearizability = every operation appears to happen instantly at one point in time — strongest, most expensive. Eventual consistency = data will converge to the same value eventually, but reads might be stale. Most real systems pick something in between based on the actual use case.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Read-Your-Own-Writes</div></div>
+      <div class="note-body">A common consistency guarantee: after you write data, you always read your own write — even from a replica. Example: you update your profile picture; you immediately see the new picture (not the old one). Implementation: route your reads to the primary after a write, or use a session token that carries your write timestamp and ensures you only read from replicas that have caught up.</div>
     </div>
     <div class="note-item" data-section="raft">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Raft Consensus</div></div>
-      <div class="note-body">Raft is how a cluster of servers agrees on one value when some might crash. One server is elected "leader" — all writes go through it. The leader replicates to a majority before committing. If the leader crashes, a new election happens in seconds. Used by etcd (the backbone of Kubernetes).</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Leader Election</div></div>
+      <div class="note-body">In Raft, a leader is elected by majority vote. If a follower doesn't hear from the leader for a random timeout (150–300ms), it starts an election, votes for itself, and asks others to vote. The candidate with the most up-to-date log and a majority of votes wins. The random timeout prevents split votes (all followers starting elections simultaneously). The term number (monotonically increasing) prevents old leaders from being re-elected after recovery.</div>
+    </div>
+    <div class="note-item" data-section="raft">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Quorum</div></div>
+      <div class="note-body">Quorum = majority of nodes in a cluster. In a 5-node cluster, quorum = 3. A write is only committed after 3 nodes confirm they've written it. Why? If leader crashes after committing to 3 nodes, any surviving majority (3+ nodes) will include at least one node that has the committed write. This ensures committed data is never lost. Odd cluster sizes (3, 5, 7) are preferred — cleaner majority math.</div>
     </div>
     <div class="note-item" data-section="distributed-locks">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Distributed Locks</div></div>
-      <div class="note-body">A distributed lock ensures only one server runs a job at a time. Redis SETNX: "set this key only if it doesn't exist" — if you get it, you hold the lock. Critical: always set an expiry so a crashed lock-holder doesn't block forever. Stronger: etcd leases auto-release when the holder's session expires.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Split-Brain Problem</div></div>
+      <div class="note-body">Split-brain: two nodes both believe they are the leader simultaneously (usually after a network partition recovers). They both accept writes → data diverges. Example: etcd leader in region A and a node in region B both think they're leader during a partition. Fix: fencing tokens (each leader gets an incrementing token; storage layer rejects writes from leaders with older tokens). etcd prevents split-brain with Raft — only one leader per term.</div>
+    </div>
+    <div class="note-item" data-section="fencing">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Fencing Token</div></div>
+      <div class="note-body">A fencing token is a monotonically increasing number given to a distributed lock holder. When you acquire a lock, you get token #47. You pass this token to storage on every write. Storage only accepts writes with token >= the last seen token. If your lock expires and another process gets token #48, your writes with #47 are rejected. Prevents the "stale leader writes after lock expires" race condition.</div>
+    </div>
+    <div class="note-item" data-section="vector-clocks">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Lamport Timestamp</div></div>
+      <div class="note-body">A Lamport timestamp is a logical clock (not wall-clock time) that tracks the "happened-before" relationship between events. Rule: every time a message is sent, increment your counter. When receiving, take max(yours, theirs) + 1. If event A's timestamp < event B's, A happened before B. But equal timestamps don't mean simultaneous — that's why vector clocks (one counter per node) give more precision.</div>
     </div>
     <div class="note-item" data-section="crdts">
-      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">CRDTs</div></div>
-      <div class="note-body">Conflict-free Replicated Data Types are data structures where concurrent updates from multiple servers can always be merged without conflicts. A G-Counter: each server tracks its own count; merge = take the max per server. No coordination needed. Used in Redis, collaborative editors, shopping carts.</div>
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Eventual Consistency in Practice</div></div>
+      <div class="note-body">Eventual consistency doesn't mean "might never converge" — it means "will converge once updates stop flowing and all messages are delivered." The key question: how do you merge concurrent updates? CRDTs define a mathematically provable merge function: counter1 + counter2, set union, last-write-wins by timestamp. The merge must be commutative (A+B = B+A) and associative ((A+B)+C = A+(B+C)) so order doesn't matter.</div>
+    </div>
+    <div class="note-item" data-section="two-pc">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Two-Phase Commit</div></div>
+      <div class="note-body">2PC: a coordinator asks all participants "can you commit?" (prepare phase). If all say yes, coordinator says "commit" (commit phase). Problem: if the coordinator crashes after some participants committed but before telling others — those participants are stuck waiting forever (blocking protocol). This is why 2PC is avoided in microservices. Sagas provide a non-blocking alternative at the cost of complex compensation logic.</div>
+    </div>
+    <div class="note-item" data-section="two-pc">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">etcd vs ZooKeeper</div></div>
+      <div class="note-body">Both are distributed coordination services providing: key-value store, leader election, distributed locks, and config storage. ZooKeeper: older (2007), used by older Kafka, Hadoop. Complex Java API, higher operational overhead. etcd: newer (2013), written in Go, simpler gRPC API, used by Kubernetes for all cluster state. In 2024, etcd is the default choice for new systems. Kafka dropped ZooKeeper support in newer versions in favor of KRaft (its own Raft implementation).</div>
     </div>
     </div>
   </aside>
