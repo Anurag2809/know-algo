@@ -69,7 +69,7 @@
     .btn-home { background: #0284c7; color: #fff !important; padding: 0.35rem 0.9rem; border-radius: 6px; font-size: 0.85rem !important; }
     .btn-home:hover { background: #0369a1; }
 
-    .page-layout { display: grid; grid-template-columns: var(--toc-width) 1fr; max-width: 1400px; margin: 0 auto; min-height: calc(100vh - var(--header-h)); }
+    .page-layout { display: grid; grid-template-columns: var(--toc-width) 1fr 220px; max-width: 1400px; margin: 0 auto; min-height: calc(100vh - var(--header-h)); }
 
     .toc-sidebar { position: sticky; top: var(--header-h); height: calc(100vh - var(--header-h)); overflow-y: auto; padding: 1.5rem 1rem; border-right: 1px solid var(--border); background: #fff; }
     .toc-sidebar::-webkit-scrollbar { width: 4px; }
@@ -108,17 +108,17 @@
     .callout-warn { background: #fffbeb; border-color: #d97706; color: #92400e; }
     .callout strong { display: block; margin-bottom: 0.3rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    .arch-diagram { background: var(--code-bg); border-radius: 10px; padding: 1.5rem; margin: 1.25rem 0; font-family: 'Courier New', Courier, monospace; color: #94a3b8; font-size: 0.82rem; line-height: 1.9; overflow-x: auto; white-space: pre; }
-    .arch-diagram .c  { color: #f8fafc; font-weight: 700; }
-    .arch-diagram .lb { color: #fbbf24; font-weight: 700; }
-    .arch-diagram .sv { color: #34d399; font-weight: 700; }
-    .arch-diagram .db { color: #a78bfa; font-weight: 700; }
-    .arch-diagram .ca { color: #fb923c; font-weight: 700; }
-    .arch-diagram .ok { color: #34d399; font-weight: 700; }
-    .arch-diagram .er { color: #f87171; font-weight: 700; }
-    .arch-diagram .hl { color: #fbbf24; }
-    .arch-diagram .cm { color: #475569; font-style: italic; }
-    .arch-diagram .cy { color: #67e8f9; font-weight: 700; }   /* cyan — CDN / cache layer */
+    .arch-diagram { background: #f8fafc; border-radius: 10px; padding: 1.5rem; margin: 1.25rem 0; font-family: 'Courier New', Courier, monospace; color: #334155; font-size: 0.82rem; line-height: 1.9; overflow-x: auto; white-space: pre; }
+    .arch-diagram .c  { color: #0f172a; font-weight: 700; }
+    .arch-diagram .lb { color: #92400e; font-weight: 700; }
+    .arch-diagram .sv { color: #166534; font-weight: 700; }
+    .arch-diagram .db { color: #5b21b6; font-weight: 700; }
+    .arch-diagram .ca { color: #9a3412; font-weight: 700; }
+    .arch-diagram .ok { color: #166534; font-weight: 700; }
+    .arch-diagram .er { color: #991b1b; font-weight: 700; }
+    .arch-diagram .hl { color: #92400e; }
+    .arch-diagram .cm { color: #94a3b8; font-style: italic; }
+    .arch-diagram .cy { color: #0e7490; font-weight: 700; }   /* cyan — CDN / cache layer */
 
     .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0; }
     .insight-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
@@ -201,6 +201,26 @@
 
     @media (max-width: 900px) { .page-layout { grid-template-columns: 1fr; } .toc-sidebar { display: none; } .main-content { padding: 1rem; } .hero h1 { font-size: 1.75rem; } }
     @media (max-width: 600px) { .topnav-links .hide-mob { display: none; } .hero { padding: 1.5rem; } }
+  
+    /* ── Notes Sidebar ─────────────────────────────── */
+    .notes-sidebar { align-self: start; }
+    .notes-sticky { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+    .notes-heading { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: 10px; }
+    .note-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: border-color .25s, box-shadow .25s; }
+    .note-item.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,0,0,.06); }
+    .note-head { display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px; cursor: pointer; }
+    .note-bullet { width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: .78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: transform .2s; }
+    .note-item.open .note-bullet { transform: rotate(45deg); }
+    .note-label { font-size: .78rem; font-weight: 600; color: #1e293b; flex: 1; line-height: 1.35; }
+    .note-body { display: none; font-size: .76rem; color: #475569; line-height: 1.55; padding: 0 11px 11px 11px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+    .note-item.open .note-body,
+    .note-item.active .note-body { display: block; }
+    @media (max-width: 1150px) {
+      .notes-sidebar { display: none !important; }
+      .page-body  { grid-template-columns: 260px 1fr !important; }
+      .page-layout { grid-template-columns: var(--toc-width, 260px) 1fr !important; }
+    }
+
   </style>
 </head>
 <body>
@@ -1211,6 +1231,31 @@ Characteristics:
     </div>
 
   </main>
+  <aside class="notes-sidebar">
+    <div class="notes-sticky">
+    <div class="notes-heading">Clarifications</div>
+    <div class="note-item" data-section="l1-cache">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">In-Process Cache (L1)</div></div>
+      <div class="note-body">L1 is memory inside your app process — a Python dict or Java HashMap. Zero network hops = nanosecond reads. Downside: local to one server. If 10 app servers each have L1, a warm cache on server A is invisible to server B.</div>
+    </div>
+    <div class="note-item" data-section="l2-cache">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Redis / Shared Cache (L2)</div></div>
+      <div class="note-body">Redis is a shared cache outside your app. All 10 servers query the same Redis — one server warms the cache that all others benefit from. Slower than L1 (milliseconds over the network), but shared across your whole fleet.</div>
+    </div>
+    <div class="note-item" data-section="cache-aside">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Cache-Aside Pattern</div></div>
+      <div class="note-body">Your code checks the cache first. On a miss: fetch from DB, store in cache, return result. Simple and explicit. The risk: if many requests miss simultaneously on a cold cache, they all hit the DB at once ("stampede").</div>
+    </div>
+    <div class="note-item" data-section="invalidation">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Cache Invalidation</div></div>
+      <div class="note-body">"There are only two hard things in CS: cache invalidation and naming things." Forgetting to invalidate means users see stale data. TTL automates expiry but allows some staleness. The right TTL balances freshness against database load.</div>
+    </div>
+    <div class="note-item" data-section="stampede">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Cache Stampede</div></div>
+      <div class="note-body">A stampede: a popular cache entry expires → thousands of requests simultaneously miss the cache → all hit the database at once. Fix: probabilistic early expiration (refresh before TTL), or a mutex so only one request refreshes while others wait.</div>
+    </div>
+    </div>
+  </aside>
 </div>
 
 <footer>
@@ -1253,6 +1298,29 @@ Characteristics:
     { rootMargin: '-60px 0px -70% 0px', threshold: 0 }
   );
   sections.forEach(sec => observer.observe(sec));
+
+  // Notes sidebar: highlight note when its section enters viewport
+  const noteItems = document.querySelectorAll('.note-item[data-section]');
+  if (noteItems.length) {
+    const noteObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const id = e.target.id;
+          noteItems.forEach(n => {
+            const match = n.dataset.section === id;
+            n.classList.toggle('active', match);
+            if (match) n.classList.add('open');
+            else n.classList.remove('open');
+          });
+        }
+      });
+    }, { rootMargin: '-10% 0px -55% 0px' });
+    document.querySelectorAll('[id]').forEach(el => noteObs.observe(el));
+    noteItems.forEach(n =>
+      n.querySelector('.note-head').addEventListener('click', () => n.classList.toggle('open'))
+    );
+  }
+
 </script>
 
 </body>

@@ -115,19 +115,19 @@
     .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; transition: all 0.2s; }
     .copy-btn:hover { background: rgba(255,255,255,0.2); color: #f1f5f9; }
 
-    .arch-diagram { background: #0f172a; border-radius: 10px; padding: 20px 24px; font-family: 'Courier New', Courier, monospace; font-size: 0.78rem; line-height: 1.6; overflow-x: auto; margin: 16px 0; color: #94a3b8; }
-    .arch-diagram .c  { color: #f1f5f9; font-weight: 600; }
-    .arch-diagram .db { color: #a78bfa; font-weight: 600; }
-    .arch-diagram .ca { color: #fb923c; font-weight: 600; }
-    .arch-diagram .sv { color: #4ade80; font-weight: 600; }
-    .arch-diagram .lb { color: #fbbf24; font-weight: 600; }
-    .arch-diagram .em { color: #34d399; font-weight: 600; }
-    .arch-diagram .ok { color: #4ade80; }
-    .arch-diagram .er { color: #f87171; }
-    .arch-diagram .hl { color: #fbbf24; }
-    .arch-diagram .cm { color: #475569; font-style: italic; }
-    .arch-diagram .bl { color: #60a5fa; font-weight: 600; }
-    .arch-diagram .ts { color: #f472b6; font-weight: 600; }
+    .arch-diagram { background: #f8fafc; border-radius: 10px; padding: 20px 24px; font-family: 'Courier New', Courier, monospace; font-size: 0.78rem; line-height: 1.6; overflow-x: auto; margin: 16px 0; color: #334155; }
+    .arch-diagram .c  { color: #0f172a; font-weight: 600; }
+    .arch-diagram .db { color: #5b21b6; font-weight: 600; }
+    .arch-diagram .ca { color: #9a3412; font-weight: 600; }
+    .arch-diagram .sv { color: #166534; font-weight: 600; }
+    .arch-diagram .lb { color: #92400e; font-weight: 600; }
+    .arch-diagram .em { color: #065f46; font-weight: 600; }
+    .arch-diagram .ok { color: #166534; }
+    .arch-diagram .er { color: #991b1b; }
+    .arch-diagram .hl { color: #92400e; }
+    .arch-diagram .cm { color: #94a3b8; font-style: italic; }
+    .arch-diagram .bl { color: #1e40af; font-weight: 600; }
+    .arch-diagram .ts { color: #9d174d; font-weight: 600; }
     .arch-diagram .am { color: #fb923c; font-weight: 600; }
 
     .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 10px; border: 1px solid var(--border); }
@@ -193,6 +193,26 @@
     footer { background: #0f172a; color: #64748b; text-align: center; padding: 40px 24px; font-size: 0.875rem; }
     footer a { color: #94a3b8; text-decoration: none; }
     footer a:hover { color: #f1f5f9; }
+  
+    /* ── Notes Sidebar ─────────────────────────────── */
+    .notes-sidebar { align-self: start; }
+    .notes-sticky { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+    .notes-heading { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: 10px; }
+    .note-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: border-color .25s, box-shadow .25s; }
+    .note-item.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,0,0,.06); }
+    .note-head { display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px; cursor: pointer; }
+    .note-bullet { width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: .78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: transform .2s; }
+    .note-item.open .note-bullet { transform: rotate(45deg); }
+    .note-label { font-size: .78rem; font-weight: 600; color: #1e293b; flex: 1; line-height: 1.35; }
+    .note-body { display: none; font-size: .76rem; color: #475569; line-height: 1.55; padding: 0 11px 11px 11px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+    .note-item.open .note-body,
+    .note-item.active .note-body { display: block; }
+    @media (max-width: 1150px) {
+      .notes-sidebar { display: none !important; }
+      .page-body  { grid-template-columns: 260px 1fr !important; }
+      .page-layout { grid-template-columns: var(--toc-width, 260px) 1fr !important; }
+    }
+
   </style>
 </head>
 <body>
@@ -1450,6 +1470,31 @@ def handle_webhook():
     </section>
 
   </main>
+  <aside class="notes-sidebar">
+    <div class="notes-sticky">
+    <div class="notes-heading">Clarifications</div>
+    <div class="note-item" data-section="rest">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">REST APIs</div></div>
+      <div class="note-body">REST uses HTTP verbs (GET/POST/PUT/DELETE) on noun URLs (/users, /orders). It's stateless — each request carries all context needed. Most public APIs are REST because it's simple, well-understood, and cacheable. "RESTful" is a convention, not a strict spec.</div>
+    </div>
+    <div class="note-item" data-section="graphql">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">GraphQL</div></div>
+      <div class="note-body">GraphQL lets the client ask for exactly the fields it needs — no over-fetching (20 fields when you need 3) or under-fetching (needing 3 API calls to get related data). Trade-off: harder to cache than REST, and N+1 query problems need explicit batching.</div>
+    </div>
+    <div class="note-item" data-section="grpc">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">gRPC</div></div>
+      <div class="note-body">gRPC uses Protocol Buffers (binary) instead of JSON (text). Binary is ~5–10× smaller and faster to parse. It also supports streaming — the server pushes a stream of updates, not just one response. Used for internal service-to-service calls where latency matters.</div>
+    </div>
+    <div class="note-item" data-section="websocket">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">WebSockets</div></div>
+      <div class="note-body">WebSockets keep a persistent connection open so either side can send messages any time — unlike HTTP where the server can only respond. Used for chat, live dashboards, multiplayer games. Scaling challenge: one user's connection lives on one server permanently (sticky sessions).</div>
+    </div>
+    <div class="note-item" data-section="api-gateway">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">API Gateway</div></div>
+      <div class="note-body">An API gateway is a single entry point in front of all services. It handles auth, rate limiting, SSL, routing, and logging — so individual services don't each implement those. Think of it as a security guard + traffic director at the building entrance.</div>
+    </div>
+    </div>
+  </aside>
 </div>
 
 <footer>
@@ -1486,6 +1531,29 @@ def handle_webhook():
     });
   }, { rootMargin: '-20% 0px -75% 0px' });
   sections.forEach(s => observer.observe(s));
+
+  // Notes sidebar: highlight note when its section enters viewport
+  const noteItems = document.querySelectorAll('.note-item[data-section]');
+  if (noteItems.length) {
+    const noteObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const id = e.target.id;
+          noteItems.forEach(n => {
+            const match = n.dataset.section === id;
+            n.classList.toggle('active', match);
+            if (match) n.classList.add('open');
+            else n.classList.remove('open');
+          });
+        }
+      });
+    }, { rootMargin: '-10% 0px -55% 0px' });
+    document.querySelectorAll('[id]').forEach(el => noteObs.observe(el));
+    noteItems.forEach(n =>
+      n.querySelector('.note-head').addEventListener('click', () => n.classList.toggle('open'))
+    );
+  }
+
 </script>
 
 </body>

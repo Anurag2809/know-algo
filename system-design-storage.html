@@ -122,20 +122,20 @@
     .copy-btn:hover { background: rgba(255,255,255,0.2); color: #f1f5f9; }
 
     /* ── Architecture diagram ── */
-    .arch-diagram { background: #0f172a; border-radius: 10px; padding: 20px 24px; font-family: 'Courier New', Courier, monospace; font-size: 0.78rem; line-height: 1.6; overflow-x: auto; margin: 16px 0; color: #94a3b8; }
-    .arch-diagram .c  { color: #f1f5f9; font-weight: 600; }
-    .arch-diagram .db { color: #a78bfa; font-weight: 600; }
-    .arch-diagram .ca { color: #fb923c; font-weight: 600; }
-    .arch-diagram .sv { color: #4ade80; font-weight: 600; }
-    .arch-diagram .lb { color: #fbbf24; font-weight: 600; }
-    .arch-diagram .em { color: #34d399; font-weight: 600; }
-    .arch-diagram .rd { color: #f87171; font-weight: 600; }
-    .arch-diagram .ok { color: #4ade80; }
-    .arch-diagram .er { color: #f87171; }
-    .arch-diagram .hl { color: #fbbf24; }
-    .arch-diagram .cm { color: #475569; font-style: italic; }
-    .arch-diagram .bl { color: #60a5fa; font-weight: 600; }
-    .arch-diagram .ts { color: #f472b6; font-weight: 600; }
+    .arch-diagram { background: #f8fafc; border-radius: 10px; padding: 20px 24px; font-family: 'Courier New', Courier, monospace; font-size: 0.78rem; line-height: 1.6; overflow-x: auto; margin: 16px 0; color: #334155; }
+    .arch-diagram .c  { color: #0f172a; font-weight: 600; }
+    .arch-diagram .db { color: #5b21b6; font-weight: 600; }
+    .arch-diagram .ca { color: #9a3412; font-weight: 600; }
+    .arch-diagram .sv { color: #166534; font-weight: 600; }
+    .arch-diagram .lb { color: #92400e; font-weight: 600; }
+    .arch-diagram .em { color: #065f46; font-weight: 600; }
+    .arch-diagram .rd { color: #991b1b; font-weight: 600; }
+    .arch-diagram .ok { color: #166534; }
+    .arch-diagram .er { color: #991b1b; }
+    .arch-diagram .hl { color: #92400e; }
+    .arch-diagram .cm { color: #94a3b8; font-style: italic; }
+    .arch-diagram .bl { color: #1e40af; font-weight: 600; }
+    .arch-diagram .ts { color: #9d174d; font-weight: 600; }
 
     /* ── Table ── */
     .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 10px; border: 1px solid var(--border); }
@@ -208,6 +208,26 @@
     footer { background: #0f172a; color: #64748b; text-align: center; padding: 40px 24px; font-size: 0.875rem; }
     footer a { color: #94a3b8; text-decoration: none; }
     footer a:hover { color: #f1f5f9; }
+  
+    /* ── Notes Sidebar ─────────────────────────────── */
+    .notes-sidebar { align-self: start; }
+    .notes-sticky { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+    .notes-heading { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: 10px; }
+    .note-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: border-color .25s, box-shadow .25s; }
+    .note-item.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,0,0,.06); }
+    .note-head { display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px; cursor: pointer; }
+    .note-bullet { width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: .78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: transform .2s; }
+    .note-item.open .note-bullet { transform: rotate(45deg); }
+    .note-label { font-size: .78rem; font-weight: 600; color: #1e293b; flex: 1; line-height: 1.35; }
+    .note-body { display: none; font-size: .76rem; color: #475569; line-height: 1.55; padding: 0 11px 11px 11px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+    .note-item.open .note-body,
+    .note-item.active .note-body { display: block; }
+    @media (max-width: 1150px) {
+      .notes-sidebar { display: none !important; }
+      .page-body  { grid-template-columns: 260px 1fr !important; }
+      .page-layout { grid-template-columns: var(--toc-width, 260px) 1fr !important; }
+    }
+
   </style>
 </head>
 <body>
@@ -1523,6 +1543,31 @@ Conflict: Postgres always wins — ES is rebuilt from Postgres at any time
     </section>
 
   </main>
+  <aside class="notes-sidebar">
+    <div class="notes-sticky">
+    <div class="notes-heading">Clarifications</div>
+    <div class="note-item" data-section="sql">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">SQL Databases</div></div>
+      <div class="note-body">SQL stores data in tables (rows + columns) with relationships via foreign keys. The killer feature: ACID transactions — if step 1 and step 2 must both succeed or both fail, SQL guarantees it. PostgreSQL handles millions of rows before you need to worry about scaling.</div>
+    </div>
+    <div class="note-item" data-section="nosql-kv">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Key-Value Stores</div></div>
+      <div class="note-body">Key-value stores are like a giant dictionary: look up any value by its key in O(1). No complex queries, no joins. DynamoDB, Redis, Memcached. Best for: sessions, carts, real-time counters. Worst for: anything requiring filtering by non-key fields.</div>
+    </div>
+    <div class="note-item" data-section="sharding">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Database Sharding</div></div>
+      <div class="note-body">Sharding splits one huge table across multiple servers. 1 billion users → 10 shards × 100 million each. The pain point: cross-shard queries (e.g., "find all US users who joined this week") must contact every shard and merge results — expensive.</div>
+    </div>
+    <div class="note-item" data-section="replication">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Replication</div></div>
+      <div class="note-body">Replication copies data to multiple servers. Primary handles writes; replicas handle reads. Benefit: read scaling + failover. Trade-off: replication lag — replicas can be milliseconds behind. A write followed immediately by a read might hit a stale replica.</div>
+    </div>
+    <div class="note-item" data-section="indexing">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Database Indexes</div></div>
+      <div class="note-body">An index is like a book's index — find matching rows without scanning the whole table. Without an index on "email", finding one user in 100M rows scans all 100M. With an index: milliseconds. Cost: every write must also update the index.</div>
+    </div>
+    </div>
+  </aside>
 </div>
 
 <footer>
@@ -1562,6 +1607,29 @@ Conflict: Postgres always wins — ES is rebuilt from Postgres at any time
     });
   }, { rootMargin: '-20% 0px -75% 0px' });
   sections.forEach(s => observer.observe(s));
+
+  // Notes sidebar: highlight note when its section enters viewport
+  const noteItems = document.querySelectorAll('.note-item[data-section]');
+  if (noteItems.length) {
+    const noteObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const id = e.target.id;
+          noteItems.forEach(n => {
+            const match = n.dataset.section === id;
+            n.classList.toggle('active', match);
+            if (match) n.classList.add('open');
+            else n.classList.remove('open');
+          });
+        }
+      });
+    }, { rootMargin: '-10% 0px -55% 0px' });
+    document.querySelectorAll('[id]').forEach(el => noteObs.observe(el));
+    noteItems.forEach(n =>
+      n.querySelector('.note-head').addEventListener('click', () => n.classList.toggle('open'))
+    );
+  }
+
 </script>
 
 </body>

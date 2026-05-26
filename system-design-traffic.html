@@ -90,7 +90,7 @@
 
     /* ── Layout ── */
     .page-layout {
-      display: grid; grid-template-columns: var(--toc-width) 1fr;
+      display: grid; grid-template-columns: var(--toc-width) 1fr 220px;
       max-width: 1400px; margin: 0 auto;
       min-height: calc(100vh - var(--header-h));
     }
@@ -175,20 +175,20 @@
 
     /* ── Architecture Diagrams ── */
     .arch-diagram {
-      background: var(--code-bg); border-radius: 10px; padding: 1.5rem;
+      background: #f8fafc; border-radius: 10px; padding: 1.5rem;
       margin: 1.25rem 0; font-family: 'Courier New', Courier, monospace;
-      color: #94a3b8; font-size: 0.82rem; line-height: 1.9; overflow-x: auto;
+      color: #334155; font-size: 0.82rem; line-height: 1.9; overflow-x: auto;
       white-space: pre;
     }
-    .arch-diagram .c  { color: #f8fafc; font-weight: 700; }   /* client */
-    .arch-diagram .lb { color: #fbbf24; font-weight: 700; }   /* load balancer */
-    .arch-diagram .sv { color: #34d399; font-weight: 700; }   /* server */
-    .arch-diagram .db { color: #a78bfa; font-weight: 700; }   /* database */
-    .arch-diagram .ca { color: #fb923c; font-weight: 700; }   /* cache */
-    .arch-diagram .ok { color: #34d399; font-weight: 700; }   /* success / ok */
-    .arch-diagram .er { color: #f87171; font-weight: 700; }   /* error / reject */
-    .arch-diagram .hl { color: #fbbf24; }                      /* highlight */
-    .arch-diagram .cm { color: #475569; font-style: italic; }  /* comment */
+    .arch-diagram .c  { color: #0f172a; font-weight: 700; }   /* client */
+    .arch-diagram .lb { color: #92400e; font-weight: 700; }   /* load balancer */
+    .arch-diagram .sv { color: #166534; font-weight: 700; }   /* server */
+    .arch-diagram .db { color: #5b21b6; font-weight: 700; }   /* database */
+    .arch-diagram .ca { color: #9a3412; font-weight: 700; }   /* cache */
+    .arch-diagram .ok { color: #166534; font-weight: 700; }   /* success / ok */
+    .arch-diagram .er { color: #991b1b; font-weight: 700; }   /* error / reject */
+    .arch-diagram .hl { color: #92400e; }                      /* highlight */
+    .arch-diagram .cm { color: #94a3b8; font-style: italic; }  /* comment */
 
     /* ── Insight Grid ── */
     .insight-grid {
@@ -342,6 +342,26 @@
       .topnav-links .hide-mob { display: none; }
       .hero { padding: 1.5rem; }
     }
+  
+    /* ── Notes Sidebar ─────────────────────────────── */
+    .notes-sidebar { align-self: start; }
+    .notes-sticky { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+    .notes-heading { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: 10px; }
+    .note-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: border-color .25s, box-shadow .25s; }
+    .note-item.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,0,0,.06); }
+    .note-head { display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px; cursor: pointer; }
+    .note-bullet { width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: .78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: transform .2s; }
+    .note-item.open .note-bullet { transform: rotate(45deg); }
+    .note-label { font-size: .78rem; font-weight: 600; color: #1e293b; flex: 1; line-height: 1.35; }
+    .note-body { display: none; font-size: .76rem; color: #475569; line-height: 1.55; padding: 0 11px 11px 11px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+    .note-item.open .note-body,
+    .note-item.active .note-body { display: block; }
+    @media (max-width: 1150px) {
+      .notes-sidebar { display: none !important; }
+      .page-body  { grid-template-columns: 260px 1fr !important; }
+      .page-layout { grid-template-columns: var(--toc-width, 260px) 1fr !important; }
+    }
+
   </style>
 </head>
 <body>
@@ -1414,6 +1434,27 @@ return {current, 1}  -- allowed</code></pre>
     </div>
 
   </main>
+  <aside class="notes-sidebar">
+    <div class="notes-sticky">
+    <div class="notes-heading">Clarifications</div>
+    <div class="note-item" data-section="load-balancing">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Load Balancing</div></div>
+      <div class="note-body">A load balancer routes requests across multiple servers — like multiple checkout lanes sharing a queue. Without it, one server handles everything while others sit idle. It also detects unhealthy servers and stops sending them traffic.</div>
+    </div>
+    <div class="note-item" data-section="rate-limiting">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Rate Limiting</div></div>
+      <div class="note-body">Rate limiting caps how many requests a client can make per time window. Without it, one misbehaving client could flood your service and crash it for everyone. The "token bucket" refills at a steady rate — you can burst briefly, then you're throttled.</div>
+    </div>
+    <div class="note-item" data-section="consistent-hashing">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Consistent Hashing</div></div>
+      <div class="note-body">Normal hashing: remove a server → almost every cache key remaps → mass cache misses. Consistent hashing: servers sit on a "ring" so removing one only remaps ~1/N keys. This is why Redis Cluster, Cassandra, and DynamoDB use it.</div>
+    </div>
+    <div class="note-item" data-section="auto-scaling">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Auto-Scaling</div></div>
+      <div class="note-body">Scaling takes minutes (spin up a VM) but spikes happen in seconds. That's why you scale proactively based on predicted load, not just reactively when alarms fire. Cooldown periods prevent rapid add/remove oscillation.</div>
+    </div>
+    </div>
+  </aside>
 </div>
 
 <footer>
@@ -1465,6 +1506,29 @@ return {current, 1}  -- allowed</code></pre>
     { rootMargin: '-60px 0px -70% 0px', threshold: 0 }
   );
   sections.forEach(sec => observer.observe(sec));
+
+  // Notes sidebar: highlight note when its section enters viewport
+  const noteItems = document.querySelectorAll('.note-item[data-section]');
+  if (noteItems.length) {
+    const noteObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const id = e.target.id;
+          noteItems.forEach(n => {
+            const match = n.dataset.section === id;
+            n.classList.toggle('active', match);
+            if (match) n.classList.add('open');
+            else n.classList.remove('open');
+          });
+        }
+      });
+    }, { rootMargin: '-10% 0px -55% 0px' });
+    document.querySelectorAll('[id]').forEach(el => noteObs.observe(el));
+    noteItems.forEach(n =>
+      n.querySelector('.note-head').addEventListener('click', () => n.classList.toggle('open'))
+    );
+  }
+
 </script>
 
 </body>

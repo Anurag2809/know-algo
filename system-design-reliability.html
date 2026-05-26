@@ -115,19 +115,19 @@
     .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; transition: all 0.2s; }
     .copy-btn:hover { background: rgba(255,255,255,0.2); color: #f1f5f9; }
 
-    .arch-diagram { background: #0f172a; border-radius: 10px; padding: 20px 24px; font-family: 'Courier New', Courier, monospace; font-size: 0.78rem; line-height: 1.6; overflow-x: auto; margin: 16px 0; color: #94a3b8; }
-    .arch-diagram .c  { color: #f1f5f9; font-weight: 600; }
-    .arch-diagram .db { color: #a78bfa; font-weight: 600; }
-    .arch-diagram .ca { color: #fb923c; font-weight: 600; }
-    .arch-diagram .sv { color: #4ade80; font-weight: 600; }
-    .arch-diagram .lb { color: #fbbf24; font-weight: 600; }
-    .arch-diagram .em { color: #34d399; font-weight: 600; }
-    .arch-diagram .ok { color: #4ade80; }
-    .arch-diagram .er { color: #f87171; }
-    .arch-diagram .hl { color: #fbbf24; }
-    .arch-diagram .cm { color: #475569; font-style: italic; }
-    .arch-diagram .bl { color: #60a5fa; font-weight: 600; }
-    .arch-diagram .rd { color: #f87171; font-weight: 600; }
+    .arch-diagram { background: #f8fafc; border-radius: 10px; padding: 20px 24px; font-family: 'Courier New', Courier, monospace; font-size: 0.78rem; line-height: 1.6; overflow-x: auto; margin: 16px 0; color: #334155; }
+    .arch-diagram .c  { color: #0f172a; font-weight: 600; }
+    .arch-diagram .db { color: #5b21b6; font-weight: 600; }
+    .arch-diagram .ca { color: #9a3412; font-weight: 600; }
+    .arch-diagram .sv { color: #166534; font-weight: 600; }
+    .arch-diagram .lb { color: #92400e; font-weight: 600; }
+    .arch-diagram .em { color: #065f46; font-weight: 600; }
+    .arch-diagram .ok { color: #166534; }
+    .arch-diagram .er { color: #991b1b; }
+    .arch-diagram .hl { color: #92400e; }
+    .arch-diagram .cm { color: #94a3b8; font-style: italic; }
+    .arch-diagram .bl { color: #1e40af; font-weight: 600; }
+    .arch-diagram .rd { color: #991b1b; font-weight: 600; }
     .arch-diagram .vl { color: #c4b5fd; font-weight: 600; }
 
     .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 10px; border: 1px solid var(--border); }
@@ -181,6 +181,26 @@
     footer { background: #0f172a; color: #64748b; text-align: center; padding: 40px 24px; font-size: 0.875rem; }
     footer a { color: #94a3b8; text-decoration: none; }
     footer a:hover { color: #f1f5f9; }
+  
+    /* ── Notes Sidebar ─────────────────────────────── */
+    .notes-sidebar { align-self: start; }
+    .notes-sticky { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+    .notes-heading { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: 10px; }
+    .note-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: border-color .25s, box-shadow .25s; }
+    .note-item.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,0,0,.06); }
+    .note-head { display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px; cursor: pointer; }
+    .note-bullet { width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: .78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: transform .2s; }
+    .note-item.open .note-bullet { transform: rotate(45deg); }
+    .note-label { font-size: .78rem; font-weight: 600; color: #1e293b; flex: 1; line-height: 1.35; }
+    .note-body { display: none; font-size: .76rem; color: #475569; line-height: 1.55; padding: 0 11px 11px 11px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+    .note-item.open .note-body,
+    .note-item.active .note-body { display: block; }
+    @media (max-width: 1150px) {
+      .notes-sidebar { display: none !important; }
+      .page-body  { grid-template-columns: 260px 1fr !important; }
+      .page-layout { grid-template-columns: var(--toc-width, 260px) 1fr !important; }
+    }
+
   </style>
 </head>
 <body>
@@ -1218,6 +1238,31 @@ groups:
     </section>
 
   </main>
+  <aside class="notes-sidebar">
+    <div class="notes-sticky">
+    <div class="notes-heading">Clarifications</div>
+    <div class="note-item" data-section="slo-sli-sla">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">SLO / SLI / SLA</div></div>
+      <div class="note-body">SLI = the metric you measure (e.g., % requests succeeding). SLO = the target (e.g., 99.9%). SLA = the legal contract with consequences if SLO is missed. Error budget = 100% − SLO. If you burn through it too fast, freeze new deployments until the budget recovers.</div>
+    </div>
+    <div class="note-item" data-section="nines">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">The Nines</div></div>
+      <div class="note-body">99% = 3.6 days downtime/year. 99.9% = 8.7 hours. 99.99% = 52 minutes. 99.999% = 5 minutes. Each extra 9 is ~10× harder and more expensive. Most services need 99.9%–99.99%. Ask: what's the actual business cost per hour of downtime vs. the cost of achieving 99.999%?</div>
+    </div>
+    <div class="note-item" data-section="circuit-breaker">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Circuit Breaker</div></div>
+      <div class="note-body">Named after electrical circuit breakers. When enough calls to a downstream service fail, the circuit "opens" — new calls fail immediately without trying. After a wait, a few test calls go through ("half-open"). If they succeed, the circuit "closes" again. Prevents one slow service from dragging everything else down.</div>
+    </div>
+    <div class="note-item" data-section="bulkhead">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Bulkhead Isolation</div></div>
+      <div class="note-body">Named after watertight compartments in a ship — one flooding doesn't sink it. In software: give each downstream dependency its own thread pool or connection pool. If payments is slow and exhausts its pool, the user profile service still has its own pool and keeps working.</div>
+    </div>
+    <div class="note-item" data-section="chaos">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Chaos Engineering</div></div>
+      <div class="note-body">Chaos engineering deliberately causes failures in production to find weaknesses before real incidents do. Netflix's Chaos Monkey randomly kills servers. The philosophy: your system WILL fail eventually — better to discover how during a planned experiment than unexpectedly at 3 AM.</div>
+    </div>
+    </div>
+  </aside>
 </div>
 
 <footer>
@@ -1254,6 +1299,29 @@ groups:
     });
   }, { rootMargin: '-20% 0px -75% 0px' });
   sections.forEach(s => observer.observe(s));
+
+  // Notes sidebar: highlight note when its section enters viewport
+  const noteItems = document.querySelectorAll('.note-item[data-section]');
+  if (noteItems.length) {
+    const noteObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const id = e.target.id;
+          noteItems.forEach(n => {
+            const match = n.dataset.section === id;
+            n.classList.toggle('active', match);
+            if (match) n.classList.add('open');
+            else n.classList.remove('open');
+          });
+        }
+      });
+    }, { rootMargin: '-10% 0px -55% 0px' });
+    document.querySelectorAll('[id]').forEach(el => noteObs.observe(el));
+    noteItems.forEach(n =>
+      n.querySelector('.note-head').addEventListener('click', () => n.classList.toggle('open'))
+    );
+  }
+
 </script>
 
 </body>

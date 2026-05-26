@@ -54,7 +54,7 @@
     .hero-tag { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #e2e8f0; font-size: .78rem; padding: 4px 12px; border-radius: 20px; }
 
     /* Layout */
-    .page-body { display: grid; grid-template-columns: 260px 1fr; gap: 32px; max-width: 1200px; margin: 40px auto; padding: 0 24px 80px; }
+    .page-body { display: grid; grid-template-columns: 260px 1fr 220px; gap: 32px; max-width: 1200px; margin: 40px auto; padding: 0 24px 80px; }
     @media (max-width: 900px) { .page-body { grid-template-columns: 1fr; } .toc-sidebar { display: none; } }
 
     /* TOC */
@@ -77,14 +77,14 @@
     .content li { margin-bottom: 6px; }
 
     /* Arch diagram */
-    .arch-diagram { background: #0f172a; border-radius: var(--radius); padding: 24px; font-family: 'Courier New', monospace; font-size: .82rem; line-height: 1.6; overflow-x: auto; margin: 20px 0; color: #94a3b8; border: 1px solid #1e293b; }
-    .arch-diagram .pk { color: #f472b6; }
-    .arch-diagram .cy { color: #22d3ee; }
-    .arch-diagram .gn { color: #4ade80; }
-    .arch-diagram .am { color: #fbbf24; }
-    .arch-diagram .vi { color: #a78bfa; }
-    .arch-diagram .or { color: #fb923c; }
-    .arch-diagram .dim { color: #475569; }
+    .arch-diagram { background: #f8fafc; border-radius: var(--radius); padding: 24px; font-family: 'Courier New', monospace; font-size: .82rem; line-height: 1.6; overflow-x: auto; margin: 20px 0; color: #334155; border: 1px solid #e2e8f0; }
+    .arch-diagram .pk { color: #be185d; }
+    .arch-diagram .cy { color: #0e7490; }
+    .arch-diagram .gn { color: #15803d; }
+    .arch-diagram .am { color: #b45309; }
+    .arch-diagram .vi { color: #6d28d9; }
+    .arch-diagram .or { color: #c2410c; }
+    .arch-diagram .dim { color: #94a3b8; }
 
     /* Cards */
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
@@ -180,6 +180,26 @@
     .tc-dbt { border-top: 4px solid #ff694a; } .tc-dbt h4 { color: #ff694a; }
     .tc-kafka { border-top: 4px solid #231f20; } .tc-kafka h4 { color: #334155; }
     .tc-dask { border-top: 4px solid #ee5a24; } .tc-dask h4 { color: #ee5a24; }
+  
+    /* ── Notes Sidebar ─────────────────────────────── */
+    .notes-sidebar { align-self: start; }
+    .notes-sticky { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+    .notes-heading { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: 10px; }
+    .note-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: border-color .25s, box-shadow .25s; }
+    .note-item.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,0,0,.06); }
+    .note-head { display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px; cursor: pointer; }
+    .note-bullet { width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: .78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: transform .2s; }
+    .note-item.open .note-bullet { transform: rotate(45deg); }
+    .note-label { font-size: .78rem; font-weight: 600; color: #1e293b; flex: 1; line-height: 1.35; }
+    .note-body { display: none; font-size: .76rem; color: #475569; line-height: 1.55; padding: 0 11px 11px 11px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+    .note-item.open .note-body,
+    .note-item.active .note-body { display: block; }
+    @media (max-width: 1150px) {
+      .notes-sidebar { display: none !important; }
+      .page-body  { grid-template-columns: 260px 1fr !important; }
+      .page-layout { grid-template-columns: var(--toc-width, 260px) 1fr !important; }
+    }
+
   </style>
 </head>
 <body>
@@ -1257,6 +1277,43 @@ model.fit(X, y)</code></pre>
     </section>
 
   </main>
+  <aside class="notes-sidebar">
+    <div class="notes-sticky">
+    <div class="notes-heading">Clarifications</div>
+    <div class="note-item" data-section="fundamentals">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Batch vs Stream</div></div>
+      <div class="note-body">"Bounded" data has an end (a file, yesterday's logs). "Unbounded" data is a live stream with no end. Watermarks tell the engine "time has advanced this far" — without them, you'd wait forever to close a time window. Streaming is ~10× more expensive to operate than batch.</div>
+    </div>
+    <div class="note-item" data-section="architectures">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Lambda vs Kappa</div></div>
+      <div class="note-body">Lambda ≠ AWS Lambda. Named after lambda calculus (combining two functions). The problem: you implement the same business logic twice — once in Spark batch, once in Flink stream. Kappa simplifies to one stream job that replays Kafka from offset 0 for historical reprocessing.</div>
+    </div>
+    <div class="note-item" data-section="etl-elt">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">ETL vs ELT</div></div>
+      <div class="note-body">ETL transforms before loading (separate compute cluster). ELT loads raw data first, transforms inside the warehouse using SQL. ELT won because cloud warehouses (BigQuery, Snowflake) have cheap compute. dbt = "data build tool" — just SQL SELECT statements materialized as tables.</div>
+    </div>
+    <div class="note-item" data-section="spark">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Apache Spark</div></div>
+      <div class="note-body">Spark's breakthrough: keep intermediate data in memory between processing steps instead of writing to disk (unlike Hadoop MapReduce). A "shuffle" = data moving across machines for GROUP BY or JOIN. Shuffles are the #1 bottleneck — they send data over the network.</div>
+    </div>
+    <div class="note-item" data-section="flink">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Apache Flink</div></div>
+      <div class="note-body">Flink processes one event at a time, not micro-batches. "Windows" group events by time (all purchases in 10 minutes). "State" is per-key memory between events (running count per user). "Checkpoint" = save state to S3 so recovery restarts without reprocessing all history from scratch.</div>
+    </div>
+    <div class="note-item" data-section="lakehouse">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Data Lakehouse</div></div>
+      <div class="note-body">A lakehouse = data lake (cheap S3 storage) + warehouse features (ACID transactions, time travel, schema enforcement). Parquet is a columnar file format — reads only the columns you need. Iceberg/Delta add a metadata layer so S3 files behave like a proper database table.</div>
+    </div>
+    <div class="note-item" data-section="orchestration">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Orchestration & DAGs</div></div>
+      <div class="note-body">DAG = Directed Acyclic Graph — a task dependency map with no loops: "task B runs after task A." Airflow doesn't run your computation; it schedules and monitors it. Backfill = re-running past dates after adding a new pipeline that needs years of history computed.</div>
+    </div>
+    <div class="note-item" data-section="quality">
+      <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Data Lineage</div></div>
+      <div class="note-body">Data lineage = the family tree of a dashboard number. "This metric → this warehouse table → built from these raw tables → loaded from this database." Without lineage, when a number looks wrong you can't trace where it came from. The data equivalent of a stack trace.</div>
+    </div>
+    </div>
+  </aside>
 </div>
 
 <!-- Scripts -->
@@ -1284,6 +1341,29 @@ model.fit(X, y)</code></pre>
     });
   }, { rootMargin: '-20% 0px -70% 0px' });
   sections.forEach(s => observer.observe(s));
+
+  // Notes sidebar: highlight note when its section enters viewport
+  const noteItems = document.querySelectorAll('.note-item[data-section]');
+  if (noteItems.length) {
+    const noteObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const id = e.target.id;
+          noteItems.forEach(n => {
+            const match = n.dataset.section === id;
+            n.classList.toggle('active', match);
+            if (match) n.classList.add('open');
+            else n.classList.remove('open');
+          });
+        }
+      });
+    }, { rootMargin: '-10% 0px -55% 0px' });
+    document.querySelectorAll('[id]').forEach(el => noteObs.observe(el));
+    noteItems.forEach(n =>
+      n.querySelector('.note-head').addEventListener('click', () => n.classList.toggle('open'))
+    );
+  }
+
 </script>
 </body>
 </html>
