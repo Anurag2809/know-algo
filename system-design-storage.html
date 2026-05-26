@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Storage Selection & Schema Design – KnowAlgo System Design</title>
+  <meta name="description" content="SQL vs NoSQL decision trees, sharding strategies, replication topologies, indexing, time-series databases, blob storage, and search engines. Pattern 03 of 16.">
+  <meta name="keywords" content="system design storage, SQL vs NoSQL, database sharding, replication, indexing, time-series database, blob storage, elasticsearch, system design interview">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.netlify.app/system-design-storage.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Data Storage Selection & Schema Design – KnowAlgo">
+  <meta property="og:description" content="How to pick the right database for any problem. SQL, NoSQL, NewSQL, time-series, blob storage, and search engines with 9 engineer perspectives.">
+  <meta property="og:url" content="https://knowalgo.netlify.app/system-design-storage.html">
+  <meta property="og:site_name" content="KnowAlgo">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Data Storage Selection & Schema Design – KnowAlgo">
+  <meta name="twitter:description" content="SQL vs NoSQL decision trees, sharding, replication, and indexing for every system design problem.">
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    :root {
+      --primary: #059669;
+      --primary-dark: #047857;
+      --primary-light: #ecfdf5;
+      --secondary: #7c3aed;
+      --accent: #0891b2;
+      --bg: #f8fafc;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --card-bg: #ffffff;
+      --radius: 14px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+    /* ── Progress bar ── */
+    #progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(to right, #10b981, #7c3aed); z-index: 9999; transition: width 0.1s linear; }
+
+    /* ── Nav ── */
+    nav { position: sticky; top: 0; z-index: 100; background: #0f172a; border-bottom: 1px solid #1e293b; }
+    .nav-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+    .nav-logo { font-weight: 700; font-size: 1.1rem; color: #f1f5f9; text-decoration: none; letter-spacing: -0.3px; }
+    .nav-logo span { color: #10b981; }
+    .nav-links { display: flex; gap: 8px; align-items: center; }
+    .nav-links a { color: #94a3b8; text-decoration: none; font-size: 0.875rem; padding: 6px 12px; border-radius: 8px; transition: all 0.2s; }
+    .nav-links a:hover { color: #f1f5f9; background: #1e293b; }
+    .nav-links .nav-cta { background: var(--primary); color: #fff; font-weight: 600; }
+    .nav-links .nav-cta:hover { background: var(--primary-dark); }
+    .hide-mobile { display: none; }
+    @media(min-width:768px) { .hide-mobile { display: inline; } }
+
+    /* ── Hero ── */
+    .hero { background: linear-gradient(135deg, #0f172a 0%, #064e3b 45%, #3b0764 100%); padding: 64px 24px 48px; text-align: center; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; padding: 6px 16px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 20px; }
+    .hero h1 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; color: #f1f5f9; letter-spacing: -0.5px; line-height: 1.15; margin-bottom: 16px; }
+    .hero h1 span { color: #34d399; }
+    .hero p { font-size: 1.05rem; color: #94a3b8; max-width: 700px; margin: 0 auto 24px; }
+    .hero-pills { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .hero-pill { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); color: #cbd5e1; padding: 4px 14px; border-radius: 99px; font-size: 0.78rem; }
+    .hero-back { display: inline-flex; align-items: center; gap: 6px; margin-top: 24px; color: #64748b; font-size: 0.85rem; text-decoration: none; }
+    .hero-back:hover { color: #94a3b8; }
+
+    /* ── Layout ── */
+    .page-body { max-width: 1280px; margin: 0 auto; padding: 40px 24px; display: grid; grid-template-columns: 240px 1fr; gap: 40px; align-items: start; }
+    @media(max-width:900px) { .page-body { grid-template-columns: 1fr; } }
+
+    /* ── TOC sidebar ── */
+    .toc { position: sticky; top: 72px; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .toc-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+    .toc ul { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+    .toc ul li a { display: block; font-size: 0.8rem; color: var(--text-muted); text-decoration: none; padding: 4px 8px; border-radius: 6px; border-left: 2px solid transparent; transition: all 0.15s; }
+    .toc ul li a:hover, .toc ul li a.active { color: var(--primary); border-left-color: var(--primary); background: var(--primary-light); }
+    .toc-next { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .toc-next-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .toc-next a { font-size: 0.82rem; color: var(--primary); text-decoration: none; font-weight: 600; }
+
+    /* ── Sections ── */
+    .section { margin-bottom: 56px; }
+    .section-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 8px; }
+    .section h2 { font-size: 1.65rem; font-weight: 800; color: var(--text); letter-spacing: -0.3px; margin-bottom: 16px; }
+    .section h3 { font-size: 1.15rem; font-weight: 700; color: var(--text); margin: 28px 0 12px; }
+    .section h4 { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 20px 0 8px; }
+    .section p { color: #334155; margin-bottom: 14px; }
+    .section ul, .section ol { padding-left: 20px; color: #334155; margin-bottom: 14px; }
+    .section li { margin-bottom: 6px; }
+
+    /* ── Callout ── */
+    .callout { border-radius: 10px; padding: 16px 20px; margin: 20px 0; border-left: 4px solid; }
+    .callout-green { background: #f0fdf4; border-color: #16a34a; }
+    .callout-blue { background: #eff6ff; border-color: #2563eb; }
+    .callout-amber { background: #fffbeb; border-color: #d97706; }
+    .callout-red { background: #fef2f2; border-color: #dc2626; }
+    .callout-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; }
+    .callout-green .callout-title { color: #15803d; }
+    .callout-blue .callout-title { color: #1d4ed8; }
+    .callout-amber .callout-title { color: #b45309; }
+    .callout-red .callout-title { color: #b91c1c; }
+    .callout p { margin-bottom: 0; font-size: 0.9rem; }
+
+    /* ── Code ── */
+    .code-wrap { position: relative; margin: 16px 0; border-radius: 10px; overflow: hidden; }
+    .code-wrap pre { margin: 0 !important; border-radius: 10px !important; font-size: 0.82rem !important; }
+    .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; transition: all 0.2s; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); color: #f1f5f9; }
+
+    /* ── Architecture diagram ── */
+    .arch-diagram { background: #0f172a; border-radius: 10px; padding: 20px 24px; font-family: 'Courier New', Courier, monospace; font-size: 0.78rem; line-height: 1.6; overflow-x: auto; margin: 16px 0; color: #94a3b8; }
+    .arch-diagram .c  { color: #f1f5f9; font-weight: 600; }
+    .arch-diagram .db { color: #a78bfa; font-weight: 600; }
+    .arch-diagram .ca { color: #fb923c; font-weight: 600; }
+    .arch-diagram .sv { color: #4ade80; font-weight: 600; }
+    .arch-diagram .lb { color: #fbbf24; font-weight: 600; }
+    .arch-diagram .em { color: #34d399; font-weight: 600; }
+    .arch-diagram .rd { color: #f87171; font-weight: 600; }
+    .arch-diagram .ok { color: #4ade80; }
+    .arch-diagram .er { color: #f87171; }
+    .arch-diagram .hl { color: #fbbf24; }
+    .arch-diagram .cm { color: #475569; font-style: italic; }
+    .arch-diagram .bl { color: #60a5fa; font-weight: 600; }
+    .arch-diagram .ts { color: #f472b6; font-weight: 600; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th { background: #059669; color: #fff; font-weight: 700; text-align: left; padding: 10px 14px; }
+    td { padding: 10px 14px; border-top: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    td code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 0.8rem; font-family: monospace; }
+
+    /* ── Engineer perspectives ── */
+    .eng-takes { display: flex; flex-direction: column; gap: 16px; margin: 20px 0; }
+    .eng-take { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .eng-take-header { padding: 10px 16px; font-weight: 700; font-size: 0.82rem; display: flex; align-items: center; gap: 8px; }
+    .eng-take-body { padding: 14px 16px; font-size: 0.88rem; color: #334155; display: flex; flex-direction: column; gap: 8px; }
+    .et-infra   .eng-take-header { background: #dbeafe; color: #1d4ed8; border-left: 4px solid #2563eb; }
+    .et-network .eng-take-header { background: #cffafe; color: #0e7490; border-left: 4px solid #0891b2; }
+    .et-platform .eng-take-header { background: #ede9fe; color: #6d28d9; border-left: 4px solid #7c3aed; }
+    .et-security .eng-take-header { background: #fee2e2; color: #b91c1c; border-left: 4px solid #dc2626; }
+    .et-data    .eng-take-header { background: #d1fae5; color: #065f46; border-left: 4px solid #059669; }
+    .et-ml      .eng-take-header { background: #fef3c7; color: #92400e; border-left: 4px solid #d97706; }
+    .et-backend .eng-take-header { background: #f1f5f9; color: #1e293b; border-left: 4px solid #475569; }
+    .et-frontend .eng-take-header { background: #fce7f3; color: #9d174d; border-left: 4px solid #db2777; }
+    .et-sre     .eng-take-header { background: #d1fae5; color: #064e3b; border-left: 4px solid #10b981; }
+
+    /* ── Decision tree ── */
+    .decision-tree { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 16px 0; }
+    .dt-node { padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; display: inline-block; margin: 4px; }
+    .dt-q  { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .dt-sql { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+    .dt-nosql { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .dt-special { background: #ede9fe; color: #6d28d9; border: 1px solid #c4b5fd; }
+    .dt-row { margin: 8px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted); }
+
+    /* ── Problems ── */
+    .problem-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin: 24px 0; box-shadow: var(--shadow); }
+    .problem-header { padding: 16px 20px; background: linear-gradient(to right, #064e3b, #3b0764); display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+    .problem-num { background: rgba(255,255,255,0.15); color: #fff; font-weight: 800; font-size: 0.75rem; padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
+    .problem-title { color: #f1f5f9; font-weight: 700; font-size: 1rem; flex: 1; }
+    .problem-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ptag { background: rgba(255,255,255,0.1); color: #cbd5e1; font-size: 0.72rem; padding: 2px 9px; border-radius: 99px; }
+    .problem-body { padding: 20px; }
+    .problem-body h4 { color: var(--text); font-size: 0.88rem; font-weight: 700; margin: 16px 0 8px; }
+    .problem-body p { font-size: 0.9rem; color: #334155; margin-bottom: 10px; }
+    .problem-body ul { font-size: 0.9rem; color: #334155; padding-left: 18px; }
+    .problem-body li { margin-bottom: 5px; }
+
+    /* ── Anti-patterns ── */
+    .antipattern-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .antipattern-list li { background: #fff5f5; border-left: 4px solid #ef4444; border-radius: 8px; padding: 12px 16px; font-size: 0.875rem; }
+    .antipattern-list li strong { color: #b91c1c; display: block; margin-bottom: 3px; }
+
+    /* ── Tips ── */
+    .tips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+    .tip-card { background: var(--card-bg); border: 1px solid #bbf7d0; border-radius: 10px; padding: 16px 18px; }
+    .tip-num { font-size: 0.7rem; font-weight: 700; color: #059669; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 6px; }
+    .tip-card p { font-size: 0.875rem; color: #334155; margin: 0; }
+
+    /* ── DB comparison grid ── */
+    .db-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin: 16px 0; }
+    .db-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .db-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .db-card-icon { font-size: 1.4rem; }
+    .db-card-name { font-weight: 700; font-size: 0.95rem; }
+    .db-card-type { font-size: 0.72rem; color: var(--text-muted); }
+    .db-card-examples { font-size: 0.78rem; color: #2563eb; font-weight: 600; margin-bottom: 8px; }
+    .db-card-when { font-size: 0.8rem; color: #334155; }
+    .db-card-when strong { color: var(--text); }
+
+    /* ── Footer ── */
+    footer { background: #0f172a; color: #64748b; text-align: center; padding: 40px 24px; font-size: 0.875rem; }
+    footer a { color: #94a3b8; text-decoration: none; }
+    footer a:hover { color: #f1f5f9; }
+  </style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">Know<span>Algo</span></a>
+    <div class="nav-links">
+      <a href="index.html" class="hide-mobile">DSA</a>
+      <a href="system-design.html" class="hide-mobile">System Design</a>
+      <a href="interview-prep.html" class="nav-cta">Interview Prep →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">Pattern 03 of 16 · System Design</div>
+  <h1>Data Storage<br><span>Selection & Schema Design</span></h1>
+  <p>The single most consequential early decision in system design: which storage engine fits your access patterns, consistency needs, and scale trajectory.</p>
+  <div class="hero-pills">
+    <span class="hero-pill">SQL vs NoSQL</span>
+    <span class="hero-pill">Sharding</span>
+    <span class="hero-pill">Replication</span>
+    <span class="hero-pill">Indexing</span>
+    <span class="hero-pill">Time-Series</span>
+    <span class="hero-pill">Blob Storage</span>
+    <span class="hero-pill">Search Engines</span>
+    <span class="hero-pill">9 Perspectives</span>
+  </div>
+  <a href="system-design.html" class="hero-back">← Back to System Design Patterns</a>
+</div>
+
+<div class="page-body">
+
+  <!-- ═══════ TOC ═══════ -->
+  <aside class="toc">
+    <div class="toc-title">Contents</div>
+    <ul>
+      <li><a href="#decision-tree">Storage Decision Tree</a></li>
+      <li><a href="#sql">Relational Databases (SQL)</a></li>
+      <li><a href="#nosql-document">Document Stores</a></li>
+      <li><a href="#nosql-kv">Key-Value Stores</a></li>
+      <li><a href="#nosql-wide">Wide-Column Stores</a></li>
+      <li><a href="#nosql-graph">Graph Databases</a></li>
+      <li><a href="#newsql">NewSQL & Distributed SQL</a></li>
+      <li><a href="#sharding">Sharding Strategies</a></li>
+      <li><a href="#replication">Replication Topologies</a></li>
+      <li><a href="#indexing">Indexing Deep Dive</a></li>
+      <li><a href="#timeseries">Time-Series Databases</a></li>
+      <li><a href="#blob">Blob & Object Storage</a></li>
+      <li><a href="#search">Search Engines</a></li>
+      <li><a href="#multi-store">Multi-Store Architecture</a></li>
+      <li><a href="#eng-perspectives">Engineer Perspectives</a></li>
+      <li><a href="#problems">Real Problems</a></li>
+      <li><a href="#tradeoffs">Trade-offs Table</a></li>
+      <li><a href="#antipatterns">Anti-patterns</a></li>
+      <li><a href="#interview-tips">Interview Tips</a></li>
+    </ul>
+    <div class="toc-next">
+      <div class="toc-next-label">Next Pattern</div>
+      <a href="system-design-apis.html">API & Communication →</a>
+    </div>
+  </aside>
+
+  <!-- ═══════ MAIN ═══════ -->
+  <main>
+
+    <!-- Decision Tree -->
+    <section class="section" id="decision-tree">
+      <div class="section-label">Foundation</div>
+      <h2>The Storage Decision Tree</h2>
+      <p>Every storage decision flows from access patterns, not data volume. Volume is an operational concern; the wrong engine for your access pattern is an architectural failure you'll spend years undoing.</p>
+
+      <div class="arch-diagram">
+<span class="hl">STORAGE SELECTION FLOWCHART</span>
+<span class="cm">────────────────────────────────────────────────────────────</span>
+
+Do you need <span class="sv">ACID transactions</span> across multiple entities?
+│
+├── YES ──► Do you need to scale writes beyond a single node?
+│           │
+│           ├── NO  ──► <span class="db">PostgreSQL / MySQL</span> (single-leader SQL)
+│           │
+│           └── YES ──► <span class="em">CockroachDB / Spanner / YugabyteDB</span> (distributed SQL)
+│
+└── NO ───► What is your PRIMARY access pattern?
+            │
+            ├── <span class="hl">Point lookups by key</span> ──► <span class="ca">DynamoDB / Redis / Cassandra</span>
+            │
+            ├── <span class="hl">Flexible schema, rich queries</span> ──► <span class="sv">MongoDB / Firestore</span>
+            │
+            ├── <span class="hl">Relationship traversal</span> ──► <span class="em">Neo4j / Amazon Neptune</span>
+            │
+            ├── <span class="hl">Append-only time-series</span> ──► <span class="ts">InfluxDB / TimescaleDB / Prometheus</span>
+            │
+            ├── <span class="hl">Full-text / fuzzy search</span> ──► <span class="bl">Elasticsearch / OpenSearch / Typesense</span>
+            │
+            └── <span class="hl">Large binary objects</span> ──► <span class="cm">S3 / GCS / Azure Blob</span>
+      </div>
+
+      <div class="callout callout-green">
+        <div class="callout-title">The Rule No One Tells You</div>
+        <p>Production systems almost always use <strong>multiple stores</strong>. PostgreSQL for authoritative state, Redis for hot reads, Elasticsearch for search, S3 for media. The decision tree helps you pick the <em>right store per concern</em>, not one store for everything.</p>
+      </div>
+    </section>
+
+    <!-- SQL -->
+    <section class="section" id="sql">
+      <div class="section-label">Storage Engine 1</div>
+      <h2>Relational Databases (SQL)</h2>
+      <p>The default starting point for most backend systems. SQL gives you ACID guarantees, expressive JOINs, and battle-tested tooling. The penalty is write throughput at extreme scale and rigid schema evolution.</p>
+
+      <h3>When SQL Wins</h3>
+      <ul>
+        <li>Financial transactions, order management — anywhere you need guaranteed consistency across related rows</li>
+        <li>Complex reporting queries with arbitrary JOINs (OLAP workloads favor Postgres over document stores)</li>
+        <li>Foreign key constraints, check constraints, enum types — data integrity enforced at the DB layer</li>
+        <li>Schema migrations are audited and versioned (Flyway / Liquibase)</li>
+      </ul>
+
+      <h3>ACID Unpacked</h3>
+      <div class="arch-diagram">
+<span class="hl">ACID PROPERTIES — what each actually guarantees:</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="sv">Atomicity</span>     "All or nothing." A transaction's writes either all commit
+              or all roll back. No half-written state.
+
+<span class="em">Consistency</span>   Data only moves from one valid state to another.
+              Constraints (FK, CHECK, UNIQUE) are always satisfied.
+
+<span class="bl">Isolation</span>     Concurrent transactions don't see each other's partial state.
+              (Levels: READ UNCOMMITTED → READ COMMITTED → REPEATABLE READ → SERIALIZABLE)
+              <span class="cm">↑ most DBs default to READ COMMITTED (PostgreSQL: READ COMMITTED)</span>
+
+<span class="ca">Durability</span>    Committed data survives crashes. Written to WAL (write-ahead log)
+              before the client gets a success response.
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">PostgreSQL isolation levels and what anomalies they prevent:</span>
+
+Level               Dirty Read   Non-Repeatable Read   Phantom Read
+──────────────────  ───────────  ────────────────────  ────────────
+READ COMMITTED      <span class="ok">Protected</span>    Possible              Possible
+REPEATABLE READ     <span class="ok">Protected</span>    <span class="ok">Protected</span>             Possible (PG: <span class="ok">Protected</span>)
+SERIALIZABLE        <span class="ok">Protected</span>    <span class="ok">Protected</span>             <span class="ok">Protected</span>
+      </div>
+
+      <h3>PostgreSQL vs MySQL</h3>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Feature</th><th>PostgreSQL</th><th>MySQL (InnoDB)</th></tr>
+          <tr><td>Default isolation</td><td>READ COMMITTED</td><td>REPEATABLE READ</td></tr>
+          <tr><td>JSON support</td><td>Excellent (JSONB indexable)</td><td>Good (JSON column)</td></tr>
+          <tr><td>Full-text search</td><td>Built-in, solid</td><td>Limited</td></tr>
+          <tr><td>Extensions</td><td>pgvector, PostGIS, timescaledb</td><td>Fewer</td></tr>
+          <tr><td>Replication</td><td>Streaming + logical</td><td>Binlog-based</td></tr>
+          <tr><td>Write performance</td><td>Slightly slower (MVCC overhead)</td><td>Slightly faster (simple writes)</td></tr>
+          <tr><td>Best for</td><td>Complex queries, analytics, JSONB</td><td>High-write web apps, proven tooling</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Document stores -->
+    <section class="section" id="nosql-document">
+      <div class="section-label">Storage Engine 2</div>
+      <h2>Document Stores</h2>
+      <p>Stores data as JSON/BSON documents. Schema-flexible — each document can have different fields. The sweet spot is hierarchical, self-contained data where you almost always retrieve the whole object.</p>
+
+      <div class="db-grid">
+        <div class="db-card">
+          <div class="db-card-head"><div class="db-card-icon">🍃</div><div><div class="db-card-name">MongoDB</div><div class="db-card-type">Document Store</div></div></div>
+          <div class="db-card-examples">Atlas (cloud) · Community · Enterprise</div>
+          <div class="db-card-when"><strong>Use when:</strong> Product catalogs, user profiles, content management, e-commerce. Rich query language + aggregation pipeline. Native sharding (mongos). Horizontal scale built-in.</div>
+        </div>
+        <div class="db-card">
+          <div class="db-card-head"><div class="db-card-icon">🔥</div><div><div class="db-card-name">Firestore</div><div class="db-card-type">Managed Document Store</div></div></div>
+          <div class="db-card-examples">Firebase / Google Cloud</div>
+          <div class="db-card-when"><strong>Use when:</strong> Mobile/web apps with real-time sync. Offline support. Automatic scaling. Limited query capabilities vs Mongo but zero ops overhead.</div>
+        </div>
+        <div class="db-card">
+          <div class="db-card-head"><div class="db-card-icon">🛋️</div><div><div class="db-card-name">CouchDB</div><div class="db-card-type">Document Store</div></div></div>
+          <div class="db-card-examples">Apache CouchDB · Couchbase</div>
+          <div class="db-card-when"><strong>Use when:</strong> Multi-master replication, offline-first apps. CouchDB's MVCC allows conflict resolution. Couchbase adds KV + N1QL query layer.</div>
+        </div>
+      </div>
+
+      <div class="callout callout-amber">
+        <div class="callout-title">The JOIN Problem with Document Stores</div>
+        <p>Document stores have no native JOINs. If you frequently need to combine data from multiple collections, either embed the related data inside the parent document (denormalize) or reconsider whether SQL is a better fit. <strong>Embedding vs referencing</strong> is the core data modeling decision in MongoDB.</p>
+      </div>
+    </section>
+
+    <!-- Key-Value -->
+    <section class="section" id="nosql-kv">
+      <div class="section-label">Storage Engine 3</div>
+      <h2>Key-Value Stores</h2>
+      <p>Pure hash-map semantics: get(key), set(key, value), delete(key). The simplest possible data model delivers the highest possible throughput. No schema, no query language beyond key lookups.</p>
+
+      <div class="arch-diagram">
+<span class="hl">KEY-VALUE ACCESS PATTERNS vs WRONG USE CASES</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="ok">RIGHT FITS:</span>
+  Session storage      user:{uuid} → {token, expiry, preferences}
+  Feature flags        feature:{name} → {enabled: true, rollout: 25}
+  Rate limit counters  ratelimit:{ip}:{window} → count  (+ EXPIRE)
+  Hot cache layer      product:{id} → serialized product blob
+  Distributed locks    lock:{resource} → {holder, ttl}  (with SETNX)
+
+<span class="er">WRONG FITS (reach for SQL/Document instead):</span>
+  "Find all sessions for user X"  ← no secondary index, requires full scan
+  "List products with price > 50" ← no range queries by value
+  "Join user + orders"            ← no relationship model
+  Anything requiring aggregation  ← no GROUP BY
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">Redis vs DynamoDB vs Memcached:</span>
+
+Redis         → Rich data types (Sorted Set, List, Bitmap, HyperLogLog)
+                Persistence optional (RDB snapshot + AOF log)
+                Lua scripting for atomic multi-key ops
+                Best for: leaderboards, queues, session, rate limiting
+
+DynamoDB      → Serverless, infinite scale, SLA-backed
+                Composite keys (PK + SK) enable range queries
+                Global Secondary Indexes (GSI) for alternate access patterns
+                Best for: serverless apps, IoT, gaming leaderboards
+
+Memcached     → Pure caching only (no persistence, no types beyond string)
+                Multi-threaded (Redis is single-threaded per shard)
+                Best for: simple cache layer where you need maximum raw throughput
+      </div>
+    </section>
+
+    <!-- Wide Column -->
+    <section class="section" id="nosql-wide">
+      <div class="section-label">Storage Engine 4</div>
+      <h2>Wide-Column Stores</h2>
+      <p>Rows identified by a partition key. Each row can have a different set of columns. Built for write-heavy workloads at massive scale, with data physically sorted by clustering columns for efficient range reads.</p>
+
+      <h3>Cassandra Data Model</h3>
+      <div class="arch-diagram">
+<span class="hl">CASSANDRA — Think "partitioned, sorted rows"</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+TABLE: messages_by_conversation
+
+PRIMARY KEY: (<span class="sv">conversation_id</span>, <span class="hl">sent_at</span>, <span class="bl">message_id</span>)
+             ↑ partition key     ↑ clustering keys (sorted DESC)
+
+<span class="sv">conversation_id</span>  <span class="hl">sent_at</span>           <span class="bl">message_id</span>  content   sender
+────────────────  ─────────────────  ──────────  ────────  ──────────
+"conv_abc"        2024-01-15 14:32  "msg_001"   "Hello"   "user_A"
+"conv_abc"        2024-01-15 14:31  "msg_000"   "Hey!"    "user_B"
+"conv_xyz"        2024-01-15 09:00  "msg_055"   "Done"    "user_C"
+
+<span class="cm">→ All messages for "conv_abc" are on the same node (same partition)</span>
+<span class="cm">→ Time-ordered within the partition (clustering key)</span>
+<span class="cm">→ Query: SELECT * FROM messages WHERE conversation_id='conv_abc' LIMIT 20</span>
+<span class="cm">   returns last 20 messages in O(1) with no full table scan</span>
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">Design Rule: Model queries first, schema second</span>
+<span class="cm">SQL: normalize data, then write arbitrary queries</span>
+<span class="cm">Cassandra: decide your queries, then design a table per query pattern</span>
+      </div>
+
+      <h3>Cassandra vs HBase</h3>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Dimension</th><th>Apache Cassandra</th><th>Apache HBase</th></tr>
+          <tr><td>Architecture</td><td>Leaderless (masterless ring)</td><td>Master-region server (HDFS-backed)</td></tr>
+          <tr><td>Consistency</td><td>Tunable (ONE/QUORUM/ALL)</td><td>Strong (single-row ACID)</td></tr>
+          <tr><td>Write throughput</td><td>Extremely high (LSM tree)</td><td>High (WAL + MemStore)</td></tr>
+          <tr><td>Read latency</td><td>Low (tunable)</td><td>Higher (HDFS seek latency)</td></tr>
+          <tr><td>Use case</td><td>IoT, messaging, time-series, sessions</td><td>Hadoop ecosystem, batch + OLAP</td></tr>
+          <tr><td>Operational complexity</td><td>Medium</td><td>High (requires Zookeeper, HDFS)</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Graph -->
+    <section class="section" id="nosql-graph">
+      <div class="section-label">Storage Engine 5</div>
+      <h2>Graph Databases</h2>
+      <p>Stores entities as nodes and relationships as edges. Relationship traversal is O(1) per hop regardless of database size — exactly the opposite of recursive JOINs in SQL which get exponentially slower.</p>
+
+      <div class="arch-diagram">
+<span class="hl">GRAPH DB vs SQL — Friend-of-friend query at depth 4</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+SQL (recursive CTE): at 1M users, depth-4 query = O(n^4) join explosion
+                     10ms → 100ms → 1s → 10s... query times blow up
+
+Neo4j / Cypher:      index-free adjacency — each node stores direct
+                     pointers to connected nodes, depth-4 traversal
+                     stays O(depth × avg_connections) regardless of
+                     total graph size → predictably fast
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">Cypher query (Neo4j):</span>
+<span class="sv">MATCH</span> (me:User {id: "alice"})
+      -[:FOLLOWS*2..4]-&gt;(suggested:User)
+<span class="sv">WHERE</span> NOT (me)-[:FOLLOWS]-&gt;(suggested)
+  AND me &lt;&gt; suggested
+<span class="sv">RETURN</span> suggested.name, count(*) AS <span class="hl">mutual_connections</span>
+<span class="sv">ORDER BY</span> mutual_connections <span class="sv">DESC</span>
+<span class="sv">LIMIT</span> 20
+
+<span class="cm">→ "People me might know" — 2-4 hops, not direct follows</span>
+<span class="cm">→ Same query in SQL requires 3+ self-joins and becomes unusable at scale</span>
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">USE CASES:</span>  Social graphs · Fraud detection (ring networks) ·
+            Knowledge graphs · Recommendation engines ·
+            Network topology mapping · Access control / permissions
+      </div>
+    </section>
+
+    <!-- NewSQL -->
+    <section class="section" id="newsql">
+      <div class="section-label">Storage Engine 6</div>
+      <h2>NewSQL & Distributed SQL</h2>
+      <p>Combines the ACID guarantees of SQL with the horizontal scalability of NoSQL. The tradeoff: higher latency per write (distributed consensus), higher operational complexity, and fewer ecosystem tools than PostgreSQL.</p>
+
+      <div class="arch-diagram">
+<span class="hl">NEWSQL ARCHITECTURE — Raft consensus + distributed storage</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+        <span class="c">┌─────────────────────────────────────────────┐</span>
+        <span class="c">│          SQL Query Layer (PostgreSQL wire)  │</span>
+        <span class="c">└──────────────┬──────────────────────────────┘</span>
+                       │  distributed query planner
+        <span class="c">┌──────────────▼──────────────────────────────┐</span>
+        <span class="c">│          Transaction Coordinator            │</span>
+        <span class="c">└────┬──────────────┬──────────────┬──────────┘</span>
+             │              │              │
+    <span class="sv">┌────────▼───┐ ┌────────▼───┐ ┌────────▼───┐</span>
+    <span class="sv">│  Range 1   │ │  Range 2   │ │  Range 3   │</span>
+    <span class="sv">│  (Raft     │ │  (Raft     │ │  (Raft     │</span>
+    <span class="sv">│  replicated│ │  replicated│ │  replicated│</span>
+    <span class="sv">│  3-5 nodes)│ │  3-5 nodes)│ │  3-5 nodes)│</span>
+    <span class="sv">└────────────┘ └────────────┘ └────────────┘</span>
+
+CockroachDB · YugabyteDB · TiDB · Google Spanner (managed)
+
+<span class="hl">Use when:</span>
+  <span class="ok">✓</span> Need global distribution with strong consistency (Spanner)
+  <span class="ok">✓</span> Multi-region writes with no single SPOF
+  <span class="ok">✓</span> Existing Postgres codebase that needs to scale out
+  <span class="er">✗</span> Avoid if single-region Postgres can handle your write volume
+  <span class="er">✗</span> Avoid if p99 latency is critical (consensus adds ~10-50ms)
+      </div>
+    </section>
+
+    <!-- Sharding -->
+    <section class="section" id="sharding">
+      <div class="section-label">Scaling Pattern</div>
+      <h2>Sharding Strategies</h2>
+      <p>Sharding partitions data across multiple database nodes. The strategy you choose determines your query patterns, hot spot risk, and how hard resharding will be two years from now.</p>
+
+      <h3>Range Sharding</h3>
+      <div class="arch-diagram">
+<span class="hl">RANGE SHARDING — Shard by key ranges</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+user_id range  │  Shard
+───────────────┼──────────────────
+0 – 999,999    │  <span class="sv">Shard A</span>  (DB node 1)
+1M – 1,999,999 │  <span class="sv">Shard B</span>  (DB node 2)
+2M – 2,999,999 │  <span class="sv">Shard C</span>  (DB node 3)
+
+<span class="ok">Pros:</span>
+  Range queries efficient: "all users 500k–600k" goes to one shard
+  Easy to reason about data location
+  Supports ordered scans (time-series: all events from T1 to T2)
+
+<span class="er">Cons:</span>
+  Hot spot risk: new user IDs all land on the latest shard
+  Temporal data (timestamps) → all writes hit the current range shard
+  Uneven shard sizes as data grows non-uniformly
+      </div>
+
+      <h3>Hash Sharding</h3>
+      <div class="arch-diagram">
+<span class="hl">HASH SHARDING — shard = hash(key) % N</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+user_id = "alice"   → SHA256 → 0x3f2a... → mod 4 = <span class="sv">Shard 2</span>
+user_id = "bob"     → SHA256 → 0x9c41... → mod 4 = <span class="sv">Shard 0</span>
+user_id = "charlie" → SHA256 → 0x71bd... → mod 4 = <span class="sv">Shard 3</span>
+
+<span class="ok">Pros:</span>
+  Even distribution regardless of key values
+  No hot spots on new data
+  Simple to implement
+
+<span class="er">Cons:</span>
+  Range queries impossible: "users 500k–600k" → must scan ALL shards
+  Resharding = change N = rehash ALL keys → massive data migration
+  No natural ordering for range scans
+
+<span class="hl">Solution:</span> Consistent Hashing (see Traffic Shaping pattern)
+  → Virtual nodes on a ring → only 1/N keys remapped when adding a shard
+      </div>
+
+      <h3>Directory (Lookup) Sharding</h3>
+      <div class="arch-diagram">
+<span class="hl">DIRECTORY SHARDING — explicit mapping in a lookup service</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+               <span class="c">┌────────────────────────┐</span>
+               <span class="c">│   Shard Directory      │</span>
+               <span class="c">│   (Redis / Config DB)  │</span>
+               <span class="c">│  user_id → shard_id    │</span>
+               <span class="c">└──────────┬─────────────┘</span>
+                          │
+          ┌───────────────┼───────────────┐
+    <span class="sv">┌──────▼──────┐</span>  <span class="sv">┌──────▼──────┐</span>  <span class="sv">┌──────▼──────┐</span>
+    <span class="sv">│  Shard A    │</span>  <span class="sv">│  Shard B    │</span>  <span class="sv">│  Shard C    │</span>
+    <span class="sv">└─────────────┘</span>  <span class="sv">└─────────────┘</span>  <span class="sv">└─────────────┘</span>
+
+<span class="ok">Pros:</span>
+  Completely flexible — any shard assignment logic
+  Resharding = update directory entries, move data incrementally
+  Can co-locate related users (tenant-aware, same geography)
+
+<span class="er">Cons:</span>
+  Directory lookup on every read/write (extra network hop)
+  Directory becomes a single point of failure (must be highly available)
+  Directory can become stale during resharding windows
+      </div>
+
+      <h3>Shard Strategy Selection Guide</h3>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Use Case</th><th>Recommended Strategy</th><th>Reason</th></tr>
+          <tr><td>Time-series / IoT events</td><td>Range on time (month/day shards)</td><td>Recent data in one shard, old data archived</td></tr>
+          <tr><td>User data (social app)</td><td>Hash on user_id</td><td>Even distribution, single-user reads are point lookups</td></tr>
+          <tr><td>Multi-tenant SaaS</td><td>Directory (tenant → shard)</td><td>Tenant isolation, large tenants get dedicated shards</td></tr>
+          <tr><td>E-commerce products</td><td>Hash on product_id</td><td>Even distribution, no cross-shard queries for catalog</td></tr>
+          <tr><td>Messaging (conversation)</td><td>Hash on conversation_id</td><td>All messages for a convo on one shard</td></tr>
+          <tr><td>Geospatial data</td><td>Range on geo-hash prefix</td><td>Nearby points in same shard, efficient spatial queries</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Replication -->
+    <section class="section" id="replication">
+      <div class="section-label">Availability Pattern</div>
+      <h2>Replication Topologies</h2>
+      <p>Replication keeps copies of your data on multiple nodes. The topology determines your consistency guarantees, failover behavior, and write scalability.</p>
+
+      <div class="arch-diagram">
+<span class="hl">THREE REPLICATION TOPOLOGIES</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="sv">1. SINGLE-LEADER (Master-Replica / Primary-Standby)</span>
+
+  Writes → <span class="sv">Primary</span> ──WAL stream──► <span class="db">Replica 1</span> (read traffic)
+                    └─────WAL stream──► <span class="db">Replica 2</span> (failover standby)
+
+  Consistency: <span class="ok">Strong</span> (sync replication) or <span class="hl">Eventual</span> (async)
+  Write scale: ✗ Single writer bottleneck
+  Failover: Replica promoted to primary (seconds–minutes of downtime)
+  Use: PostgreSQL read replicas, MySQL primary/replica, most RDBMS
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="em">2. MULTI-LEADER (Active-Active)</span>
+
+  US Primary ──► <span class="em">EU Primary</span>  (replication both ways)
+       │              │
+  US Replicas    EU Replicas
+
+  Consistency: <span class="hl">Eventual</span> (conflict resolution required)
+  Write scale: ✓ Writes accepted at any leader
+  Conflict: Last-Write-Wins / CRDT / application-level merge
+  Use: Multi-region writes (CouchDB, MySQL Group Replication)
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="bl">3. LEADERLESS (Dynamo-style / Peer-to-Peer)</span>
+
+  Client writes to <span class="hl">W</span> of N replicas (quorum write)
+  Client reads from <span class="hl">R</span> of N replicas (quorum read)
+  When W + R &gt; N → strong consistency guaranteed
+
+  W=2, R=2, N=3 → W+R=4 &gt; 3 → <span class="ok">strong consistency</span>
+  W=1, R=1, N=3 → W+R=2 ≤ 3 → <span class="hl">eventual consistency</span> (higher throughput)
+
+  Use: Cassandra, Amazon DynamoDB, Riak
+      </div>
+
+      <div class="callout callout-blue">
+        <div class="callout-title">Replication Lag is Not a Bug, It's a Feature Tradeoff</div>
+        <p>Synchronous replication = zero lag, but every write waits for replica acknowledgment → higher write latency. Async replication = lower write latency, but replicas may be seconds behind. Read-your-own-writes consistency requires routing reads to the primary or using sync replication for at least one replica.</p>
+      </div>
+    </section>
+
+    <!-- Indexing -->
+    <section class="section" id="indexing">
+      <div class="section-label">Performance Pattern</div>
+      <h2>Indexing Deep Dive</h2>
+      <p>The wrong index (or missing one) is the #1 cause of database performance problems. Understanding the underlying data structure tells you exactly which index to reach for.</p>
+
+      <h3>B-tree vs LSM tree vs Hash Index</h3>
+      <div class="arch-diagram">
+<span class="hl">B-TREE INDEX — PostgreSQL, MySQL default</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+              <span class="sv">[50]</span>
+            /      \
+      <span class="sv">[20, 30]</span>    <span class="sv">[70, 90]</span>
+      /   |   \    /   |   \
+ [10]  [25] [35] [60] [80] [100]
+
+Reads:  O(log n) — balanced tree, 3-4 disk reads for millions of rows
+Writes: O(log n) — insert in-place, rebalance if needed
+Range:  <span class="ok">Efficient</span> — leaf nodes linked, range scan = sequential leaf walk
+Use:    <span class="ok">General purpose</span> — most SQL indexes, equality + range queries
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">LSM TREE — Cassandra, RocksDB, LevelDB, InfluxDB</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Write:  MemTable (in-memory) → flush to SSTable (immutable on-disk)
+        SSTables periodically compacted (merging sorted files)
+Read:   Check MemTable → L0 SSTables → L1 → L2... (bloom filter skip)
+
+Reads:  O(log n) but slower than B-tree on cold reads (multi-level check)
+Writes: <span class="ok">Extremely fast</span> — sequential append, never in-place update
+Range:  Good (SSTables are sorted)
+Use:    <span class="ok">Write-heavy workloads</span> — time-series, event log, Cassandra
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">HASH INDEX — in-memory key→offset map</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Reads:  O(1) — pure hash lookup
+Writes: O(1) average
+Range:  <span class="er">Impossible</span> — no ordering preserved
+Use:    <span class="ok">Exact-match lookups only</span> — session store, KV cache
+      </div>
+
+      <h3>Composite & Covering Indexes</h3>
+      <div class="arch-diagram">
+<span class="hl">COMPOSITE INDEX — column order matters</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+CREATE INDEX idx_orders ON orders(user_id, status, created_at DESC);
+
+<span class="ok">Uses index:</span>  WHERE user_id = 42
+            WHERE user_id = 42 AND status = 'shipped'
+            WHERE user_id = 42 AND status = 'shipped' ORDER BY created_at DESC
+<span class="er">Skips index:</span> WHERE status = 'shipped'          ← leading column missing
+            WHERE created_at &gt; '2024-01-01'   ← leading columns missing
+
+Rule: <span class="hl">Prefix rule</span> — index only usable if leading columns are in WHERE/JOIN
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">COVERING INDEX — index contains all SELECT columns</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Query: SELECT user_id, status, created_at FROM orders WHERE user_id = 42
+
+Normal index:  find row pointers → <span class="hl">fetch rows from heap</span> (random I/O)
+Covering idx:  index already has user_id + status + created_at
+               → <span class="ok">index-only scan</span>, never touch the actual table rows
+               → 10-100× faster on I/O-bound queries
+
+PostgreSQL: CREATE INDEX INCLUDE (status, created_at) → explicit covering
+MySQL:      All InnoDB secondary indexes automatically include PK column
+      </div>
+
+      <h3>Partial & Expression Indexes</h3>
+      <div class="arch-diagram">
+<span class="hl">PARTIAL INDEX — index only the rows you actually query</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="cm">-- Only active orders need fast lookup, not 5 years of history</span>
+CREATE INDEX idx_active_orders ON orders(user_id)
+  WHERE status IN ('pending', 'processing');
+<span class="cm">-- 10M orders total, 50k active → index size 200× smaller</span>
+
+<span class="hl">EXPRESSION INDEX — index a computed value</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="cm">-- Case-insensitive email lookup without touching application code</span>
+CREATE INDEX idx_email_lower ON users(LOWER(email));
+<span class="cm">-- Query: SELECT * FROM users WHERE LOWER(email) = LOWER($1)</span>
+<span class="cm">-- Now uses the index instead of full table scan</span>
+      </div>
+    </section>
+
+    <!-- Time-series -->
+    <section class="section" id="timeseries">
+      <div class="section-label">Specialized Storage</div>
+      <h2>Time-Series Databases</h2>
+      <p>Optimized for append-only, timestamp-ordered data with high write throughput and efficient range aggregations. Using a general-purpose SQL DB for time-series data at scale leads to painful performance degradation over time.</p>
+
+      <div class="arch-diagram">
+<span class="hl">TIME-SERIES ACCESS PATTERNS</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Write pattern:   <span class="ts">INSERT (sensor_id, timestamp, value)</span> — billions/day
+                 Always monotonically increasing timestamp
+                 Bulk inserts common (batched from edge devices)
+
+Read pattern:    "Last 5 minutes of CPU for host-042"
+                 "Average latency per service per hour, last 30 days"
+                 "Max temperature per zone, rolling 15-min window"
+
+Key optimization: <span class="ts">Column-based storage</span>
+                  [time, time, time, time] compressed → 90%+ savings
+                  [value, value, value...] delta-encoded (store diffs)
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">RETENTION POLICIES — automatic data lifecycle</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Raw data (1s resolution)  → keep 7 days   → auto-delete
+1-min rollup              → keep 30 days  → downsampled from raw
+1-hour rollup             → keep 1 year   → downsampled from 1-min
+1-day rollup              → keep 5 years  → downsampled from 1-hour
+
+<span class="ok">Benefit:</span> Storage grows O(log time) not O(time)
+          Queries on old data hit pre-aggregated rollups → fast
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">TSDB CHOICES:</span>
+
+InfluxDB    → Purpose-built TSDB, Flux query language, push model
+              Best for: metrics, monitoring, IoT
+TimescaleDB → PostgreSQL extension (SQL queries work!)
+              Best for: SQL ecosystem, complex joins with relational data
+Prometheus  → Pull model, short retention, alerting-first
+              Best for: Kubernetes metrics + Grafana dashboards
+ClickHouse  → OLAP columnar store, SQL, petabyte-scale analytics
+              Best for: log analytics, event analytics, not pure time-series
+      </div>
+    </section>
+
+    <!-- Blob storage -->
+    <section class="section" id="blob">
+      <div class="section-label">Specialized Storage</div>
+      <h2>Blob & Object Storage</h2>
+      <p>Immutable, flat-namespace storage for large binary objects: images, videos, backups, ML model artifacts, logs. Object storage is not a file system — there's no in-place editing, no rename, no directory structure (just prefixes).</p>
+
+      <div class="arch-diagram">
+<span class="hl">OBJECT STORAGE ARCHITECTURE (S3 / GCS / Azure Blob)</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Namespace:  <span class="bl">bucket/key</span>  (flat — "folders" are just key prefixes)
+            s3://my-bucket/users/alice/avatar.jpg
+            s3://my-bucket/users/alice/bg.jpg
+            s3://my-bucket/videos/2024/01/upload_abc.mp4
+
+Operations: <span class="ok">PUT</span>    → upload (atomic, versioned if enabled)
+            <span class="ok">GET</span>    → download (direct URL or pre-signed URL)
+            <span class="ok">DELETE</span> → mark deleted (immediate or via lifecycle rule)
+            <span class="ok">LIST</span>   → list keys by prefix (paginated)
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">LIFECYCLE POLICIES — automated tiering</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Day 0:    Upload → <span class="sv">S3 Standard</span>         (hot, immediate access)
+Day 30:   Auto-transition → <span class="hl">S3-IA</span>        (infrequent access, 40% cheaper)
+Day 90:   Auto-transition → <span class="em">S3 Glacier</span>  (archive, minutes to hours retrieval)
+Day 365:  Auto-transition → <span class="bl">Deep Archive</span> (12h retrieval, 75% cheaper)
+Day 2555: Auto-delete
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">PRE-SIGNED URLs — secure direct uploads/downloads</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="cm">Client → Your API → "Give me URL to upload my avatar"</span>
+<span class="cm">Your API → S3: generate pre-signed PUT URL (expires in 15 min)</span>
+<span class="cm">Your API → Client: {url: "https://s3.amazonaws.com/...?sig=..."}</span>
+<span class="cm">Client → S3: PUT directly (bypasses your server, huge bandwidth saving)</span>
+
+<span class="cm">→ Your backend never touches the binary data</span>
+<span class="cm">→ S3 verifies signature, enforces max file size, CORS</span>
+<span class="cm">→ After upload, client notifies your API → record metadata in DB</span>
+      </div>
+    </section>
+
+    <!-- Search -->
+    <section class="section" id="search">
+      <div class="section-label">Specialized Storage</div>
+      <h2>Search Engines</h2>
+      <p>Full-text search, fuzzy matching, and relevance ranking require an inverted index — a fundamentally different data structure from B-trees. Elasticsearch is the default choice; Typesense is the simpler, faster alternative for most apps.</p>
+
+      <div class="arch-diagram">
+<span class="hl">INVERTED INDEX — how Elasticsearch works</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Documents:
+  Doc 1: "Distributed caching with Redis"
+  Doc 2: "Redis cluster setup guide"
+  Doc 3: "Cache invalidation strategies"
+
+Tokenize + normalize (lowercase, stem, remove stopwords):
+  "distribut" → [Doc1]
+  "cach"      → [Doc1, Doc3]
+  "redis"     → [Doc1, Doc2]
+  "cluster"   → [Doc2]
+  "setup"     → [Doc2]
+  "invalidat" → [Doc3]
+  "strategi"  → [Doc3]
+
+Query: "redis caching"
+  "redis"  → [Doc1, Doc2]
+  "cach"   → [Doc1, Doc3]
+  Union    → Doc1 ∩ Doc1 = <span class="ok">Doc1 (highest score)</span>, Doc2, Doc3
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">ELASTICSEARCH vs TYPESENSE vs OPENSEARCH</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Elasticsearch  → Most mature, complex, Java-based
+                 Powerful aggregations, geo-search, ML ranking
+                 High operational complexity and memory footprint
+                 Best for: log analytics (ELK stack), complex search
+
+Typesense      → Rust-based, extremely fast, simple API
+                 Typo-tolerance built-in, instant search
+                 Simpler deployment (single binary)
+                 Best for: product search, autocomplete, most app search
+
+OpenSearch     → AWS fork of Elasticsearch (open-source, no license risk)
+                 Compatible with ES tooling, AWS-managed (AOSS)
+                 Best for: AWS shops, ELK replacement without Elastic license
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">SEARCH AS A SECONDARY INDEX — canonical pattern</span>
+
+  Source of truth: <span class="db">PostgreSQL</span>  (ACID writes)
+  Search index:    <span class="bl">Elasticsearch</span>  (async sync via CDC or event)
+  On write:        INSERT into Postgres → publish event → ES indexer
+  On read:         Search → ES → get IDs → fetch full records from Postgres
+      </div>
+    </section>
+
+    <!-- Multi-store -->
+    <section class="section" id="multi-store">
+      <div class="section-label">Architecture Pattern</div>
+      <h2>Multi-Store Architecture</h2>
+      <p>Modern production systems routinely combine 3-5 storage engines. Each engine serves its natural access pattern. The architecture challenge is keeping these stores synchronized and knowing which is the source of truth.</p>
+
+      <div class="arch-diagram">
+<span class="hl">SOCIAL PLATFORM — 5-store architecture</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+                    <span class="c">[ Client ]</span>
+                         │
+                  <span class="lb">[ API Gateway ]</span>
+                    /  |  |  |  \
+                   /   |  |  |   \
+         ┌─────────┐   │  │  │  ┌──────────┐
+         <span class="db">│Postgres │</span>   │  │  │  <span class="ca">│  Redis   │</span>
+         <span class="db">│Users    │</span>   │  │  │  <span class="ca">│  Sessions│</span>
+         <span class="db">│Posts    │</span>   │  │  │  <span class="ca">│  Feeds   │</span>
+         <span class="db">│Follows  │</span>   │  │  │  <span class="ca">│  Counts  │</span>
+         <span class="db">└─────────┘</span>   │  │  │  └──────────┘
+                      │  │  │
+               ┌──────┘  │  └──────────┐
+          <span class="bl">┌────────┐</span>  │          <span class="sv">┌────────┐</span>
+          <span class="bl">│  Elastic│</span>  │          <span class="sv">│   S3   │</span>
+          <span class="bl">│ Search  │</span>  │          <span class="sv">│ Images │</span>
+          <span class="bl">│ Users   │</span>  │          <span class="sv">│ Videos │</span>
+          <span class="bl">│ Posts   │</span>  │          <span class="sv">└────────┘</span>
+          <span class="bl">└────────┘</span>  │
+                    <span class="ts">┌──────────┐</span>
+                    <span class="ts">│InfluxDB  │</span>
+                    <span class="ts">│ Analytics│</span>
+                    <span class="ts">│ Events   │</span>
+                    <span class="ts">│ Metrics  │</span>
+                    <span class="ts">└──────────┘</span>
+
+<span class="hl">Ownership rules:</span>
+  <span class="db">Postgres</span>    → source of truth for users, posts, social graph
+  <span class="ca">Redis</span>       → derived hot state (rebuilt from Postgres if lost)
+  <span class="bl">Elasticsearch</span> → derived search index (rebuilt from Postgres via CDC)
+  <span class="sv">S3</span>          → source of truth for binary objects (never duplicated)
+  <span class="ts">InfluxDB</span>    → derived analytics (append-only from event stream)
+      </div>
+
+      <div class="callout callout-blue">
+        <div class="callout-title">Change Data Capture (CDC) — the glue between stores</div>
+        <p>Debezium watches the Postgres WAL (write-ahead log) and publishes every INSERT/UPDATE/DELETE as a Kafka event. Elasticsearch consumers and Redis consumers subscribe and update their respective indexes. This keeps all stores eventually consistent without coupling application code to every storage system. Debezium → Kafka → Elasticsearch indexer is production-standard for search index sync.</p>
+      </div>
+    </section>
+
+    <!-- Engineer Perspectives -->
+    <section class="section" id="eng-perspectives">
+      <div class="section-label">9 Lenses</div>
+      <h2>How Each Team Thinks About Storage</h2>
+      <p>The same storage decision looks completely different depending on which concerns dominate your role.</p>
+
+      <div class="eng-takes">
+
+        <div class="eng-take et-infra">
+          <div class="eng-take-header">🏗️ Infrastructure Engineer</div>
+          <div class="eng-take-body">
+            <p>We care about disk I/O, memory pressure, and operational footprint. A PostgreSQL cluster with streaming replication is something we can operate reliably. Adding MongoDB alongside it doubles our backup surface area, doubles our restore drill complexity, and requires separate expertise. Before adding a second database technology, we ask: does the application complexity justify the operational cost?</p>
+            <p>Our playbook is: managed services wherever possible (RDS, Cloud SQL, Atlas). Self-managed only when cost or compliance demands it — and then we size instances conservatively (database RAM = working set size) and set up automated failover before going to production.</p>
+            <p>For sharding, we prefer application-level sharding over Vitess or manual setup until we demonstrably need it. A Postgres read replica can scale you to 10× read traffic before you need to shard writes. We've seen teams shard prematurely and spend months migrating back to a simpler topology.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-network">
+          <div class="eng-take-header">🌐 Network Engineer</div>
+          <div class="eng-take-body">
+            <p>Database connections are a network resource. Connection pooling (PgBouncer, ProxySQL) is not optional at scale — each open Postgres connection consumes ~5MB of memory and a file descriptor. At 1000 concurrent users, 1000 Postgres connections is a problem before you hit any query bottleneck.</p>
+            <p>Multi-region database topologies require careful latency accounting. A cross-region synchronous replication write adds 60-150ms of network RTT for every transaction. We help teams make the call between sync (zero data loss, higher latency) and async (data loss risk, lower latency) replication, because that's fundamentally a network latency problem, not a database problem.</p>
+            <p>Encryption in transit is always on — TLS for all database connections, never plaintext database sockets on public or shared network segments. We enforce this at the firewall and audit it monthly.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-platform">
+          <div class="eng-take-header">⚙️ Platform Engineer</div>
+          <div class="eng-take-body">
+            <p>Our job is to give product teams a "database as a service" experience — provision a Postgres instance with click or CLI, get connection strings injected into the service, migrations run via CI pipeline, and backups happen automatically. When teams bypass this for a self-hosted MongoDB because they want flexible schema, we lose auditability and backup guarantees.</p>
+            <p>We standardize on two or three approved database technologies for our platform. More than that, and we can't provide operator expertise, runbook coverage, or reliable SLAs for all of them. This means sometimes pushing back on "we need a graph database" and asking whether the team has actually tried modeling the problem in Postgres with recursive CTEs first.</p>
+            <p>Schema migration tooling is critical. Flyway or Liquibase runs in CI, every migration is reviewed and versioned, and we test all migrations against a production-sized dataset in staging. The number one cause of production incidents we see is a migration that ran fine on 1000 rows and locked the table for 10 minutes on 100M rows.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-security">
+          <div class="eng-take-header">🔐 Security / Cyber Engineer</div>
+          <div class="eng-take-body">
+            <p>Every database is a data exfiltration target. Our concerns are: who can access what data, how is that access audited, and can we detect anomalous access patterns. Row-level security (Postgres RLS) lets us enforce tenant isolation in the database layer rather than relying on application code to be correct every time. Defense in depth — application bugs shouldn't expose other tenants' data.</p>
+            <p>Encryption at rest is baseline. Encryption of specific columns (PII, payment data) goes further — if someone exfiltrates the database dump, they still can't read SSNs or card numbers without the application key. We use envelope encryption: data encrypted with a data key, data key wrapped with a master key in KMS. Key rotation doesn't require re-encrypting all data.</p>
+            <p>Audit logging for all DDL changes and privileged queries is non-negotiable. We want to know: who ran `SELECT * FROM users`, when, and from which IP. In Postgres, pgaudit extension + centralized log shipping to a SIEM. Schema changes go through change management — no direct `ALTER TABLE` in production without a ticket and a change window.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-data">
+          <div class="eng-take-header">📊 Data Engineer</div>
+          <div class="eng-take-body">
+            <p>The production database is the source of truth, but it's the wrong place to run analytics. Long-running analytical queries contend with OLTP traffic and can lock rows or consume connections needed for user-facing requests. We pull data to a warehouse (BigQuery, Snowflake, Redshift) via CDC or scheduled ETL, and analytics runs there — never on the production replica.</p>
+            <p>Schema design for analytics workloads favors star schema (fact + dimension tables) over normalized OLTP schemas. Denormalization is acceptable in the warehouse because you never write to it — you only read it. Wide tables with pre-joined data can answer 80% of business questions with a single table scan instead of a 5-way join.</p>
+            <p>We obsess over data types because storage engines treat them differently. In Postgres, `text` vs `varchar(255)` has no performance difference, but `integer` vs `bigint` vs `numeric` matters for index size and arithmetic precision. In Parquet (columnar analytics format), choosing the right type can halve storage size and halve query time through better compression.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-ml">
+          <div class="eng-take-header">🤖 ML / AI Engineer</div>
+          <div class="eng-take-body">
+            <p>Training data pipelines need immutable, versioned datasets. We don't train on the live production database — we snapshot it to object storage (Parquet files on S3) at specific points in time, and each training run references a fixed dataset version. This makes experiments reproducible and prevents training data leakage from future data.</p>
+            <p>Feature stores are a specialized storage layer for ML. They serve two purposes: offline storage (historical features for training, Parquet on S3) and online storage (low-latency feature serving at inference time, Redis or DynamoDB). The hard problem is keeping offline and online features consistent so that what you trained on matches what you serve at prediction time.</p>
+            <p>Vector databases (Pinecone, Weaviate, pgvector) are the newest storage category we care about. Embedding vectors for semantic search, RAG pipelines, and recommendation systems need approximate nearest-neighbor (ANN) search — something no SQL index can do. pgvector in Postgres handles most use cases up to ~10M vectors; dedicated vector DBs are for larger scale or more complex similarity metrics.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-backend">
+          <div class="eng-take-header">⚡ Backend Engineer</div>
+          <div class="eng-take-body">
+            <p>I care about query performance, connection management, and ORM behavior. The most common mistakes I see: SELECT * queries that return 50 columns when you need 3 (unnecessary data transfer and memory), missing indexes on foreign keys (every JOIN becomes a sequential scan), and N+1 query patterns hidden inside ORMs (fetch a list of users, then loop and fetch each user's orders separately — 1 + N queries).</p>
+            <p>Database transactions should be short. Long transactions hold locks and inflate MVCC bloat in Postgres. The pattern I follow: acquire data → do any computation outside the transaction → open transaction → write → commit. Never make API calls or do heavy processing inside a transaction. If the HTTP call hangs, you're holding a lock for the duration.</p>
+            <p>Connection pooling is always on. SQLAlchemy's pool_size + max_overflow matches PgBouncer's pool settings. I test connection pool behavior explicitly under load — a pool exhaustion bug hides until you have real traffic, then it causes cascading timeout failures across all endpoints simultaneously.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-frontend">
+          <div class="eng-take-header">🎨 Frontend Engineer</div>
+          <div class="eng-take-body">
+            <p>From the frontend perspective, the storage technology itself is mostly invisible — I care about the API response shape, response time, and consistency guarantees. But storage choices bleed through. If the backend uses MongoDB with flexible schema, I might get inconsistent field presence across different documents and have to null-check everything. If it uses an eventually consistent store, I might see stale data immediately after my own writes.</p>
+            <p>Optimistic updates require understanding storage guarantees. If I update a post optimistically in the UI before the API call completes, and the backend uses eventual consistency, my next page load might show the old value. This means the frontend needs to either manage local state carefully or understand when to trust the server response vs the local cache.</p>
+            <p>For offline-first apps (PWA, mobile), I'm implementing a client-side store (IndexedDB, SQLite via Expo) that syncs with the backend. The sync protocol has to handle conflicts — what wins when the user edits offline and someone else edits the same record? The storage technology on the backend determines whether conflict resolution is possible (CRDTs, last-write-wins, versioned fields) or painful.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-sre">
+          <div class="eng-take-header">📡 SRE / Site Reliability Engineer</div>
+          <div class="eng-take-body">
+            <p>Storage is where the most catastrophic and hardest-to-reverse incidents happen. Our golden rules: every database has automated backups tested weekly with a full restore drill. Backup untested is no backup. We've seen teams discover their Postgres backups were corrupted only when they tried to restore after a failure — the backup job was silently failing for months.</p>
+            <p>Our SLOs for storage depend on the tier. User-facing reads: p99 < 20ms (served from cache), p99 < 100ms (from DB with index). Analytics queries: p95 < 5s. Write SLO: p99 < 50ms for OLTP. When these drift, we alert and treat it as an incident — database performance degradation is always a leading indicator of something worse.</p>
+            <p>Schema migrations in production require a runbook. For tables over 1M rows, we use online DDL tools (pt-online-schema-change for MySQL, pg_repack or pg_partman for Postgres). We test migrations against a production-sized snapshot, measure lock duration, and set a rollback plan before touching production. A migration that seemed fast in staging can take hours and lock the table on production-scale data.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Real Problems -->
+    <section class="section" id="problems">
+      <div class="section-label">Real Problems</div>
+      <h2>Applied Storage Design</h2>
+
+      <!-- Problem 1 -->
+      <div class="problem-card">
+        <div class="problem-header">
+          <span class="problem-num">Problem 01</span>
+          <div class="problem-title">Design the Storage Layer for a Social Platform (Instagram-scale)</div>
+          <div class="problem-tags">
+            <span class="ptag">Multi-store</span>
+            <span class="ptag">Sharding</span>
+            <span class="ptag">Replication</span>
+            <span class="ptag">Blob Storage</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Requirements</h4>
+          <p>500M users. Users post photos/videos. Follow graph (up to 100M edges). 2B daily active sessions. Search users and hashtags. Prioritize: availability over strict consistency for social data, strict consistency for payment/billing.</p>
+
+          <h4>Storage Architecture</h4>
+          <div class="arch-diagram">
+<span class="hl">USER WRITES (photo upload flow):</span>
+
+Client ──► <span class="sv">POST /media/upload</span>
+            API server generates pre-signed S3 URL
+Client ──► <span class="sv">PUT image.jpg directly to S3</span>  (bypass API server)
+            API server called back: <span class="sv">POST /media/confirm</span>
+API server ──► <span class="db">Postgres</span>: INSERT INTO media (user_id, s3_key, ...)
+              ──► <span class="ca">Redis</span>: invalidate user feed cache
+              ──► Event bus: publish "media.uploaded" event
+CDC stream ──► <span class="bl">Elasticsearch</span>: index media for hashtag search
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">SHARDING STRATEGY:</span>
+
+<span class="db">Postgres</span>    → Shard on user_id (hash mod 64 shards)
+              Each shard: 1 primary + 2 async replicas
+              User data never crosses shards (no cross-shard joins)
+
+<span class="sv">S3</span>          → No sharding needed (S3 is infinite scale by design)
+              Key structure: {bucket}/{user_id_prefix}/{date}/{uuid}.jpg
+
+<span class="bl">Elasticsearch</span> → Index per content type (users, posts, hashtags)
+                Sharded internally by ES (5 primary shards default)
+
+<span class="ca">Redis</span>       → Feed cache: user:{id}:feed → sorted set of post IDs
+              Sessions: session:{token} → user_id (with TTL)
+              Sharded Redis Cluster (consistent hashing, 16k hash slots)
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">CONSISTENCY DECISIONS:</span>
+
+Follow relationship:  <span class="hl">Eventual OK</span>  — if you follow someone and their
+                      posts appear 500ms later, users don't notice
+Payment / billing:    <span class="ok">Strict required</span> — dedicated Postgres + sync replica
+Session tokens:       <span class="ok">Strict required</span> — Redis with sync replication
+Photo metadata:       <span class="hl">Eventual OK</span>    — async replica lag acceptable
+          </div>
+
+          <h4>Schema Key Tables</h4>
+          <div class="code-wrap">
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <pre><code class="language-sql">-- Sharded user table (each shard holds a user_id range)
+CREATE TABLE users (
+  user_id     BIGINT PRIMARY KEY,   -- shard key
+  username    TEXT UNIQUE NOT NULL,
+  email       TEXT UNIQUE NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT now(),
+  profile     JSONB                  -- flexible metadata, avoid nullable columns
+);
+
+-- Media table, co-located with user on same shard
+CREATE TABLE media (
+  media_id    BIGINT PRIMARY KEY,
+  user_id     BIGINT NOT NULL,       -- same shard as user
+  s3_key      TEXT NOT NULL,
+  media_type  TEXT CHECK (media_type IN ('photo','video','reel')),
+  caption     TEXT,
+  created_at  TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX idx_media_user_time ON media(user_id, created_at DESC);
+
+-- Follow graph: keep on a dedicated graph shard or use Cassandra
+CREATE TABLE follows (
+  follower_id BIGINT NOT NULL,
+  followee_id BIGINT NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT now(),
+  PRIMARY KEY (follower_id, followee_id)
+);
+-- Covering index for "who does user X follow?" and "who follows user X?"
+CREATE INDEX idx_follows_followee ON follows(followee_id, follower_id);</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Problem 2 -->
+      <div class="problem-card">
+        <div class="problem-header">
+          <span class="problem-num">Problem 02</span>
+          <div class="problem-title">Design Storage for IoT Sensor Platform (10M Devices)</div>
+          <div class="problem-tags">
+            <span class="ptag">Time-Series</span>
+            <span class="ptag">Wide-Column</span>
+            <span class="ptag">Retention Policy</span>
+            <span class="ptag">Write-Heavy</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Problem Shape</h4>
+          <p>10M IoT devices each send a reading every 10 seconds: device_id, timestamp, sensor_type, value. Peak write rate: 1M events/second. Queries: recent readings per device, aggregates per device class per hour, anomaly detection on rolling windows. Data older than 90 days is rarely queried.</p>
+
+          <h4>Why Not PostgreSQL?</h4>
+          <p>Postgres with a naive schema hits a wall at ~5M rows/day: VACUUM overhead grows, B-tree indexes get bloated from sequential inserts, and range-aggregate queries on billions of rows become multi-second scans. This is exactly what time-series databases were built to solve.</p>
+
+          <h4>Architecture</h4>
+          <div class="arch-diagram">
+<span class="hl">IOT INGESTION PIPELINE</span>
+
+<span class="sv">10M devices</span>
+    │ MQTT / CoAP (binary protocol, low overhead)
+    ▼
+<span class="lb">[ MQTT Broker / Kafka ]</span>  (buffer — handles bursty device reconnects)
+    │ stream partitioned by device_id
+    ▼
+<span class="em">[ Ingest Service ]</span>  (stateless, horizontally scaled)
+    │  batch writes (1000 events per write)
+    ▼
+<span class="ts">[ TimescaleDB hypertable ]</span>  — raw data, 7-day retention
+    │  continuous aggregate job (every 1 minute)
+    ▼
+<span class="ts">[ TimescaleDB 1-min rollup ]</span>  — 30-day retention
+    │  continuous aggregate job (every 1 hour)
+    ▼
+<span class="ts">[ TimescaleDB 1-hour rollup ]</span>  — 1-year retention
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">WHY TIMESCALEDB (not pure InfluxDB):</span>
+  → Standard SQL (team knows it, BI tools connect to it)
+  → Continuous aggregates = materialized views that auto-update
+  → TimescaleDB chunks = automatic partitioning by time
+  → Can JOIN with relational device metadata in Postgres
+  → pgvector available if we want ML anomaly detection
+          </div>
+
+          <h4>TimescaleDB Schema</h4>
+          <div class="code-wrap">
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <pre><code class="language-sql">-- Regular Postgres table, converted to hypertable
+CREATE TABLE sensor_readings (
+  device_id   TEXT        NOT NULL,
+  time        TIMESTAMPTZ NOT NULL,
+  sensor_type TEXT        NOT NULL,
+  value       DOUBLE PRECISION NOT NULL
+);
+
+-- Creates 1-day chunks internally (auto-managed)
+SELECT create_hypertable('sensor_readings', 'time', chunk_time_interval => INTERVAL '1 day');
+
+-- Compress chunks older than 7 days (typically 95%+ compression ratio)
+ALTER TABLE sensor_readings SET (
+  timescaledb.compress,
+  timescaledb.compress_segmentby = 'device_id, sensor_type'
+);
+SELECT add_compression_policy('sensor_readings', INTERVAL '7 days');
+
+-- Auto-drop raw data after 90 days
+SELECT add_retention_policy('sensor_readings', INTERVAL '90 days');
+
+-- Continuous aggregate for 1-minute rollups (auto-updated)
+CREATE MATERIALIZED VIEW readings_1min
+WITH (timescaledb.continuous) AS
+SELECT
+  device_id, sensor_type,
+  time_bucket('1 minute', time) AS bucket,
+  avg(value)  AS avg_val,
+  min(value)  AS min_val,
+  max(value)  AS max_val,
+  count(*)    AS sample_count
+FROM sensor_readings
+GROUP BY device_id, sensor_type, bucket;
+
+SELECT add_continuous_aggregate_policy('readings_1min',
+  start_offset => INTERVAL '10 minutes',
+  end_offset   => INTERVAL '1 minute',
+  schedule_interval => INTERVAL '1 minute');</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Problem 3 -->
+      <div class="problem-card">
+        <div class="problem-header">
+          <span class="problem-num">Problem 03</span>
+          <div class="problem-title">E-commerce Product Search & Catalog Storage</div>
+          <div class="problem-tags">
+            <span class="ptag">Elasticsearch</span>
+            <span class="ptag">PostgreSQL</span>
+            <span class="ptag">CDC</span>
+            <span class="ptag">Search Relevance</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>The Problem with Search in SQL</h4>
+          <p>LIKE '%laptop%' performs a full table scan. ILIKE is case-insensitive but still full scan. PostgreSQL's built-in full-text search (tsvector/tsquery) is good but lacks: typo tolerance, synonym expansion, personalized ranking, and faceted aggregations. For an e-commerce search box, Elasticsearch wins clearly.</p>
+
+          <h4>Dual-Store Architecture</h4>
+          <div class="arch-diagram">
+<span class="hl">E-COMMERCE STORAGE SPLIT</span>
+
+<span class="hl">Source of Truth:</span> <span class="db">PostgreSQL</span>
+  products (id, name, description, price, inventory_count, category_id)
+  orders (id, user_id, total, status, created_at)
+  inventory (product_id, warehouse_id, quantity, reserved)
+  → All transactional writes go here, ACID guaranteed
+
+<span class="hl">Search Index:</span> <span class="bl">Elasticsearch</span>
+  products index with: name, description, category, brand, price,
+                       attributes (color, size, material), avg_rating,
+                       sales_rank (for popularity boost)
+  → Denormalized, pre-joined, ready for instant query
+  → Updated asynchronously via CDC (Debezium)
+
+<span class="hl">Session & Cart:</span> <span class="ca">Redis</span>
+  cart:{user_id} → Hash {product_id: quantity}
+  session:{token} → user_id
+  recently_viewed:{user_id} → List of product_ids (LRANGE for display)
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">SYNC PIPELINE (Postgres → Elasticsearch)</span>
+
+<span class="db">Postgres WAL</span>
+    │  Debezium connector reads WAL
+    ▼
+<span class="lb">Kafka topic: products.changes</span>
+    │  Kafka Connect ES Sink writes to Elasticsearch
+    ▼
+<span class="bl">Elasticsearch products index</span>
+
+Lag: typically &lt;500ms (eventual consistency)
+Conflict: Postgres always wins — ES is rebuilt from Postgres at any time
+          </div>
+
+          <h4>Elasticsearch Mapping for Products</h4>
+          <div class="code-wrap">
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <pre><code class="language-json">{
+  "mappings": {
+    "properties": {
+      "name": {
+        "type": "text",
+        "analyzer": "english",
+        "fields": {
+          "keyword": { "type": "keyword" },
+          "suggest": { "type": "search_as_you_type" }
+        }
+      },
+      "description": { "type": "text", "analyzer": "english" },
+      "price": { "type": "scaled_float", "scaling_factor": 100 },
+      "category_path": { "type": "keyword" },
+      "brand": { "type": "keyword" },
+      "attributes": {
+        "type": "nested",
+        "properties": {
+          "name":  { "type": "keyword" },
+          "value": { "type": "keyword" }
+        }
+      },
+      "avg_rating":  { "type": "half_float" },
+      "sales_rank":  { "type": "integer" },
+      "in_stock":    { "type": "boolean" }
+    }
+  }
+}</code></pre>
+          </div>
+
+          <p style="font-size:0.88rem; color:#334155; margin-top:12px;"><strong>Key design choices:</strong> <code>search_as_you_type</code> field type enables prefix-optimized autocomplete. <code>nested</code> type for attributes preserves attribute name-value pairing (otherwise a cross-query artifact occurs). <code>scaled_float</code> for price avoids floating-point imprecision while keeping numeric range filters fast. Faceted aggregation on <code>keyword</code> fields (brand, category, attributes.value) enables the filter sidebar.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trade-offs -->
+    <section class="section" id="tradeoffs">
+      <div class="section-label">Decision Guide</div>
+      <h2>Trade-offs Table</h2>
+
+      <div class="table-wrap">
+        <table>
+          <tr>
+            <th>Decision</th>
+            <th>Option A</th>
+            <th>Option B</th>
+            <th>When to Choose A</th>
+          </tr>
+          <tr>
+            <td><strong>Consistency vs Throughput</strong></td>
+            <td>Synchronous replication (strong)</td>
+            <td>Async replication (eventual)</td>
+            <td>Financial, auth, inventory — any data where staleness causes wrong decisions</td>
+          </tr>
+          <tr>
+            <td><strong>SQL vs Document Store</strong></td>
+            <td>PostgreSQL</td>
+            <td>MongoDB</td>
+            <td>When you need JOINs, FK constraints, or complex transactions. Default choice unless access pattern is clearly document-shaped</td>
+          </tr>
+          <tr>
+            <td><strong>Hash vs Range Sharding</strong></td>
+            <td>Hash sharding</td>
+            <td>Range sharding</td>
+            <td>When writes are random (user IDs). Use range when recent data is always hot (time-series)</td>
+          </tr>
+          <tr>
+            <td><strong>Normalize vs Denormalize</strong></td>
+            <td>Normalized (3NF)</td>
+            <td>Denormalized / embedded</td>
+            <td>Normalized for OLTP (smaller writes, consistent updates). Denormalized for read-heavy or document stores</td>
+          </tr>
+          <tr>
+            <td><strong>B-tree vs LSM index</strong></td>
+            <td>B-tree (Postgres default)</td>
+            <td>LSM tree (Cassandra, RocksDB)</td>
+            <td>B-tree for mixed read/write OLTP. LSM for write-heavy, time-series, append-only workloads</td>
+          </tr>
+          <tr>
+            <td><strong>Self-hosted vs Managed</strong></td>
+            <td>Managed (RDS, Atlas, Cloud SQL)</td>
+            <td>Self-hosted</td>
+            <td>Managed unless cost at scale or compliance (data residency) requires control. The ops savings outweigh the cost premium at most companies</td>
+          </tr>
+          <tr>
+            <td><strong>Single store vs Multi-store</strong></td>
+            <td>Postgres for everything</td>
+            <td>Postgres + Redis + Elasticsearch</td>
+            <td>Single store for early stage. Add specialized stores only when you hit a concrete limitation: search quality, read throughput, or latency</td>
+          </tr>
+          <tr>
+            <td><strong>TimescaleDB vs InfluxDB</strong></td>
+            <td>TimescaleDB (SQL)</td>
+            <td>InfluxDB (Flux)</td>
+            <td>TimescaleDB when you need SQL compatibility, JOINs with relational data, or BI tool integration. InfluxDB for pure IoT/monitoring workloads at massive scale</td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Anti-patterns -->
+    <section class="section" id="antipatterns">
+      <div class="section-label">What Not to Do</div>
+      <h2>Anti-patterns</h2>
+
+      <ul class="antipattern-list">
+        <li>
+          <strong>Choosing the database before defining access patterns</strong>
+          "MongoDB is flexible, let's use it." Schema flexibility is irrelevant if your query patterns require JOINs. Always enumerate your top 5 queries before picking a storage engine — the queries determine the engine, not the other way around.
+        </li>
+        <li>
+          <strong>Using a relational DB as a document store</strong>
+          Storing all data in a single JSON column in Postgres to get "schema flexibility." You lose query ability (can't index inside JSON efficiently beyond JSONB), lose FK constraints, and get none of the actual benefits of either approach. Pick SQL with a schema, or pick a document store — not a hybrid that's worse than both.
+        </li>
+        <li>
+          <strong>Sharding prematurely (before you hit a real limit)</strong>
+          Sharding adds enormous complexity: no cross-shard joins, harder schema migrations, complex backup/restore, connection multiplexing. A well-indexed Postgres on a c6g.8xlarge with read replicas can handle 50k+ TPS. Shard when you have concrete evidence of the bottleneck, not as speculative architecture.
+        </li>
+        <li>
+          <strong>Indexing every column "just in case"</strong>
+          Each index is a write penalty (must be updated on every INSERT/UPDATE/DELETE) and consumes disk. An over-indexed table with 20 indexes can have worse write throughput than one with 3 well-chosen indexes. Use EXPLAIN ANALYZE to find which indexes are actually used, then drop the ones that aren't.
+        </li>
+        <li>
+          <strong>No data retention policy — letting the database grow forever</strong>
+          Every database needs a retention strategy. Time-series data that never ages out will eventually exhaust disk and slow queries. Decide at schema design time: what's the max data age we'll ever query? Implement retention policies before launch, not after the disk fills up.
+        </li>
+        <li>
+          <strong>Running analytics on the production OLTP database</strong>
+          Analytics queries (GROUP BY, COUNT, window functions over millions of rows) compete with user-facing OLTP traffic. A slow analytics query can lock rows and cause cascading timeouts. Use a read replica at minimum, a data warehouse (Redshift, BigQuery) for anything serious.
+        </li>
+        <li>
+          <strong>Treating the search index as the source of truth</strong>
+          Elasticsearch can lose data on improper shutdown, has eventual consistency, and doesn't support ACID transactions. It's a derived index, not a source of truth. Postgres is the source of truth; Elasticsearch is rebuilt from it. If they diverge, Postgres wins and you re-index from Postgres — not the other way around.
+        </li>
+        <li>
+          <strong>Long transactions in high-throughput OLTP</strong>
+          A transaction that takes 5 seconds holds locks for 5 seconds. In Postgres, long transactions also prevent VACUUM from reclaiming dead rows (MVCC bloat). Keep transactions under 100ms. Move computation, external API calls, and file I/O outside transaction boundaries. If a business flow truly requires a long transaction, consider a saga pattern with compensating transactions instead.
+        </li>
+      </ul>
+    </section>
+
+    <!-- Interview Tips -->
+    <section class="section" id="interview-tips">
+      <div class="section-label">Interview Strategy</div>
+      <h2>Interview Tips for Storage Questions</h2>
+
+      <div class="callout callout-green">
+        <div class="callout-title">The Storage Interview Trap</div>
+        <p>Interviewers want to hear you ask about access patterns before picking a database. Jumping straight to "I'll use MongoDB" or "I'll use PostgreSQL" signals that you're cargo-culting. Always say: "Before I pick the storage engine, let me understand the read/write ratio and the primary query patterns."</p>
+      </div>
+
+      <div class="tips-grid">
+        <div class="tip-card">
+          <div class="tip-num">Tip 01</div>
+          <p><strong>Lead with access patterns, not with engines.</strong> Ask: "What are the top 3 queries?" before you name a database. Then map those queries to the access pattern → engine matrix.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 02</div>
+          <p><strong>Always mention the primary-replica pattern.</strong> Even for basic SQL setups, say "primary for writes, read replicas for read traffic" — this shows you think about scale even at lower complexity.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 03</div>
+          <p><strong>Explain sharding only when prompted by scale.</strong> Don't shard speculatively. Say: "A single Postgres instance handles X TPS. If we grow past that, we'd shard on user_id using consistent hashing." Then stop unless the interviewer pushes further.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 04</div>
+          <p><strong>Name the source of truth explicitly.</strong> In multi-store designs, interviewers want to hear: "Postgres is the source of truth. Elasticsearch is a derived index rebuilt from Postgres. Redis is a derived cache." This shows you understand data ownership.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 05</div>
+          <p><strong>Mention EXPLAIN ANALYZE for performance questions.</strong> When asked "how do you optimize this query?", say: "First, I'd run EXPLAIN ANALYZE to see if it's using the index, check for sequential scans, and look at estimated vs actual rows." This is exactly what senior engineers do.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 06</div>
+          <p><strong>For time-series, always mention retention and rollups.</strong> Raw data at 1s resolution forever is never the right answer. Say: "I'd keep raw data for 7 days, 1-minute rollups for 30 days, hourly rollups for a year — this keeps storage bounded and historical queries fast."</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p>KnowAlgo · Pattern 03: Data Storage Selection &amp; Schema Design · <a href="system-design.html">All Patterns</a> · <a href="index.html">DSA Guides</a></p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+<script>
+  // Reading progress bar
+  window.addEventListener('scroll', () => {
+    const scrollTop = document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    document.getElementById('progress-bar').style.width = (scrollTop / scrollHeight * 100) + '%';
+  });
+
+  // Copy code button
+  function copyCode(btn) {
+    const code = btn.nextElementSibling.querySelector('code');
+    navigator.clipboard.writeText(code.innerText).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  }
+
+  // TOC active highlighting
+  const tocLinks = document.querySelectorAll('.toc a');
+  const sections = document.querySelectorAll('section[id]');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.toc a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -75% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

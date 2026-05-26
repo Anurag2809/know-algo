@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Async Processing & Message Passing – KnowAlgo System Design</title>
+  <meta name="description" content="Message queues, event streaming, pub/sub, task queues, saga patterns, and backpressure. Kafka, SQS, RabbitMQ, and Celery deep dives. Pattern 05 of 16.">
+  <meta name="keywords" content="message queue, Kafka, event streaming, pub sub, saga pattern, async processing, Celery, RabbitMQ, SQS, system design interview">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.netlify.app/system-design-async.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Async Processing & Message Passing – KnowAlgo">
+  <meta property="og:description" content="Kafka, SQS, RabbitMQ, pub/sub, task queues, saga patterns, and backpressure. 9 engineer perspectives.">
+  <meta property="og:url" content="https://knowalgo.netlify.app/system-design-async.html">
+  <meta property="og:site_name" content="KnowAlgo">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Async Processing & Message Passing – KnowAlgo">
+  <meta name="twitter:description" content="Message queues vs event streaming. When Kafka, when SQS, when RabbitMQ. Saga patterns and backpressure strategies.">
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    :root {
+      --primary: #7c3aed;
+      --primary-dark: #6d28d9;
+      --primary-light: #f5f3ff;
+      --secondary: #0891b2;
+      --accent: #059669;
+      --bg: #f8fafc;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --card-bg: #ffffff;
+      --radius: 14px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+    #progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(to right, #7c3aed, #0891b2); z-index: 9999; transition: width 0.1s linear; }
+
+    nav { position: sticky; top: 0; z-index: 100; background: #0f172a; border-bottom: 1px solid #1e293b; }
+    .nav-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+    .nav-logo { font-weight: 700; font-size: 1.1rem; color: #f1f5f9; text-decoration: none; letter-spacing: -0.3px; }
+    .nav-logo span { color: #a78bfa; }
+    .nav-links { display: flex; gap: 8px; align-items: center; }
+    .nav-links a { color: #94a3b8; text-decoration: none; font-size: 0.875rem; padding: 6px 12px; border-radius: 8px; transition: all 0.2s; }
+    .nav-links a:hover { color: #f1f5f9; background: #1e293b; }
+    .nav-links .nav-cta { background: var(--primary); color: #fff; font-weight: 600; }
+    .nav-links .nav-cta:hover { background: var(--primary-dark); }
+    .hide-mobile { display: none; }
+    @media(min-width:768px) { .hide-mobile { display: inline; } }
+
+    .hero { background: linear-gradient(135deg, #0f172a 0%, #2e1065 45%, #0c4a6e 100%); padding: 64px 24px 48px; text-align: center; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(167,139,250,0.15); border: 1px solid rgba(167,139,250,0.3); color: #c4b5fd; padding: 6px 16px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 20px; }
+    .hero h1 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; color: #f1f5f9; letter-spacing: -0.5px; line-height: 1.15; margin-bottom: 16px; }
+    .hero h1 span { color: #a78bfa; }
+    .hero p { font-size: 1.05rem; color: #94a3b8; max-width: 700px; margin: 0 auto 24px; }
+    .hero-pills { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .hero-pill { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); color: #cbd5e1; padding: 4px 14px; border-radius: 99px; font-size: 0.78rem; }
+    .hero-back { display: inline-flex; align-items: center; gap: 6px; margin-top: 24px; color: #64748b; font-size: 0.85rem; text-decoration: none; }
+    .hero-back:hover { color: #94a3b8; }
+
+    .page-body { max-width: 1280px; margin: 0 auto; padding: 40px 24px; display: grid; grid-template-columns: 240px 1fr; gap: 40px; align-items: start; }
+    @media(max-width:900px) { .page-body { grid-template-columns: 1fr; } }
+
+    .toc { position: sticky; top: 72px; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .toc-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+    .toc ul { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+    .toc ul li a { display: block; font-size: 0.8rem; color: var(--text-muted); text-decoration: none; padding: 4px 8px; border-radius: 6px; border-left: 2px solid transparent; transition: all 0.15s; }
+    .toc ul li a:hover, .toc ul li a.active { color: var(--primary); border-left-color: var(--primary); background: var(--primary-light); }
+    .toc-next { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .toc-prev-label, .toc-next-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .toc-next a { font-size: 0.82rem; color: var(--primary); text-decoration: none; font-weight: 600; }
+
+    .section { margin-bottom: 56px; }
+    .section-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 8px; }
+    .section h2 { font-size: 1.65rem; font-weight: 800; color: var(--text); letter-spacing: -0.3px; margin-bottom: 16px; }
+    .section h3 { font-size: 1.15rem; font-weight: 700; color: var(--text); margin: 28px 0 12px; }
+    .section h4 { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 20px 0 8px; }
+    .section p { color: #334155; margin-bottom: 14px; }
+    .section ul, .section ol { padding-left: 20px; color: #334155; margin-bottom: 14px; }
+    .section li { margin-bottom: 6px; }
+
+    .callout { border-radius: 10px; padding: 16px 20px; margin: 20px 0; border-left: 4px solid; }
+    .callout-green  { background: #f0fdf4; border-color: #16a34a; }
+    .callout-blue   { background: #eff6ff; border-color: #2563eb; }
+    .callout-amber  { background: #fffbeb; border-color: #d97706; }
+    .callout-red    { background: #fef2f2; border-color: #dc2626; }
+    .callout-violet { background: #f5f3ff; border-color: #7c3aed; }
+    .callout-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; }
+    .callout-green  .callout-title { color: #15803d; }
+    .callout-blue   .callout-title { color: #1d4ed8; }
+    .callout-amber  .callout-title { color: #b45309; }
+    .callout-red    .callout-title { color: #b91c1c; }
+    .callout-violet .callout-title { color: #6d28d9; }
+    .callout p { margin-bottom: 0; font-size: 0.9rem; }
+
+    .code-wrap { position: relative; margin: 16px 0; border-radius: 10px; overflow: hidden; }
+    .code-wrap pre { margin: 0 !important; border-radius: 10px !important; font-size: 0.82rem !important; }
+    .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; transition: all 0.2s; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); color: #f1f5f9; }
+
+    .arch-diagram { background: #0f172a; border-radius: 10px; padding: 20px 24px; font-family: 'Courier New', Courier, monospace; font-size: 0.78rem; line-height: 1.6; overflow-x: auto; margin: 16px 0; color: #94a3b8; }
+    .arch-diagram .c  { color: #f1f5f9; font-weight: 600; }
+    .arch-diagram .db { color: #a78bfa; font-weight: 600; }
+    .arch-diagram .ca { color: #fb923c; font-weight: 600; }
+    .arch-diagram .sv { color: #4ade80; font-weight: 600; }
+    .arch-diagram .lb { color: #fbbf24; font-weight: 600; }
+    .arch-diagram .em { color: #34d399; font-weight: 600; }
+    .arch-diagram .ok { color: #4ade80; }
+    .arch-diagram .er { color: #f87171; }
+    .arch-diagram .hl { color: #fbbf24; }
+    .arch-diagram .cm { color: #475569; font-style: italic; }
+    .arch-diagram .bl { color: #60a5fa; font-weight: 600; }
+    .arch-diagram .ts { color: #f472b6; font-weight: 600; }
+    .arch-diagram .vl { color: #c4b5fd; font-weight: 600; }
+
+    .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th { background: #7c3aed; color: #fff; font-weight: 700; text-align: left; padding: 10px 14px; }
+    td { padding: 10px 14px; border-top: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    td code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 0.8rem; font-family: monospace; }
+
+    .eng-takes { display: flex; flex-direction: column; gap: 16px; margin: 20px 0; }
+    .eng-take { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .eng-take-header { padding: 10px 16px; font-weight: 700; font-size: 0.82rem; display: flex; align-items: center; gap: 8px; }
+    .eng-take-body { padding: 14px 16px; font-size: 0.88rem; color: #334155; display: flex; flex-direction: column; gap: 8px; }
+    .et-infra   .eng-take-header { background: #dbeafe; color: #1d4ed8; border-left: 4px solid #2563eb; }
+    .et-network .eng-take-header { background: #cffafe; color: #0e7490; border-left: 4px solid #0891b2; }
+    .et-platform .eng-take-header { background: #ede9fe; color: #6d28d9; border-left: 4px solid #7c3aed; }
+    .et-security .eng-take-header { background: #fee2e2; color: #b91c1c; border-left: 4px solid #dc2626; }
+    .et-data    .eng-take-header { background: #d1fae5; color: #065f46; border-left: 4px solid #059669; }
+    .et-ml      .eng-take-header { background: #fef3c7; color: #92400e; border-left: 4px solid #d97706; }
+    .et-backend .eng-take-header { background: #f1f5f9; color: #1e293b; border-left: 4px solid #475569; }
+    .et-frontend .eng-take-header { background: #fce7f3; color: #9d174d; border-left: 4px solid #db2777; }
+    .et-sre     .eng-take-header { background: #d1fae5; color: #064e3b; border-left: 4px solid #10b981; }
+
+    .problem-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin: 24px 0; box-shadow: var(--shadow); }
+    .problem-header { padding: 16px 20px; background: linear-gradient(to right, #2e1065, #0c4a6e); display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+    .problem-num { background: rgba(255,255,255,0.15); color: #fff; font-weight: 800; font-size: 0.75rem; padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
+    .problem-title { color: #f1f5f9; font-weight: 700; font-size: 1rem; flex: 1; }
+    .problem-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ptag { background: rgba(255,255,255,0.1); color: #cbd5e1; font-size: 0.72rem; padding: 2px 9px; border-radius: 99px; }
+    .problem-body { padding: 20px; }
+    .problem-body h4 { color: var(--text); font-size: 0.88rem; font-weight: 700; margin: 16px 0 8px; }
+    .problem-body p { font-size: 0.9rem; color: #334155; margin-bottom: 10px; }
+    .problem-body ul { font-size: 0.9rem; color: #334155; padding-left: 18px; }
+    .problem-body li { margin-bottom: 5px; }
+
+    .antipattern-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .antipattern-list li { background: #fff5f5; border-left: 4px solid #ef4444; border-radius: 8px; padding: 12px 16px; font-size: 0.875rem; }
+    .antipattern-list li strong { color: #b91c1c; display: block; margin-bottom: 3px; }
+
+    .tips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+    .tip-card { background: var(--card-bg); border: 1px solid #ddd6fe; border-radius: 10px; padding: 16px 18px; }
+    .tip-num { font-size: 0.7rem; font-weight: 700; color: #7c3aed; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 6px; }
+    .tip-card p { font-size: 0.875rem; color: #334155; margin: 0; }
+
+    .tool-compare { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 16px; margin: 16px 0; }
+    .tool-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .tool-card-head { padding: 12px 16px; font-weight: 700; font-size: 0.9rem; }
+    .tool-card-body { padding: 12px 16px; font-size: 0.82rem; color: #334155; }
+    .tool-card-body li { margin-bottom: 5px; }
+    .tc-kafka .tool-card-head { background: #1e293b; color: #a78bfa; }
+    .tc-sqs   .tool-card-head { background: #1e293b; color: #fb923c; }
+    .tc-rmq   .tool-card-head { background: #1e293b; color: #4ade80; }
+    .tc-redis .tool-card-head { background: #1e293b; color: #fbbf24; }
+
+    footer { background: #0f172a; color: #64748b; text-align: center; padding: 40px 24px; font-size: 0.875rem; }
+    footer a { color: #94a3b8; text-decoration: none; }
+    footer a:hover { color: #f1f5f9; }
+  </style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">Know<span>Algo</span></a>
+    <div class="nav-links">
+      <a href="index.html" class="hide-mobile">DSA</a>
+      <a href="system-design.html" class="hide-mobile">System Design</a>
+      <a href="interview-prep.html" class="nav-cta">Interview Prep →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">Pattern 05 of 16 · System Design</div>
+  <h1>Async Processing<br><span>&amp; Message Passing</span></h1>
+  <p>Decouple producers from consumers, absorb traffic spikes, and build systems that keep working when downstream services fail — with the right tool for each job.</p>
+  <div class="hero-pills">
+    <span class="hero-pill">Kafka</span>
+    <span class="hero-pill">SQS</span>
+    <span class="hero-pill">RabbitMQ</span>
+    <span class="hero-pill">Pub/Sub</span>
+    <span class="hero-pill">Task Queues</span>
+    <span class="hero-pill">Saga Pattern</span>
+    <span class="hero-pill">Backpressure</span>
+    <span class="hero-pill">9 Perspectives</span>
+  </div>
+  <a href="system-design.html" class="hero-back">← Back to System Design Patterns</a>
+</div>
+
+<div class="page-body">
+
+  <!-- ═══════ TOC ═══════ -->
+  <aside class="toc">
+    <div class="toc-title">Contents</div>
+    <ul>
+      <li><a href="#decision-tree">When to Go Async</a></li>
+      <li><a href="#queue-vs-stream">Queue vs Event Stream</a></li>
+      <li><a href="#kafka">Apache Kafka Deep Dive</a></li>
+      <li><a href="#sqs">SQS & Task Queues</a></li>
+      <li><a href="#pubsub">Pub/Sub Patterns</a></li>
+      <li><a href="#delivery">Delivery Semantics</a></li>
+      <li><a href="#backpressure">Backpressure</a></li>
+      <li><a href="#saga">Saga Pattern</a></li>
+      <li><a href="#outbox">Transactional Outbox</a></li>
+      <li><a href="#tool-selection">Tool Selection</a></li>
+      <li><a href="#eng-perspectives">Engineer Perspectives</a></li>
+      <li><a href="#problems">Real Problems</a></li>
+      <li><a href="#tradeoffs">Trade-offs Table</a></li>
+      <li><a href="#antipatterns">Anti-patterns</a></li>
+      <li><a href="#interview-tips">Interview Tips</a></li>
+    </ul>
+    <div class="toc-next">
+      <div class="toc-prev-label">Previous</div>
+      <a href="system-design-apis.html">← API & Communication</a>
+      <div class="toc-next-label" style="margin-top:0.75rem;">Next Pattern</div>
+      <a href="system-design-reliability.html">Reliability →</a>
+    </div>
+  </aside>
+
+  <!-- ═══════ MAIN ═══════ -->
+  <main>
+
+    <!-- Decision Tree -->
+    <section class="section" id="decision-tree">
+      <div class="section-label">Foundation</div>
+      <h2>When to Go Async</h2>
+      <p>Async processing trades immediacy for decoupling and resilience. Not every operation benefits from it — but certain patterns make synchronous calls actively harmful.</p>
+
+      <div class="arch-diagram">
+<span class="hl">SYNC vs ASYNC DECISION FLOWCHART</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Does the <span class="c">client need the result</span> before it can proceed?
+│
+├── YES → Synchronous (gRPC / REST)
+│          "Create order and return order_id to client"
+│
+└── NO  → Can be async. Now ask:
+          │
+          ├── <span class="hl">Is the work time-sensitive?</span>
+          │   ├── YES (SLA &lt;5s)  → Task queue with fast workers (Celery, SQS)
+          │   └── NO             → Batch processing acceptable
+          │
+          ├── <span class="hl">Do multiple services need this event?</span>
+          │   ├── YES → Pub/Sub (Kafka topic, SNS fan-out)
+          │   └── NO  → Point-to-point queue (SQS, RabbitMQ)
+          │
+          ├── <span class="hl">Do you need event replay / historical reads?</span>
+          │   ├── YES → Event stream (Kafka, Kinesis — log retention)
+          │   └── NO  → Message queue (delete-on-consume, SQS/RabbitMQ)
+          │
+          └── <span class="hl">Do you need ordered processing?</span>
+              ├── YES → Kafka (partition-level ordering)
+              └── NO  → SQS standard (no ordering, higher throughput)
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">PRIME USE CASES FOR ASYNC:</span>
+
+  <span class="ok">✓</span> Email / notification sending (user doesn't wait for email)
+  <span class="ok">✓</span> Image / video processing (encode after upload acknowledged)
+  <span class="ok">✓</span> Charging a payment (confirm order, charge asynchronously)
+  <span class="ok">✓</span> Search index updates (ES reindex after DB write)
+  <span class="ok">✓</span> Analytics event ingestion (never block on analytics)
+  <span class="ok">✓</span> ML inference jobs (batch scoring overnight)
+  <span class="ok">✓</span> Cross-service fan-out (order.created → 5 downstream services)
+
+  <span class="er">✗</span> Auth checks (must be synchronous — every request needs it)
+  <span class="er">✗</span> Inventory reservation before order confirmation (need result)
+  <span class="er">✗</span> Payment capture when user is waiting on checkout page
+      </div>
+    </section>
+
+    <!-- Queue vs Stream -->
+    <section class="section" id="queue-vs-stream">
+      <div class="section-label">Core Distinction</div>
+      <h2>Message Queue vs Event Stream</h2>
+      <p>These two patterns solve different problems. Confusing them is the root cause of most async architecture mistakes.</p>
+
+      <div class="arch-diagram">
+<span class="hl">MESSAGE QUEUE — work distribution</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="sv">Producer</span>          <span class="vl">Queue</span>              <span class="lb">Consumer Pool</span>
+  │                  │                      │
+  ├── msg A ────────►│                ┌─────┤ Worker 1
+  ├── msg B ────────►│                │     │   processes msg A
+  ├── msg C ────────►│                │     │   deletes msg A from queue
+  │                  │                └─────┤ Worker 2
+                                      │     │   processes msg B
+                                      └─────┤ Worker 3
+                                            │   processes msg C
+
+<span class="hl">Key properties:</span>
+  • Each message consumed by <span class="hl">exactly one</span> consumer
+  • Message deleted after successful processing (ack)
+  • Consumer pool scales horizontally to drain queue
+  • No replay — consumed messages are gone
+  • Ordering not guaranteed (SQS standard)
+
+<span class="ok">Use when:</span> Task distribution, job queues, work parallelism
+Tools: <span class="sv">SQS, RabbitMQ, Redis Lists (LPUSH/BRPOP)</span>
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">EVENT STREAM — event log</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="sv">Producer</span>          <span class="vl">Topic/Partition (append-only log)</span>
+  │                  │
+  ├── event A ──────►│ offset 0: order.created {id:1}
+  ├── event B ──────►│ offset 1: order.created {id:2}
+  ├── event C ──────►│ offset 2: payment.captured {id:1}
+
+Consumer groups (each gets all events independently):
+  <span class="bl">Shipping Service</span>  → reads from offset 0, processes all 3 events
+  <span class="em">Inventory Service</span> → reads from offset 0, processes all 3 events
+  <span class="ca">Analytics Service</span> → reads from offset 0, processes all 3 events
+
+<span class="hl">Key properties:</span>
+  • Each consumer group reads <span class="hl">all</span> events independently
+  • Events retained for configurable period (hours to forever)
+  • <span class="ok">Replay:</span> new consumer can read from offset 0 to replay history
+  • Ordered within partition (not across partitions)
+  • Consumers track own offset (commit on success)
+
+<span class="ok">Use when:</span> Audit log, fan-out to multiple consumers, replay, CDC
+Tools: <span class="vl">Kafka, AWS Kinesis, Google Cloud Pub/Sub</span>
+      </div>
+    </section>
+
+    <!-- Kafka -->
+    <section class="section" id="kafka">
+      <div class="section-label">Deep Dive</div>
+      <h2>Apache Kafka</h2>
+      <p>Kafka is a distributed, durable, ordered log. It's not a message queue — it's a commit log that multiple consumers can independently read. This distinction changes everything about how you design with it.</p>
+
+      <h3>Kafka Architecture</h3>
+      <div class="arch-diagram">
+<span class="hl">KAFKA INTERNALS</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Topic: <span class="vl">orders</span>  (4 partitions, replication factor 3)
+
+Partition 0: [msg0][msg1][msg4][msg7]... → <span class="sv">Broker 1</span> (leader)
+                                         → <span class="bl">Broker 2</span> (follower)
+                                         → <span class="em">Broker 3</span> (follower)
+
+Partition 1: [msg2][msg5]...             → <span class="sv">Broker 2</span> (leader)
+                                         → <span class="bl">Broker 3</span> (follower)
+                                         → <span class="em">Broker 1</span> (follower)
+
+<span class="hl">Partitioning key:</span>
+  Producer sends {key: "order_123", value: {...}}
+  Kafka: partition = hash("order_123") % 4  → always same partition
+  <span class="ok">Guarantee:</span> All events for the same order_id are in the same partition
+  <span class="ok">Guarantee:</span> Partition is consumed in-order by one consumer in the group
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">CONSUMER GROUP — parallel processing</span>
+
+Topic: orders (4 partitions)
+Consumer Group: shipping-service (4 consumers)
+
+Consumer 1 ──► Partition 0
+Consumer 2 ──► Partition 1
+Consumer 3 ──► Partition 2
+Consumer 4 ──► Partition 3
+
+<span class="hl">Scaling rule:</span> max parallelism = number of partitions
+  If consumers &gt; partitions → some consumers idle (set partitions high)
+  If consumers &lt; partitions → one consumer handles multiple partitions
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">RETENTION &amp; REPLAY</span>
+
+Default retention: 7 days (configurable: hours to permanent)
+New consumer group: start from beginning → processes all 7 days of events
+Existing group: resumes from last committed offset
+
+<span class="ok">Use case:</span> Add new analytics service → reprocess last 30 days of events
+          Bug in consumer → fix bug, reset offset → reprocess
+          Disaster recovery → replay all events to rebuild state
+      </div>
+
+      <h3>Producer Guarantees: acks Setting</h3>
+      <div class="arch-diagram">
+<span class="hl">PRODUCER ACKNOWLEDGMENT LEVELS</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+acks=0 (fire and forget):
+  Producer sends, doesn't wait for any ack
+  <span class="ok">Fastest</span> — maximum throughput
+  <span class="er">Risk:</span> message lost if broker crashes before write
+  Use for: high-volume metrics, analytics (some loss acceptable)
+
+acks=1 (leader ack):
+  Leader broker writes to disk, acks to producer
+  <span class="hl">Medium</span> — good balance of throughput and safety
+  <span class="er">Risk:</span> message lost if leader crashes BEFORE followers replicate
+  Use for: most general-purpose use cases
+
+acks=all (−1) (full quorum ack):
+  Leader + all in-sync replicas write, then ack
+  <span class="ok">Strongest</span> — no message loss as long as one ISR survives
+  <span class="er">Latency:</span> adds follower replication time to every write
+  Use for: <span class="hl">financial events, user actions requiring guaranteed delivery</span>
+
+<span class="cm">Pair with: min.insync.replicas = 2</span>
+<span class="cm">→ Kafka rejects write if fewer than 2 replicas are in-sync</span>
+<span class="cm">→ Prevents data loss even if one broker fails during write</span>
+      </div>
+
+      <h3>Kafka Consumer: Offset Management</h3>
+      <div class="code-wrap">
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        <pre><code class="language-python">from confluent_kafka import Consumer, KafkaError
+
+consumer = Consumer({
+    'bootstrap.servers': 'kafka-broker:9092',
+    'group.id':          'shipping-service-v1',
+    'auto.offset.reset': 'earliest',          # start from beginning if no offset saved
+    'enable.auto.commit': False,              # CRITICAL: manual commit for exactly-once
+})
+
+consumer.subscribe(['orders'])
+
+while True:
+    msg = consumer.poll(timeout=1.0)
+    if msg is None:
+        continue
+    if msg.error():
+        # Handle partition EOF, broker errors, etc.
+        handle_kafka_error(msg.error())
+        continue
+
+    try:
+        order = json.loads(msg.value())
+        # Process BEFORE committing offset
+        create_shipment(order)
+
+        # Commit AFTER successful processing
+        # If we crash here, this message will be reprocessed — idempotency required
+        consumer.commit(asynchronous=False)
+
+    except Exception as e:
+        # Do NOT commit — message will be redelivered after rebalance
+        log.error(f"Failed to process {msg.offset()}: {e}")
+        # Dead letter queue or retry logic here</code></pre>
+      </div>
+
+      <div class="callout callout-violet">
+        <div class="callout-title">The Commit Placement Problem</div>
+        <p>Commit BEFORE processing → at-most-once (message lost on crash). Commit AFTER processing → at-least-once (message reprocessed on crash). There is no "exactly-once" without idempotent consumers (checking if message was already processed). The standard choice is at-least-once with idempotent consumers — simplest to implement correctly.</p>
+      </div>
+    </section>
+
+    <!-- SQS -->
+    <section class="section" id="sqs">
+      <div class="section-label">Task Queue Pattern</div>
+      <h2>SQS &amp; Task Queues</h2>
+      <p>Amazon SQS and similar task queue systems (Celery + Redis/RabbitMQ) are designed for work distribution, not event streaming. The message is deleted after consumption — there's no replay, no consumer groups, just workers competing for tasks.</p>
+
+      <div class="arch-diagram">
+<span class="hl">SQS VISIBILITY TIMEOUT — how at-least-once works</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="sv">Worker</span> calls ReceiveMessage
+    │  SQS returns message, sets visibility timeout (30s default)
+    │  Message is HIDDEN from other workers (not deleted)
+    │
+    ├── <span class="ok">Worker processes successfully</span>
+    │   Worker calls DeleteMessage
+    │   Message permanently deleted ✓
+    │
+    └── <span class="er">Worker crashes / timeout expires</span>
+        Message becomes VISIBLE again after timeout
+        Another worker picks it up → reprocessed
+
+<span class="hl">Visibility timeout tuning:</span>
+  Set to 2× your max processing time
+  If job takes 60s max → visibility timeout = 120s
+  Too short → multiple workers process same message
+  Too long → failed messages take a long time to retry
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">DEAD LETTER QUEUE (DLQ) — handling poison messages</span>
+
+Message processed, fails, requeued.
+Message processed again, fails again.  (maxReceiveCount = 5)
+After 5 failures → message moved to <span class="er">Dead Letter Queue</span>
+
+DLQ benefits:
+  • Failed messages don't block the main queue indefinitely
+  • Inspect DLQ to debug why messages are failing
+  • Replay from DLQ after bug fix (SQS DLQ redrive)
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">SQS STANDARD vs FIFO</span>
+
+Standard:  <span class="ok">unlimited throughput</span>, at-least-once, no ordering guarantee
+           <span class="hl">Best for: most use cases, parallelizable work</span>
+
+FIFO:      <span class="hl">exactly-once</span>, strict ordering per MessageGroupId
+           <span class="er">Max 3000 msg/s</span> with batching (300/s per group)
+           <span class="hl">Best for: financial transactions, sequential job steps</span>
+      </div>
+
+      <h3>Celery Task Queue Pattern</h3>
+      <div class="code-wrap">
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        <pre><code class="language-python"># tasks.py — Celery with Redis broker
+from celery import Celery
+from celery.utils.log import get_task_logger
+
+app = Celery('tasks', broker='redis://localhost:6379/0',
+                       backend='redis://localhost:6379/1')
+
+app.conf.task_routes = {
+    'tasks.send_email':    {'queue': 'email'},
+    'tasks.resize_image':  {'queue': 'image_processing'},
+    'tasks.charge_payment': {'queue': 'payments'},  # dedicated high-priority queue
+}
+
+logger = get_task_logger(__name__)
+
+@app.task(bind=True, max_retries=3, default_retry_delay=60)
+def send_email(self, user_id, template_id, context):
+    try:
+        user = fetch_user(user_id)
+        email_service.send(user.email, template_id, context)
+    except EmailServiceTemporaryError as exc:
+        # Exponential backoff: 60s, 120s, 240s
+        raise self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))
+    except EmailServicePermanentError:
+        # Don't retry — log and alert
+        logger.error(f"Permanent email failure for user {user_id}")
+        send_alert(f"Email permanently failed: user {user_id}")
+
+# Caller — fire and forget:
+send_email.delay(user_id=42, template_id='welcome', context={'name': 'Alice'})
+
+# Caller — chain (sequential tasks):
+from celery import chain
+chain(resize_image.s(image_id), generate_thumbnail.s(), update_cdn.s()).delay()</code></pre>
+      </div>
+    </section>
+
+    <!-- Pub/Sub -->
+    <section class="section" id="pubsub">
+      <div class="section-label">Fan-out Pattern</div>
+      <h2>Pub/Sub Architecture</h2>
+      <p>Publish/Subscribe decouples event producers from consumers completely. Producers don't know who subscribes. New consumers can be added without touching producer code. This is the core pattern for event-driven microservices.</p>
+
+      <div class="arch-diagram">
+<span class="hl">PUB/SUB FAN-OUT — one event, many consumers</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="sv">Order Service</span>
+    │  publishes: order.created {order_id: "ord_123", user_id: 42, total: 99.99}
+    ▼
+<span class="vl">Kafka Topic: order.created</span>
+    │  (no knowledge of who subscribes)
+    │
+    ├──► <span class="bl">Inventory Service</span>   reserves stock
+    ├──► <span class="em">Shipping Service</span>    creates shipment
+    ├──► <span class="ca">Email Service</span>       sends confirmation email
+    ├──► <span class="lb">Fraud Service</span>       runs fraud analysis
+    └──► <span class="ts">Analytics Service</span>   records conversion event
+
+<span class="hl">Adding a new consumer (Loyalty Points Service):</span>
+  → Subscribe to order.created topic
+  → Deploy Loyalty Points Service
+  → Order Service untouched, no downtime
+  → New service can replay history from offset 0
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">AWS SNS + SQS FAN-OUT (serverless pattern)</span>
+
+<span class="sv">Order Service</span>
+    │  SNS Publish: order.created
+    ▼
+<span class="lb">[ SNS Topic ]</span>
+    │  fan-out to subscribed SQS queues
+    │
+    ├──► <span class="em">SQS Queue: inventory</span>  → Lambda or ECS worker
+    ├──► <span class="bl">SQS Queue: shipping</span>   → Lambda or ECS worker
+    └──► <span class="ca">SQS Queue: email</span>      → Lambda
+
+<span class="ok">Benefits:</span>
+  • SQS provides buffering + retry per consumer independently
+  • Consumer A failing doesn't affect consumer B
+  • Each queue has its own DLQ
+  • Lambda auto-scales per queue depth
+      </div>
+    </section>
+
+    <!-- Delivery Semantics -->
+    <section class="section" id="delivery">
+      <div class="section-label">Core Guarantee</div>
+      <h2>Delivery Semantics</h2>
+
+      <div class="arch-diagram">
+<span class="hl">THREE DELIVERY GUARANTEES</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="er">AT-MOST-ONCE</span>:
+  Ack first, process after.
+  If processing crashes after ack → message LOST.
+  <span class="ok">Benefit:</span> No duplicates, low overhead
+  Use for: High-volume metrics where losing 0.1% is acceptable
+
+<span class="hl">AT-LEAST-ONCE</span> (standard choice):
+  Process first, ack after.
+  If crash after process but before ack → redelivered → DUPLICATE.
+  <span class="ok">Benefit:</span> No message loss
+  <span class="er">Requirement:</span> Consumers MUST be idempotent
+  Use for: <span class="hl">99% of production async systems</span>
+
+<span class="ok">EXACTLY-ONCE</span>:
+  Process and ack atomically.
+  Kafka: Transactional API + idempotent producer
+  SQS FIFO: MessageDeduplicationId within 5-min dedup window
+  <span class="er">Complexity:</span> High, performance overhead
+  Use for: Financial transactions, billing events
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">IDEMPOTENCY IMPLEMENTATION (at-least-once consumers)</span>
+
+Pattern 1: <span class="sv">Unique constraint in DB</span>
+  DB: INSERT INTO processed_events (event_id) VALUES ($1)
+      ON CONFLICT (event_id) DO NOTHING
+  If duplicate: INSERT fails silently → skip processing
+
+Pattern 2: <span class="sv">Check-then-act</span>
+  IF event_id IN processed_events_cache THEN return
+  ELSE process AND record event_id
+
+Pattern 3: <span class="sv">Idempotent operations</span>
+  "Set inventory to 50" is idempotent (applied twice = same result)
+  "Decrement inventory by 1" is NOT (applied twice = wrong result)
+  Design operations to be inherently idempotent where possible
+      </div>
+    </section>
+
+    <!-- Backpressure -->
+    <section class="section" id="backpressure">
+      <div class="section-label">Flow Control</div>
+      <h2>Backpressure</h2>
+      <p>Backpressure is how a slow consumer tells a fast producer to slow down. Without it, producers overwhelm consumers, queues grow unboundedly, and the system eventually crashes with OOM errors or timeout cascades.</p>
+
+      <div class="arch-diagram">
+<span class="hl">BACKPRESSURE STRATEGIES</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="hl">1. BOUNDED QUEUES — reject when full</span>
+   Queue max depth: 10,000 messages
+   Producer tries to enqueue when queue is full
+   → Reject: producer receives error, slows down or retries
+   → Never infinite memory growth
+
+<span class="hl">2. CONSUMER LAG MONITORING — scale consumers dynamically</span>
+   Kafka consumer lag = (latest offset) - (consumer current offset)
+   Alert if lag &gt; 10,000 messages
+   Auto-scale: add consumer replicas when lag exceeds threshold
+   Scale-in: remove consumers when lag &lt; 1,000 for 10 min
+
+<span class="hl">3. RATE LIMITING PRODUCERS</span>
+   Producer checks queue depth before sending
+   If queue_depth / queue_max &gt; 0.8 → producer pauses 500ms
+   Reactive backpressure vs proactive backpressure
+
+<span class="hl">4. LOAD SHEDDING</span>
+   Drop lowest-priority messages when overloaded
+   Example: analytics events dropped, payment events never dropped
+   Requires message priority classification upfront
+
+<span class="hl">5. TOKEN BUCKET at queue ingestion</span>
+   Queue accepts max 5000 msg/s from a single producer
+   Burst allowed up to bucket size, then throttle
+   Smooth producer bursts, protect consumers
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">CONSUMER LAG SLO EXAMPLE</span>
+
+SLO: email notifications delivered within 30s of event
+Average event processing: 10ms/message
+Consumer throughput: 100 msg/s
+
+If lag = 50,000 messages:
+  Time to clear lag: 50,000 / 100 = 500 seconds → <span class="er">SLO violated</span>
+  Solution: scale consumers until throughput &gt; producer rate + drain rate
+      </div>
+    </section>
+
+    <!-- Saga -->
+    <section class="section" id="saga">
+      <div class="section-label">Distributed Transactions</div>
+      <h2>Saga Pattern</h2>
+      <p>In microservices, you can't use a database transaction that spans multiple services. The saga pattern achieves distributed consistency without distributed transactions by decomposing a business flow into a sequence of local transactions, each with a compensating action on failure.</p>
+
+      <div class="arch-diagram">
+<span class="hl">SAGA — E-COMMERCE ORDER FLOW</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="hl">Happy path:</span>
+  Step 1: <span class="sv">Order Service</span>     creates order (status: PENDING)
+  Step 2: <span class="bl">Inventory Service</span>  reserves stock (status: RESERVED)
+  Step 3: <span class="em">Payment Service</span>    charges card (status: CHARGED)
+  Step 4: <span class="ca">Shipping Service</span>   creates shipment (status: SHIPPED)
+  Step 5: <span class="sv">Order Service</span>     marks order CONFIRMED
+
+<span class="er">Failure at Step 3 (payment declined):</span>
+  Step 3 fails → trigger compensating transactions in reverse:
+  Step 2 rollback: <span class="bl">Inventory Service</span> releases reservation
+  Step 1 rollback: <span class="sv">Order Service</span> marks order FAILED
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">TWO SAGA IMPLEMENTATIONS</span>
+
+<span class="vl">Choreography</span> (event-driven, no central coordinator):
+  Each service publishes success/failure events
+  Other services react to events autonomously
+
+  OrderService → "order.created" → InventoryService
+  InventoryService → "stock.reserved" → PaymentService
+  PaymentService → "payment.failed" → InventoryService ("release.stock")
+
+  <span class="ok">Pros:</span> Decoupled, no SPOF
+  <span class="er">Cons:</span> Hard to track overall saga state, difficult to debug
+
+<span class="sv">Orchestration</span> (central saga orchestrator):
+  Saga Orchestrator calls each service in sequence
+  Orchestrator tracks state, calls compensations on failure
+
+  <span class="sv">SagaOrchestrator</span>
+    → call InventoryService.reserve()
+    → call PaymentService.charge()
+    → if fail: call InventoryService.release()
+    → call ShippingService.ship()
+
+  <span class="ok">Pros:</span> Single place to see full saga state, easier debugging
+  <span class="er">Cons:</span> Orchestrator becomes coupling point
+
+<span class="hl">Production recommendation:</span> Orchestration for &lt;5 steps, choreography for fan-out
+      </div>
+    </section>
+
+    <!-- Transactional Outbox -->
+    <section class="section" id="outbox">
+      <div class="section-label">Reliability Pattern</div>
+      <h2>Transactional Outbox</h2>
+      <p>The hardest problem in async systems: how do you atomically save to your database AND publish an event to Kafka? If you do them separately, you can save to DB but fail to publish the event — or publish the event but have the DB write rollback. The transactional outbox solves this without two-phase commit.</p>
+
+      <div class="arch-diagram">
+<span class="hl">THE DUAL-WRITE PROBLEM</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="er">WRONG approach:</span>
+  BEGIN TRANSACTION
+    INSERT INTO orders (...)
+  COMMIT
+  kafka.publish("order.created", ...)  ← <span class="er">crash here → event lost!</span>
+
+  OR:
+  kafka.publish("order.created", ...)  ← <span class="er">if DB transaction rolls back → ghost event!</span>
+  BEGIN TRANSACTION
+    INSERT INTO orders (...)
+  COMMIT
+
+<span class="ok">CORRECT: Transactional Outbox Pattern</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+  BEGIN TRANSACTION
+    INSERT INTO orders (id, status, ...) VALUES (...)
+    INSERT INTO outbox (event_type, payload, status)
+             VALUES ('order.created', '{...}', 'pending')
+  COMMIT  ← atomic! Either both succeed or both rollback
+
+  <span class="lb">[ Outbox Worker ]</span> (separate process):
+    SELECT * FROM outbox WHERE status = 'pending' LIMIT 100
+    FOR each event:
+      kafka.publish(event.event_type, event.payload)
+      UPDATE outbox SET status='published' WHERE id=event.id
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">DEBEZIUM (CDC-based outbox):</span>
+
+  Instead of a worker, use Debezium to watch the outbox table's WAL
+  Debezium reads Postgres WAL → publishes to Kafka automatically
+  Zero application code for outbox polling → simpler, more reliable
+  <span class="ok">Production standard for high-volume event publishing</span>
+      </div>
+    </section>
+
+    <!-- Tool Selection -->
+    <section class="section" id="tool-selection">
+      <div class="section-label">Decision Guide</div>
+      <h2>Tool Selection</h2>
+
+      <div class="tool-compare">
+        <div class="tool-card tc-kafka">
+          <div class="tool-card-head">Apache Kafka</div>
+          <div class="tool-card-body">
+            <ul>
+              <li><strong>Best for:</strong> Event streaming, fan-out to multiple consumers, audit log, CDC, replay</li>
+              <li><strong>Throughput:</strong> Millions of messages/second</li>
+              <li><strong>Retention:</strong> Days to forever</li>
+              <li><strong>Ordering:</strong> Per partition</li>
+              <li><strong>Managed:</strong> Confluent Cloud, MSK (AWS), Aiven</li>
+              <li><strong>Avoid when:</strong> Simple task queue (overkill), need strict routing per message</li>
+            </ul>
+          </div>
+        </div>
+        <div class="tool-card tc-sqs">
+          <div class="tool-card-head">Amazon SQS</div>
+          <div class="tool-card-body">
+            <ul>
+              <li><strong>Best for:</strong> Task queues, work distribution, serverless Lambda triggers</li>
+              <li><strong>Throughput:</strong> Unlimited (standard), 3000/s (FIFO)</li>
+              <li><strong>Retention:</strong> Up to 14 days</li>
+              <li><strong>Ordering:</strong> FIFO only with SQS FIFO</li>
+              <li><strong>Cost:</strong> Pay per message, serverless</li>
+              <li><strong>Avoid when:</strong> Fan-out to many consumers (SNS+SQS combo), replay needed</li>
+            </ul>
+          </div>
+        </div>
+        <div class="tool-card tc-rmq">
+          <div class="tool-card-head">RabbitMQ</div>
+          <div class="tool-card-body">
+            <ul>
+              <li><strong>Best for:</strong> Complex routing (topic, fanout, direct exchanges), RPC pattern</li>
+              <li><strong>Throughput:</strong> Hundreds of thousands/second</li>
+              <li><strong>Routing:</strong> Flexible exchange types</li>
+              <li><strong>Protocol:</strong> AMQP (richer than HTTP-based queues)</li>
+              <li><strong>Avoid when:</strong> Need replay, high throughput &gt;1M/s</li>
+            </ul>
+          </div>
+        </div>
+        <div class="tool-card tc-redis">
+          <div class="tool-card-head">Redis Streams / Lists</div>
+          <div class="tool-card-body">
+            <ul>
+              <li><strong>Best for:</strong> Simple queues, low-latency task dispatch, real-time pub/sub</li>
+              <li><strong>Throughput:</strong> Very high (in-memory)</li>
+              <li><strong>Streams:</strong> Consumer groups, persistent log (unlike Redis Lists)</li>
+              <li><strong>Pub/Sub:</strong> Ephemeral (not persisted) — fan-out only</li>
+              <li><strong>Avoid when:</strong> Need durable multi-consumer streaming (use Kafka)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Engineer Perspectives -->
+    <section class="section" id="eng-perspectives">
+      <div class="section-label">9 Lenses</div>
+      <h2>How Each Team Thinks About Async</h2>
+
+      <div class="eng-takes">
+
+        <div class="eng-take et-infra">
+          <div class="eng-take-header">🏗️ Infrastructure Engineer</div>
+          <div class="eng-take-body">
+            <p>Kafka clusters are complex to operate. Broker sizing, disk throughput, JVM heap tuning, Zookeeper (now KRaft) quorum, partition reassignment during broker replacement — these are non-trivial operational concerns. We almost always recommend Confluent Cloud or MSK over self-managed Kafka unless there's a compelling cost or compliance reason. The managed service cost is worth it in engineering time saved.</p>
+            <p>Consumer lag dashboards are our primary operational signal for async systems. We set alerts: p95 consumer lag under 1 minute for critical queues, under 5 minutes for non-critical. When lag grows faster than it's drained, something is wrong — either a processing bottleneck, a poison message causing retry loops, or a consumer crash. We don't wait for users to report problems; lag is the leading indicator.</p>
+            <p>Kafka partition count is a one-way door. You can increase partition count, but partitions cannot be decreased without recreating the topic (which means losing existing messages or migrating them). We set initial partition counts conservatively high (e.g., 24) to allow future consumer scaling without topology changes.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-network">
+          <div class="eng-take-header">🌐 Network Engineer</div>
+          <div class="eng-take-body">
+            <p>Kafka's inter-broker replication traffic is substantial. For a 3-replica Kafka cluster receiving 100 MB/s of messages, inter-broker replication generates another 200 MB/s (each message replicated to 2 followers). We size network interfaces accordingly and place Kafka brokers on dedicated network segments with guaranteed bandwidth, separate from application traffic.</p>
+            <p>Consumer batch fetching (fetch.min.bytes, fetch.max.wait.ms) is a network efficiency tuning knob. Small batch sizes mean many small TCP segments — lots of overhead. Large batch sizes mean higher latency but fewer round trips. We tune this based on the latency SLO of each consumer: email notifications (SLO: 30s) can batch aggressively, real-time fraud detection (SLO: 200ms) cannot.</p>
+            <p>Cross-region Kafka replication (MirrorMaker 2 or Confluent Replication) adds meaningful latency and bandwidth cost. We model this explicitly: 10 MB/s of events × cross-region replication = ~$300/month in data transfer costs. We help teams decide whether they need true multi-region Kafka or whether regional Kafka clusters per region with eventual consistency is sufficient.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-platform">
+          <div class="eng-take-header">⚙️ Platform Engineer</div>
+          <div class="eng-take-body">
+            <p>We provide a "queue as a service" abstraction. Teams declare a queue in a config file, our platform creates the SQS queue + DLQ + IAM policy + Datadog dashboard + PagerDuty alert. They don't touch AWS console. This standardization means every queue in the company has a DLQ, monitoring, and alerting — not just the ones where a senior engineer remembered to set it up.</p>
+            <p>Schema registry is the platform artifact that enables async evolution. When teams publish Kafka events with Avro schemas registered in Confluent Schema Registry, adding a new field is backward-compatible (consumers that don't know the new field ignore it). Removing a required field is a breaking change and triggers a schema compatibility check failure in CI. This is the async equivalent of API contract testing.</p>
+            <p>We've standardized on CloudEvents (CNCF spec) as our event envelope format. Every event has: specversion, type (e.g., "com.company.orders.created"), source, id, time, and data. The standard envelope means our event routing, tracing, and schema tooling works uniformly across all event types, regardless of which team published them.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-security">
+          <div class="eng-take-header">🔐 Security / Cyber Engineer</div>
+          <div class="eng-take-body">
+            <p>Message queues are a data exfiltration vector. A compromised consumer service that subscribes to a Kafka topic with PII can silently exfiltrate all user data. We enforce topic-level ACLs: each service gets read access only to the topics it explicitly needs, and write access only to topics it owns. No wildcard subscriptions, no "subscribe to everything" service accounts.</p>
+            <p>Encryption in transit for Kafka is mandatory: TLS on all broker connections. Encryption at rest depends on the sensitivity of the data — payment events and PII events are on encrypted EBS volumes, high-volume analytics events can use unencrypted storage for cost. We document this per topic in our data classification registry.</p>
+            <p>Message replay is a security concern people overlook. If an attacker gains temporary access to a Kafka consumer and resets the consumer offset, they can replay all historical events — including password reset tokens, one-time payment links, or auth codes that were previously consumed. We treat Kafka ACLs with the same rigor as database access controls, not as a secondary concern.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-data">
+          <div class="eng-take-header">📊 Data Engineer</div>
+          <div class="eng-take-body">
+            <p>Kafka is our data backbone. Every user action, system event, and service state change flows through Kafka, and we read it in real time for analytics, monitoring, and ML feature computation. The key pattern is: application writes to Kafka → Kafka Streams job aggregates → results land in the data warehouse or feature store. We're the team that cares most about event schema stability — a producer changing field names without notice breaks our pipelines silently.</p>
+            <p>Event time vs processing time is a subtle but critical distinction for streaming analytics. An IoT sensor event with timestamp "2024-01-15 10:00:00" might arrive at Kafka at 10:05 due to network delay. If we aggregate by event time (the actual occurrence), we need to handle late arrivals with a watermark (e.g., accept events up to 2 minutes late). If we aggregate by processing time (arrival time), the results are simpler but inaccurate for out-of-order data.</p>
+            <p>We love the transactional outbox pattern because it makes CDC-based pipelines fully reliable. Debezium watching the outbox table gives us exactly-once event delivery to Kafka, which means our downstream analytics are consistent with the source-of-truth database. We've been burned by producers that publish to Kafka and then fail the DB write — we spent days reconciling analytics that diverged from production data.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-ml">
+          <div class="eng-take-header">🤖 ML / AI Engineer</div>
+          <div class="eng-take-body">
+            <p>Real-time feature computation is an async processing problem. User behavior events (clicks, purchases, search queries) flow through Kafka → Flink/Kafka Streams → feature store (Redis). The online feature store serves these computed features at inference time. The challenge is keeping the real-time features aligned with the batch features used in training — feature skew is the silent killer of ML model performance in production.</p>
+            <p>Async batch inference is the workload we use Celery for. Users upload documents → we enqueue an "analyze_document" task → Celery workers with GPU access process the document in 30 seconds → result stored in DB, user notified via WebSocket. This decouples the user-facing API from the ML inference latency — users get immediate acknowledgment, wait for the async result.</p>
+            <p>Model training pipelines are large-scale async workflows. We use Airflow (workflow orchestrator) to schedule DAGs: extract training data from Kafka → preprocess → train → evaluate → if metrics pass: deploy. Each step is a Celery task or a Kubernetes job. The saga pattern applies here: if model evaluation fails, we trigger a rollback (keep the previous model serving). We never deploy a failing model synchronously during user traffic.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-backend">
+          <div class="eng-take-header">⚡ Backend Engineer</div>
+          <div class="eng-take-body">
+            <p>The most important async design decision is: what's the user contract when something fails? If I queue an email and the email service is down, does the user know? For most async work, the answer is: they get an acknowledgment that the action was accepted, and if it eventually fails permanently, they get a notification (email failed to send, payment couldn't process). Designing this failure notification path is as important as the happy path.</p>
+            <p>I treat every Celery task as potentially being run multiple times. Idempotency keys in the task payload, check-then-act patterns in the task body, and unique constraints in the database are my three layers of defense against duplicate processing. A task that's safe to run twice is a task I can deploy confidently knowing retries won't corrupt state.</p>
+            <p>The choice between Celery chains and Saga choreography depends on coupling tolerance. Celery chains are centralized — the caller defines the full workflow. Kafka choreography is decoupled — each service reacts independently to events. For internal workflows where I control all services, I prefer Celery chains (simpler, easier to trace). For cross-team event propagation where coupling is undesirable, Kafka choreography is cleaner.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-frontend">
+          <div class="eng-take-header">🎨 Frontend Engineer</div>
+          <div class="eng-take-body">
+            <p>Async processing shifts the UX challenge from "how to show loading" to "how to show progress." When a user submits a form that triggers an async job (video upload, data export, background analysis), I can't show a spinner that resolves in 200ms — the job takes 30 seconds. My options: polling (GET /jobs/{id} every 2s), WebSocket push from job completion, or Server-Sent Events from the job service.</p>
+            <p>Job status pages are the standard UX pattern for long async operations. The user is redirected to /jobs/abc123 immediately after submission. That page polls or subscribes to the job status and shows a progress indicator. When the job completes, the page refreshes with results. This is how Netlify shows deploy status, how Vercel shows build logs — it's a proven pattern that users understand intuitively.</p>
+            <p>Optimistic UI for async operations requires careful thought about rollback. I can optimistically show "email sent!" and then handle the rare case where the async email fails by showing a retry button or notification. But for irreversible async operations (deduct credits, send payment), I don't optimistically show success — I wait for at least the queue acknowledgment before updating UI, and show a clear pending state.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-sre">
+          <div class="eng-take-header">📡 SRE / Site Reliability Engineer</div>
+          <div class="eng-take-body">
+            <p>Consumer lag is my primary SLO for async systems. For the order processing pipeline, my SLO is: 99th percentile order processing lag under 30 seconds. I alert at 2 minutes (warning) and 5 minutes (critical, page on-call). Consumer lag is a leading indicator — by the time users notice delayed notifications, lag has been growing for minutes. We catch it before users do.</p>
+            <p>Dead letter queue depth is my second alert. If DLQ messages are accumulating, a class of messages is consistently failing processing. This is different from consumer lag (which can indicate overload) — DLQ growth indicates bugs (poison messages, schema mismatches, downstream service failures). I alert at 100 DLQ messages and page at 1000. DLQ messages should be investigated within hours, not left to accumulate for days.</p>
+            <p>Kafka broker disk is the most operationally painful alert to deal with urgently. Kafka writes log segments to disk, and a broker with a full disk stops accepting writes and can cause partition leader elections. We set log retention based on disk capacity (not arbitrarily), monitor disk fill rate, and pre-provision at 60% utilization. Kafka disk filling up at 3 AM with 30 minutes to fix it is an incident we've lived and never want again.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Real Problems -->
+    <section class="section" id="problems">
+      <div class="section-label">Real Problems</div>
+      <h2>Applied Async Design</h2>
+
+      <!-- Problem 1 -->
+      <div class="problem-card">
+        <div class="problem-header">
+          <span class="problem-num">Problem 01</span>
+          <div class="problem-title">Design the Notification System for a Social Platform (1B users)</div>
+          <div class="problem-tags">
+            <span class="ptag">Fan-out on Write</span>
+            <span class="ptag">Kafka</span>
+            <span class="ptag">Priority Queues</span>
+            <span class="ptag">Multi-Channel</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Problem</h4>
+          <p>A celebrity with 10M followers posts a photo. Each follower may need a push notification, email digest, and in-app notification. That's up to 30M notification events from a single action. At the same time, a regular user's post to 100 followers needs to notify in under 2 seconds (real-time feel).</p>
+
+          <h4>Architecture</h4>
+          <div class="arch-diagram">
+<span class="hl">TWO-TIER NOTIFICATION SYSTEM</span>
+
+<span class="sv">User posts</span>
+    │
+    ▼
+<span class="lb">[ Post Service ]</span>
+    │  → Kafka: "post.created" {user_id, follower_count, post_id}
+    ▼
+<span class="vl">[ Fan-out Service ]</span>
+    │
+    ├── Celebrity path (follower_count &gt; 100k):
+    │   → Write "notify user X about post Y" to <span class="bl">Kafka: fan-out-jobs</span>
+    │   → Worker processes batch (500 followers per Kafka message)
+    │   → Priority: <span class="hl">LOW</span> — eventual delivery acceptable (minutes)
+    │
+    └── Regular user path (follower_count &lt;= 100k):
+        → Write all follower IDs directly to <span class="em">Kafka: notifications-high-priority</span>
+        → Priority: <span class="ok">HIGH</span> — deliver within 2 seconds
+
+<span class="vl">[ Notification Router ]</span>
+    Reads from Kafka, routes to channel queues:
+    ├── <span class="ca">SQS: push-notifications</span> → FCM / APNs workers
+    ├── <span class="bl">SQS: email-notifications</span>  → Email service workers
+    └── <span class="db">SQS: in-app</span>             → WebSocket push to connected clients
+
+<span class="hl">Backpressure:</span> Push SLO 2s, Email SLO 30min — different worker pool sizes
+<span class="hl">Deduplication:</span> Redis SET per user per post (SETEX 1h) → skip if already notified
+          </div>
+
+          <h4>Fan-out Strategy</h4>
+          <p>For users with &lt;100K followers: fan-out on write (write to each follower's notification queue immediately). For celebrities with &gt;100K followers: fan-out on read (store the post, generate notifications lazily as followers open their apps). The hybrid avoids generating 30M notifications instantly while maintaining real-time feel for regular users.</p>
+        </div>
+      </div>
+
+      <!-- Problem 2 -->
+      <div class="problem-card">
+        <div class="problem-header">
+          <span class="problem-num">Problem 02</span>
+          <div class="problem-title">Distributed Order Processing Saga (E-commerce at Scale)</div>
+          <div class="problem-tags">
+            <span class="ptag">Saga Pattern</span>
+            <span class="ptag">Transactional Outbox</span>
+            <span class="ptag">Compensation</span>
+            <span class="ptag">Idempotency</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Services Involved</h4>
+          <ul>
+            <li>Order Service — creates and tracks the order</li>
+            <li>Inventory Service — reserves stock</li>
+            <li>Payment Service — charges customer</li>
+            <li>Shipping Service — creates a shipment</li>
+            <li>Email Service — sends confirmation</li>
+          </ul>
+
+          <h4>Saga Flow with Outbox</h4>
+          <div class="code-wrap">
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <pre><code class="language-python"># order_service.py — Orchestration-based saga
+class OrderSagaOrchestrator:
+
+    def execute(self, order_data):
+        saga_id = uuid4()
+        # All state in the saga_executions table
+        # Debezium watches for state changes → publishes to Kafka
+
+        # Step 1: Create order + publish event atomically via outbox
+        with db.transaction():
+            order = Order.create(**order_data, status='pending')
+            db.execute("""
+                INSERT INTO outbox (saga_id, event_type, payload)
+                VALUES (%s, 'inventory.reserve', %s)
+            """, [saga_id, json.dumps({'order_id': order.id,
+                                       'items': order_data['items']})])
+
+        # Debezium picks up outbox row, publishes to Kafka
+        # Inventory Service consumes and reserves stock
+
+    def on_inventory_reserved(self, event):
+        # Step 2: Inventory successful → trigger payment
+        with db.transaction():
+            db.execute("UPDATE orders SET status='inventory_reserved' WHERE id=%s",
+                       [event['order_id']])
+            db.execute("""
+                INSERT INTO outbox (event_type, payload)
+                VALUES ('payment.charge', %s)
+            """, [json.dumps({'order_id': event['order_id'],
+                              'amount': event['total']})])
+
+    def on_payment_failed(self, event):
+        # Compensate: release inventory reservation
+        with db.transaction():
+            db.execute("UPDATE orders SET status='failed' WHERE id=%s",
+                       [event['order_id']])
+            db.execute("""
+                INSERT INTO outbox (event_type, payload)
+                VALUES ('inventory.release', %s)
+            """, [json.dumps({'order_id': event['order_id']})])</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Problem 3 -->
+      <div class="problem-card">
+        <div class="problem-header">
+          <span class="problem-num">Problem 03</span>
+          <div class="problem-title">Video Processing Pipeline (YouTube-scale)</div>
+          <div class="problem-tags">
+            <span class="ptag">Task Queue</span>
+            <span class="ptag">Backpressure</span>
+            <span class="ptag">Multi-stage Pipeline</span>
+            <span class="ptag">Priority</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Pipeline Stages</h4>
+
+          <div class="arch-diagram">
+<span class="hl">VIDEO PROCESSING ASYNC PIPELINE</span>
+
+<span class="c">User uploads</span> → <span class="sv">S3 (raw video)</span>
+    │  S3 event notification
+    ▼
+<span class="vl">SQS: video-ingestion</span>
+    │
+    ▼
+<span class="lb">[ Ingest Worker ]</span>
+    │  validates format, extracts metadata
+    │  publishes to 3 downstream queues in parallel
+    │
+    ├── <span class="bl">SQS: video-transcode (high priority)</span>
+    │   [ Transcode Workers — GPU instances ]
+    │     → 1080p H.264
+    │     → 720p H.264
+    │     → 480p H.264
+    │     → audio-only AAC
+    │   Each resolution = separate Celery task
+    │   Outputs: S3 (transcoded segments)
+    │
+    ├── <span class="em">SQS: thumbnail-generation</span>
+    │   [ Thumbnail Workers ]
+    │     → extract frames at 10% intervals
+    │     → resize to 320×180 and 1280×720
+    │
+    └── <span class="ts">SQS: content-analysis (low priority)</span>
+        [ ML Workers ]
+          → speech-to-text (for captions)
+          → content safety classification
+          → auto-tagging / category prediction
+
+<span class="hl">Backpressure strategy:</span>
+  Transcode queue max depth: 1000 (reject above, return 429 to uploader)
+  Transcode priority: premium users &gt; verified creators &gt; regular users
+  GPU worker auto-scaling: scale up when queue depth &gt; 100, scale down after 10min idle
+
+<span class="hl">Status tracking:</span>
+  Video processing status in Redis: video:{id}:status
+  WebSocket push to creator when each stage completes
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trade-offs -->
+    <section class="section" id="tradeoffs">
+      <div class="section-label">Decision Guide</div>
+      <h2>Trade-offs Table</h2>
+
+      <div class="table-wrap">
+        <table>
+          <tr>
+            <th>Decision</th>
+            <th>Option A</th>
+            <th>Option B</th>
+            <th>When to Choose A</th>
+          </tr>
+          <tr>
+            <td><strong>Kafka vs SQS</strong></td>
+            <td>Kafka</td>
+            <td>SQS</td>
+            <td>Multiple independent consumer groups need the same events, or replay is required. SQS when task distribution to a single consumer pool is the goal</td>
+          </tr>
+          <tr>
+            <td><strong>At-least-once vs exactly-once</strong></td>
+            <td>At-least-once</td>
+            <td>Exactly-once</td>
+            <td>At-least-once + idempotent consumers covers 95% of cases with less complexity. Exactly-once for financial events where duplicates cause real money errors</td>
+          </tr>
+          <tr>
+            <td><strong>Choreography vs Orchestration</strong></td>
+            <td>Orchestration</td>
+            <td>Choreography</td>
+            <td>Orchestration when you need to track saga state and debug easily (&lt;5 steps, one team). Choreography for decoupled cross-team event propagation</td>
+          </tr>
+          <tr>
+            <td><strong>Queue vs Stream for fan-out</strong></td>
+            <td>Kafka (stream)</td>
+            <td>SNS+SQS (queue per consumer)</td>
+            <td>Kafka when consumers are internal and homogeneous. SNS+SQS when consumers are independent teams who need isolated delivery guarantees and DLQs</td>
+          </tr>
+          <tr>
+            <td><strong>Fan-out on write vs read</strong></td>
+            <td>Fan-out on write</td>
+            <td>Fan-out on read</td>
+            <td>Fan-out on write for users with &lt;100K followers (low latency, simple reads). Fan-out on read for celebrities (avoid generating millions of notifications instantly)</td>
+          </tr>
+          <tr>
+            <td><strong>Outbox pattern vs dual-write</strong></td>
+            <td>Transactional outbox</td>
+            <td>Direct publish to Kafka</td>
+            <td>Always use outbox when the DB write and the event must be atomic. Dual-write only for idempotent events where an extra delivery is safe</td>
+          </tr>
+          <tr>
+            <td><strong>Celery vs Kafka Streams</strong></td>
+            <td>Celery (task queue)</td>
+            <td>Kafka Streams</td>
+            <td>Celery for work distribution (jobs with side effects, external API calls). Kafka Streams for stateful stream processing (aggregations, joins, windowed computations)</td>
+          </tr>
+          <tr>
+            <td><strong>Priority queues vs single queue</strong></td>
+            <td>Multiple queues by priority</td>
+            <td>Single queue all traffic</td>
+            <td>Separate queues when high-priority work (payments) must not be starved by low-priority work (analytics). Single queue when all work has equal SLA</td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Anti-patterns -->
+    <section class="section" id="antipatterns">
+      <div class="section-label">What Not to Do</div>
+      <h2>Anti-patterns</h2>
+
+      <ul class="antipattern-list">
+        <li>
+          <strong>Non-idempotent consumers with at-least-once delivery</strong>
+          If your consumer does "charge card X for amount Y" without idempotency checks, a redelivered message (due to consumer crash after processing but before commit) charges the user twice. Every at-least-once consumer must be idempotent. This is not optional — it's the foundational invariant of reliable async systems.
+        </li>
+        <li>
+          <strong>No Dead Letter Queue</strong>
+          A message that consistently fails processing will be retried indefinitely, consuming worker capacity and hiding the underlying bug. Every queue needs a DLQ with a retry limit (maxReceiveCount). DLQ alerts tell you that a class of messages is broken — without them, the queue just silently grows and workers spin.
+        </li>
+        <li>
+          <strong>Unbounded queues without backpressure</strong>
+          Accepting work faster than you process it means your queue grows indefinitely. A 10M-message backlog takes 3 hours to drain at 1000 msg/s. During those 3 hours, all messages are delayed, your SLO is violated, and the system is effectively down for that workload. Set max queue depths and reject producers when limits are hit.
+        </li>
+        <li>
+          <strong>Putting too much data in the message payload</strong>
+          Kafka messages should be small (ideally &lt;1MB). A message containing a full 10MB JSON document means 10MB per consumer replica, per message — this hits Kafka broker memory limits and increases replication overhead. Store the large data in S3 or the database and put only the ID in the message. Consumers fetch the full data when they process the event.
+        </li>
+        <li>
+          <strong>Dual-write (DB + Kafka) without transactional outbox</strong>
+          Publishing to Kafka in application code after a DB commit is a race condition. If the process crashes between the commit and the publish, the event is lost forever. If you publish before the commit and the commit fails, you have a ghost event. Use the transactional outbox pattern — it's not optional if correctness matters.
+        </li>
+        <li>
+          <strong>Storing mutable business logic in event schemas</strong>
+          A Kafka event schema published to 10 consumers is a public API. Renaming a field breaks all 10 consumers simultaneously. Events should be versioned (envelope with schema version), and consumers should be written to handle unknown fields gracefully. Never silently break consumers with a "quick schema fix."
+        </li>
+        <li>
+          <strong>Using a queue when you need a stream (or vice versa)</strong>
+          Using SQS (queue) when you need multiple services to independently consume the same events means you need one SQS queue per consumer — which you then have to manually fan-out to. Use Kafka (stream) instead and let consumer groups handle fan-out naturally. Conversely, using Kafka for a simple task queue where one worker pool processes each message is overkill — SQS is simpler and cheaper.
+        </li>
+        <li>
+          <strong>Coupling Saga steps synchronously inside a transaction</strong>
+          Calling Payment Service inside a database transaction while waiting for the HTTP response keeps the DB transaction open for the duration of the network call. A 500ms payment API call holds a DB lock for 500ms — at 1000 concurrent checkouts, this is table-lock disaster. Saga steps must be asynchronous and transactionless at the orchestration level.
+        </li>
+      </ul>
+    </section>
+
+    <!-- Interview Tips -->
+    <section class="section" id="interview-tips">
+      <div class="section-label">Interview Strategy</div>
+      <h2>Interview Tips for Async Questions</h2>
+
+      <div class="callout callout-violet">
+        <div class="callout-title">The Async Interview Signal</div>
+        <p>Any time you hear "user doesn't need to wait for this" or "this could spike 100×," that's your cue to propose an async pattern. Interviewers reward candidates who correctly identify when decoupling and queueing is necessary — not just those who can describe how Kafka works.</p>
+      </div>
+
+      <div class="tips-grid">
+        <div class="tip-card">
+          <div class="tip-num">Tip 01</div>
+          <p><strong>Lead with the distinction: queue vs stream.</strong> "Does each event need to be processed by one consumer, or multiple independent consumers?" One consumer = SQS. Multiple = Kafka. This single question shows you understand the paradigm difference.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 02</div>
+          <p><strong>Always mention the DLQ.</strong> Every queue discussion should include "and a Dead Letter Queue with an alert." This shows operational thinking — not just happy-path design but what happens when things fail.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 03</div>
+          <p><strong>Raise idempotency proactively.</strong> When proposing async processing, say "consumers must be idempotent because we use at-least-once delivery." Then briefly describe how: idempotency key in DB, check-then-act, or inherently idempotent operations.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 04</div>
+          <p><strong>For distributed transactions, name the Saga pattern.</strong> "We can't use a 2-phase commit across microservices, so we'd use a saga — either choreography via events or orchestration with a saga coordinator." Naming the pattern signals seniority.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 05</div>
+          <p><strong>Mention consumer lag as your SLO metric.</strong> "I'd set an SLO on consumer lag — say, p99 lag under 30 seconds — and alert when it exceeds 2 minutes." This shows you think about measuring async system health, not just building it.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 06</div>
+          <p><strong>For notification fan-out, discuss the celebrity problem.</strong> Distinguishing "fan-out on write for regular users" vs "fan-out on read for celebrities" shows you've thought about the extreme case. Interviewers asking about notification systems almost always probe this.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p>KnowAlgo · Pattern 05: Async Processing &amp; Message Passing · <a href="system-design.html">All Patterns</a> · <a href="index.html">DSA Guides</a></p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+<script>
+  window.addEventListener('scroll', () => {
+    const scrollTop = document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    document.getElementById('progress-bar').style.width = (scrollTop / scrollHeight * 100) + '%';
+  });
+
+  function copyCode(btn) {
+    const code = btn.nextElementSibling.querySelector('code');
+    navigator.clipboard.writeText(code.innerText).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  }
+
+  const tocLinks = document.querySelectorAll('.toc a');
+  const sections = document.querySelectorAll('section[id]');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.toc a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -75% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

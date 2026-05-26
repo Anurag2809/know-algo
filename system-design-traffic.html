@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traffic Shaping & Load Distribution – System Design Patterns | KnowAlgo</title>
+  <meta name="description" content="Master traffic shaping and load distribution: load balancing algorithms, rate limiting patterns (token bucket, leaky bucket, sliding window), auto-scaling, consistent hashing, and canary deployments. 9 engineer perspectives included.">
+  <meta name="keywords" content="load balancing, rate limiting, token bucket, leaky bucket, sliding window, auto scaling, consistent hashing, traffic shaping, system design patterns, API gateway design">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.netlify.app/system-design-traffic.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Traffic Shaping & Load Distribution – System Design Patterns">
+  <meta property="og:description" content="Load balancing, rate limiting, auto-scaling, and consistent hashing — with 9 engineer perspectives and 3 real interview problems.">
+  <meta property="og:url" content="https://knowalgo.netlify.app/system-design-traffic.html">
+  <meta property="og:site_name" content="KnowAlgo">
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    /* ── Variables ── */
+    :root {
+      --primary: #0891b2;
+      --primary-dark: #0e7490;
+      --primary-light: #ecfeff;
+      --secondary: #4338ca;
+      --accent: #059669;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --bg: #f8fafc;
+      --bg-card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #1e293b;
+      --toc-width: 260px;
+      --header-h: 64px;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.7;
+    }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    ul, ol { padding-left: 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+
+    /* ── Progress Bar ── */
+    .reading-progress {
+      position: fixed; top: 0; left: 0; height: 3px; width: 0;
+      background: linear-gradient(to right, #0891b2, #4338ca);
+      z-index: 999; transition: width 0.1s;
+    }
+
+    /* ── Top Nav ── */
+    .topnav {
+      position: sticky; top: 0; z-index: 200;
+      background: #fff; border-bottom: 1px solid var(--border);
+      height: var(--header-h); display: flex; align-items: center;
+      padding: 0 1.5rem; gap: 1rem; box-shadow: var(--shadow);
+    }
+    .topnav-logo { font-weight: 800; font-size: 1.25rem; color: #0891b2; letter-spacing: -0.5px; }
+    .topnav-sep { color: var(--border); }
+    .topnav-crumb { color: var(--text-muted); font-size: 0.9rem; }
+    .topnav-crumb-active { color: #0891b2; font-weight: 600; }
+    .topnav-links { margin-left: auto; display: flex; gap: 1rem; align-items: center; }
+    .topnav-links a { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
+    .topnav-links a:hover { color: var(--primary); text-decoration: none; }
+    .btn-home {
+      background: #0891b2; color: #fff !important;
+      padding: 0.35rem 0.9rem; border-radius: 6px; font-size: 0.85rem !important;
+    }
+    .btn-home:hover { background: #0e7490; }
+
+    /* ── Layout ── */
+    .page-layout {
+      display: grid; grid-template-columns: var(--toc-width) 1fr;
+      max-width: 1400px; margin: 0 auto;
+      min-height: calc(100vh - var(--header-h));
+    }
+
+    /* ── TOC Sidebar ── */
+    .toc-sidebar {
+      position: sticky; top: var(--header-h);
+      height: calc(100vh - var(--header-h)); overflow-y: auto;
+      padding: 1.5rem 1rem; border-right: 1px solid var(--border);
+      background: #fff;
+    }
+    .toc-sidebar::-webkit-scrollbar { width: 4px; }
+    .toc-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .toc-title {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text-muted); margin-bottom: 0.75rem;
+    }
+    .toc-list { list-style: none; padding: 0; }
+    .toc-list li { margin-bottom: 0; }
+    .toc-list a {
+      display: block; padding: 0.3rem 0.75rem; border-radius: 6px;
+      font-size: 0.875rem; color: var(--text-muted); transition: all 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .toc-list a:hover, .toc-list a.active {
+      color: var(--primary); background: var(--primary-light);
+      border-left-color: var(--primary); text-decoration: none;
+    }
+    .toc-list .toc-sub a { padding-left: 1.5rem; font-size: 0.82rem; }
+    .toc-divider { border: none; border-top: 1px solid var(--border); margin: 0.75rem 0; }
+    .toc-next { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .toc-next-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem; }
+    .toc-next a { font-size: 0.875rem; font-weight: 500; }
+
+    /* ── Main Content ── */
+    .main-content { padding: 2rem 2.5rem; max-width: 900px; }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, #0f172a 0%, #134e4a 45%, #1e3a8a 100%);
+      color: white; border-radius: var(--radius); padding: 2.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .hero-badge {
+      display: inline-block; background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25); padding: 0.2rem 0.7rem;
+      border-radius: 99px; font-size: 0.75rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1rem;
+    }
+    .hero h1 { font-size: 2.25rem; font-weight: 800; line-height: 1.2; margin-bottom: 0.75rem; }
+    .hero p { font-size: 1.05rem; opacity: 0.88; max-width: 600px; margin-bottom: 1.25rem; }
+    .hero-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .hero-meta span { font-size: 0.85rem; opacity: 0.82; display: flex; align-items: center; gap: 0.4rem; }
+
+    /* ── Sections ── */
+    .section {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem; margin-bottom: 1.75rem;
+      scroll-margin-top: calc(var(--header-h) + 1rem);
+    }
+    .section h2 {
+      font-size: 1.5rem; font-weight: 700; color: var(--text);
+      margin-bottom: 1rem; padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .section-icon { font-size: 1.3rem; }
+    .section h3 { font-size: 1.15rem; font-weight: 650; color: var(--text); margin: 1.5rem 0 0.6rem; }
+    .section h4 { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin: 1rem 0 0.4rem; text-transform: uppercase; letter-spacing: 0.3px; }
+    .section p { margin-bottom: 0.85rem; color: #334155; }
+    .section p:last-child { margin-bottom: 0; }
+
+    /* ── Callouts ── */
+    .callout {
+      border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0;
+      border-left: 4px solid; font-size: 0.9rem;
+    }
+    .callout-info { background: #ecfeff; border-color: #0891b2; color: #155e75; }
+    .callout-tip { background: #f0fdf4; border-color: var(--accent); color: #065f46; }
+    .callout-warn { background: #fffbeb; border-color: var(--warning); color: #92400e; }
+    .callout strong { display: block; margin-bottom: 0.3rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── Architecture Diagrams ── */
+    .arch-diagram {
+      background: var(--code-bg); border-radius: 10px; padding: 1.5rem;
+      margin: 1.25rem 0; font-family: 'Courier New', Courier, monospace;
+      color: #94a3b8; font-size: 0.82rem; line-height: 1.9; overflow-x: auto;
+      white-space: pre;
+    }
+    .arch-diagram .c  { color: #f8fafc; font-weight: 700; }   /* client */
+    .arch-diagram .lb { color: #fbbf24; font-weight: 700; }   /* load balancer */
+    .arch-diagram .sv { color: #34d399; font-weight: 700; }   /* server */
+    .arch-diagram .db { color: #a78bfa; font-weight: 700; }   /* database */
+    .arch-diagram .ca { color: #fb923c; font-weight: 700; }   /* cache */
+    .arch-diagram .ok { color: #34d399; font-weight: 700; }   /* success / ok */
+    .arch-diagram .er { color: #f87171; font-weight: 700; }   /* error / reject */
+    .arch-diagram .hl { color: #fbbf24; }                      /* highlight */
+    .arch-diagram .cm { color: #475569; font-style: italic; }  /* comment */
+
+    /* ── Insight Grid ── */
+    .insight-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem; margin: 1rem 0;
+    }
+    .insight-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.25rem;
+    }
+    .insight-card .ic-icon { font-size: 1.75rem; margin-bottom: 0.5rem; }
+    .insight-card h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.35rem; color: var(--text); text-transform: none; letter-spacing: 0; }
+    .insight-card p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+
+    /* ── Step list ── */
+    .steps { counter-reset: step; margin: 1rem 0; }
+    .step { display: grid; grid-template-columns: 2.5rem 1fr; gap: 1rem; margin-bottom: 1rem; align-items: start; }
+    .step-num {
+      counter-increment: step; width: 2.5rem; height: 2.5rem;
+      background: var(--primary); color: #fff; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
+    }
+    .step-body h4 { margin-top: 0.35rem; color: var(--text); font-size: 1rem; text-transform: none; letter-spacing: 0; }
+    .step-body p { font-size: 0.9rem; color: var(--text-muted); margin: 0.25rem 0; }
+
+    /* ── Code blocks ── */
+    .code-wrap { position: relative; margin: 1rem 0; border-radius: 10px; overflow: hidden; }
+    .code-header {
+      background: #0f172a; padding: 0.6rem 1rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .code-lang { font-size: 0.78rem; color: #64748b; font-family: 'Courier New', monospace; text-transform: uppercase; letter-spacing: 0.5px; }
+    .copy-btn {
+      background: #1e293b; color: #94a3b8; border: 1px solid #334155;
+      padding: 0.25rem 0.65rem; border-radius: 5px; font-size: 0.75rem;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .copy-btn:hover { background: #334155; color: #e2e8f0; }
+    .copy-btn.copied { color: #34d399; border-color: #34d399; }
+    .code-wrap pre[class*="language-"] { margin: 0; border-radius: 0; border: none; font-size: 0.875rem; max-height: 480px; }
+
+    /* ── Tables ── */
+    .table-wrap { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { background: #0891b2; color: #fff; padding: 0.65rem 1rem; text-align: left; font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.3px; }
+    td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    .badge-a { color: #065f46; background: #d1fae5; padding: 0.15rem 0.5rem; border-radius: 99px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+    .badge-b { color: #92400e; background: #fef3c7; padding: 0.15rem 0.5rem; border-radius: 99px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+
+    /* ── Engineer Perspectives ── */
+    .eng-take {
+      border: 1px solid var(--border); border-radius: 10px;
+      overflow: hidden; margin-bottom: 1.25rem;
+    }
+    .eng-take-header {
+      padding: 1rem 1.25rem; display: flex; gap: 0.75rem;
+      align-items: center; border-left: 4px solid;
+    }
+    .eng-take-icon { font-size: 1.5rem; }
+    .eng-take-role { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+    .eng-take-focus { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.1rem; }
+    .eng-take-body { padding: 1.25rem 1.5rem; background: #fff; }
+    .eng-take-body p { font-size: 0.9rem; color: #334155; margin-bottom: 0.65rem; }
+    .eng-take-body p:last-child { margin-bottom: 0; }
+    .eng-take-body ul { font-size: 0.9rem; color: #334155; }
+
+    .et-infra .eng-take-header   { border-left-color: #2563eb; background: #eff6ff; }
+    .et-network .eng-take-header  { border-left-color: #0891b2; background: #ecfeff; }
+    .et-platform .eng-take-header { border-left-color: #7c3aed; background: #f5f3ff; }
+    .et-security .eng-take-header { border-left-color: #dc2626; background: #fef2f2; }
+    .et-data .eng-take-header     { border-left-color: #059669; background: #f0fdf4; }
+    .et-ml .eng-take-header       { border-left-color: #d97706; background: #fffbeb; }
+    .et-backend .eng-take-header  { border-left-color: #475569; background: #f8fafc; }
+    .et-frontend .eng-take-header { border-left-color: #db2777; background: #fdf2f8; }
+    .et-sre .eng-take-header      { border-left-color: #16a34a; background: #f0fdf4; }
+
+    /* ── Real Problem Cards ── */
+    .problem-card {
+      border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; margin-bottom: 2rem;
+      scroll-margin-top: calc(var(--header-h) + 1rem);
+    }
+    .problem-header {
+      padding: 1.25rem 1.5rem; background: #f8fafc;
+      border-bottom: 1px solid var(--border);
+    }
+    .problem-num { font-size: 0.78rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 0.3rem; }
+    .problem-title { font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+    .problem-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .ptag {
+      background: var(--primary-light); color: var(--primary);
+      padding: 0.15rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;
+    }
+    .problem-body { padding: 1.5rem; }
+    .problem-body h4 { color: var(--text); font-size: 0.88rem; text-transform: uppercase; letter-spacing: 0.3px; margin: 1.25rem 0 0.4rem; }
+    .problem-body h4:first-child { margin-top: 0; }
+    .problem-body p { font-size: 0.9rem; color: #334155; margin-bottom: 0.5rem; }
+    .problem-body ul { font-size: 0.9rem; color: #334155; }
+
+    /* ── Anti-pattern list ── */
+    .antipattern-list { list-style: none; padding: 0; }
+    .antipattern-list li {
+      padding: 0.85rem 1rem; border-radius: 8px; margin-bottom: 0.6rem;
+      border-left: 4px solid #dc2626; background: #fef2f2;
+      font-size: 0.9rem; color: #334155;
+    }
+    .antipattern-list li strong { color: #991b1b; display: block; margin-bottom: 0.2rem; }
+
+    /* ── Interview Tips ── */
+    .tip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+    .tip-card {
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      border-radius: 10px; padding: 1.25rem;
+    }
+    .tip-card .tip-num { font-size: 1.5rem; font-weight: 900; color: #16a34a; line-height: 1; margin-bottom: 0.4rem; }
+    .tip-card h4 { font-size: 0.95rem; font-weight: 700; color: #065f46; margin-bottom: 0.35rem; text-transform: none; letter-spacing: 0; }
+    .tip-card p { font-size: 0.85rem; color: #166534; margin: 0; }
+
+    /* ── Inline code ── */
+    code:not([class]) {
+      background: #f1f5f9; color: #7c3aed;
+      padding: 0.15rem 0.4rem; border-radius: 4px;
+      font-size: 0.88em; font-family: 'Courier New', monospace;
+    }
+
+    /* ── Compare grid ── */
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+    .compare-card { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .compare-head { padding: 0.65rem 1rem; font-weight: 700; font-size: 0.9rem; }
+    .compare-pro .compare-head { background: #d1fae5; color: #065f46; }
+    .compare-con .compare-head { background: #fee2e2; color: #991b1b; }
+    .compare-body { padding: 0.75rem 1rem; }
+    .compare-body li { font-size: 0.875rem; color: var(--text-muted); }
+
+    /* ── Footer ── */
+    footer { background: #0f172a; color: #94a3b8; text-align: center; padding: 2rem 1rem; font-size: 0.875rem; margin-top: 3rem; }
+    footer a { color: #5eead4; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .page-layout { grid-template-columns: 1fr; }
+      .toc-sidebar { display: none; }
+      .main-content { padding: 1rem; }
+      .hero h1 { font-size: 1.75rem; }
+      .compare-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .topnav-links .hide-mob { display: none; }
+      .hero { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="reading-progress" id="readingProgress"></div>
+
+<!-- ═══════ TOP NAV ═══════ -->
+<nav class="topnav">
+  <span class="topnav-logo">KnowAlgo</span>
+  <span class="topnav-sep">/</span>
+  <a href="system-design.html" class="topnav-crumb">System Design</a>
+  <span class="topnav-sep">/</span>
+  <span class="topnav-crumb topnav-crumb-active">Traffic Shaping</span>
+  <div class="topnav-links">
+    <a href="system-design.html" class="hide-mob">All Patterns</a>
+    <a href="index.html" class="hide-mob">DSA</a>
+    <a href="index.html" class="btn-home">← Home</a>
+  </div>
+</nav>
+
+<div class="page-layout">
+
+  <!-- ═══════ TOC ═══════ -->
+  <aside class="toc-sidebar">
+    <div class="toc-title">On This Page</div>
+    <ul class="toc-list">
+      <li><a href="#overview">Pattern Overview</a></li>
+      <li><a href="#problem">The Core Problem</a></li>
+      <li><a href="#load-balancing">Load Balancing</a></li>
+      <li class="toc-sub"><a href="#lb-algorithms">Algorithms</a></li>
+      <li class="toc-sub"><a href="#lb-layers">Layer 4 vs Layer 7</a></li>
+      <li class="toc-sub"><a href="#lb-sticky">Sticky Sessions</a></li>
+      <li class="toc-sub"><a href="#lb-health">Health Checks</a></li>
+      <hr class="toc-divider">
+      <li><a href="#rate-limiting">Rate Limiting</a></li>
+      <li class="toc-sub"><a href="#token-bucket">Token Bucket</a></li>
+      <li class="toc-sub"><a href="#leaky-bucket">Leaky Bucket</a></li>
+      <li class="toc-sub"><a href="#sliding-window">Sliding Window</a></li>
+      <li class="toc-sub"><a href="#distributed-rl">Distributed RL</a></li>
+      <hr class="toc-divider">
+      <li><a href="#auto-scaling">Auto-Scaling</a></li>
+      <li class="toc-sub"><a href="#h-vs-v">H vs V Scaling</a></li>
+      <li class="toc-sub"><a href="#reactive">Reactive vs Predictive</a></li>
+      <hr class="toc-divider">
+      <li><a href="#routing">Traffic Routing</a></li>
+      <li class="toc-sub"><a href="#geo-routing">Geographic Routing</a></li>
+      <li class="toc-sub"><a href="#canary">Canary & Blue-Green</a></li>
+      <li class="toc-sub"><a href="#consistent-hashing">Consistent Hashing</a></li>
+      <hr class="toc-divider">
+      <li><a href="#perspectives">Engineer Perspectives</a></li>
+      <hr class="toc-divider">
+      <li><a href="#real-problems">Real Problems</a></li>
+      <li class="toc-sub"><a href="#rate-limiter-design">Rate Limiter Design</a></li>
+      <li class="toc-sub"><a href="#social-feed">Social Feed at Scale</a></li>
+      <li class="toc-sub"><a href="#api-gateway-design">API Gateway Design</a></li>
+      <hr class="toc-divider">
+      <li><a href="#tradeoffs">Trade-offs</a></li>
+      <li><a href="#antipatterns">Anti-patterns</a></li>
+      <li><a href="#interview-tips">Interview Tips</a></li>
+    </ul>
+    <div class="toc-next">
+      <div class="toc-next-label">Next Pattern</div>
+      <a href="system-design-caching.html">Caching &amp; Latency →</a>
+    </div>
+  </aside>
+
+  <!-- ═══════ MAIN ═══════ -->
+  <main class="main-content">
+
+    <!-- Hero -->
+    <div class="hero" id="overview">
+      <div class="hero-badge">Pattern 01 of 16 &nbsp;·&nbsp; System Design</div>
+      <h1>Traffic Shaping &amp;<br>Load Distribution</h1>
+      <p>When your system receives more requests than a single server can handle, you need to distribute load, control flow, and scale horizontally. This pattern is the foundation every system design builds on.</p>
+      <div class="hero-meta">
+        <span>⚡ Trigger: High request volume or single-server bottleneck</span>
+        <span>🎯 Goal: Even load, controlled flow, elastic capacity</span>
+        <span>👥 Primary owners: Infra, Network, SRE</span>
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <strong>When to reach for this pattern</strong>
+      A single server is CPU-bound, memory-limited, or you need zero-downtime deployments. Any public service beyond ~500 req/sec, or any system with bursty traffic, needs at minimum: a load balancer, a rate limiter, and a defined scaling policy.
+    </div>
+
+    <!-- ═══ CORE PROBLEM ═══ -->
+    <div class="section" id="problem">
+      <h2><span class="section-icon">🔴</span> The Core Problem</h2>
+      <p>Every service starts as a single server. Eventually, incoming requests exceed what one machine can handle. When that happens, you get one of three failure modes:</p>
+
+      <div class="arch-diagram"><span class="cm">Without traffic shaping — single server overload:</span>
+
+<span class="c">C1</span> ──────────────────────────────────────────────────►  ┌────────────────────────────────┐
+<span class="c">C2</span> ──────────────────────────────────────────────────►  │        App Server              │
+<span class="c">C3</span> ──────────────────────────────────────────────────►  │  CPU:    <span class="er">████████████ 100%</span>   │
+<span class="c">C4</span> ──────────────────────────────────────────────────►  │  Memory: <span class="er">████████████  98%</span>   │
+<span class="c">...1,200 req/sec</span> ─────────────────────────────────────►  │  Conns:  <span class="er">MAXED</span>               │
+                                                           │  Status: <span class="er">❌ OVERLOADED</span>       │
+                                                           └────────────────────────────────┘
+<span class="cm">Result: timeouts, OOM kills, or the process crashes entirely.</span>
+
+<span class="cm">With load balancer + 3 servers:</span>
+
+                      ┌────────────────────────────────────────────────────┐
+                      │               <span class="lb">Load Balancer</span>                       │
+                      │   NGINX / AWS ALB / HAProxy / GCP Load Balancer    │
+                      │   Health checks ✓    SSL termination ✓             │
+                      └──────────────┬──────────────┬──────────────────────┘
+                                     │              │              │
+                                     ▼              ▼              ▼
+                              ┌──────────┐   ┌──────────┐   ┌──────────┐
+                              │ <span class="sv">Server 1</span> │   │ <span class="sv">Server 2</span> │   │ <span class="sv">Server 3</span> │
+                              │ CPU: 33% │   │ CPU: 31% │   │ CPU: 36% │
+                              │ <span class="ok">Healthy</span>  │   │ <span class="ok">Healthy</span>  │   │ <span class="ok">Healthy</span>  │
+                              └──────────┘   └──────────┘   └──────────┘</div>
+
+      <p>Three tools solve different dimensions of this problem. You usually need all three:</p>
+      <div class="insight-grid">
+        <div class="insight-card">
+          <div class="ic-icon">⚖️</div>
+          <h4>Load Balancer</h4>
+          <p>Distributes requests across multiple servers. Solves the single-machine throughput ceiling.</p>
+        </div>
+        <div class="insight-card">
+          <div class="ic-icon">🚦</div>
+          <h4>Rate Limiter</h4>
+          <p>Controls how fast any one client can make requests. Protects servers from intentional or accidental floods.</p>
+        </div>
+        <div class="insight-card">
+          <div class="ic-icon">📈</div>
+          <h4>Auto-Scaler</h4>
+          <p>Adjusts the number of servers dynamically. Handles growing or spiky traffic without manual intervention.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ LOAD BALANCING ═══ -->
+    <div class="section" id="load-balancing">
+      <h2><span class="section-icon">⚖️</span> Load Balancing</h2>
+      <p>A load balancer sits in front of your server pool, accepts incoming connections, and forwards each request to a backend server according to its algorithm. The choice of algorithm determines how evenly work is distributed.</p>
+
+      <h3 id="lb-algorithms">Algorithms</h3>
+
+      <div class="arch-diagram"><span class="cm">── Round Robin ────────────────────────────────────────────────────────</span>
+  Request 1  ──► <span class="sv">Server A</span>
+  Request 2  ──► <span class="sv">Server B</span>
+  Request 3  ──► <span class="sv">Server C</span>
+  Request 4  ──► <span class="sv">Server A</span>   <span class="cm">(wraps around)</span>
+
+  Best for: stateless services with homogeneous servers.
+  Weakness: ignores server load — a heavy request and a light one get
+            treated the same.
+
+<span class="cm">── Weighted Round Robin ────────────────────────────────────────────────</span>
+  Server A: weight=3  (larger instance)
+  Server B: weight=1  (smaller instance)
+  Sequence: A, A, A, B, A, A, A, B ...
+
+  Best for: heterogeneous server pools (mix of instance sizes).
+
+<span class="cm">── Least Connections ───────────────────────────────────────────────────</span>
+  Server A: <span class="er">150 active conns</span>
+  Server B: <span class="ok"> 20 active conns</span>   ◄── next request goes here
+  Server C:  50 active conns
+
+  Best for: long-lived connections (WebSockets, streaming, DB proxies)
+            where requests have unequal duration.
+
+<span class="cm">── IP Hash ─────────────────────────────────────────────────────────────</span>
+  hash(client_ip) % num_servers = server_index
+
+  Client 10.0.0.5 → always → <span class="sv">Server B</span>
+  Client 10.0.0.9 → always → <span class="sv">Server C</span>
+
+  Best for: stateful apps that store session data in memory.
+  Weakness: one IP behind NAT sends all traffic to one server (hot spot).
+            If that server dies, all sessions for that IP are lost.</div>
+
+      <h3 id="consistent-hashing-algo">Consistent Hashing (for caches and sharded services)</h3>
+      <p>When you add or remove a server from a pool, simple modulo hashing remaps almost all keys. Consistent hashing limits disruption to ~1/N keys.</p>
+
+      <div class="arch-diagram"><span class="cm">── Virtual Hash Ring (0° → 360°) ───────────────────────────────────────</span>
+
+                          <span class="sv">Server A</span> (120°)
+                               ●
+               ┌───────────────┘
+  0° ●─────────────────────────────────────● 360°
+               └───────────────┐
+                               ●
+                          <span class="sv">Server B</span> (240°)
+
+  "user:1234" hashes to 175°  →  next clockwise  →  <span class="sv">Server B</span> (240°)
+  "user:5678" hashes to  80°  →  next clockwise  →  <span class="sv">Server A</span> (120°)
+  "user:9999" hashes to 300°  →  next clockwise  →  <span class="sv">Server A</span> (0°/360°)
+
+<span class="cm">── Add Server C at 200° ────────────────────────────────────────────────</span>
+  Keys between 120° and 200° now route to Server C.
+  Everything else stays the same.
+  Only ~1/N keys remapped — not all of them.
+
+  Used by: DynamoDB, Apache Cassandra, Redis Cluster, Memcached, CDN edge selection.</div>
+
+      <h3 id="lb-layers">Layer 4 vs Layer 7</h3>
+
+      <div class="arch-diagram"><span class="cm">── Layer 4 (Transport) ─────────────</span>  <span class="cm">── Layer 7 (Application) ───────────</span>
+
+  Sees: TCP/UDP packets only           Sees: HTTP headers, URL path, cookies
+  Routing: by IP address + port        Routing: by content of the request
+
+  Client                               Client
+    │                                    │
+    ▼                                    ▼ GET /api/orders HTTP/1.1
+  [<span class="lb">TCP Proxy LB</span>]                       [<span class="lb">HTTP Proxy LB</span>]
+    │  (opaque stream)                   │ reads URL, routes smartly
+    ▼                                    ├──► /api/*     → <span class="sv">API servers</span>
+  Backend                              ├──► /static/*  → <span class="sv">CDN origin</span>
+                                         └──► /ws/*      → <span class="sv">WebSocket servers</span>
+
+  Examples: AWS NLB, HAProxy TCP        Examples: AWS ALB, NGINX, Traefik
+
+  Choose Layer 4 when:                 Choose Layer 7 when:
+    • Database connection pooling          • Microservice routing by URL
+    • Raw UDP (gaming, video)             • A/B testing by header/cookie
+    • Ultra-low latency required          • SSL/TLS termination needed
+    • Protocol is not HTTP                • WebSocket upgrade handling</div>
+
+      <h3 id="lb-sticky">Sticky Sessions (Session Affinity)</h3>
+      <p>When your application stores session state in local memory (not in Redis), you need the same client to always reach the same server. This is called sticky sessions.</p>
+
+      <div class="arch-diagram"><span class="cm">Cookie-based stickiness:</span>
+  1. First request hits LB → routed to <span class="sv">Server B</span>
+  2. LB inserts cookie: <span class="hl">AWSALB=abc123</span> (encodes Server B's identity)
+  3. Client sends cookie on every subsequent request
+  4. LB reads cookie → routes to <span class="sv">Server B</span> always
+
+<span class="cm">The problem with sticky sessions:</span>
+  • If <span class="sv">Server B</span> dies → all its sessions are lost
+  • <span class="sv">Server B</span> can become a hot spot (popular client → all traffic there)
+  • Makes rolling deployments harder (you need connection draining)
+
+<span class="cm">Better alternative: stateless services + Redis for session storage</span>
+  Request → Any Server → reads session from <span class="ca">Redis</span> → stateless response
+  Works with any LB algorithm. No hot spots. Survives server failure.</div>
+
+      <h3 id="lb-health">Health Checks</h3>
+      <div class="callout callout-warn">
+        <strong>Critical design decision</strong>
+        A shallow health check (TCP connect succeeds) will mark a server as healthy even if it is deadlocked, stuck in GC, or has a broken database connection. Deep health checks are almost always worth the overhead.
+      </div>
+
+      <div class="arch-diagram"><span class="cm">Shallow check (TCP ping):</span>
+  LB ──► TCP connect to port 8080 ──► <span class="ok">OK</span>
+  LB thinks: server is healthy ✓
+  Reality:   server is stuck in GC, not processing requests
+
+<span class="cm">Deep check (HTTP /health endpoint):</span>
+  LB ──► GET /health HTTP/1.1 ──► Server checks:
+                                    ├── DB connection pool: <span class="ok">OK</span>
+                                    ├── Redis connection:   <span class="ok">OK</span>
+                                    ├── Downstream APIs:    <span class="ok">OK</span>
+                                    └── Returns HTTP 200 {"status": "ok"}
+  LB: healthy ✓ (the server can actually serve requests)
+
+  If /health returns 5xx → LB removes server from rotation automatically.</div>
+    </div>
+
+    <!-- ═══ RATE LIMITING ═══ -->
+    <div class="section" id="rate-limiting">
+      <h2><span class="section-icon">🚦</span> Rate Limiting</h2>
+      <p>Rate limiting controls how many requests a client (user, IP, API key) can make within a time window. It protects your service from both malicious abuse and accidental floods.</p>
+
+      <h3 id="token-bucket">Algorithm 1: Token Bucket</h3>
+      <p>A bucket holds up to <strong>C</strong> tokens (the burst capacity). Tokens refill at rate <strong>r</strong> per second. Each request consumes one token. If the bucket is empty, the request is rejected or queued.</p>
+
+      <div class="arch-diagram"><span class="hl">Capacity C = 100 tokens  |  Refill rate r = 20 tokens/sec</span>
+
+  t = 0s   Bucket: <span class="ok">[●●●●●●●●●●] 100 tokens</span>   (full)
+  t = 1s   +20 tokens, 80 requests arrive
+           Bucket: <span class="ok">[●●●●●●●●●●] 40 tokens remaining</span>   <span class="ok">80 allowed ✓</span>
+  t = 2s   +20 tokens, 70 requests arrive
+           Bucket: <span class="er">[●●●●●●●●●●]  0 tokens</span>   <span class="ok">60 allowed ✓</span>  <span class="er">10 rejected ✗</span>
+
+  Incoming request decision:
+  ┌───────────────────────────────────────────────────────────────┐
+  │                    Request arrives                            │
+  └────────────────────────┬──────────────────────────────────────┘
+                           ▼
+               Token available in bucket?
+                 /                    \
+              YES                      NO
+               │                       │
+               ▼                       ▼
+  Consume 1 token           <span class="er">429 Too Many Requests</span>
+  Allow request ✓           (or queue if soft limit)
+
+  Properties:
+    ✓ Allows bursts up to capacity C
+    ✓ Smooth average rate of r req/sec over time
+    ✓ Easy to implement (2 values per client: token_count, last_refill_time)</div>
+
+      <h3 id="leaky-bucket">Algorithm 2: Leaky Bucket</h3>
+      <p>Requests enter a queue. A processor drains the queue at a fixed rate <strong>r</strong>. If the queue is full, new requests are dropped.</p>
+
+      <div class="arch-diagram"><span class="hl">Queue size Q = 50  |  Processing rate r = 10 req/sec</span>
+
+  Requests flood in ──► [<span class="hl">Queue: 50 max</span>] ──► Process at 10 req/sec ──► Backend
+
+  If queue full: <span class="er">drop incoming requests</span>
+
+  Token Bucket vs Leaky Bucket:
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │  Token Bucket:  allows bursts (bursty client OK up to C requests)   │
+  │  Leaky Bucket:  smooth output (always processes at exactly r/sec)   │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  Use Leaky Bucket for:
+    • Outbound API calls to a third party with a strict per-second limit
+    • Smoothing egress traffic (prevents bursts toward downstream)
+  Use Token Bucket for:
+    • Inbound API rate limiting where short bursts are acceptable</div>
+
+      <h3 id="sliding-window">Algorithm 3: Fixed vs Sliding Window Counter</h3>
+
+      <div class="arch-diagram"><span class="cm">── Fixed Window (simple, has edge-case burst) ──────────────────────────</span>
+
+  Window [00:00 ─── 00:59]   100 requests   (at limit)
+  Window [01:00 ─── 01:59]   100 requests   (at limit)
+
+  <span class="er">Problem: 100 req at 00:58 + 100 req at 01:02 = 200 req in 4 seconds!</span>
+  The window boundary creates a legal burst of 2× the intended limit.
+
+<span class="cm">── Sliding Window Log (accurate, memory-heavy) ─────────────────────────</span>
+
+  Store timestamp of every request in a sorted log.
+  Count timestamps in [now - 60s, now].
+  If count ≥ limit → reject.
+
+  Cost: O(requests) memory per client. Accurate but expensive at scale.
+
+<span class="cm">── Sliding Window Counter (approximate, efficient) ──────────────────────</span>
+
+  Track count for current window and previous window only.
+  Estimate count = prev_count × (1 - elapsed/window) + curr_count
+
+  Example at 01:15 (25% into the new window, 75% through old window):
+    prev_count = 100    curr_count = 30    elapsed_in_window = 15s / 60s = 0.25
+    estimated  = 100 × (1 - 0.25) + 30 = 75 + 30 = 105
+
+  105 > 100 limit → <span class="er">REJECT</span>   ← catches the edge-case burst, memory-efficient
+
+  Used by: Cloudflare, NGINX, most production rate limiters</div>
+
+      <h3 id="distributed-rl">Distributed Rate Limiting with Redis</h3>
+      <p>A single server can enforce limits with in-memory counters. Multiple servers need a shared counter store — Redis is the standard choice.</p>
+
+      <div class="arch-diagram"><span class="cm">Single-server rate limiting (local counter):</span>
+
+   <span class="c">Client</span> ──► <span class="sv">Server A</span>: counter["user:42"] = 47   ← lives in memory
+
+<span class="cm">Multi-server problem (no shared state):</span>
+
+   <span class="c">Client</span> ──► <span class="sv">Server A</span>: counter["user:42"] = 47
+   <span class="c">Client</span> ──► <span class="sv">Server B</span>: counter["user:42"] = 53   ← different counter!
+   <span class="c">Client</span> ──► <span class="sv">Server C</span>: counter["user:42"] = 39
+
+   Total requests = 139, but each server thinks limit not exceeded.
+
+<span class="cm">Fix: centralized counter in Redis (atomic INCR):</span>
+
+   <span class="c">Client</span>
+     │
+     ▼
+   <span class="lb">API Gateway</span>
+     │ 1. INCR  "rl:user:42"        (atomic increment)
+     │ 2. EXPIRE "rl:user:42" 60    (60-second window)
+     │ 3. GET   "rl:user:42"
+     ├──► if count &gt; 100 → <span class="er">429 Too Many Requests</span>
+     └──► if count ≤ 100 → forward to <span class="ok">backend ✓</span>
+                │
+                ▼
+             <span class="ca">Redis</span> (single source of truth)
+             "rl:user:42" = 74   TTL: 23s remaining</div>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">Lua – atomic Redis sliding window (executes atomically)</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><code class="language-lua">-- KEYS[1] = rate limit key   e.g. "rl:user:42"
+-- ARGV[1] = window seconds   e.g. "60"
+-- ARGV[2] = max requests     e.g. "100"
+-- Returns: {current_count, allowed}  (1=allowed, 0=denied)
+
+local current = redis.call('INCR', KEYS[1])
+if current == 1 then
+    redis.call('EXPIRE', KEYS[1], ARGV[1])
+end
+if current > tonumber(ARGV[2]) then
+    return {current, 0}  -- denied
+end
+return {current, 1}  -- allowed</code></pre>
+      </div>
+
+      <p>The Lua script executes atomically on Redis — no race condition between INCR and EXPIRE. This is the standard pattern used by Kong, NGINX rate-limit module, and most API gateways.</p>
+    </div>
+
+    <!-- ═══ AUTO-SCALING ═══ -->
+    <div class="section" id="auto-scaling">
+      <h2><span class="section-icon">📈</span> Auto-Scaling</h2>
+      <p>Auto-scaling adjusts the number of compute instances based on observed or predicted load. The goal is to have enough capacity to serve traffic without over-provisioning and paying for idle machines.</p>
+
+      <h3 id="h-vs-v">Horizontal vs Vertical Scaling</h3>
+
+      <div class="arch-diagram"><span class="cm">── Vertical Scaling (scale up) ─────────────────────────────────────────</span>
+
+  Before: [<span class="sv">4 vCPU / 16 GB RAM</span>]
+  After:  [<span class="sv">32 vCPU / 128 GB RAM</span>]
+
+  ✓ No code changes needed
+  ✓ No distributed-systems complexity
+  <span class="er">✗ Has a hard ceiling (biggest instance available)</span>
+  <span class="er">✗ Usually requires downtime or live migration</span>
+  <span class="er">✗ Single point of failure remains</span>
+
+  Good for: stateful services (databases, Zookeeper, ElasticSearch)
+            where horizontal sharding is complex.
+
+<span class="cm">── Horizontal Scaling (scale out) ──────────────────────────────────────</span>
+
+  Before: [<span class="sv">Server 1</span>]  [<span class="sv">Server 2</span>]
+  After:  [<span class="sv">Server 1</span>]  [<span class="sv">Server 2</span>]  [<span class="sv">Server 3</span>]  [<span class="sv">Server 4</span>]  [<span class="sv">Server 5</span>]
+
+  ✓ No theoretical ceiling
+  ✓ Inherently fault-tolerant (N-1 servers survive)
+  ✓ Cheaper (many small instances vs one huge one)
+  <span class="er">✗ Requires stateless services (sessions → Redis, files → S3)</span>
+  <span class="er">✗ Operational complexity increases</span>
+
+  Good for: stateless web/API servers, worker pools, microservices.</div>
+
+      <h3 id="reactive">Reactive vs Predictive Auto-Scaling</h3>
+
+      <div class="arch-diagram"><span class="cm">── Reactive (threshold-based) ───────────────────────────────────────────</span>
+
+  Metric: CPU utilization (CloudWatch, Prometheus)
+
+  Rule:  CPU &gt; 70% for 3 minutes → add 1 instance
+         CPU &lt; 30% for 10 minutes → remove 1 instance
+
+  Traffic ────────────────────────────────────────────────────────────► time
+           ░░░░░░░░░░░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░
+  Capacity      1     1   2   3   3   3   2   1      1
+
+  <span class="er">Problem: lag</span>  New instances take 2–5 min to start.
+                During that lag, your existing servers absorb the spike.
+                For sudden viral spikes, you may not scale fast enough.
+
+<span class="cm">── Predictive (ML-based) ────────────────────────────────────────────────</span>
+
+  Training:  "Every Monday at 9 AM, CPU spikes to 85%"
+             "Every year at Nov 25–30, traffic is 10× baseline"
+
+  Action:    Pre-scale to target capacity 15 min before predicted spike
+             No cold-start lag during the event
+
+  Monday 8:45 AM: Capacity automatically raised to 5 instances
+  Monday 9:00 AM: Traffic spike hits → servers already ready
+
+  Tools: AWS Predictive Scaling, GCP Predictive Autoscaler
+
+<span class="cm">── Warm Pools (reduces scale-out lag) ──────────────────────────────────</span>
+
+  Keep N instances pre-warmed in stopped/standby state.
+  On scale-out trigger: start warm instance (30 sec) instead of
+  bootstrapping a new one (3–5 min: AMI launch + software install + warm-up).
+
+  Trade-off: pays for stopped instance storage, saves on scale-out latency.</div>
+
+      <div class="callout callout-tip">
+        <strong>Cool-down period</strong>
+        Always set a cool-down period after a scale-in event (typically 5–15 minutes). Without it, you get thrashing: the metric drops below threshold → remove instance → metric spikes → add instance → repeat. Cool-down prevents this oscillation.
+      </div>
+    </div>
+
+    <!-- ═══ TRAFFIC ROUTING ═══ -->
+    <div class="section" id="routing">
+      <h2><span class="section-icon">🌐</span> Traffic Routing</h2>
+
+      <h3 id="geo-routing">Geographic & Latency-Based Routing</h3>
+      <p>DNS is your first load balancer for global systems. Users in Tokyo should not connect to servers in Virginia. Route 53 and Cloudflare resolve DNS to the nearest healthy region before the request even leaves the user's network.</p>
+
+      <div class="arch-diagram"><span class="c">User in Tokyo</span>
+         │  1. DNS lookup: api.myapp.com
+         ▼
+  [DNS Resolver]
+         │  2. Route 53 / Cloudflare GeoDNS
+         │     checks: latency to us-east-1 = 230ms
+         │             latency to ap-northeast-1 = 8ms
+         │
+         │  3. Returns IP of ap-northeast-1 load balancer
+         ▼
+  [<span class="lb">ap-northeast-1 LB</span>]
+         │
+         ▼
+  [<span class="sv">Tokyo servers</span>]   ← 8ms round-trip instead of 230ms
+
+  Types:
+    Latency-based:   route to region with lowest latency for that client
+    Geolocation:     route by client's country (for data residency / GDPR)
+    Geoproximity:    route by geographic distance (with traffic bias weights)
+    Failover:        primary region → secondary region if primary unhealthy</div>
+
+      <h3 id="canary">Canary Deployments & Blue-Green</h3>
+
+      <div class="arch-diagram"><span class="cm">── Canary Deployment ────────────────────────────────────────────────────</span>
+
+  v1.0 (stable)  ◄──── 90% of traffic   (9 out of 10 requests)
+  v1.1 (canary)  ◄────  10% of traffic   (1 out of 10 requests)
+
+  Week 1:  10% to v1.1 → monitor error rate, p99 latency, business metrics
+  Week 2:  50% to v1.1 → still healthy?
+  Week 3: 100% to v1.1 → v1.0 decommissioned
+
+  If v1.1 shows elevated errors → route 0% back to v1.1 instantly
+
+  Implementation:
+    • AWS ALB: weighted target groups
+    • Kubernetes: two Deployments with different replica counts
+    • Istio / Envoy: traffic weight in VirtualService spec
+    • Feature flags: route specific user cohorts to new code
+
+<span class="cm">── Blue-Green Deployment ────────────────────────────────────────────────</span>
+
+  Blue (v1.0)  ◄──── 100% production traffic
+  Green (v1.1)        idle (deploy, integration test, load test here)
+
+  Switch:
+  Blue (v1.0)         idle (kept for instant rollback, 15–30 min)
+  Green (v1.1) ◄──── 100% production traffic
+
+  How to switch: change DNS CNAME, or change LB target group
+  Rollback:      switch back in &lt;60 seconds if problems arise
+
+  Cost: requires 2× compute capacity during transition period.</div>
+
+      <h3 id="consistent-hashing">Consistent Hashing for Distributed Services</h3>
+      <p>When you shard a service (cache, database proxy, session store) across N nodes, consistent hashing minimizes reshuffling when nodes are added or removed. This is distinct from load-balancing HTTP traffic — it applies to key-based routing.</p>
+
+      <div class="arch-diagram"><span class="cm">Without consistent hashing (simple modulo):</span>
+
+  3 cache nodes: key % 3
+  Add 4th node:  key % 4
+  <span class="er">75% of keys now map to a different node → cache miss storm</span>
+
+<span class="cm">With consistent hashing:</span>
+
+  Virtual hash ring (0 → 2^32):
+
+            <span class="sv">Node A</span> (pos: 1,000,000)
+                  ●
+      ┌───────────┘
+  0 ●──────────────────────────────────────────● 2^32
+      └───────────┐
+                  ●
+            <span class="sv">Node B</span> (pos: 2,100,000)
+
+  "session:user_42" hashes to 1,500,000
+  → next clockwise node → <span class="sv">Node B</span>
+
+  Add <span class="sv">Node C</span> at position 1,200,000:
+  → Only keys between 1,000,000 and 1,200,000 move to Node C
+  → ~1/N of all keys remapped, not all
+
+  Virtual nodes:
+    Each physical node gets 100–200 "virtual" positions on the ring.
+    Ensures even distribution even with few physical nodes.
+
+  Real-world use: Redis Cluster, Apache Cassandra, DynamoDB, Memcached,
+                  CDN edge-node selection, database connection routing.</div>
+    </div>
+
+    <!-- ═══ ENGINEER PERSPECTIVES ═══ -->
+    <div class="section" id="perspectives">
+      <h2><span class="section-icon">👥</span> Engineer Perspectives</h2>
+      <p>The same traffic shaping decision looks entirely different depending on who's in the room. Here's what each role owns and prioritizes.</p>
+
+      <!-- Infrastructure Engineer -->
+      <div class="eng-take et-infra">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">🖥️</span>
+          <div>
+            <div class="eng-take-role">Infrastructure Engineer</div>
+            <div class="eng-take-focus">Cloud resources · Provisioning · Cost · Auto-Scaling Groups</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p>My first question: <strong>ALB or NLB?</strong> For HTTP/HTTPS API traffic, ALB is the default — Layer 7 routing, path-based rules, SSL termination, WebSocket support, and per-target health checks. For database connection pooling or any raw TCP workload, NLB is better — it's pass-through TCP with microsecond latency and millions of connections per second.</p>
+          <p>Cost matters: ALBs charge by the hour plus by LCU (Load Capacity Unit) — a function of new connections, active connections, processed bytes, and rule evaluations. Under heavy traffic, LCU costs can exceed the instance cost. Understand your traffic shape before choosing.</p>
+          <p>For Auto-Scaling Groups: I define min=2, max=20, desired=4. I attach CloudWatch alarms to scale-out on CPU&gt;70% and scale-in on CPU&lt;30%. The hard-earned lesson: <strong>scale-in cooldown must be longer than scale-out cooldown</strong> (scale out fast, scale in slow). Set scale-in cooldown to 10–15 minutes. Otherwise you get thrashing — scale in during a lull, then immediately scale back out when the next request wave hits.</p>
+        </div>
+      </div>
+
+      <!-- Network Engineer -->
+      <div class="eng-take et-network">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">🌐</span>
+          <div>
+            <div class="eng-take-role">Network Engineer</div>
+            <div class="eng-take-focus">DNS · Bandwidth · BGP · DDoS · Latency</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p>Before the load balancer even comes up, I'm thinking: <strong>single-region or multi-region?</strong> If your users are global, DNS is your most impactful load balancer. Route 53 latency-based routing or Cloudflare GeoDNS resolves the API hostname to the closest healthy region. That's a 100–200ms improvement for distant users — much bigger than anything you can do within a single region.</p>
+          <p>For DDoS: rate limiting at the application LB is too late. I want volumetric attacks absorbed at the CDN/edge layer (Cloudflare Magic Transit, AWS Shield Advanced). TCP SYN flood protection happens at the network layer before your LB even sees the packets. The LB is for application-level distribution, not threat absorption.</p>
+          <p>DNS TTL design: low TTL (30–60s) enables fast failover when a region goes down, but increases DNS resolver load. High TTL (300s+) reduces resolver traffic but slows failover. For production traffic routing I use 60s TTL; for canary or blue-green switches I temporarily drop to 30s, then raise it back.</p>
+        </div>
+      </div>
+
+      <!-- Platform Engineer -->
+      <div class="eng-take et-platform">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">🏗️</span>
+          <div>
+            <div class="eng-take-role">Platform Engineer</div>
+            <div class="eng-take-focus">Kubernetes · Ingress · Service Mesh · HPA · CI/CD</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p>In Kubernetes, we don't use a classic LB directly — the <strong>Ingress controller</strong> handles Layer 7 routing. I choose between NGINX Ingress (battle-tested, wide plugin support) or Traefik (better dashboard, native K8s integration). Rate limiting can be configured at the Ingress level via annotations, or at the API gateway layer (Kong, NGINX Plus, Envoy).</p>
+          <p>For auto-scaling: <strong>HPA (Horizontal Pod Autoscaler)</strong> scales pods based on CPU, memory, or custom metrics (queue depth via KEDA — Kubernetes Event-Driven Autoscaling). The critical dependency: HPA only helps if new pods start fast. A JVM service with 3-minute startup time or a model that loads 2GB from S3 on boot will burn during a spike while HPA waits for pods to become ready. For these, I pre-scale or use warm pools.</p>
+          <p>Service mesh (Istio/Envoy) enables per-service traffic policies: circuit breaking, retries, timeout budgets, and canary splits — all without touching application code. The trade-off is operational complexity: service mesh adds 1–3ms of latency per hop and requires significant expertise to operate correctly.</p>
+        </div>
+      </div>
+
+      <!-- Security Engineer -->
+      <div class="eng-take et-security">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">🔒</span>
+          <div>
+            <div class="eng-take-role">Security / Cyber Engineer</div>
+            <div class="eng-take-focus">DDoS · Bot Detection · SSL/TLS · WAF · Rate Limit as Defense</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p>Rate limiting is my primary defense against <strong>credential stuffing</strong> (bots trying username/password pairs), API abuse, and scraping. The design of the limit matters enormously: per-IP alone is weak — botnets distribute across thousands of IPs. The right design is tiered: unauthenticated users get 10 req/min, authenticated free tier gets 100 req/min, paid users get 1000 req/min. Different limits for login endpoints (5 req/min) vs read-only endpoints (1000 req/min).</p>
+          <p><strong>SSL termination at the LB:</strong> always terminate TLS at the LB, not at each backend server. This offloads cipher negotiation from every backend (expensive for CPU), enables certificate management in one place, and allows the LB to inspect HTTP headers for routing and WAF rules. Ensure the LB-to-backend path is on a private network (VPC internal, not public internet).</p>
+          <p>If compliance requires end-to-end encryption (PCI-DSS, HIPAA), use <strong>SSL passthrough</strong> — the LB routes by SNI without decrypting. But then you lose Layer 7 routing, WAF inspection, and header-based rules. Evaluate whether the compliance requirement actually mandates E2E encryption or just "encryption in transit" (which TLS termination at LB satisfies).</p>
+        </div>
+      </div>
+
+      <!-- Data Engineer -->
+      <div class="eng-take et-data">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">📊</span>
+          <div>
+            <div class="eng-take-role">Data Engineer</div>
+            <div class="eng-take-focus">Read Replicas · Connection Pooling · Replication Lag</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p>Load balancing for <strong>read replicas</strong> is a pattern I use constantly. Primary database handles writes. Read replicas handle analytics queries, dashboards, and read-heavy API paths. I put a proxy (ProxySQL, PgBouncer, HAProxy) in front of the replicas and route SELECT traffic there. This takes 80–90% of query load off the primary.</p>
+          <p>The critical caveat: <strong>replication lag</strong>. Reads from replicas may be 0–30 seconds behind the primary. For analytics dashboards this is fine. For "did my payment go through?" this is not. My routing rule: writes and reads that require read-your-own-write consistency go to primary. All other reads go to replicas.</p>
+          <p><strong>Connection pooling</strong> becomes critical after you add a load balancer. Going from 1 app server to 10 servers, each with a connection pool of 20, means 200 simultaneous DB connections. PostgreSQL starts degrading at ~100–200 connections and fails around 500–1000. Use PgBouncer (for Postgres) or ProxySQL (for MySQL) as a connection pool in front of the DB. They hold hundreds of app-facing connections but maintain only 10–50 connections to the actual database.</p>
+        </div>
+      </div>
+
+      <!-- ML Engineer -->
+      <div class="eng-take et-ml">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">🤖</span>
+          <div>
+            <div class="eng-take-role">ML / AI Engineer</div>
+            <div class="eng-take-focus">Inference Cost · Shadow Traffic · Model Version Routing</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p>Model inference is expensive — a single call to a large model can take 50–500ms and saturate a GPU. I rate-limit aggressively at the model serving layer: not by generic API call, but by inference call. Each user gets N inference calls per minute, not N API calls. This prevents one user from monopolizing GPU time.</p>
+          <p><strong>Shadow traffic</strong> for model rollout: I route 1–5% of production requests to the new model version in shadow mode — the response is not shown to users, but the inference runs. This lets me benchmark the new model under real traffic distribution (real inputs, real concurrency) before switching any production traffic. Only after shadow shows acceptable latency and quality do I run a canary split.</p>
+          <p>For LLM serving: GPU memory is the bottleneck, not CPU or network. Horizontal scaling of GPU instances requires careful batching — serving infrastructure (vLLM, TGI, Triton) handles request batching to maximize GPU utilization. The "load balancer" for LLM serving is actually the batching scheduler inside the serving framework, not a traditional network LB.</p>
+        </div>
+      </div>
+
+      <!-- Backend Engineer -->
+      <div class="eng-take et-backend">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">⚙️</span>
+          <div>
+            <div class="eng-take-role">Backend Engineer</div>
+            <div class="eng-take-focus">Stateless Design · Graceful Shutdown · Connection Pooling</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p>The LB adds three requirements I must design for. First: <strong>statelessness</strong>. No in-memory session state. Any data that must survive request routing goes to Redis, a database, or shared storage — not to an instance variable. Second: my <code>/health</code> endpoint must respond quickly (&lt;200ms) with real dependency checks. A health check that queries the DB and takes 2 seconds will cause the LB to mark the server unhealthy under load.</p>
+          <p>Third: <strong>graceful shutdown</strong>. When the LB or auto-scaler removes my instance, it sends a SIGTERM. I must: stop accepting new connections, finish in-flight requests (drain), close DB connections, then exit. Without this, the LB removes the instance while it's still processing requests — clients get TCP RST. Kubernetes pod termination grace period (default 30s) + preStop hook give me a window to drain.</p>
+          <p>After we horizontally scaled from 1 server to 10 servers, our DB started getting connection errors. The culprit: 10 servers × 20 pool connections = 200 connections, exceeding Postgres's default limit of 100. Fix: reduce pool size per server to 5–8, and add PgBouncer. This is the most common gotcha when first scaling horizontally.</p>
+        </div>
+      </div>
+
+      <!-- Frontend Engineer -->
+      <div class="eng-take et-frontend">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">🎨</span>
+          <div>
+            <div class="eng-take-role">Frontend Engineer</div>
+            <div class="eng-take-focus">WebSocket Affinity · CORS · Timeout Config · Retry Logic</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p>The LB is mostly invisible to me — until it breaks something. <strong>WebSocket connections</strong> are the biggest issue: WebSockets are long-lived persistent connections. If the LB doesn't support sticky sessions (or the session cookie expires), the connection gets routed to a different server mid-stream — and the new server has no state for that WebSocket. Fix: configure sticky sessions for <code>/ws/*</code> paths, or better, use a stateless WebSocket router backed by Redis Pub/Sub.</p>
+          <p><strong>CORS</strong>: if the LB terminates SSL and changes the origin domain (e.g., routes <code>api.myapp.com</code> → <code>internal-lb.myapp.com</code>), CORS preflight requests will fail because the <code>Origin</code> header doesn't match. The backend needs to allow the correct origin, or the LB needs to proxy the correct host header.</p>
+          <p>ALB and NGINX have default timeouts (60s for ALB idle timeout, 60–75s for NGINX). Long file uploads or slow API responses that exceed these timeouts get dropped mid-stream. For large file uploads I configure multipart chunked upload; for long-running API calls I switch to async (202 Accepted + polling) rather than fighting timeout configs across multiple layers.</p>
+        </div>
+      </div>
+
+      <!-- SRE -->
+      <div class="eng-take et-sre">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">📈</span>
+          <div>
+            <div class="eng-take-role">SRE / Reliability Engineer</div>
+            <div class="eng-take-focus">SLOs · Health Checks · On-Call · Capacity Planning</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p>My SLO for the load balancer: 99.99% availability (52 minutes downtime/year), p99 added latency &lt;5ms, error rate &lt;0.05%. The LB is our most critical single point of failure — if it fails, everything behind it fails. <strong>Solution: multi-AZ LB deployment with anycast or Route 53 health checks</strong>. AWS ALB is inherently multi-AZ. Self-managed NGINX needs an active-passive pair with a VIP (virtual IP) and keepalived for failover.</p>
+          <p>For capacity planning I use: (current p99 latency) × (current throughput) × (safety factor of 1.5). If my p99 is 50ms and I'm processing 1000 req/sec, one server can handle at most 20 requests in flight (1s / 50ms = 20). At 1000 req/sec I need at least 50 servers (1000/20), plus 50% headroom = 75 servers. I run this math before every big event (product launch, Black Friday) and pre-scale manually.</p>
+          <p><strong>Connection draining</strong> (a.k.a. "deregistration delay") is the single most important setting for zero-downtime deployments. When I deregister an instance from the target group, the LB stops sending new requests to it but keeps existing connections alive for the drain period (default: 300 seconds on ALB). Without it, in-flight requests get TCP RST the moment the instance is removed. I set drain to 30s for APIs, 120s for anything with long-lived connections.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ REAL PROBLEMS ═══ -->
+    <div class="section" id="real-problems">
+      <h2><span class="section-icon">🎯</span> Real Interview Problems</h2>
+      <p>These three problems are asked repeatedly across FAANG and top-tier companies. Each one is primarily a traffic shaping problem — knowing the patterns above gives you the vocabulary to answer them fluently.</p>
+
+      <!-- Problem 1: Rate Limiter -->
+      <div class="problem-card" id="rate-limiter-design">
+        <div class="problem-header">
+          <div class="problem-num">Problem 01</div>
+          <div class="problem-title">Design a Distributed Rate Limiter</div>
+          <div class="problem-tags">
+            <span class="ptag">Backend</span>
+            <span class="ptag">Infrastructure</span>
+            <span class="ptag">Security</span>
+            <span class="ptag">Redis</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>The Scenario</h4>
+          <p>Design a rate limiter for a public API serving 10M users. Limit: 100 requests per user per minute. The service runs on 50 servers. Must add &lt;5ms latency overhead. Must handle 100K req/sec at peak.</p>
+
+          <h4>What Makes It Hard</h4>
+          <p>At 50 servers, local counters don't work — each server has a different count for the same user. You need a shared, atomic counter store. That store becomes a bottleneck and a SPOF unless you design it carefully.</p>
+
+          <h4>Architecture</h4>
+          <div class="arch-diagram"><span class="c">Client</span>
+    │
+    ▼
+<span class="lb">API Gateway</span>   (50 instances)
+    │
+    │  1. INCR  "rl:{user_id}"        ─────────────────────────┐
+    │  2. EXPIRE "rl:{user_id}" 60                             │
+    │  3. GET   "rl:{user_id}"                                 ▼
+    │                                            <span class="ca">Redis Cluster</span>
+    │                                            (3 primary shards,
+    ├── count &gt; 100 → <span class="er">HTTP 429</span>                  3 read replicas,
+    │                 Retry-After: 23s           persistent AOF)
+    │
+    └── count ≤ 100 → forward to <span class="sv">Backend Services</span>
+
+<span class="cm">Redis cluster sharding by user_id:</span>
+    user_id % 3 → shard 0, 1, or 2
+    Each shard handles ~33K req/sec   (Redis: 1M ops/sec per node)
+    Read replicas absorb GET calls, primaries handle INCR + EXPIRE</div>
+
+          <h4>Key Design Decisions</h4>
+          <ul>
+            <li><strong>Algorithm:</strong> Sliding window counter (prev window × overlap + curr window) — more accurate than fixed window, cheaper than log.</li>
+            <li><strong>Atomicity:</strong> Lua script on Redis ensures INCR + EXPIRE executes atomically — no race condition.</li>
+            <li><strong>Failure mode:</strong> If Redis is down, fail open (allow requests) not fail closed (block everything). Document this in the SLO.</li>
+            <li><strong>Headers:</strong> Always return <code>X-RateLimit-Limit</code>, <code>X-RateLimit-Remaining</code>, <code>X-RateLimit-Reset</code> so clients can self-throttle.</li>
+            <li><strong>Tiers:</strong> Unauthenticated: 10/min. Free: 100/min. Paid: 1000/min. Login endpoints: 5/min (credential stuffing protection).</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Problem 2: Social Feed -->
+      <div class="problem-card" id="social-feed">
+        <div class="problem-header">
+          <div class="problem-num">Problem 02</div>
+          <div class="problem-title">Design a Social Media Feed at Scale (Traffic Angle)</div>
+          <div class="problem-tags">
+            <span class="ptag">Load Balancing</span>
+            <span class="ptag">Rate Limiting</span>
+            <span class="ptag">Fan-out</span>
+            <span class="ptag">Celebrity Problem</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>The Scenario</h4>
+          <p>Design the tweet delivery system for a Twitter-scale platform. 300M daily active users. Peak: 6,000 new tweets/sec. A celebrity (Lady Gaga, 100M followers) tweets — how do you not bring down the service?</p>
+
+          <h4>The Celebrity Problem</h4>
+          <p>If you push every tweet to every follower's feed synchronously, one celebrity tweet creates 100M write operations in seconds. No message queue can absorb that without significant delay. The solution is a hybrid push/pull strategy based on follower count.</p>
+
+          <h4>Architecture</h4>
+          <div class="arch-diagram"><span class="cm">Write Path (tweet is created):</span>
+
+<span class="c">User</span> ──► <span class="lb">API Gateway</span>   [<span class="hl">Rate limit: 300 tweets/3hr per user</span>]
+              │
+              ▼
+          <span class="sv">Tweet Service</span>   (stores tweet in DB, gets tweet_id)
+              │
+              ├──► <span class="ca">Tweet Cache</span> (Redis, by tweet_id)
+              │
+              └──► <span class="sv">Fan-out Service</span>
+                       │
+                   Is follower_count &lt; 10,000?
+                   /                       \
+               YES                          NO (celebrity)
+                │                           │
+                ▼                           ▼
+     Push to each follower's       Don't push. Store tweet_id
+     <span class="ca">Timeline Cache</span>              in celebrity tweets index only.
+
+<span class="cm">Read Path (user loads their feed):</span>
+
+<span class="c">User</span> ──► <span class="lb">API Gateway</span>   [<span class="hl">Rate limit: 100 feed reads/min</span>]
+              │
+              ▼
+         <span class="sv">Feed Service</span>
+              │
+              ├── Fetch from <span class="ca">personal Timeline Cache</span>   (pushed tweets from friends)
+              │
+              ├── Fetch celebrity tweet_ids this user follows
+              │   └──► lookup tweets from <span class="ca">Tweet Cache</span>   (pull on read)
+              │
+              └── Merge + sort + paginate → return feed</div>
+
+          <h4>Key Decisions</h4>
+          <ul>
+            <li><strong>Rate limits by operation type:</strong> tweet creation (300/3hr), feed reads (100/min), likes (1000/min), follows (400/day).</li>
+            <li><strong>Fan-out threshold:</strong> &lt;10K followers → push. &gt;10K → pull on read. This prevents one celebrity tweet from generating 100M write operations.</li>
+            <li><strong>Load balancer for read replicas:</strong> Feed service routes to DB read replicas for timeline reads. Replication lag (&lt;1s) is acceptable for feeds.</li>
+            <li><strong>Auto-scaling trigger:</strong> Tweet fanout queue depth — if queue backs up, scale fan-out workers horizontally, not vertically.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Problem 3: API Gateway -->
+      <div class="problem-card" id="api-gateway-design">
+        <div class="problem-header">
+          <div class="problem-num">Problem 03</div>
+          <div class="problem-title">Design an API Gateway</div>
+          <div class="problem-tags">
+            <span class="ptag">Load Balancing</span>
+            <span class="ptag">Rate Limiting</span>
+            <span class="ptag">Auth</span>
+            <span class="ptag">Routing</span>
+            <span class="ptag">Observability</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>The Scenario</h4>
+          <p>You have 30 microservices. Clients (web app, mobile, third-party partners) are calling each service directly. Design an API Gateway that provides a single entry point, adds auth, rate limiting, and routing — without becoming a bottleneck.</p>
+
+          <h4>Architecture</h4>
+          <div class="arch-diagram"><span class="c">Client Request</span>   GET /v1/orders/456
+    │
+    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                           <span class="lb">API Gateway</span>   (horizontally scaled)               │
+│                                                                          │
+│  Step 1: <span class="hl">Authentication</span>                                                 │
+│    Validate JWT / API key → reject if invalid (HTTP 401)                │
+│    Enrich request: inject user_id, tenant_id into headers               │
+│                                                                          │
+│  Step 2: <span class="hl">Rate Limiting</span>                                                  │
+│    Check Redis counter per API key / user tier                          │
+│    Reject if over limit (HTTP 429, Retry-After header)                  │
+│                                                                          │
+│  Step 3: <span class="hl">Routing</span>                                                       │
+│    /v1/users/*    ──► <span class="sv">User Service</span>   (LB across 5 instances)             │
+│    /v1/orders/*   ──► <span class="sv">Order Service</span>  (LB across 8 instances)             │
+│    /v1/products/* ──► <span class="sv">Product Service</span> (LB + read cache)                 │
+│    /v1/search/*   ──► <span class="sv">Search Service</span>  (separate cluster)                │
+│                                                                          │
+│  Step 4: <span class="hl">Transform</span>                                                     │
+│    Request: normalize headers, strip internal headers, add trace ID     │
+│    Response: aggregate errors, strip internal fields, add CORS headers  │
+│                                                                          │
+│  Step 5: <span class="hl">Observe</span>                                                      │
+│    Log: user_id, endpoint, latency, status_code → centralized log store │
+│    Metric: p50/p99/p999 latency, error rate per route                  │
+│    Trace: inject X-Trace-ID, propagate to all downstream services       │
+└──────────────────────────────────────────────────────────────────────────┘
+              │                    │                    │
+              ▼                    ▼                    ▼
+        <span class="sv">User Service</span>      <span class="sv">Order Service</span>    <span class="sv">Product Service</span></div>
+
+          <h4>Avoiding the Bottleneck</h4>
+          <ul>
+            <li><strong>Horizontal scaling:</strong> The gateway is stateless. Deploy 10–50 instances behind a cloud LB. Each instance connects to shared Redis for rate limiting.</li>
+            <li><strong>Async auth:</strong> Cache validated JWTs in Redis for their TTL period. Don't re-validate the signature on every request — signature verification is CPU-expensive.</li>
+            <li><strong>Timeout budget:</strong> Gateway-level timeout of 30s. Each downstream service gets 25s (5s for gateway overhead + network). Services that exceed their budget get a 504 from the gateway.</li>
+            <li><strong>Circuit breaker per route:</strong> If Order Service returns 5xx for 50% of requests over 10s, open the circuit — stop forwarding to Order Service, return a cached response or 503. This prevents a slow downstream from backing up the gateway's connection pool.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TRADE-OFFS ═══ -->
+    <div class="section" id="tradeoffs">
+      <h2><span class="section-icon">⚖️</span> Trade-offs</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Decision</th>
+              <th>Option A</th>
+              <th>Option B</th>
+              <th>Choose A when</th>
+              <th>Choose B when</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>LB layer</strong></td>
+              <td><span class="badge-a">Layer 4 (NLB)</span></td>
+              <td><span class="badge-b">Layer 7 (ALB)</span></td>
+              <td>DB connections, raw TCP, ultra-low latency, non-HTTP protocols</td>
+              <td>HTTP APIs, URL routing, SSL termination, WebSockets, A/B testing</td>
+            </tr>
+            <tr>
+              <td><strong>Rate limit algorithm</strong></td>
+              <td><span class="badge-a">Token Bucket</span></td>
+              <td><span class="badge-b">Leaky Bucket</span></td>
+              <td>Inbound API — bursty traffic OK, clients can batch requests</td>
+              <td>Outbound to 3rd-party API — need smooth constant rate, no bursts</td>
+            </tr>
+            <tr>
+              <td><strong>Scaling axis</strong></td>
+              <td><span class="badge-a">Horizontal (scale out)</span></td>
+              <td><span class="badge-b">Vertical (scale up)</span></td>
+              <td>Stateless web/API services, worker pools, microservices</td>
+              <td>Stateful databases, Zookeeper, single-tenant services</td>
+            </tr>
+            <tr>
+              <td><strong>Session state</strong></td>
+              <td><span class="badge-a">Stateless + Redis</span></td>
+              <td><span class="badge-b">Sticky sessions</span></td>
+              <td>Greenfield service, multiple AZs, zero-downtime deploys needed</td>
+              <td>Legacy app where refactoring is not feasible short-term</td>
+            </tr>
+            <tr>
+              <td><strong>Health check type</strong></td>
+              <td><span class="badge-a">Deep (/health + deps)</span></td>
+              <td><span class="badge-b">Shallow (TCP ping)</span></td>
+              <td>Almost always — catches deadlocks, broken DB connections</td>
+              <td>/health endpoint doesn't exist yet; short-term only</td>
+            </tr>
+            <tr>
+              <td><strong>Cache routing</strong></td>
+              <td><span class="badge-a">Consistent hashing</span></td>
+              <td><span class="badge-b">Simple modulo hash</span></td>
+              <td>Adding/removing cache nodes without cache miss storms</td>
+              <td>Fixed node count that never changes; simpler to implement</td>
+            </tr>
+            <tr>
+              <td><strong>Deployment strategy</strong></td>
+              <td><span class="badge-a">Canary (gradual)</span></td>
+              <td><span class="badge-b">Blue-Green (full swap)</span></td>
+              <td>Risk-averse; need to monitor real traffic before full rollout</td>
+              <td>Need instant rollback capability; can afford 2× compute cost</td>
+            </tr>
+            <tr>
+              <td><strong>Auto-scaling policy</strong></td>
+              <td><span class="badge-a">Reactive (threshold)</span></td>
+              <td><span class="badge-b">Predictive (ML)</span></td>
+              <td>Unpredictable traffic; simpler to implement and reason about</td>
+              <td>Predictable traffic patterns (daily/weekly cycles, planned events)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ ANTI-PATTERNS ═══ -->
+    <div class="section" id="antipatterns">
+      <h2><span class="section-icon">❌</span> Anti-patterns at Scale</h2>
+      <p>These are the mistakes that look fine in development and fail catastrophically in production.</p>
+      <ul class="antipattern-list">
+        <li>
+          <strong>Single LB with no redundancy</strong>
+          The LB itself becomes your single point of failure. If it goes down, nothing works. Use multi-AZ LB deployment (AWS ALB handles this automatically) or active-passive NGINX pair with keepalived.
+        </li>
+        <li>
+          <strong>Shallow health checks</strong>
+          TCP-level health checks pass even when the server is deadlocked or has a broken database connection. The LB keeps routing traffic to a broken instance. Always implement a deep <code>/health</code> endpoint that checks real dependencies.
+        </li>
+        <li>
+          <strong>Rate limiting per IP only</strong>
+          Botnets distribute across hundreds of thousands of IPs. IP-only rate limiting is trivially bypassed. Always layer: per-IP (DDoS protection) + per-user/API-key (abuse protection) + per-endpoint (credential stuffing protection).
+        </li>
+        <li>
+          <strong>Auto-scaling without a cool-down period</strong>
+          Metric drops below threshold → remove instance → brief spike → metric exceeds threshold → add instance → repeat. This "thrashing" wastes money and can cause instability. Set scale-in cooldown to 10–15 minutes.
+        </li>
+        <li>
+          <strong>Vertical scaling as primary strategy</strong>
+          The instance size has a ceiling. The biggest EC2 instance is still one server — one failure point. Use vertical scaling only for stateful services where horizontal sharding is genuinely infeasible.
+        </li>
+        <li>
+          <strong>No connection draining on scale-in</strong>
+          Removing an instance from the target group without draining immediately drops all in-flight requests for that instance. Configure deregistration delay (30–120s) and graceful shutdown in your application.
+        </li>
+        <li>
+          <strong>Sticky sessions on a single LB</strong>
+          Sticky sessions already undermine load balancing by creating hot spots. If you additionally have only one LB, you've built a two-layer SPOF. Prefer stateless services + Redis for session storage.
+        </li>
+        <li>
+          <strong>Rate limit counter in application memory</strong>
+          Works fine on one server. With 10 servers, each server has a different count for the same user. A user can exceed the limit by routing requests across servers. Use Redis (or another distributed store) for rate limit counters.
+        </li>
+      </ul>
+    </div>
+
+    <!-- ═══ INTERVIEW TIPS ═══ -->
+    <div class="section" id="interview-tips">
+      <h2><span class="section-icon">💡</span> Interview Application Tips</h2>
+      <div class="tip-grid">
+        <div class="tip-card">
+          <div class="tip-num">01</div>
+          <h4>Ask traffic shape before anything</h4>
+          <p>"What's the expected peak req/sec, and is traffic steady or spiky?" This single question determines your LB type, rate limiting strategy, and scaling policy.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">02</div>
+          <h4>Mention rate limiting proactively</h4>
+          <p>Even if the problem doesn't explicitly mention it, add rate limiting. It shows security awareness and operational maturity. State the algorithm and what you're limiting (per user, per IP, per endpoint).</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">03</div>
+          <h4>Default to horizontal scaling</h4>
+          <p>When asked "how do you scale X?", always say horizontal first and explain why (stateless design, no ceiling, fault tolerance). Then mention when vertical is appropriate (databases, stateful services).</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">04</div>
+          <h4>Know the L4 vs L7 distinction</h4>
+          <p>"I'd use an ALB for Layer 7 routing since we need path-based routing and SSL termination" impresses interviewers more than "I'd use a load balancer."</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">05</div>
+          <h4>Consistent hashing for cache nodes</h4>
+          <p>If asked "what happens when you add a cache server?" the answer is "consistent hashing — only 1/N of keys remap, not all of them." Simple modulo hashing would cause a cache miss storm on scale-out.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">06</div>
+          <h4>Always mention health checks</h4>
+          <p>"And I'd configure a deep /health endpoint that checks the DB connection pool and any downstream dependencies before the LB considers the instance healthy." This shows operational thinking that many candidates miss.</p>
+        </div>
+      </div>
+
+      <div class="callout callout-tip" style="margin-top: 1.5rem;">
+        <strong>The pattern → trigger habit</strong>
+        Train yourself to identify the trigger before naming the solution. "I see high and spiky traffic (trigger) → I reach for horizontal auto-scaling + rate limiting (pattern)" lands better than jumping to the solution name. Interviewers are evaluating your reasoning process, not just your knowledge of component names.
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<footer>
+  <p>Built by <strong>KnowAlgo</strong> — System Design Patterns Made Deep</p>
+  <p style="margin-top: 0.5rem;">
+    <a href="system-design.html">All Patterns</a> &nbsp;·&nbsp;
+    <a href="index.html">DSA</a> &nbsp;·&nbsp;
+    <a href="interview-prep.html">Interview Prep</a>
+  </p>
+  <p style="margin-top: 1rem; font-size: 0.8rem; opacity: 0.6;">© 2026 KnowAlgo. Free forever. No ads, no paywalls.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-lua.min.js"></script>
+
+<script>
+  // Reading progress bar
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = total > 0 ? (scrolled / total) * 100 : 0;
+    document.getElementById('readingProgress').style.width = pct + '%';
+  });
+
+  // Copy code button
+  function copyCode(btn) {
+    const pre = btn.closest('.code-wrap').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  // Active TOC highlighting
+  const sections = document.querySelectorAll('[id]');
+  const tocLinks = document.querySelectorAll('.toc-list a[href^="#"]');
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.getAttribute('id');
+          tocLinks.forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+          });
+        }
+      });
+    },
+    { rootMargin: '-60px 0px -70% 0px', threshold: 0 }
+  );
+  sections.forEach(sec => observer.observe(sec));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API & Communication Protocols – KnowAlgo System Design</title>
+  <meta name="description" content="REST vs GraphQL vs gRPC vs WebSocket vs Webhook. API gateway design, versioning, security, and service-to-service communication patterns. Pattern 04 of 16.">
+  <meta name="keywords" content="REST API design, GraphQL, gRPC, WebSocket, API gateway, system design interview, API versioning, OAuth 2.0, microservices communication">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.netlify.app/system-design-apis.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="API & Communication Protocols – KnowAlgo">
+  <meta property="og:description" content="REST vs GraphQL vs gRPC vs WebSocket. API design, gateway patterns, and 9 engineer perspectives.">
+  <meta property="og:url" content="https://knowalgo.netlify.app/system-design-apis.html">
+  <meta property="og:site_name" content="KnowAlgo">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="API & Communication Protocols – KnowAlgo">
+  <meta name="twitter:description" content="Every API paradigm explained with real trade-offs. REST, GraphQL, gRPC, WebSocket, and Webhook patterns.">
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    :root {
+      --primary: #d97706;
+      --primary-dark: #b45309;
+      --primary-light: #fffbeb;
+      --secondary: #7c3aed;
+      --accent: #059669;
+      --bg: #f8fafc;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --card-bg: #ffffff;
+      --radius: 14px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+    #progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(to right, #f59e0b, #7c3aed); z-index: 9999; transition: width 0.1s linear; }
+
+    nav { position: sticky; top: 0; z-index: 100; background: #0f172a; border-bottom: 1px solid #1e293b; }
+    .nav-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+    .nav-logo { font-weight: 700; font-size: 1.1rem; color: #f1f5f9; text-decoration: none; letter-spacing: -0.3px; }
+    .nav-logo span { color: #f59e0b; }
+    .nav-links { display: flex; gap: 8px; align-items: center; }
+    .nav-links a { color: #94a3b8; text-decoration: none; font-size: 0.875rem; padding: 6px 12px; border-radius: 8px; transition: all 0.2s; }
+    .nav-links a:hover { color: #f1f5f9; background: #1e293b; }
+    .nav-links .nav-cta { background: var(--primary); color: #fff; font-weight: 600; }
+    .nav-links .nav-cta:hover { background: var(--primary-dark); }
+    .hide-mobile { display: none; }
+    @media(min-width:768px) { .hide-mobile { display: inline; } }
+
+    .hero { background: linear-gradient(135deg, #0f172a 0%, #431407 45%, #3b0764 100%); padding: 64px 24px 48px; text-align: center; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: #fcd34d; padding: 6px 16px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 20px; }
+    .hero h1 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; color: #f1f5f9; letter-spacing: -0.5px; line-height: 1.15; margin-bottom: 16px; }
+    .hero h1 span { color: #fbbf24; }
+    .hero p { font-size: 1.05rem; color: #94a3b8; max-width: 700px; margin: 0 auto 24px; }
+    .hero-pills { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .hero-pill { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); color: #cbd5e1; padding: 4px 14px; border-radius: 99px; font-size: 0.78rem; }
+    .hero-back { display: inline-flex; align-items: center; gap: 6px; margin-top: 24px; color: #64748b; font-size: 0.85rem; text-decoration: none; }
+    .hero-back:hover { color: #94a3b8; }
+
+    .page-body { max-width: 1280px; margin: 0 auto; padding: 40px 24px; display: grid; grid-template-columns: 240px 1fr; gap: 40px; align-items: start; }
+    @media(max-width:900px) { .page-body { grid-template-columns: 1fr; } }
+
+    .toc { position: sticky; top: 72px; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .toc-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+    .toc ul { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+    .toc ul li a { display: block; font-size: 0.8rem; color: var(--text-muted); text-decoration: none; padding: 4px 8px; border-radius: 6px; border-left: 2px solid transparent; transition: all 0.15s; }
+    .toc ul li a:hover, .toc ul li a.active { color: var(--primary); border-left-color: var(--primary); background: var(--primary-light); }
+    .toc-next { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .toc-prev-label, .toc-next-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .toc-next a { font-size: 0.82rem; color: var(--primary); text-decoration: none; font-weight: 600; }
+
+    .section { margin-bottom: 56px; }
+    .section-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 8px; }
+    .section h2 { font-size: 1.65rem; font-weight: 800; color: var(--text); letter-spacing: -0.3px; margin-bottom: 16px; }
+    .section h3 { font-size: 1.15rem; font-weight: 700; color: var(--text); margin: 28px 0 12px; }
+    .section h4 { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 20px 0 8px; }
+    .section p { color: #334155; margin-bottom: 14px; }
+    .section ul, .section ol { padding-left: 20px; color: #334155; margin-bottom: 14px; }
+    .section li { margin-bottom: 6px; }
+
+    .callout { border-radius: 10px; padding: 16px 20px; margin: 20px 0; border-left: 4px solid; }
+    .callout-green  { background: #f0fdf4; border-color: #16a34a; }
+    .callout-blue   { background: #eff6ff; border-color: #2563eb; }
+    .callout-amber  { background: #fffbeb; border-color: #d97706; }
+    .callout-red    { background: #fef2f2; border-color: #dc2626; }
+    .callout-violet { background: #f5f3ff; border-color: #7c3aed; }
+    .callout-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; }
+    .callout-green  .callout-title { color: #15803d; }
+    .callout-blue   .callout-title { color: #1d4ed8; }
+    .callout-amber  .callout-title { color: #b45309; }
+    .callout-red    .callout-title { color: #b91c1c; }
+    .callout-violet .callout-title { color: #6d28d9; }
+    .callout p { margin-bottom: 0; font-size: 0.9rem; }
+
+    .code-wrap { position: relative; margin: 16px 0; border-radius: 10px; overflow: hidden; }
+    .code-wrap pre { margin: 0 !important; border-radius: 10px !important; font-size: 0.82rem !important; }
+    .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; transition: all 0.2s; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); color: #f1f5f9; }
+
+    .arch-diagram { background: #0f172a; border-radius: 10px; padding: 20px 24px; font-family: 'Courier New', Courier, monospace; font-size: 0.78rem; line-height: 1.6; overflow-x: auto; margin: 16px 0; color: #94a3b8; }
+    .arch-diagram .c  { color: #f1f5f9; font-weight: 600; }
+    .arch-diagram .db { color: #a78bfa; font-weight: 600; }
+    .arch-diagram .ca { color: #fb923c; font-weight: 600; }
+    .arch-diagram .sv { color: #4ade80; font-weight: 600; }
+    .arch-diagram .lb { color: #fbbf24; font-weight: 600; }
+    .arch-diagram .em { color: #34d399; font-weight: 600; }
+    .arch-diagram .ok { color: #4ade80; }
+    .arch-diagram .er { color: #f87171; }
+    .arch-diagram .hl { color: #fbbf24; }
+    .arch-diagram .cm { color: #475569; font-style: italic; }
+    .arch-diagram .bl { color: #60a5fa; font-weight: 600; }
+    .arch-diagram .ts { color: #f472b6; font-weight: 600; }
+    .arch-diagram .am { color: #fb923c; font-weight: 600; }
+
+    .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th { background: #d97706; color: #fff; font-weight: 700; text-align: left; padding: 10px 14px; }
+    td { padding: 10px 14px; border-top: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    td code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 0.8rem; font-family: monospace; }
+
+    .eng-takes { display: flex; flex-direction: column; gap: 16px; margin: 20px 0; }
+    .eng-take { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .eng-take-header { padding: 10px 16px; font-weight: 700; font-size: 0.82rem; display: flex; align-items: center; gap: 8px; }
+    .eng-take-body { padding: 14px 16px; font-size: 0.88rem; color: #334155; display: flex; flex-direction: column; gap: 8px; }
+    .et-infra   .eng-take-header { background: #dbeafe; color: #1d4ed8; border-left: 4px solid #2563eb; }
+    .et-network .eng-take-header { background: #cffafe; color: #0e7490; border-left: 4px solid #0891b2; }
+    .et-platform .eng-take-header { background: #ede9fe; color: #6d28d9; border-left: 4px solid #7c3aed; }
+    .et-security .eng-take-header { background: #fee2e2; color: #b91c1c; border-left: 4px solid #dc2626; }
+    .et-data    .eng-take-header { background: #d1fae5; color: #065f46; border-left: 4px solid #059669; }
+    .et-ml      .eng-take-header { background: #fef3c7; color: #92400e; border-left: 4px solid #d97706; }
+    .et-backend .eng-take-header { background: #f1f5f9; color: #1e293b; border-left: 4px solid #475569; }
+    .et-frontend .eng-take-header { background: #fce7f3; color: #9d174d; border-left: 4px solid #db2777; }
+    .et-sre     .eng-take-header { background: #d1fae5; color: #064e3b; border-left: 4px solid #10b981; }
+
+    .paradigm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin: 16px 0; }
+    .paradigm-card { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .paradigm-card-head { padding: 12px 16px; font-weight: 700; font-size: 0.88rem; }
+    .paradigm-card-body { padding: 12px 16px; font-size: 0.82rem; color: #334155; }
+    .paradigm-card-body strong { color: var(--text); display: block; margin-top: 6px; }
+    .pc-rest    .paradigm-card-head { background: #dbeafe; color: #1d4ed8; }
+    .pc-gql     .paradigm-card-head { background: #ede9fe; color: #6d28d9; }
+    .pc-grpc    .paradigm-card-head { background: #d1fae5; color: #065f46; }
+    .pc-ws      .paradigm-card-head { background: #fef3c7; color: #92400e; }
+    .pc-wh      .paradigm-card-head { background: #fce7f3; color: #9d174d; }
+
+    .problem-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin: 24px 0; box-shadow: var(--shadow); }
+    .problem-header { padding: 16px 20px; background: linear-gradient(to right, #431407, #3b0764); display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+    .problem-num { background: rgba(255,255,255,0.15); color: #fff; font-weight: 800; font-size: 0.75rem; padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
+    .problem-title { color: #f1f5f9; font-weight: 700; font-size: 1rem; flex: 1; }
+    .problem-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ptag { background: rgba(255,255,255,0.1); color: #cbd5e1; font-size: 0.72rem; padding: 2px 9px; border-radius: 99px; }
+    .problem-body { padding: 20px; }
+    .problem-body h4 { color: var(--text); font-size: 0.88rem; font-weight: 700; margin: 16px 0 8px; }
+    .problem-body p { font-size: 0.9rem; color: #334155; margin-bottom: 10px; }
+    .problem-body ul { font-size: 0.9rem; color: #334155; padding-left: 18px; }
+    .problem-body li { margin-bottom: 5px; }
+
+    .antipattern-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .antipattern-list li { background: #fff5f5; border-left: 4px solid #ef4444; border-radius: 8px; padding: 12px 16px; font-size: 0.875rem; }
+    .antipattern-list li strong { color: #b91c1c; display: block; margin-bottom: 3px; }
+
+    .tips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+    .tip-card { background: var(--card-bg); border: 1px solid #fcd34d; border-radius: 10px; padding: 16px 18px; }
+    .tip-num { font-size: 0.7rem; font-weight: 700; color: #d97706; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 6px; }
+    .tip-card p { font-size: 0.875rem; color: #334155; margin: 0; }
+
+    .status-code-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin: 12px 0; }
+    .sc-group { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; }
+    .sc-group-title { font-weight: 700; font-size: 0.8rem; margin-bottom: 8px; }
+    .sc-group ul { list-style: none; font-size: 0.78rem; color: #334155; }
+    .sc-group li { padding: 3px 0; }
+    .sc-group li code { font-family: monospace; font-weight: 600; margin-right: 6px; }
+
+    footer { background: #0f172a; color: #64748b; text-align: center; padding: 40px 24px; font-size: 0.875rem; }
+    footer a { color: #94a3b8; text-decoration: none; }
+    footer a:hover { color: #f1f5f9; }
+  </style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">Know<span>Algo</span></a>
+    <div class="nav-links">
+      <a href="index.html" class="hide-mobile">DSA</a>
+      <a href="system-design.html" class="hide-mobile">System Design</a>
+      <a href="interview-prep.html" class="nav-cta">Interview Prep →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">Pattern 04 of 16 · System Design</div>
+  <h1>API &amp; Communication<br><span>Protocols</span></h1>
+  <p>REST, GraphQL, gRPC, WebSocket, and Webhook — when each wins, when each fails, and how they compose into real architectures.</p>
+  <div class="hero-pills">
+    <span class="hero-pill">REST</span>
+    <span class="hero-pill">GraphQL</span>
+    <span class="hero-pill">gRPC</span>
+    <span class="hero-pill">WebSocket</span>
+    <span class="hero-pill">Webhook</span>
+    <span class="hero-pill">API Gateway</span>
+    <span class="hero-pill">Versioning</span>
+    <span class="hero-pill">Auth</span>
+    <span class="hero-pill">9 Perspectives</span>
+  </div>
+  <a href="system-design.html" class="hero-back">← Back to System Design Patterns</a>
+</div>
+
+<div class="page-body">
+
+  <!-- ═══════ TOC ═══════ -->
+  <aside class="toc">
+    <div class="toc-title">Contents</div>
+    <ul>
+      <li><a href="#decision-tree">Paradigm Decision Tree</a></li>
+      <li><a href="#rest">REST API Design</a></li>
+      <li><a href="#graphql">GraphQL</a></li>
+      <li><a href="#grpc">gRPC</a></li>
+      <li><a href="#websocket">WebSocket</a></li>
+      <li><a href="#webhooks">Webhooks</a></li>
+      <li><a href="#api-gateway">API Gateway</a></li>
+      <li><a href="#service-to-service">Service-to-Service</a></li>
+      <li><a href="#versioning">API Versioning</a></li>
+      <li><a href="#security">API Security</a></li>
+      <li><a href="#eng-perspectives">Engineer Perspectives</a></li>
+      <li><a href="#problems">Real Problems</a></li>
+      <li><a href="#tradeoffs">Trade-offs Table</a></li>
+      <li><a href="#antipatterns">Anti-patterns</a></li>
+      <li><a href="#interview-tips">Interview Tips</a></li>
+    </ul>
+    <div class="toc-next">
+      <div class="toc-prev-label">Previous</div>
+      <a href="system-design-storage.html">← Data Storage</a>
+      <div class="toc-next-label" style="margin-top:0.75rem;">Next Pattern</div>
+      <a href="system-design-async.html">Async Processing →</a>
+    </div>
+  </aside>
+
+  <!-- ═══════ MAIN ═══════ -->
+  <main>
+
+    <!-- Decision Tree -->
+    <section class="section" id="decision-tree">
+      <div class="section-label">Foundation</div>
+      <h2>Paradigm Decision Tree</h2>
+      <p>There is no universally superior API style. Each paradigm optimizes for a different set of constraints. The decision is about which constraints your problem has, not which technology is fashionable.</p>
+
+      <div class="arch-diagram">
+<span class="hl">API PARADIGM SELECTION FLOWCHART</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Who are the consumers?
+│
+├── <span class="hl">External / public / mobile clients</span>
+│   │
+│   ├── Need flexible queries (different clients need different fields)?
+│   │   ├── YES → <span class="db">GraphQL</span>  (mobile: fetch exactly what you need)
+│   │   └── NO  → <span class="bl">REST</span>     (standard, cacheable, well-understood)
+│   │
+│   └── Need real-time push from server?
+│       ├── YES → <span class="am">WebSocket</span> or <span class="sv">SSE</span> (Server-Sent Events for one-way push)
+│       └── NO  → REST
+│
+├── <span class="hl">Internal microservices (service-to-service)</span>
+│   │
+│   ├── Low-latency, high-throughput, strict schema?
+│   │   └── YES → <span class="em">gRPC</span>  (binary protobufs, multiplexed HTTP/2)
+│   │
+│   ├── Fire-and-forget, decoupled, async?
+│   │   └── YES → <span class="lb">Message Queue</span> (Kafka, SQS) → see Async pattern
+│   │
+│   └── Casual internal REST is fine for low-traffic internal services
+│
+└── <span class="hl">Server-to-server event notification (3rd party)</span>
+    └── <span class="ts">Webhooks</span>  (HTTP POST callbacks, no persistent connection)
+      </div>
+
+      <div class="paradigm-grid">
+        <div class="paradigm-card pc-rest">
+          <div class="paradigm-card-head">REST</div>
+          <div class="paradigm-card-body">
+            Stateless, resource-based, HTTP verbs + status codes. The universal default.
+            <strong>Best for:</strong> Public APIs, CRUD services, cacheable data, any client that speaks HTTP.
+            <strong>Avoid when:</strong> Many small related queries (over-fetching/under-fetching), binary payloads, real-time.
+          </div>
+        </div>
+        <div class="paradigm-card pc-gql">
+          <div class="paradigm-card-head">GraphQL</div>
+          <div class="paradigm-card-body">
+            Single endpoint, client-specified query shape. Schema-first, type-safe.
+            <strong>Best for:</strong> Mobile apps (bandwidth-sensitive), heterogeneous clients, rapid frontend iteration.
+            <strong>Avoid when:</strong> Simple CRUD, file uploads, heavy caching (per-resource cache invalidation is hard).
+          </div>
+        </div>
+        <div class="paradigm-card pc-grpc">
+          <div class="paradigm-card-head">gRPC</div>
+          <div class="paradigm-card-body">
+            Binary protobuf over HTTP/2. Strongly typed, code-generated clients.
+            <strong>Best for:</strong> Internal microservices, streaming (bidirectional), polyglot environments.
+            <strong>Avoid when:</strong> Browser clients (needs gRPC-web proxy), external public APIs (tooling friction).
+          </div>
+        </div>
+        <div class="paradigm-card pc-ws">
+          <div class="paradigm-card-head">WebSocket</div>
+          <div class="paradigm-card-body">
+            Persistent full-duplex TCP connection. Server pushes without client polling.
+            <strong>Best for:</strong> Chat, live dashboards, collaborative editing, multiplayer games.
+            <strong>Avoid when:</strong> Infrequent updates (SSE is simpler), request-response pattern (REST is better).
+          </div>
+        </div>
+        <div class="paradigm-card pc-wh">
+          <div class="paradigm-card-head">Webhook</div>
+          <div class="paradigm-card-body">
+            HTTP POST to a URL you register. Event-driven, no persistent connection.
+            <strong>Best for:</strong> Third-party integrations (Stripe, GitHub, Twilio), async notifications.
+            <strong>Avoid when:</strong> High-frequency events (polling is more efficient), delivery guarantees needed without retry logic.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REST -->
+    <section class="section" id="rest">
+      <div class="section-label">Paradigm 1</div>
+      <h2>REST API Design</h2>
+      <p>REST is not just "HTTP with JSON." A well-designed REST API is self-documenting through resource names, predictable through consistent verb semantics, and performant through HTTP-native caching. A poorly designed one is just RPC wrapped in HTTP.</p>
+
+      <h3>Resource Design & HTTP Verbs</h3>
+      <div class="arch-diagram">
+<span class="hl">RESOURCE-ORIENTED DESIGN</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="ok">CORRECT — nouns for resources, verbs via HTTP method:</span>
+
+  GET    /users              → list users (paginated)
+  GET    /users/{id}         → get specific user
+  POST   /users              → create user (returns 201 + Location header)
+  PUT    /users/{id}         → full replace (all fields required)
+  PATCH  /users/{id}         → partial update (only changed fields)
+  DELETE /users/{id}         → delete user (returns 204 No Content)
+
+  GET    /users/{id}/orders  → user's orders (nested resource)
+  POST   /users/{id}/orders  → create order for user
+
+<span class="er">WRONG — verbs in URLs (RPC over HTTP):</span>
+
+  POST   /createUser         ← verb in path
+  GET    /getUserById?id=5   ← not resource-oriented
+  POST   /users/delete       ← using POST for delete
+  GET    /users/search?q=bob ← ok for search, but /users?q=bob is better
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">IDEMPOTENCY — critical for safe retries:</span>
+
+  <span class="ok">Idempotent:</span>  GET, PUT, DELETE, HEAD, OPTIONS  (safe to retry)
+  <span class="er">NOT idempotent:</span> POST  (calling twice creates two resources)
+  <span class="hl">PATCH:</span>        Depends — "set name to X" is idempotent,
+                "increment counter by 1" is NOT idempotent
+
+<span class="cm">→ Clients SHOULD retry idempotent requests on network failure</span>
+<span class="cm">→ POST retries require server-side idempotency keys</span>
+      </div>
+
+      <h3>Status Codes That Matter</h3>
+      <div class="status-code-grid">
+        <div class="sc-group">
+          <div class="sc-group-title" style="color:#1d4ed8">2xx — Success</div>
+          <ul>
+            <li><code>200</code> OK — general success</li>
+            <li><code>201</code> Created — POST success, include Location header</li>
+            <li><code>204</code> No Content — DELETE or action with no body</li>
+            <li><code>206</code> Partial Content — range request (file streaming)</li>
+          </ul>
+        </div>
+        <div class="sc-group">
+          <div class="sc-group-title" style="color:#d97706">3xx — Redirect</div>
+          <ul>
+            <li><code>301</code> Moved Permanently — update your bookmarks</li>
+            <li><code>302</code> Found — temporary redirect</li>
+            <li><code>304</code> Not Modified — conditional GET cache hit</li>
+          </ul>
+        </div>
+        <div class="sc-group">
+          <div class="sc-group-title" style="color:#dc2626">4xx — Client Error</div>
+          <ul>
+            <li><code>400</code> Bad Request — validation error (include detail)</li>
+            <li><code>401</code> Unauthorized — no valid credentials</li>
+            <li><code>403</code> Forbidden — valid credentials, insufficient permission</li>
+            <li><code>404</code> Not Found — resource doesn't exist</li>
+            <li><code>409</code> Conflict — state conflict (duplicate, version mismatch)</li>
+            <li><code>422</code> Unprocessable — semantic validation failed</li>
+            <li><code>429</code> Too Many Requests — rate limited</li>
+          </ul>
+        </div>
+        <div class="sc-group">
+          <div class="sc-group-title" style="color:#6d28d9">5xx — Server Error</div>
+          <ul>
+            <li><code>500</code> Internal Server Error — unexpected crash</li>
+            <li><code>502</code> Bad Gateway — upstream service down</li>
+            <li><code>503</code> Service Unavailable — overloaded or maintenance</li>
+            <li><code>504</code> Gateway Timeout — upstream took too long</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Pagination Patterns</h3>
+      <div class="arch-diagram">
+<span class="hl">THREE PAGINATION STRATEGIES</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="bl">1. OFFSET / LIMIT</span>
+  GET /posts?limit=20&amp;offset=40
+  SQL: SELECT * FROM posts ORDER BY created_at LIMIT 20 OFFSET 40
+
+  <span class="ok">Simple</span>, works for any SQL query
+  <span class="er">Problem:</span> Inserts during pagination cause items to skip or repeat
+  <span class="er">Problem:</span> OFFSET 10000 → full scan of 10,000 rows just to skip them
+  Use for: Admin UIs, non-real-time data, low page numbers
+
+<span class="em">2. CURSOR / KEYSET PAGINATION</span>
+  GET /posts?limit=20&amp;after=eyJpZCI6NDJ9  (base64-encoded cursor)
+  SQL: SELECT * FROM posts WHERE id &gt; 42 ORDER BY id LIMIT 20
+
+  <span class="ok">Stable</span>: no skip/repeat even with concurrent writes
+  <span class="ok">Fast</span>: uses index, constant time regardless of page depth
+  <span class="er">Cannot</span> jump to arbitrary page number
+  Use for: <span class="hl">Infinite scroll, feeds, high-volume APIs</span> — this is the right default
+
+<span class="lb">3. SEEK / TIME-BASED</span>
+  GET /events?since=2024-01-15T14:32:00Z&amp;limit=100
+  SQL: SELECT * FROM events WHERE created_at &gt; $1 ORDER BY created_at LIMIT 100
+
+  Natural for time-series / event feeds
+  Works well with CDC-style streaming consumers
+  Requires monotonic created_at (duplicates at same timestamp = problem)
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">Response envelope for paginated APIs:</span>
+
+{
+  "data": [...],
+  "pagination": {
+    "next_cursor": "eyJpZCI6NjJ9",
+    "has_more": true,
+    "total": 1250  <span class="cm">// optional — expensive to compute, skip if not needed</span>
+  }
+}
+      </div>
+    </section>
+
+    <!-- GraphQL -->
+    <section class="section" id="graphql">
+      <div class="section-label">Paradigm 2</div>
+      <h2>GraphQL</h2>
+      <p>GraphQL shifts the contract from server-defined endpoints to a schema that clients query flexibly. This solves over-fetching (getting 50 fields when you need 3) and under-fetching (the N+1 problem hidden inside REST that forces multiple round trips).</p>
+
+      <h3>Query Shape vs REST</h3>
+      <div class="arch-diagram">
+<span class="hl">THE OVER/UNDER-FETCHING PROBLEM</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="er">REST — mobile client needs user name + first 3 post titles:</span>
+
+  GET /users/42          → 25-field user object (15 fields unused)
+  GET /users/42/posts    → full post objects (content, metadata, comments...)
+                           Client picks first 3 post titles out of 50 posts
+  Total: 2 round trips, massive over-fetching
+
+<span class="ok">GraphQL — mobile client specifies exactly what it needs:</span>
+
+  POST /graphql
+  { query: "
+    query UserWithPosts($userId: ID!) {
+      user(id: $userId) {    <span class="cm"># only these fields come back</span>
+        name
+        avatar_url
+        posts(first: 3) {
+          title
+        }
+      }
+    }
+  " }
+
+  Total: 1 round trip, exactly the fields requested, no more
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">GraphQL request types:</span>
+  query    → read data (like GET)
+  mutation → write data (like POST/PUT/PATCH/DELETE)
+  subscription → real-time push via WebSocket transport
+      </div>
+
+      <h3>The N+1 Problem & DataLoader</h3>
+      <div class="arch-diagram">
+<span class="hl">N+1 PROBLEM — the hidden GraphQL killer</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Query: { posts { title author { name } } }
+
+<span class="er">Naive resolver — 1 + N queries:</span>
+  SQL: SELECT * FROM posts             <span class="cm">← 1 query, returns 100 posts</span>
+  For each post:
+    SQL: SELECT name FROM users WHERE id = {post.author_id}
+  Total: <span class="er">101 queries</span> to render a single GraphQL response
+
+<span class="ok">DataLoader — batches + deduplicates:</span>
+  SQL: SELECT * FROM posts             <span class="cm">← 1 query, returns 100 posts</span>
+  Collect all author_ids: [1, 2, 2, 3, 1, 5, ...]
+  SQL: SELECT * FROM users WHERE id IN (1, 2, 3, 5)  <span class="cm">← 1 query (batched)</span>
+  Total: <span class="ok">2 queries</span> regardless of number of posts
+
+DataLoader works by:
+  1. Collecting all IDs queued during a single tick (event loop frame)
+  2. Calling a batch function once with the deduplicated ID set
+  3. Returning results mapped back to individual promise resolvers
+
+<span class="cm">Rule: Any resolver that loads a related entity MUST use DataLoader.</span>
+<span class="cm">Every non-DataLoader resolver in production is a latency time bomb.</span>
+      </div>
+
+      <h3>Query Cost Limiting & Depth Limiting</h3>
+      <div class="arch-diagram">
+<span class="hl">GRAPHQL DENIAL-OF-SERVICE via nested queries</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Malicious query (exponential cost):
+{
+  user(id: 1) {
+    friends {               <span class="cm">← 100 friends</span>
+      friends {             <span class="cm">← 100 × 100 = 10,000</span>
+        friends {           <span class="cm">← 10,000 × 100 = 1,000,000 queries</span>
+          name
+        }
+      }
+    }
+  }
+}
+
+<span class="ok">Defenses:</span>
+  1. <span class="hl">Depth limiting:</span> reject queries with nesting &gt; 5 levels
+  2. <span class="hl">Query complexity scoring:</span> each field has a cost weight; reject if total &gt; 1000
+  3. <span class="hl">Persisted queries:</span> only allow pre-registered query hashes from clients
+  4. <span class="hl">Rate limiting per client:</span> complexity budget per user per minute
+  5. <span class="hl">Query timeout:</span> 5-second hard timeout on resolver execution
+      </div>
+
+      <div class="callout callout-amber">
+        <div class="callout-title">When NOT to Use GraphQL</div>
+        <p>GraphQL makes HTTP caching hard (all queries are POST to one endpoint — you lose CDN caching). It adds schema complexity for simple CRUD APIs. File uploads are awkward (multipart workaround). If your API is consumed by a single client with stable requirements, the flexibility cost isn't worth it. Reach for GraphQL when you have many heterogeneous clients or when over-fetching is a real measured problem.</p>
+      </div>
+    </section>
+
+    <!-- gRPC -->
+    <section class="section" id="grpc">
+      <div class="section-label">Paradigm 3</div>
+      <h2>gRPC</h2>
+      <p>gRPC uses Protocol Buffers for binary serialization over HTTP/2. Where REST is text-based and human-readable, gRPC is machine-optimized: smaller payload, multiplexed streams, code-generated clients in any language, and strict schema enforcement via the .proto file.</p>
+
+      <h3>Protocol Buffers Schema</h3>
+      <div class="code-wrap">
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        <pre><code class="language-protobuf">// user_service.proto
+syntax = "proto3";
+package user;
+
+service UserService {
+  // Unary RPC — one request, one response (like HTTP REST)
+  rpc GetUser(GetUserRequest) returns (User);
+
+  // Server streaming — one request, stream of responses
+  rpc WatchUserEvents(WatchRequest) returns (stream UserEvent);
+
+  // Client streaming — stream of requests, one response
+  rpc BatchImportUsers(stream ImportUser) returns (ImportResult);
+
+  // Bidirectional streaming — both sides stream simultaneously
+  rpc ChatSession(stream ChatMessage) returns (stream ChatMessage);
+}
+
+message GetUserRequest { string user_id = 1; }
+
+message User {
+  string user_id    = 1;
+  string username   = 2;
+  string email      = 3;
+  int64  created_at = 4;  // Unix timestamp
+  repeated string roles = 5;
+}
+
+// protoc compiles this into typed clients in Go, Python, Java, etc.
+// Server stub + client stub auto-generated — no hand-written HTTP code</code></pre>
+      </div>
+
+      <h3>gRPC vs REST Performance</h3>
+      <div class="arch-diagram">
+<span class="hl">WHY gRPC IS FASTER THAN REST (for internal services)</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="hl">Serialization:</span>
+  JSON (REST):   text encoding, ~400 bytes for a typical user object
+  Protobuf:      binary encoding, ~60 bytes same object (6.7× smaller)
+  Parsing:       Protobuf deserialization ~5× faster than JSON parsing
+
+<span class="hl">Transport:</span>
+  HTTP/1.1 (REST): one request per TCP connection (without HTTP/2)
+                   head-of-line blocking (request N waits for N-1)
+  HTTP/2 (gRPC):  multiplexed streams on one connection
+                   request N doesn't wait for N-1
+                   header compression (HPACK)
+                   server push capability
+
+<span class="hl">Code generation:</span>
+  REST: you write the HTTP client, parse JSON, handle errors manually
+  gRPC: protoc generates a type-safe client — just call GetUser(req)
+
+<span class="hl">Latency at scale:</span>
+  Typical gRPC call (same datacenter): 0.5–2ms
+  Equivalent REST+JSON: 2–10ms
+  At 10k RPS, this difference compounds significantly
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">gRPC LIMITATION — no native browser support:</span>
+  Browsers cannot make raw HTTP/2 gRPC calls.
+  Solution: <span class="bl">gRPC-Web proxy</span> (Envoy/nginx translates gRPC-Web → gRPC)
+  For browser clients: REST or GraphQL is the right choice.
+      </div>
+    </section>
+
+    <!-- WebSocket -->
+    <section class="section" id="websocket">
+      <div class="section-label">Paradigm 4</div>
+      <h2>WebSocket</h2>
+      <p>WebSocket upgrades an HTTP connection to a persistent, full-duplex TCP channel. The server can push data to the client without the client polling. The cost: stateful connections that don't scale horizontally without a pub/sub backbone.</p>
+
+      <h3>WebSocket vs SSE vs Long Polling</h3>
+      <div class="arch-diagram">
+<span class="hl">THREE WAYS TO GET SERVER PUSH</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="am">Long Polling</span>:   Client sends GET, server holds until event, responds,
+                client immediately sends next GET. No real connection.
+                <span class="ok">Works everywhere</span>, high overhead, latency = 1 RTT per event.
+                Use only as last resort (legacy environments).
+
+<span class="sv">Server-Sent Events (SSE)</span>:
+                HTTP/1.1 response body streams indefinitely.
+                Server pushes text events; client reads with EventSource API.
+                <span class="ok">One-directional only (server → client)</span>
+                <span class="ok">Auto-reconnect built into browser EventSource</span>
+                <span class="ok">Works through HTTP/2 multiplexing</span>
+                Best for: live feeds, dashboards, notifications
+
+<span class="bl">WebSocket</span>:      HTTP Upgrade handshake → TCP connection takeover.
+                Full duplex: both sides can send at any time.
+                Binary frames or text frames.
+                <span class="er">Requires stateful server (can't load-balance naively)</span>
+                Best for: chat, collaborative editing, multiplayer games
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">SCALING WEBSOCKETS — the pub/sub backbone pattern</span>
+
+                <span class="c">[ Client A ]</span>──WS──► <span class="sv">[ Server 1 ]</span>
+                                          │ subscribe "room:XYZ"
+                <span class="c">[ Client B ]</span>──WS──► <span class="sv">[ Server 2 ]</span>
+                                          │ subscribe "room:XYZ"
+                                          │
+                              <span class="ca">[ Redis Pub/Sub or Kafka ]</span>
+                                          │
+                Event from user C ──────►│ publish "room:XYZ" → message
+                                          │
+                              <span class="sv">Server 1</span> and <span class="sv">Server 2</span> both receive
+                              and push to all their subscribed clients
+
+<span class="cm">→ Any server can handle any client's connection</span>
+<span class="cm">→ Redis pub/sub fans out to all WebSocket servers</span>
+<span class="cm">→ Sticky sessions optional (reduces cross-server overhead)</span>
+      </div>
+    </section>
+
+    <!-- Webhooks -->
+    <section class="section" id="webhooks">
+      <div class="section-label">Paradigm 5</div>
+      <h2>Webhooks</h2>
+      <p>Webhooks invert the request direction: instead of your system polling theirs, their system calls yours when an event happens. The challenge is everything that HTTP polling handled for you — delivery guarantees, retry, ordering, security — becomes your problem to solve.</p>
+
+      <div class="arch-diagram">
+<span class="hl">WEBHOOK RELIABILITY PATTERN</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="hl">Reliable webhook delivery (Stripe/GitHub approach):</span>
+
+<span class="sv">Event source</span> creates event
+    │  persists event to DB (status: queued)
+    ▼
+<span class="lb">[ Webhook Worker ]</span>
+    │  POST {event} to registered endpoint
+    │  timeout: 30s
+    │
+    ├── <span class="ok">2xx response</span> → mark delivered ✓
+    │
+    └── <span class="er">non-2xx / timeout</span> → retry with exponential backoff
+           Attempt 1:  immediate
+           Attempt 2:  5 minutes
+           Attempt 3:  30 minutes
+           Attempt 4:  2 hours
+           Attempt 5:  10 hours
+           → mark failed, notify developer
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">SECURITY — HMAC signature verification:</span>
+
+Sender:
+  HMAC-SHA256(secret_key, request_body) → X-Signature-256 header
+
+Receiver:
+  expected = HMAC-SHA256(your_secret_key, raw_request_body)
+  if not hmac.compare_digest(expected, received_signature):
+      return 401  ← reject, someone spoofed the webhook
+
+<span class="cm">→ Always verify signature BEFORE processing the payload</span>
+<span class="cm">→ Use raw bytes for HMAC, not parsed JSON (order may differ)</span>
+<span class="cm">→ Replay attack: include timestamp in signed payload, reject if &gt;5min old</span>
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">IDEMPOTENCY — handle duplicate deliveries:</span>
+
+Webhook may be delivered multiple times (retry after timeout).
+Your endpoint MUST be idempotent:
+  - Store event_id in DB
+  - On receipt: IF event_id already exists → return 200 immediately
+  - Process event only once, even if called 10 times
+      </div>
+    </section>
+
+    <!-- API Gateway -->
+    <section class="section" id="api-gateway">
+      <div class="section-label">Infrastructure Layer</div>
+      <h2>API Gateway</h2>
+      <p>The API gateway is the front door to all your services. It centralizes cross-cutting concerns so individual services don't each have to implement them. Think of it as the load balancer plus the security perimeter plus the traffic cop.</p>
+
+      <div class="arch-diagram">
+<span class="hl">API GATEWAY REQUEST PIPELINE</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="c">Client Request</span>
+    │
+    ▼
+<span class="lb">[ API Gateway ]</span>
+    │
+    ├── Step 1: <span class="hl">TLS Termination</span>
+    │   Decrypt HTTPS here, forward plain HTTP internally
+    │
+    ├── Step 2: <span class="bl">Authentication</span>
+    │   Validate JWT / API key / OAuth token
+    │   Attach user identity to forwarded request header
+    │   Reject with 401 if invalid
+    │
+    ├── Step 3: <span class="db">Rate Limiting</span>
+    │   Per-user / per-IP / per-API-key quota
+    │   Reject with 429 + Retry-After header
+    │
+    ├── Step 4: <span class="ca">Request Transformation</span>
+    │   Version routing: /v1/ → legacy service, /v2/ → new service
+    │   Request enrichment: inject tenant_id, correlation_id
+    │   Protocol translation: REST → gRPC backend
+    │
+    ├── Step 5: <span class="sv">Routing</span>
+    │   /users/* → User Service
+    │   /orders/* → Order Service
+    │   /search/* → Search Service
+    │
+    └── Step 6: <span class="em">Response Transformation</span>
+        Strip internal headers, add CORS headers, compress response
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">PRODUCTS:</span>
+  Cloud-managed: AWS API Gateway, Kong Gateway, Google Apigee
+  Self-hosted:   Nginx + Lua, Envoy, Traefik, Kong (on-prem)
+  Lightweight:   nginx with auth_request module
+      </div>
+
+      <h3>Backend for Frontend (BFF) Pattern</h3>
+      <div class="arch-diagram">
+<span class="hl">BFF — a dedicated gateway per client type</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="er">Problem with a single gateway for all clients:</span>
+  Mobile needs compact responses (bandwidth limited)
+  Web browser needs different auth mechanism (cookie vs token)
+  Smart TV needs simplified API (limited compute for parsing)
+
+<span class="ok">Solution: Backend for Frontend (BFF)</span>
+
+<span class="c">[ Mobile App ]</span> → <span class="am">[ Mobile BFF ]</span>  → aggregates: User + Feed + Notifications
+<span class="c">[ Web Browser]</span> → <span class="bl">[ Web BFF    ]</span>  → full data, server-side rendering support
+<span class="c">[ Smart TV   ]</span> → <span class="sv">[ TV BFF     ]</span>  → simplified, pre-aggregated responses
+
+Each BFF:
+  - Calls multiple backend microservices in parallel
+  - Aggregates and shapes the response for its specific client
+  - Handles client-specific auth (mobile: OAuth token, web: session cookie)
+  - Can be GraphQL layer on top of gRPC backend services
+      </div>
+    </section>
+
+    <!-- Service-to-service -->
+    <section class="section" id="service-to-service">
+      <div class="section-label">Internal Communication</div>
+      <h2>Service-to-Service Communication</h2>
+      <p>Internal microservice calls have different constraints than client-facing APIs: trust level is higher, latency tolerance is lower, and the tooling choice (gRPC vs HTTP vs messaging) has compounding effects across tens of services.</p>
+
+      <div class="arch-diagram">
+<span class="hl">SYNCHRONOUS vs ASYNCHRONOUS SERVICE COMMUNICATION</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="bl">Synchronous (gRPC / REST)</span>:
+  Order Service → gRPC → Inventory Service → gRPC → Warehouse Service
+
+  <span class="ok">Good:</span>  Immediate response, simple request-response flow
+  <span class="er">Risk:</span>  Chain of dependencies — if Warehouse is down, Order fails
+          Latency compounds: 50ms + 40ms + 60ms = 150ms minimum
+          Requires circuit breakers at every hop (see Reliability pattern)
+
+<span class="em">Asynchronous (Message Queue)</span>:
+  Order Service → Kafka → [Inventory Consumer, Warehouse Consumer, Email Consumer]
+
+  <span class="ok">Good:</span>  Order Service doesn't wait — responds to user immediately
+          Downstream services fail independently without blocking Order
+          Natural buffer for traffic spikes
+  <span class="er">Risk:</span>  Eventually consistent — inventory update isn't instant
+          Harder to debug (distributed tracing essential)
+
+<span class="hl">Decision rule:</span>
+  Need an answer to proceed?    → Synchronous (gRPC)
+  Can proceed without waiting?  → Asynchronous (Kafka / SQS)
+  Third-party integration?      → Webhooks (event-driven HTTP)
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">SERVICE MESH — Istio / Linkerd</span>
+
+  Sidecar proxy (Envoy) injected into every service pod
+  Handles: mTLS between services, circuit breaking, retries,
+           load balancing, distributed tracing, traffic shaping
+  Services themselves have no networking code → just business logic
+  Use when: 10+ microservices, need fine-grained traffic control
+      </div>
+    </section>
+
+    <!-- Versioning -->
+    <section class="section" id="versioning">
+      <div class="section-label">Evolution Pattern</div>
+      <h2>API Versioning</h2>
+      <p>APIs change. Clients break. Versioning is how you let both evolve independently. The choice of versioning strategy affects your routing logic, documentation tooling, and how long you must maintain old behavior.</p>
+
+      <div class="arch-diagram">
+<span class="hl">THREE VERSIONING STRATEGIES</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="bl">1. URL PATH VERSIONING</span>
+  GET /v1/users/42
+  GET /v2/users/42
+
+  <span class="ok">Pros:</span> Explicit, easy to route in gateway, visible in logs/browser
+  <span class="er">Cons:</span> URL semantics say "resource identity" — version pollutes it
+  Use for: <span class="hl">Public APIs, majority of cases</span> — simple, universally understood
+
+<span class="sv">2. HEADER VERSIONING</span>
+  GET /users/42
+  Accept: application/vnd.myapi.v2+json
+  <span class="cm">-- or --</span>
+  API-Version: 2024-01-01
+
+  <span class="ok">Pros:</span> Clean URLs, explicit content negotiation
+  <span class="er">Cons:</span> Clients often forget the header, not visible in browser
+  Use for: Internal APIs, Stripe's date-based versioning approach
+
+<span class="em">3. QUERY PARAMETER VERSIONING</span>
+  GET /users/42?version=2
+
+  <span class="ok">Pros:</span> Convenient for testing in browser
+  <span class="er">Cons:</span> Can conflict with other query params, cache-unfriendly
+  Use for: Development/staging only, not production public APIs
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">ADDITIVE CHANGES (backward-compatible, no version bump needed):</span>
+  <span class="ok">✓</span> Add new optional fields to response
+  <span class="ok">✓</span> Add new optional request parameters
+  <span class="ok">✓</span> Add new endpoints
+  <span class="ok">✓</span> Add new enum values (clients should handle unknown values)
+
+<span class="hl">BREAKING CHANGES (require version bump):</span>
+  <span class="er">✗</span> Remove or rename fields
+  <span class="er">✗</span> Change field type (string → int)
+  <span class="er">✗</span> Change error response format
+  <span class="er">✗</span> Remove endpoints
+  <span class="er">✗</span> Change authentication scheme
+      </div>
+    </section>
+
+    <!-- Security -->
+    <section class="section" id="security">
+      <div class="section-label">Security Layer</div>
+      <h2>API Security</h2>
+
+      <div class="arch-diagram">
+<span class="hl">AUTH MECHANISMS — choosing the right one</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="bl">API Keys</span>:
+  X-API-Key: sk_live_abc123
+  Server looks up key → maps to account
+  <span class="ok">Simple</span>, good for server-to-server (machine clients)
+  <span class="er">No expiry by default</span> — stolen key is valid forever unless rotated
+  Use for: developer APIs, webhook senders, B2B integrations
+
+<span class="em">JWT (JSON Web Token)</span>:
+  Authorization: Bearer eyJhbGciOiJSUzI1NiJ9...
+  Self-contained: header.payload.signature (base64-encoded)
+  Server verifies signature without DB lookup → stateless
+  Payload has exp (expiry), sub (subject), roles
+  <span class="er">Cannot invalidate before expiry</span> (use short TTL: 15min, refresh token: 7d)
+  Use for: user auth, stateless APIs, cross-service auth
+
+<span class="sv">OAuth 2.0</span>:
+  Authorization Code flow:
+    1. Client redirects user to auth server
+    2. User logs in, consents to scopes
+    3. Auth server issues authorization code
+    4. Client exchanges code for access_token + refresh_token
+    5. Client uses access_token for API calls
+  <span class="ok">Delegated authorization</span> — user grants limited access without sharing password
+  Use for: "Login with Google/GitHub", third-party app access
+
+<span class="db">mTLS (mutual TLS)</span>:
+  Both client and server present certificates
+  Server verifies client certificate → strong identity
+  <span class="ok">Best for internal service-to-service auth</span> (service mesh handles it)
+  <span class="er">High operational overhead</span> — cert rotation, PKI management
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">AUTHORIZATION — RBAC vs ABAC</span>
+
+RBAC (Role-Based):  user has role "admin" → can do admin actions
+                    Simple, scales well for discrete role sets
+
+ABAC (Attribute-Based): policy: "user can READ resource if resource.owner == user.id"
+                        Fine-grained, complex policies, audit-friendly
+                        Use for multi-tenant SaaS (tenant isolation via policy)
+      </div>
+
+      <div class="callout callout-red">
+        <div class="callout-title">OWASP API Security Top 3</div>
+        <p><strong>Broken Object Level Authorization (BOLA):</strong> GET /orders/123 returns order 123 even if the logged-in user doesn't own it. Always validate that the authenticated user is authorized to access the specific resource ID in the URL — not just that they're logged in. This is the #1 API security failure. <strong>Excessive Data Exposure:</strong> returning full DB objects and letting clients filter. Send only what the client needs. <strong>Mass Assignment:</strong> binding all request body fields to model fields — allows clients to set `is_admin: true` in a POST body.</p>
+      </div>
+    </section>
+
+    <!-- Engineer Perspectives -->
+    <section class="section" id="eng-perspectives">
+      <div class="section-label">9 Lenses</div>
+      <h2>How Each Team Thinks About APIs</h2>
+
+      <div class="eng-takes">
+
+        <div class="eng-take et-infra">
+          <div class="eng-take-header">🏗️ Infrastructure Engineer</div>
+          <div class="eng-take-body">
+            <p>We care about the operational properties of the API protocol. gRPC over HTTP/2 with persistent connections means connection pooling behaves differently than REST — we tune max concurrent streams and watch for connection exhaustion. WebSocket servers are stateful, which breaks our standard ephemeral auto-scaling model — we provision WebSocket tiers separately with sticky routing.</p>
+            <p>API gateway selection is partly an infrastructure decision. We prefer gateways that output standard metrics (request rate, latency percentiles, error rate) that feed into our existing Prometheus/Grafana stack. We've seen teams use API gateways with proprietary observability that creates blind spots — metrics trapped in a vendor dashboard we can't alert on.</p>
+            <p>TLS termination at the gateway boundary is our job. We manage certificates (ACM or Let's Encrypt via cert-manager), rotation schedules, and HSTS headers. Internal service traffic uses mTLS managed by Istio — certificates auto-rotate every 24 hours with zero manual intervention after initial setup.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-network">
+          <div class="eng-take-header">🌐 Network Engineer</div>
+          <div class="eng-take-body">
+            <p>Protocol selection has direct network cost implications. HTTP/2 multiplexing means multiple gRPC streams share one TCP connection — fewer connections, less TCP handshake overhead, more efficient use of connection table entries on load balancers. This matters at 50k+ concurrent users where the load balancer's connection limit becomes a real constraint.</p>
+            <p>WebSocket traffic doesn't play well with standard HTTP load balancers unless you configure WebSocket passthrough. Sticky sessions (IP hash or cookie-based) are often needed so the same client consistently hits the same WebSocket server. Sticky sessions reduce auto-scaling flexibility — we document this constraint before approving WebSocket architecture.</p>
+            <p>Long-lived connections (WebSocket, gRPC streams) need aggressive keep-alive tuning on both sides. A mid-path firewall or NAT gateway that silently drops idle connections after 30 seconds will cause mysterious client disconnects in production. We test connection keep-alive behavior against all firewall tiers in staging before any real-time feature launches.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-platform">
+          <div class="eng-take-header">⚙️ Platform Engineer</div>
+          <div class="eng-take-body">
+            <p>We provide API standards as a platform capability. Internal teams get a proto file template, a CI pipeline that runs protoc and publishes generated clients to our internal package registry, and a standard health check endpoint (/healthz, /readyz) pattern. This means any service in the company can call any other service without writing HTTP client code by hand.</p>
+            <p>API contract testing (Pact, or schema validation in CI) prevents breaking changes from reaching production silently. When a team changes a proto definition, our CI runs the consumer contracts against the new schema — if it breaks any registered consumer, the build fails before deployment. This is the single most effective practice we've implemented for preventing service-to-service breakage.</p>
+            <p>We maintain an internal API registry (Backstage or a simple spec server) where every service publishes its OpenAPI or proto schema. New engineers find APIs by searching the registry, not by asking in Slack. Auto-generated documentation from the schema reduces the chance that docs drift from implementation — a perennial problem with hand-written API docs.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-security">
+          <div class="eng-take-header">🔐 Security / Cyber Engineer</div>
+          <div class="eng-take-body">
+            <p>Every API endpoint is an attack surface. Our minimum baseline: authentication on all non-public endpoints, rate limiting on all endpoints (including authenticated ones — credential stuffing attacks authenticate successfully then hit the API hard), and request size limits to prevent payload-based DoS. We audit new endpoints against OWASP API Security Top 10 before they ship.</p>
+            <p>JWT validation must happen at the gateway, not in application code — we've seen services accidentally deploy without attaching the auth middleware, exposing the endpoint publicly. The gateway is the mandatory choke point. We require all services to be deployed behind the gateway and block direct ingress to service IPs at the network layer. "Gateway optional" architectures have too many ways to accidentally bypass auth.</p>
+            <p>Webhook security is chronically underimplemented. We require HMAC signature verification on every webhook receiver we build, replay attack protection (reject events older than 5 minutes), and idempotency keys to prevent double-processing. We run webhook security checks in our code review checklist because developers routinely skip signature verification when prototyping and never add it back.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-data">
+          <div class="eng-take-header">📊 Data Engineer</div>
+          <div class="eng-take-body">
+            <p>APIs are data pipelines with bad lineage. Every API call that returns data is implicitly a data transformation — fields get renamed, filtered, aggregated. We work with backend teams to ensure API response schemas are versioned and documented so we can build reliable data ingestion pipelines on top of them. A schema change with no notice breaks our pipeline silently until an alert fires hours later.</p>
+            <p>GraphQL is particularly interesting for data work because the query shape tells us exactly which fields were accessed. We've used GraphQL query logs to understand actual field usage patterns — useful for pruning over-fetched data, identifying never-used API fields safe to deprecate, and measuring the actual data footprint of different client types.</p>
+            <p>Webhooks are a data source we love and hate. They push events to us in real time — great for data freshness. But they're not guaranteed-ordered, can be delivered out of sequence, and may replay events. Our webhook ingestion pipeline always checks event timestamps against the last-seen event and handles out-of-order delivery explicitly rather than assuming chronological order.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-ml">
+          <div class="eng-take-header">🤖 ML / AI Engineer</div>
+          <div class="eng-take-body">
+            <p>ML inference APIs have unique SLA requirements: high throughput (batched requests), low tail latency (p99, not just p50), and graceful degradation when the model is overloaded. We design ML serving APIs around gRPC for internal calls (binary protobufs with batching) and REST for external-facing inference endpoints. The request batching pattern — accumulate N requests within a 10ms window, send as batch to GPU — requires async handling that REST alone doesn't elegantly support.</p>
+            <p>Streaming inference (LLM token streaming) is a real-time API problem. We use Server-Sent Events for streaming model output to browsers — simpler than WebSocket for one-directional server push, and the browser's EventSource API handles reconnection automatically. For internal pipelines that consume model output, gRPC server streaming is the better choice.</p>
+            <p>Model API versioning is trickier than regular API versioning because the "contract" is often implicit (same input, same response schema) but behavior changes between model versions. We version models with both an API version (schema) and a model version (behavior) — clients can pin to a specific model checkpoint for reproducibility, or use "latest" for the best current model. A/B testing routing at the gateway determines which model version serves which traffic percentage.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-backend">
+          <div class="eng-take-header">⚡ Backend Engineer</div>
+          <div class="eng-take-body">
+            <p>I design APIs that I'd enjoy consuming. That means consistent error formats (always {error: {code, message, details}}), never mixing HTTP status codes with in-body success/failure flags, and idempotency keys on all non-idempotent endpoints that clients might retry. The ugliest APIs I've inherited were designed by people who only thought about the happy path — the error handling is an afterthought and every caller has to reverse-engineer what each error condition means.</p>
+            <p>N+1 queries in GraphQL resolvers are my #1 production concern for GraphQL APIs. Every resolver that fetches a related entity goes through DataLoader — no exceptions. I treat any resolver without DataLoader as a code review blocker. The performance difference between a naive resolver and a DataLoader resolver isn't theoretical: in production I've seen a single GraphQL query drop from 800ms to 12ms purely by adding DataLoader, without changing any business logic.</p>
+            <p>For gRPC services, I define the .proto first before writing any implementation code. The schema is the contract. We run protoc in CI against a committed version of the proto to generate client stubs for all consuming services. Breaking the proto file fails CI for all consumers simultaneously — this is the intended behavior, it forces breaking changes to be deliberate and coordinated rather than accidental.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-frontend">
+          <div class="eng-take-header">🎨 Frontend Engineer</div>
+          <div class="eng-take-body">
+            <p>The API protocol choice directly affects my development experience. REST with OpenAPI means I get type-safe client generation (openapi-typescript, orval) — the API schema generates my TypeScript interfaces automatically. GraphQL with codegen gives the same thing but is more flexible about query shape. gRPC from a browser requires gRPC-Web and Envoy proxy, which adds infrastructure complexity — I'd rather not deal with that unless there's a specific reason.</p>
+            <p>Over-fetching is a real problem I've measured, not a theoretical concern. On mobile, fetching a user profile with 30 fields when the UI shows 4 wastes bandwidth and parsing time. GraphQL lets me specify exactly what I need. But I've also seen teams adopt GraphQL for simple CRUD screens where the "flexibility" advantage doesn't exist — those pages would be simpler with plain REST. The tool fits specific problems.</p>
+            <p>WebSocket reconnection logic is always harder than it looks. The browser's WebSocket API doesn't reconnect automatically — you have to implement exponential backoff, event queue replay during disconnection, and heartbeat-based dead-connection detection. Libraries like socket.io handle this, but they add overhead. For most "live update" use cases, SSE is simpler to implement correctly and handles reconnection automatically via the EventSource API.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-sre">
+          <div class="eng-take-header">📡 SRE / Site Reliability Engineer</div>
+          <div class="eng-take-body">
+            <p>My API SLO is a latency and error rate target: p50 < 50ms, p99 < 200ms, error rate < 0.1% over a 30-day rolling window. When these targets are violated, I page someone. The API gateway gives me per-endpoint metrics, but the gateway only sees requests that pass rate limiting — I also need application-level metrics to catch issues that don't manifest as HTTP errors (slow DB queries, silent data corruption).</p>
+            <p>Distributed tracing is how I debug cross-service API calls. A Trace-ID header is injected at the gateway, propagated through every gRPC and async call, and emitted to Jaeger or Tempo. When a user reports slow page loads, I search by Trace-ID and see exactly which service and which database query was the bottleneck. Without tracing, debugging in a 15-service architecture means grepping logs across 15 services simultaneously — not viable at 3 AM.</p>
+            <p>API gateway rate limits are a blast radius control mechanism. A misbehaving client or a bug in our own code that creates a request loop can exhaust downstream service capacity in seconds. Rate limits at the gateway contain the damage to the misbehaving client without taking down the service for everyone else. I set conservative limits, monitor for legitimate clients hitting them, and increase only with evidence — not preemptively.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Real Problems -->
+    <section class="section" id="problems">
+      <div class="section-label">Real Problems</div>
+      <h2>Applied API Design</h2>
+
+      <!-- Problem 1 -->
+      <div class="problem-card">
+        <div class="problem-header">
+          <span class="problem-num">Problem 01</span>
+          <div class="problem-title">Real-Time Collaborative Document Editor (Google Docs-style)</div>
+          <div class="problem-tags">
+            <span class="ptag">WebSocket</span>
+            <span class="ptag">Operational Transform</span>
+            <span class="ptag">Pub/Sub</span>
+            <span class="ptag">Presence</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Communication Requirements</h4>
+          <ul>
+            <li>Multiple users edit the same document simultaneously</li>
+            <li>Edits must appear in near-real-time (&lt;100ms) for all collaborators</li>
+            <li>User presence (cursor positions, names) must be visible live</li>
+            <li>Connection drops must not lose in-progress edits</li>
+          </ul>
+
+          <h4>Protocol Architecture</h4>
+          <div class="arch-diagram">
+<span class="hl">COLLABORATIVE EDITOR — API LAYER</span>
+
+<span class="c">Client A</span> ──WS──► <span class="sv">[ WebSocket Server ]</span> ──► <span class="ca">[ Redis Pub/Sub ]</span>
+<span class="c">Client B</span> ──WS──► <span class="sv">[ WebSocket Server ]</span> ◄── (broadcast "doc:abc")
+<span class="c">Client C</span> ──WS──► <span class="sv">[ WebSocket Server ]</span>
+
+REST (HTTP):  GET /docs/{id}  → initial document state + version number
+              POST /docs/{id}/ops → persist operation (async, after WS delivery)
+
+WebSocket messages:
+  Client → Server: {type: "op", docId: "abc", op: {type:"insert", pos:5, text:"X"}, version: 42}
+  Server → Client: {type: "op", op: {...}, author: "alice", version: 43}
+  Server → Client: {type: "presence", userId: "bob", cursor: {line:3, col:7}}
+
+<span class="hl">OPERATIONAL TRANSFORM (OT) — conflict resolution:</span>
+  Alice inserts "A" at position 5 (version 42)
+  Bob deletes char at position 3 (version 42)  ← concurrent
+  Server receives both:
+    Apply Alice's op first → "B" at position 3 is gone
+    Transform Bob's op relative to Alice's → adjust positions
+    Broadcast transformed ops to all clients
+  All clients converge to identical document state
+          </div>
+
+          <h4>Handling Reconnection</h4>
+          <p>When a client disconnects, it buffers local operations with a local version counter. On reconnect, it sends all buffered ops with their versions. The server replays missed server ops first, then applies client ops with position transforms. This "catch-up" pattern ensures no edit is lost during a network blip.</p>
+        </div>
+      </div>
+
+      <!-- Problem 2 -->
+      <div class="problem-card">
+        <div class="problem-header">
+          <span class="problem-num">Problem 02</span>
+          <div class="problem-title">GraphQL API for a Mobile Social App (Twitter/X-style)</div>
+          <div class="problem-tags">
+            <span class="ptag">GraphQL</span>
+            <span class="ptag">DataLoader</span>
+            <span class="ptag">Persisted Queries</span>
+            <span class="ptag">Subscriptions</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Why GraphQL Here</h4>
+          <p>The mobile app has 5 different screens, each needing different combinations of user, tweet, reply, and media data. REST would require 3-4 endpoints per screen with over-fetching. GraphQL lets each screen define its exact data requirements in one query.</p>
+
+          <h4>Schema Design</h4>
+          <div class="code-wrap">
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <pre><code class="language-graphql">type Query {
+  tweet(id: ID!): Tweet
+  user(id: ID!): User
+  feed(first: Int, after: String): TweetConnection
+  search(query: String!, first: Int): SearchResult
+}
+
+type Mutation {
+  postTweet(text: String!, mediaIds: [ID]): Tweet
+  likeTweet(tweetId: ID!): LikePayload
+  retweet(tweetId: ID!): RetweetPayload
+  followUser(userId: ID!): FollowPayload
+}
+
+type Subscription {
+  # Real-time new tweets in home feed (WebSocket transport)
+  newTweet: Tweet
+  # Live like/retweet counts for a specific tweet
+  tweetStats(tweetId: ID!): TweetStats
+}
+
+type Tweet {
+  id: ID!
+  text: String!
+  author: User!          # DataLoader batches: collect authorIds, one SQL IN query
+  likeCount: Int!
+  retweetCount: Int!
+  replies(first: Int): TweetConnection
+  createdAt: String!
+}
+
+type TweetConnection {
+  edges: [TweetEdge!]!
+  pageInfo: PageInfo!    # cursor-based pagination
+}
+
+# Input validation via scalars
+scalar DateTime
+scalar URL</code></pre>
+          </div>
+
+          <h4>DataLoader Implementation</h4>
+          <div class="code-wrap">
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <pre><code class="language-javascript">// userLoader.js — one loader per request context
+const DataLoader = require('dataloader');
+const db = require('./db');
+
+function createUserLoader() {
+  return new DataLoader(async (userIds) => {
+    // Called once per tick with all queued IDs (deduplicated)
+    const users = await db.query(
+      'SELECT * FROM users WHERE id = ANY($1)',
+      [userIds]  // single IN query regardless of how many tweets we resolve
+    );
+    // Must return results in same order as input IDs
+    const userMap = Object.fromEntries(users.map(u => [u.id, u]));
+    return userIds.map(id => userMap[id] || null);
+  });
+}
+
+// In GraphQL context (one loader instance per HTTP request):
+const context = {
+  userLoader: createUserLoader(),
+  // Per-request: prevents cross-request data leakage
+};
+
+// Tweet resolver — no N+1:
+const Tweet = {
+  author: (tweet, _, { userLoader }) => userLoader.load(tweet.author_id),
+};</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Problem 3 -->
+      <div class="problem-card">
+        <div class="problem-header">
+          <span class="problem-num">Problem 03</span>
+          <div class="problem-title">Payment Webhook System (Stripe-style)</div>
+          <div class="problem-tags">
+            <span class="ptag">Webhooks</span>
+            <span class="ptag">Idempotency</span>
+            <span class="ptag">HMAC</span>
+            <span class="ptag">Retry Logic</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Architecture</h4>
+          <p>Payment provider sends webhooks to merchants for payment events (payment.succeeded, payment.failed, refund.created). Merchants often have flaky endpoints, and the system must guarantee at-least-once delivery with retry logic.</p>
+
+          <div class="arch-diagram">
+<span class="hl">RELIABLE WEBHOOK DELIVERY SYSTEM</span>
+
+<span class="sv">Payment Event</span> → DB: INSERT webhook_events (status=queued)
+                → <span class="lb">Outbox Worker</span> polls queued events
+
+<span class="lb">Outbox Worker</span>:
+  1. SELECT FOR UPDATE events WHERE status='queued' AND next_attempt &lt;= NOW()
+  2. POST {event} to merchant_url (30s timeout)
+  3a. <span class="ok">Success (2xx):</span>  UPDATE status='delivered', delivered_at=NOW()
+  3b. <span class="er">Failure:</span>         UPDATE status='retry',
+                             attempts = attempts + 1,
+                             next_attempt = NOW() + backoff(attempts)
+
+Backoff schedule:
+  attempts=1: +5min  |  attempts=2: +30min  |  attempts=3: +2h
+  attempts=4: +10h   |  attempts=5: +24h    →  status='failed'
+          </div>
+
+          <h4>HMAC Verification (Merchant Side)</h4>
+          <div class="code-wrap">
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <pre><code class="language-python">import hmac, hashlib, time
+from flask import request, abort
+
+WEBHOOK_SECRET = "whsec_abc123..."
+
+def verify_webhook(request):
+    # 1. Get raw bytes BEFORE JSON parsing (order matters for HMAC)
+    payload = request.get_data()
+
+    # 2. Extract signature and timestamp from header
+    sig_header = request.headers.get('Stripe-Signature', '')
+    parts = dict(p.split('=', 1) for p in sig_header.split(','))
+    timestamp = int(parts.get('t', 0))
+    received_sig = parts.get('v1', '')
+
+    # 3. Reject stale events (replay attack prevention)
+    if abs(time.time() - timestamp) > 300:  # 5 minutes
+        abort(400, "Webhook timestamp too old")
+
+    # 4. Compute expected signature
+    signed_payload = f"{timestamp}.".encode() + payload
+    expected_sig = hmac.new(
+        WEBHOOK_SECRET.encode(), signed_payload, hashlib.sha256
+    ).hexdigest()
+
+    # 5. Constant-time comparison (prevents timing attacks)
+    if not hmac.compare_digest(expected_sig, received_sig):
+        abort(401, "Invalid signature")
+
+@app.route('/webhooks/payment', methods=['POST'])
+def handle_webhook():
+    verify_webhook(request)
+    event = request.json
+
+    # 6. Idempotency — check if already processed
+    if WebhookEvent.exists(event['id']):
+        return '', 200  # already handled, return 200 so no retry
+
+    # 7. Process event
+    if event['type'] == 'payment.succeeded':
+        fulfill_order(event['data'])
+
+    WebhookEvent.create(event_id=event['id'], processed_at=datetime.utcnow())
+    return '', 200</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trade-offs -->
+    <section class="section" id="tradeoffs">
+      <div class="section-label">Decision Guide</div>
+      <h2>Trade-offs Table</h2>
+
+      <div class="table-wrap">
+        <table>
+          <tr>
+            <th>Decision</th>
+            <th>Option A</th>
+            <th>Option B</th>
+            <th>When to Choose A</th>
+          </tr>
+          <tr>
+            <td><strong>REST vs GraphQL</strong></td>
+            <td>REST</td>
+            <td>GraphQL</td>
+            <td>Single client, stable requirements, heavy caching needs (CDN). GraphQL when multiple heterogeneous clients or severe over-fetching is measured</td>
+          </tr>
+          <tr>
+            <td><strong>REST vs gRPC (internal)</strong></td>
+            <td>gRPC</td>
+            <td>REST/JSON</td>
+            <td>gRPC for services with high call volume, strict schema, or streaming. REST for low-traffic internal services or when team is unfamiliar with protobufs</td>
+          </tr>
+          <tr>
+            <td><strong>WebSocket vs SSE</strong></td>
+            <td>SSE</td>
+            <td>WebSocket</td>
+            <td>SSE when only server-to-client push needed (feed, notifications). WebSocket when client also sends data (chat, collaborative edit, games)</td>
+          </tr>
+          <tr>
+            <td><strong>URL vs Header versioning</strong></td>
+            <td>URL (/v1/...)</td>
+            <td>Accept header</td>
+            <td>URL for public APIs (visible, debuggable, routing is trivial). Header for sophisticated internal APIs where clean URL semantics matter</td>
+          </tr>
+          <tr>
+            <td><strong>JWT vs API key</strong></td>
+            <td>JWT</td>
+            <td>API key</td>
+            <td>JWT for user-facing auth (stateless, roles embedded). API key for machine-to-machine (simpler, no expiry concerns for trusted internal services)</td>
+          </tr>
+          <tr>
+            <td><strong>Single gateway vs BFF</strong></td>
+            <td>Single API gateway</td>
+            <td>Backend for Frontend</td>
+            <td>Single gateway for simple or early-stage systems. BFF when different clients (mobile, web, TV) need substantially different response shapes or auth mechanisms</td>
+          </tr>
+          <tr>
+            <td><strong>Sync vs Async service calls</strong></td>
+            <td>gRPC (sync)</td>
+            <td>Kafka (async)</td>
+            <td>gRPC when you need the result before proceeding. Kafka when downstream processing can be deferred and you want blast-radius isolation</td>
+          </tr>
+          <tr>
+            <td><strong>Offset vs Cursor pagination</strong></td>
+            <td>Cursor-based</td>
+            <td>Offset/limit</td>
+            <td>Cursor for feeds and infinite scroll (stable, fast at any depth). Offset for admin UIs with page numbers and small datasets (&lt;100k rows)</td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Anti-patterns -->
+    <section class="section" id="antipatterns">
+      <div class="section-label">What Not to Do</div>
+      <h2>Anti-patterns</h2>
+
+      <ul class="antipattern-list">
+        <li>
+          <strong>Using POST for everything ("RPC over HTTP")</strong>
+          POST /getUser, POST /deleteOrder, POST /searchProducts — this throws away everything HTTP gives you: caching (GET is cacheable), idempotency (PUT/DELETE are defined as idempotent), and meaningful status codes. Also makes your API unreadable to anyone who didn't write it.
+        </li>
+        <li>
+          <strong>GraphQL resolvers without DataLoader</strong>
+          Any resolver that fetches a related entity in a loop is an N+1 query waiting to destroy your database at scale. This is so common it has a name. Every GraphQL resolver that loads related data must go through DataLoader. Treat this as a hard requirement, not a "nice to have."
+        </li>
+        <li>
+          <strong>JWT with no expiry (or multi-year expiry)</strong>
+          JWTs are self-contained — you can't revoke them before expiry without a token blacklist (which negates the stateless benefit). Setting exp: "5 years" means a stolen token is valid for 5 years. Standard pattern: access token expires in 15 minutes, refresh token in 7 days. Short-lived access tokens limit the blast radius of token theft.
+        </li>
+        <li>
+          <strong>Skipping HMAC verification on webhooks</strong>
+          A webhook endpoint that processes any incoming POST without verifying the signature can be exploited: an attacker sends forged payment.succeeded events to your endpoint, triggering order fulfillment for unpaid orders. Always verify HMAC before processing, regardless of how "internal" the webhook seems.
+        </li>
+        <li>
+          <strong>Breaking API changes without version bumps</strong>
+          Renaming a field, removing a response field, or changing a field type in a deployed API breaks all existing clients silently. They either crash, return wrong data, or fail validation. Backwards-incompatible changes need a version bump (v1 → v2) with a deprecation period, not in-place modification of the existing version.
+        </li>
+        <li>
+          <strong>Polling instead of WebSocket/SSE for live data</strong>
+          GET /notifications every 2 seconds generates 30 requests per minute per user. At 10k users that's 300k requests/minute — all returning empty results most of the time. A single WebSocket per user delivers events instantly with zero polling overhead. The cost difference at scale is enormous.
+        </li>
+        <li>
+          <strong>Exposing internal microservice APIs directly to clients</strong>
+          Giving mobile clients direct access to your OrderService, InventoryService, and ShippingService means: every service must implement auth, the client makes 5 round trips for one screen, you can't change internal service boundaries without breaking the client. The API gateway / BFF layer exists to aggregate, transform, and shield internal architecture from external contracts.
+        </li>
+        <li>
+          <strong>Not setting a request timeout on outgoing gRPC/HTTP calls</strong>
+          An upstream service hanging — not erroring, just hanging — will cause your request goroutines to pile up indefinitely. Without a timeout, a 30-second upstream hang turns into 30 seconds of thread exhaustion, then into a cascading failure across your service. Every external call gets a timeout. Use context deadlines in gRPC (these propagate automatically), explicit timeouts in HTTP clients.
+        </li>
+      </ul>
+    </section>
+
+    <!-- Interview Tips -->
+    <section class="section" id="interview-tips">
+      <div class="section-label">Interview Strategy</div>
+      <h2>Interview Tips for API Design Questions</h2>
+
+      <div class="callout callout-amber">
+        <div class="callout-title">The Pattern Interviewers Are Testing</div>
+        <p>API design questions test whether you understand the <em>why</em> behind protocol choices. "We'll use REST" is not an answer — "We'll use REST because the clients are third-party integrators who need familiar tooling, and the data is cacheable at the CDN layer" is the answer that signals senior thinking.</p>
+      </div>
+
+      <div class="tips-grid">
+        <div class="tip-card">
+          <div class="tip-num">Tip 01</div>
+          <p><strong>Ask about client types before picking a protocol.</strong> "Who calls this API?" is the first question. External developers → REST. Mobile app with varied screens → GraphQL. Internal services → gRPC. Real-time → WebSocket or SSE.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 02</div>
+          <p><strong>Mention the API gateway as an explicit component.</strong> Interviewers like to see that you centralize auth, rate limiting, and routing in a gateway rather than implementing them per-service. Name it (Kong, Nginx, AWS API GW) and list what it does.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 03</div>
+          <p><strong>For real-time problems, compare WebSocket vs SSE explicitly.</strong> One-way push (notifications, feeds) → SSE. Bidirectional (chat, collaborative edit) → WebSocket. Show you know the difference, then pick one and justify it.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 04</div>
+          <p><strong>Always mention idempotency for write APIs.</strong> POST /orders should accept an idempotency key header. Clients retry on network failures — without idempotency keys, retries create duplicate orders. This shows you think about distributed systems failure modes.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 05</div>
+          <p><strong>Mention cursor-based pagination for large datasets.</strong> Never offset pagination for feeds or user-facing infinite scroll. Cursor pagination is O(1) per page regardless of depth, and doesn't have the skip/repeat problem with concurrent writes.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 06</div>
+          <p><strong>For GraphQL: proactively raise the N+1 problem.</strong> "I'd use DataLoader to batch all resolver calls to the same entity type within one query execution." This one sentence signals GraphQL experience. Most interviewers have seen GraphQL APIs destroyed by missing DataLoaders.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p>KnowAlgo · Pattern 04: API &amp; Communication Protocols · <a href="system-design.html">All Patterns</a> · <a href="index.html">DSA Guides</a></p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+<script>
+  window.addEventListener('scroll', () => {
+    const scrollTop = document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    document.getElementById('progress-bar').style.width = (scrollTop / scrollHeight * 100) + '%';
+  });
+
+  function copyCode(btn) {
+    const code = btn.nextElementSibling.querySelector('code');
+    navigator.clipboard.writeText(code.innerText).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  }
+
+  const tocLinks = document.querySelectorAll('.toc a');
+  const sections = document.querySelectorAll('section[id]');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.toc a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -75% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

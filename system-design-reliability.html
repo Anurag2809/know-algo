@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reliability, Resilience & Fault Tolerance – KnowAlgo System Design</title>
+  <meta name="description" content="Circuit breakers, bulkheads, retries, timeouts, chaos engineering, SLO/SLA/SLI, graceful degradation, and multi-region failover. Pattern 06 of 16.">
+  <meta name="keywords" content="circuit breaker, bulkhead pattern, retry logic, SLO SLA SLI, chaos engineering, fault tolerance, reliability engineering, system design interview">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.netlify.app/system-design-reliability.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Reliability, Resilience & Fault Tolerance – KnowAlgo">
+  <meta property="og:description" content="Circuit breakers, bulkheads, SLOs, chaos engineering, and cascading failure prevention. 9 engineer perspectives.">
+  <meta property="og:url" content="https://knowalgo.netlify.app/system-design-reliability.html">
+  <meta property="og:site_name" content="KnowAlgo">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Reliability, Resilience & Fault Tolerance – KnowAlgo">
+  <meta name="twitter:description" content="How to build systems that fail gracefully. Circuit breakers, SLOs, retries, and chaos engineering.">
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    :root {
+      --primary: #dc2626;
+      --primary-dark: #b91c1c;
+      --primary-light: #fef2f2;
+      --secondary: #7c3aed;
+      --accent: #0891b2;
+      --bg: #f8fafc;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --card-bg: #ffffff;
+      --radius: 14px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+    #progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(to right, #dc2626, #7c3aed); z-index: 9999; transition: width 0.1s linear; }
+
+    nav { position: sticky; top: 0; z-index: 100; background: #0f172a; border-bottom: 1px solid #1e293b; }
+    .nav-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+    .nav-logo { font-weight: 700; font-size: 1.1rem; color: #f1f5f9; text-decoration: none; letter-spacing: -0.3px; }
+    .nav-logo span { color: #f87171; }
+    .nav-links { display: flex; gap: 8px; align-items: center; }
+    .nav-links a { color: #94a3b8; text-decoration: none; font-size: 0.875rem; padding: 6px 12px; border-radius: 8px; transition: all 0.2s; }
+    .nav-links a:hover { color: #f1f5f9; background: #1e293b; }
+    .nav-links .nav-cta { background: var(--primary); color: #fff; font-weight: 600; }
+    .nav-links .nav-cta:hover { background: var(--primary-dark); }
+    .hide-mobile { display: none; }
+    @media(min-width:768px) { .hide-mobile { display: inline; } }
+
+    .hero { background: linear-gradient(135deg, #0f172a 0%, #450a0a 45%, #2e1065 100%); padding: 64px 24px 48px; text-align: center; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.3); color: #fca5a5; padding: 6px 16px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 20px; }
+    .hero h1 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; color: #f1f5f9; letter-spacing: -0.5px; line-height: 1.15; margin-bottom: 16px; }
+    .hero h1 span { color: #fca5a5; }
+    .hero p { font-size: 1.05rem; color: #94a3b8; max-width: 700px; margin: 0 auto 24px; }
+    .hero-pills { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .hero-pill { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); color: #cbd5e1; padding: 4px 14px; border-radius: 99px; font-size: 0.78rem; }
+    .hero-back { display: inline-flex; align-items: center; gap: 6px; margin-top: 24px; color: #64748b; font-size: 0.85rem; text-decoration: none; }
+    .hero-back:hover { color: #94a3b8; }
+
+    .page-body { max-width: 1280px; margin: 0 auto; padding: 40px 24px; display: grid; grid-template-columns: 240px 1fr; gap: 40px; align-items: start; }
+    @media(max-width:900px) { .page-body { grid-template-columns: 1fr; } }
+
+    .toc { position: sticky; top: 72px; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .toc-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+    .toc ul { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+    .toc ul li a { display: block; font-size: 0.8rem; color: var(--text-muted); text-decoration: none; padding: 4px 8px; border-radius: 6px; border-left: 2px solid transparent; transition: all 0.15s; }
+    .toc ul li a:hover, .toc ul li a.active { color: var(--primary); border-left-color: var(--primary); background: var(--primary-light); }
+    .toc-next { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .toc-prev-label, .toc-next-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .toc-next a { font-size: 0.82rem; color: var(--primary); text-decoration: none; font-weight: 600; }
+
+    .section { margin-bottom: 56px; }
+    .section-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 8px; }
+    .section h2 { font-size: 1.65rem; font-weight: 800; color: var(--text); letter-spacing: -0.3px; margin-bottom: 16px; }
+    .section h3 { font-size: 1.15rem; font-weight: 700; color: var(--text); margin: 28px 0 12px; }
+    .section h4 { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 20px 0 8px; }
+    .section p { color: #334155; margin-bottom: 14px; }
+    .section ul, .section ol { padding-left: 20px; color: #334155; margin-bottom: 14px; }
+    .section li { margin-bottom: 6px; }
+
+    .callout { border-radius: 10px; padding: 16px 20px; margin: 20px 0; border-left: 4px solid; }
+    .callout-green  { background: #f0fdf4; border-color: #16a34a; }
+    .callout-blue   { background: #eff6ff; border-color: #2563eb; }
+    .callout-amber  { background: #fffbeb; border-color: #d97706; }
+    .callout-red    { background: #fef2f2; border-color: #dc2626; }
+    .callout-violet { background: #f5f3ff; border-color: #7c3aed; }
+    .callout-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; }
+    .callout-green  .callout-title { color: #15803d; }
+    .callout-blue   .callout-title { color: #1d4ed8; }
+    .callout-amber  .callout-title { color: #b45309; }
+    .callout-red    .callout-title { color: #b91c1c; }
+    .callout-violet .callout-title { color: #6d28d9; }
+    .callout p { margin-bottom: 0; font-size: 0.9rem; }
+
+    .code-wrap { position: relative; margin: 16px 0; border-radius: 10px; overflow: hidden; }
+    .code-wrap pre { margin: 0 !important; border-radius: 10px !important; font-size: 0.82rem !important; }
+    .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; transition: all 0.2s; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); color: #f1f5f9; }
+
+    .arch-diagram { background: #0f172a; border-radius: 10px; padding: 20px 24px; font-family: 'Courier New', Courier, monospace; font-size: 0.78rem; line-height: 1.6; overflow-x: auto; margin: 16px 0; color: #94a3b8; }
+    .arch-diagram .c  { color: #f1f5f9; font-weight: 600; }
+    .arch-diagram .db { color: #a78bfa; font-weight: 600; }
+    .arch-diagram .ca { color: #fb923c; font-weight: 600; }
+    .arch-diagram .sv { color: #4ade80; font-weight: 600; }
+    .arch-diagram .lb { color: #fbbf24; font-weight: 600; }
+    .arch-diagram .em { color: #34d399; font-weight: 600; }
+    .arch-diagram .ok { color: #4ade80; }
+    .arch-diagram .er { color: #f87171; }
+    .arch-diagram .hl { color: #fbbf24; }
+    .arch-diagram .cm { color: #475569; font-style: italic; }
+    .arch-diagram .bl { color: #60a5fa; font-weight: 600; }
+    .arch-diagram .rd { color: #f87171; font-weight: 600; }
+    .arch-diagram .vl { color: #c4b5fd; font-weight: 600; }
+
+    .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th { background: #dc2626; color: #fff; font-weight: 700; text-align: left; padding: 10px 14px; }
+    td { padding: 10px 14px; border-top: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    td code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 0.8rem; font-family: monospace; }
+
+    .eng-takes { display: flex; flex-direction: column; gap: 16px; margin: 20px 0; }
+    .eng-take { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .eng-take-header { padding: 10px 16px; font-weight: 700; font-size: 0.82rem; display: flex; align-items: center; gap: 8px; }
+    .eng-take-body { padding: 14px 16px; font-size: 0.88rem; color: #334155; display: flex; flex-direction: column; gap: 8px; }
+    .et-infra   .eng-take-header { background: #dbeafe; color: #1d4ed8; border-left: 4px solid #2563eb; }
+    .et-network .eng-take-header { background: #cffafe; color: #0e7490; border-left: 4px solid #0891b2; }
+    .et-platform .eng-take-header { background: #ede9fe; color: #6d28d9; border-left: 4px solid #7c3aed; }
+    .et-security .eng-take-header { background: #fee2e2; color: #b91c1c; border-left: 4px solid #dc2626; }
+    .et-data    .eng-take-header { background: #d1fae5; color: #065f46; border-left: 4px solid #059669; }
+    .et-ml      .eng-take-header { background: #fef3c7; color: #92400e; border-left: 4px solid #d97706; }
+    .et-backend .eng-take-header { background: #f1f5f9; color: #1e293b; border-left: 4px solid #475569; }
+    .et-frontend .eng-take-header { background: #fce7f3; color: #9d174d; border-left: 4px solid #db2777; }
+    .et-sre     .eng-take-header { background: #d1fae5; color: #064e3b; border-left: 4px solid #10b981; }
+
+    .problem-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin: 24px 0; box-shadow: var(--shadow); }
+    .problem-header { padding: 16px 20px; background: linear-gradient(to right, #450a0a, #2e1065); display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+    .problem-num { background: rgba(255,255,255,0.15); color: #fff; font-weight: 800; font-size: 0.75rem; padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
+    .problem-title { color: #f1f5f9; font-weight: 700; font-size: 1rem; flex: 1; }
+    .problem-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ptag { background: rgba(255,255,255,0.1); color: #cbd5e1; font-size: 0.72rem; padding: 2px 9px; border-radius: 99px; }
+    .problem-body { padding: 20px; }
+    .problem-body h4 { color: var(--text); font-size: 0.88rem; font-weight: 700; margin: 16px 0 8px; }
+    .problem-body p { font-size: 0.9rem; color: #334155; margin-bottom: 10px; }
+    .problem-body ul { font-size: 0.9rem; color: #334155; padding-left: 18px; }
+    .problem-body li { margin-bottom: 5px; }
+
+    .antipattern-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .antipattern-list li { background: #fff5f5; border-left: 4px solid #ef4444; border-radius: 8px; padding: 12px 16px; font-size: 0.875rem; }
+    .antipattern-list li strong { color: #b91c1c; display: block; margin-bottom: 3px; }
+
+    .tips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+    .tip-card { background: var(--card-bg); border: 1px solid #fecaca; border-radius: 10px; padding: 16px 18px; }
+    .tip-num { font-size: 0.7rem; font-weight: 700; color: #dc2626; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 6px; }
+    .tip-card p { font-size: 0.875rem; color: #334155; margin: 0; }
+
+    .nines-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+    .nines-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; text-align: center; }
+    .nines-val { font-size: 1.4rem; font-weight: 800; margin-bottom: 4px; }
+    .nines-down { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+    .nines-use { font-size: 0.75rem; color: #334155; }
+
+    footer { background: #0f172a; color: #64748b; text-align: center; padding: 40px 24px; font-size: 0.875rem; }
+    footer a { color: #94a3b8; text-decoration: none; }
+    footer a:hover { color: #f1f5f9; }
+  </style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">Know<span>Algo</span></a>
+    <div class="nav-links">
+      <a href="index.html" class="hide-mobile">DSA</a>
+      <a href="system-design.html" class="hide-mobile">System Design</a>
+      <a href="interview-prep.html" class="nav-cta">Interview Prep →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">Pattern 06 of 16 · System Design</div>
+  <h1>Reliability, Resilience<br><span>&amp; Fault Tolerance</span></h1>
+  <p>How to build systems that fail gracefully, recover automatically, and never turn one broken service into a full-stack outage.</p>
+  <div class="hero-pills">
+    <span class="hero-pill">Circuit Breakers</span>
+    <span class="hero-pill">Bulkhead</span>
+    <span class="hero-pill">Retry / Timeout</span>
+    <span class="hero-pill">SLO / SLI / SLA</span>
+    <span class="hero-pill">Graceful Degradation</span>
+    <span class="hero-pill">Chaos Engineering</span>
+    <span class="hero-pill">Multi-Region Failover</span>
+    <span class="hero-pill">9 Perspectives</span>
+  </div>
+  <a href="system-design.html" class="hero-back">← Back to System Design Patterns</a>
+</div>
+
+<div class="page-body">
+
+  <!-- ═══════ TOC ═══════ -->
+  <aside class="toc">
+    <div class="toc-title">Contents</div>
+    <ul>
+      <li><a href="#slo-sli-sla">SLO / SLI / SLA</a></li>
+      <li><a href="#nines">The Nines</a></li>
+      <li><a href="#failure-modes">Failure Modes</a></li>
+      <li><a href="#circuit-breaker">Circuit Breaker</a></li>
+      <li><a href="#bulkhead">Bulkhead Pattern</a></li>
+      <li><a href="#retry-timeout">Retry & Timeout</a></li>
+      <li><a href="#graceful-degradation">Graceful Degradation</a></li>
+      <li><a href="#chaos">Chaos Engineering</a></li>
+      <li><a href="#multi-region">Multi-Region Failover</a></li>
+      <li><a href="#health-checks">Health Checks</a></li>
+      <li><a href="#eng-perspectives">Engineer Perspectives</a></li>
+      <li><a href="#problems">Real Problems</a></li>
+      <li><a href="#tradeoffs">Trade-offs Table</a></li>
+      <li><a href="#antipatterns">Anti-patterns</a></li>
+      <li><a href="#interview-tips">Interview Tips</a></li>
+    </ul>
+    <div class="toc-next">
+      <div class="toc-prev-label">Previous</div>
+      <a href="system-design-async.html">← Async Processing</a>
+      <div class="toc-next-label" style="margin-top:0.75rem;">Next Pattern</div>
+      <a href="system-design-consistency.html">Distributed Consistency →</a>
+    </div>
+  </aside>
+
+  <!-- ═══════ MAIN ═══════ -->
+  <main>
+
+    <!-- SLO/SLI/SLA -->
+    <section class="section" id="slo-sli-sla">
+      <div class="section-label">Foundation</div>
+      <h2>SLO, SLI, and SLA — Measuring Reliability</h2>
+      <p>You cannot improve what you don't measure. SLOs (Service Level Objectives) are the internal reliability targets that drive engineering decisions. SLAs are the contractual commitments to customers. SLIs are the actual measurements.</p>
+
+      <div class="arch-diagram">
+<span class="hl">THE THREE CONCEPTS</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="sv">SLI (Service Level Indicator)</span>:
+  The metric you measure. Raw data.
+  Examples:
+    Request success rate = (successful requests) / (total requests)
+    Latency p99 = 99th percentile response time
+    Availability = (uptime minutes) / (total minutes in period)
+
+<span class="lb">SLO (Service Level Objective)</span>:
+  Your internal target for the SLI. What you're engineering toward.
+  Examples:
+    "Availability SLO: 99.9% of requests succeed in a 30-day window"
+    "Latency SLO: p99 &lt; 200ms for /search endpoint"
+    "Error rate SLO: &lt; 0.1% of API calls return 5xx"
+
+<span class="bl">SLA (Service Level Agreement)</span>:
+  Legal/contractual commitment to customers.
+  Usually more conservative than SLO (buffer for when you miss SLO).
+  Example: SLO = 99.9%, SLA = 99.5% (gives you 4 nines of buffer)
+  Violation → financial penalty, credits, contract clauses
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">ERROR BUDGET — the key concept SRE teams use</span>
+
+SLO: 99.9% availability over 30 days
+Total minutes in 30 days: 43,200
+Allowed downtime: 43,200 × 0.001 = <span class="hl">43.2 minutes</span>
+
+Error budget = 43.2 minutes per month
+  Current downtime this month: 15 minutes
+  Remaining error budget: 28.2 minutes
+
+<span class="ok">Budget remaining → can deploy risky changes</span>
+<span class="er">Budget exhausted → freeze deployments, focus on reliability</span>
+
+This creates a data-driven conversation between product (wants features) and SRE (wants stability). Both are valid — the budget decides.
+      </div>
+    </section>
+
+    <!-- The Nines -->
+    <section class="section" id="nines">
+      <div class="section-label">Availability Targets</div>
+      <h2>The Nines of Availability</h2>
+
+      <div class="nines-grid">
+        <div class="nines-card">
+          <div class="nines-val" style="color:#dc2626">99%</div>
+          <div class="nines-down">7.3 hours/month down</div>
+          <div class="nines-use">Internal tools, non-critical services</div>
+        </div>
+        <div class="nines-card">
+          <div class="nines-val" style="color:#d97706">99.9%</div>
+          <div class="nines-down">43.8 min/month down</div>
+          <div class="nines-use">Standard web apps, most SaaS products</div>
+        </div>
+        <div class="nines-card">
+          <div class="nines-val" style="color:#059669">99.95%</div>
+          <div class="nines-down">21.9 min/month down</div>
+          <div class="nines-use">Business-critical services, AWS RDS</div>
+        </div>
+        <div class="nines-card">
+          <div class="nines-val" style="color:#2563eb">99.99%</div>
+          <div class="nines-down">4.4 min/month down</div>
+          <div class="nines-use">Financial, healthcare, multi-region</div>
+        </div>
+        <div class="nines-card">
+          <div class="nines-val" style="color:#7c3aed">99.999%</div>
+          <div class="nines-down">26 sec/month down</div>
+          <div class="nines-use">Telecom, emergency systems, payments</div>
+        </div>
+      </div>
+
+      <div class="callout callout-amber">
+        <div class="callout-title">The Compounding Problem with Dependencies</div>
+        <p>If your service depends on 3 external services, each at 99.9% availability, your availability is 99.9% × 99.9% × 99.9% = <strong>99.7%</strong> — even if your own code is perfect. Every dependency erodes your SLO. This is why graceful degradation (serving reduced functionality when a dependency is down) is not optional in distributed systems.</p>
+      </div>
+    </section>
+
+    <!-- Failure Modes -->
+    <section class="section" id="failure-modes">
+      <div class="section-label">Risk Taxonomy</div>
+      <h2>Failure Modes in Distributed Systems</h2>
+
+      <div class="arch-diagram">
+<span class="hl">TAXONOMY OF FAILURES</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="rd">Fail-stop</span>:     Service crashes and stops responding.
+               Easiest to detect (health check fails, circuit breaker trips).
+               Example: Out-of-memory crash, disk full.
+
+<span class="er">Fail-slow</span>:    Service responds, but very slowly.
+               <span class="hl">Hardest to detect</span> — looks like high load, not failure.
+               Timeouts are the only defense.
+               Example: DB with 90% CPU, GC pause, lock contention.
+
+<span class="er">Fail-partial</span>: Some operations succeed, some fail unpredictably.
+               Very hard to detect pattern — requires per-operation metrics.
+               Example: S3 region degradation, partial network partition.
+
+<span class="er">Fail-corrupt</span>: Service responds correctly but returns wrong data silently.
+               No timeout or circuit breaker helps — requires data validation.
+               Example: Bug in serialization, bit rot, cache returning stale data.
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">CASCADING FAILURE — the most dangerous pattern</span>
+
+Without protection:
+  Upstream traffic ──► <span class="sv">Service A</span> ──► (slow) <span class="rd">Service B</span>
+                            │                      │
+                       Threads pile up        Threads pile up
+                       waiting for B          waiting for DB
+                            │
+                       <span class="er">Service A OOM → crashes</span>
+                            │
+                       Load shifts to <span class="sv">Service A'</span>
+                            │
+                       <span class="er">Service A' also crashes</span>
+                            │
+                       <span class="er">Full stack outage</span>
+
+With circuit breaker + bulkhead:
+  Upstream traffic ──► <span class="sv">Service A</span> ──► <span class="lb">Circuit Breaker</span> ──► (slow) <span class="rd">Service B</span>
+                            │              │
+                       Fast failure ◄──── Open circuit
+                       (fallback response)   after 5 failures
+                            │
+                       <span class="ok">Service A healthy, B isolated</span>
+      </div>
+    </section>
+
+    <!-- Circuit Breaker -->
+    <section class="section" id="circuit-breaker">
+      <div class="section-label">Core Pattern</div>
+      <h2>Circuit Breaker</h2>
+      <p>Named after the electrical circuit breaker: when a circuit overloads, the breaker trips and prevents current from flowing until the overload is resolved. Applied to service calls: when failures exceed a threshold, stop calling the failing service and fail fast (returning a cached/fallback response), giving the failing service time to recover.</p>
+
+      <div class="arch-diagram">
+<span class="hl">CIRCUIT BREAKER STATE MACHINE</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+                    <span class="sv">[ CLOSED ]</span>  ← normal operation
+                    Requests flow through.
+                    Track failure count in rolling window.
+                         │
+        failures &gt; threshold  │  ← e.g., 5 failures in 10s
+                         │
+                    <span class="er">[ OPEN ]</span>  ← failing fast
+                    Immediately return error/fallback.
+                    No calls to downstream service.
+                    Timer starts (e.g., 30 seconds).
+                         │
+              timer expires   │
+                         │
+                    <span class="hl">[ HALF-OPEN ]</span>  ← probing
+                    Allow 1 test request through.
+                    │
+                    ├── <span class="ok">Success</span> → back to CLOSED ✓
+                    └── <span class="er">Failure</span> → back to OPEN, reset timer
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">PARAMETERS TO TUNE:</span>
+  Failure threshold:  5 failures in last 10 seconds (count-based)
+                      50% error rate in 60-second window (rate-based)
+  Open duration:      30 seconds before half-open probe
+  Success threshold:  3 consecutive successes in half-open → close
+      </div>
+
+      <h3>Python Implementation</h3>
+      <div class="code-wrap">
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        <pre><code class="language-python">import time
+from enum import Enum
+
+class CircuitState(Enum):
+    CLOSED = "closed"
+    OPEN = "open"
+    HALF_OPEN = "half_open"
+
+class CircuitBreaker:
+    def __init__(self, failure_threshold=5, recovery_timeout=30, success_threshold=3):
+        self.state = CircuitState.CLOSED
+        self.failure_count = 0
+        self.success_count = 0
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.success_threshold = success_threshold
+        self.last_failure_time = None
+
+    def call(self, func, *args, fallback=None, **kwargs):
+        if self.state == CircuitState.OPEN:
+            # Check if recovery timeout has elapsed → half-open
+            if time.time() - self.last_failure_time >= self.recovery_timeout:
+                self.state = CircuitState.HALF_OPEN
+                self.success_count = 0
+            else:
+                # Fast fail — return fallback without calling downstream
+                if fallback:
+                    return fallback(*args, **kwargs)
+                raise CircuitOpenError("Circuit is open")
+
+        try:
+            result = func(*args, **kwargs)
+            self._on_success()
+            return result
+        except Exception as e:
+            self._on_failure()
+            raise
+
+    def _on_success(self):
+        if self.state == CircuitState.HALF_OPEN:
+            self.success_count += 1
+            if self.success_count >= self.success_threshold:
+                self.state = CircuitState.CLOSED
+                self.failure_count = 0
+        else:
+            self.failure_count = max(0, self.failure_count - 1)  # decay
+
+    def _on_failure(self):
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        if self.failure_count >= self.failure_threshold:
+            self.state = CircuitState.OPEN
+
+# Usage:
+recommendation_cb = CircuitBreaker(failure_threshold=5, recovery_timeout=30)
+
+def get_recommendations_with_fallback(user_id):
+    return recommendation_cb.call(
+        recommendation_service.get,
+        user_id,
+        fallback=lambda uid: get_popular_items()  # show trending if CB open
+    )</code></pre>
+      </div>
+
+      <div class="callout callout-red">
+        <div class="callout-title">Libraries Over Hand-Rolled: Resilience4j, Hystrix, Polly</div>
+        <p>Resilience4j (Java/Kotlin), Polly (.NET), and the deprecated Netflix Hystrix all provide battle-tested circuit breaker implementations with metrics hooks, thread pool isolation, and configurable ring buffer tracking. In service meshes (Istio/Envoy), circuit breaking is configurable at the proxy layer without any application code. Production systems should use proven libraries, not hand-rolled state machines.</p>
+      </div>
+    </section>
+
+    <!-- Bulkhead -->
+    <section class="section" id="bulkhead">
+      <div class="section-label">Isolation Pattern</div>
+      <h2>Bulkhead Pattern</h2>
+      <p>Named after ship bulkheads that divide a ship's hull into waterproof compartments — a hull breach floods one compartment, not the whole ship. Applied to services: isolate failure domains so that one failing integration can't exhaust the resources of the whole service.</p>
+
+      <div class="arch-diagram">
+<span class="hl">BULKHEAD — THREAD POOL ISOLATION</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="er">WITHOUT BULKHEAD:</span>
+  Single thread pool (200 threads) shared by all downstream calls
+
+  Recommendation Service (slow) ──► 180 threads stuck waiting
+  Payment Service (fast)         ──► 20 threads available → <span class="er">queued</span>
+  Search Service (critical)      ──► 0 threads → <span class="er">timeout, user-facing failure</span>
+
+  One slow dependency starves all others.
+
+<span class="ok">WITH BULKHEAD:</span>
+  <span class="sv">Recommendation pool:</span>  30 threads (slow OK, isolated)
+  <span class="em">Payment pool:</span>          50 threads (critical, dedicated)
+  <span class="bl">Search pool:</span>           40 threads (user-facing, dedicated)
+  <span class="ca">Internal API pool:</span>     30 threads
+
+  Recommendation Service hangs → 30 threads stuck
+  Payment Service unaffected → 50 threads still available ✓
+  Search Service unaffected → 40 threads still available ✓
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">BULKHEAD — CONNECTION POOL ISOLATION</span>
+
+  <span class="db">User DB pool:</span>         max 50 connections
+  <span class="db">Orders DB pool:</span>       max 30 connections
+  <span class="db">Analytics DB pool:</span>    max 10 connections
+
+  Analytics query spikes → analytics pool exhausted
+  User and Order DBs unaffected ✓
+
+<span class="hl">BULKHEAD — KUBERNETES RESOURCE ISOLATION</span>
+
+  Namespace: payments → resource limits: 4 CPU, 8GB RAM
+  Namespace: analytics → resource limits: 2 CPU, 4GB RAM
+  Namespace: web-api → resource limits: 8 CPU, 16GB RAM
+
+  Analytics job spikes → hits namespace CPU limit, throttled
+  Payments and web-api unaffected ✓
+      </div>
+    </section>
+
+    <!-- Retry & Timeout -->
+    <section class="section" id="retry-timeout">
+      <div class="section-label">Core Mechanism</div>
+      <h2>Retry &amp; Timeout Strategies</h2>
+      <p>Retries and timeouts are complementary but often misconfigured together. Retries amplify load on a failing service — without timeouts, retries can make cascading failures worse.</p>
+
+      <div class="arch-diagram">
+<span class="hl">RETRY STRATEGIES</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="er">BAD: Immediate retry (thundering herd)</span>
+  Service A calls B, B fails.
+  Immediately retry → B still failing
+  All Service A instances retry simultaneously
+  B is hit with 3× the load while already struggling → death spiral
+
+<span class="hl">GOOD: Exponential backoff with jitter</span>
+  Attempt 1:  immediate
+  Attempt 2:  wait 1s
+  Attempt 3:  wait 2s
+  Attempt 4:  wait 4s  (cap at some max, e.g., 32s)
+
+  + Jitter: wait = random(0, base_delay) → desynchronizes retriers
+  Multiple clients don't all retry at the same second
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">WHAT TO RETRY (and what NOT to retry)</span>
+
+<span class="ok">Safe to retry:</span>
+  GET requests (idempotent by HTTP spec)
+  PUT/DELETE (idempotent by HTTP spec)
+  Network errors (connection refused, DNS timeout)
+  5xx errors ONLY if you know they're transient (503 Retry-After)
+
+<span class="er">Do NOT retry:</span>
+  POST without idempotency key (creates duplicates)
+  400 Bad Request (retrying won't fix a malformed request)
+  401/403 (auth error — retry is pointless)
+  409 Conflict (application logic error, not transient)
+  500 from your own code logic (not a transient network error)
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">TIMEOUT HIERARCHY — set at each call boundary</span>
+
+<span class="sv">User browser</span>: 30s connection timeout, 60s read timeout
+   │
+<span class="lb">API Gateway</span>: 25s request timeout (shorter than browser → explicit error page)
+   │
+<span class="em">Service A</span>: 20s deadline propagated via context
+   │
+<span class="bl">Service B call</span>: 15s timeout (leaves buffer for retry + response)
+   │
+<span class="ca">DB query</span>: 5s statement timeout
+
+<span class="hl">Rule:</span> Each timeout shorter than the caller's timeout.
+      Buffer enough for at least one retry.
+      Propagate deadlines (gRPC context) so services don't work past client timeout.
+      </div>
+    </section>
+
+    <!-- Graceful Degradation -->
+    <section class="section" id="graceful-degradation">
+      <div class="section-label">Resilience Pattern</div>
+      <h2>Graceful Degradation</h2>
+      <p>When a non-critical dependency fails, serve a reduced but still useful response rather than failing completely. This requires upfront design decisions about what's core functionality vs what's enhancement.</p>
+
+      <div class="arch-diagram">
+<span class="hl">DEGRADATION TIERS — product design for resilience</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+E-commerce product page:
+
+<span class="ok">Tier 1 (always available — core):</span>
+  Product name, description, price, add-to-cart
+  Served from: Postgres primary + CDN cache
+  SLO: 99.99% — any downtime is P0
+
+<span class="hl">Tier 2 (usually available — important):</span>
+  Customer reviews and ratings
+  Served from: Reviews service + Redis cache
+  Fallback: "Reviews temporarily unavailable" + cached rating from last hour
+
+<span class="sv">Tier 3 (nice to have — enhancement):</span>
+  Personalized recommendations ("You might also like")
+  Served from: ML recommendation service
+  Fallback: Popular items in same category (from Redis, no ML needed)
+  Circuit breaker: if ML service fails, instantly return popular items
+
+<span class="db">Tier 4 (optional — enrichment):</span>
+  Real-time inventory count ("12 left in stock!")
+  Served from: Inventory service WebSocket
+  Fallback: Static "In Stock" text from cached data
+  User barely notices.
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">FEATURE FLAGS — runtime degradation control</span>
+
+  ENABLE_RECOMMENDATIONS = true
+  ENABLE_REVIEWS = true
+  ENABLE_LIVE_INVENTORY = false  ← disabled during inventory service incident
+
+  → Ops can disable non-critical features instantly during incidents
+  → No deploy required → 30-second toggle vs 5-minute deploy
+  → Launchdarky, Unleash, or simple Redis key
+      </div>
+    </section>
+
+    <!-- Chaos Engineering -->
+    <section class="section" id="chaos">
+      <div class="section-label">Proactive Reliability</div>
+      <h2>Chaos Engineering</h2>
+      <p>Chaos engineering is the practice of deliberately injecting failures in a controlled way to verify your resilience assumptions before they fail in production uncontrolled. The hypothesis: "The system maintains SLO when X fails." The experiment: make X fail, observe.</p>
+
+      <div class="arch-diagram">
+<span class="hl">CHAOS EXPERIMENT PROCESS</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+1. Define steady state:
+   "p99 latency &lt; 200ms, error rate &lt; 0.1%"
+
+2. Hypothesis:
+   "Killing one of 3 database replicas won't violate steady state"
+
+3. Inject failure (in staging first, then production with small blast radius):
+   Kill 1 of 3 DB replicas via: kill -9 {postgres_pid}
+
+4. Observe:
+   Does error rate spike? Does p99 exceed 200ms?
+   Did automatic failover occur within 30 seconds?
+   Did any alerts fire?
+
+5. Analyze and fix:
+   Found: connection pool exhaustion during replica promotion (15s)
+   Fix: add retry logic during failover window
+   Re-run experiment → confirm fix
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">FAILURE INJECTION CATALOG</span>
+
+Network failures:
+  <span class="rd">tc netem</span>: add 200ms latency to all packets to DB subnet
+  <span class="rd">iptables</span>: drop 10% of packets to payment service
+  <span class="rd">toxiproxy</span>: inject latency, jitter, timeout on specific connections
+
+Process failures:
+  <span class="rd">kill -9</span> on specific service processes
+  <span class="rd">chaos-monkey</span> randomly terminates VMs in production (Netflix)
+
+Resource exhaustion:
+  <span class="rd">stress-ng</span>: fill memory, saturate CPU, exhaust file descriptors
+  <span class="rd">disk-fill</span>: fill disk to trigger space errors
+
+Service failures:
+  <span class="rd">Gremlin</span>, <span class="rd">Chaos Mesh</span>: Kubernetes-native chaos injection
+  <span class="rd">AWS Fault Injection Simulator</span>: managed chaos for AWS services
+      </div>
+    </section>
+
+    <!-- Multi-region -->
+    <section class="section" id="multi-region">
+      <div class="section-label">Geographic Resilience</div>
+      <h2>Multi-Region Failover</h2>
+      <p>A single-region service is unavailable during that region's outage — no circuit breaker or retry helps when AWS us-east-1 has a regional failure. Multi-region architectures survive AZ and region failures at the cost of significant complexity and data replication concerns.</p>
+
+      <div class="arch-diagram">
+<span class="hl">MULTI-REGION TOPOLOGIES</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="sv">ACTIVE-PASSIVE (Warm Standby):</span>
+
+  <span class="em">us-east-1 (active)</span>          <span class="bl">eu-west-1 (passive/warm)</span>
+  All traffic → here             No user traffic
+  Primary DB (writes)            Read-only replica (continuous sync)
+                                 Warm app servers (auto-start on failover)
+
+  Failover: update DNS (Route53 health check) → 60-300s RTO
+  RPO: seconds (async replication lag) to zero (sync replication)
+  Use for: DR requirements, lower cost than active-active
+
+<span class="lb">ACTIVE-ACTIVE (Multi-region writes):</span>
+
+  <span class="em">us-east-1 (active)</span>          <span class="bl">eu-west-1 (active)</span>
+  US users → here                EU users → here
+  Primary DB (writes)            Primary DB (writes)
+         │  ←──── sync ────► │
+         └──── conflict resolution needed ────┘
+
+  Complexity: write conflicts (last-write-wins or CRDT)
+  RTO: near-zero (traffic rerouted instantly via DNS/anycast)
+  Use for: global latency SLOs, financial services, gaming
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">DNS FAILOVER (AWS Route53 example):</span>
+
+Primary record: us-east-1 load balancer
+  Health check: HTTPS GET /healthz every 10s, must return 200
+
+Failover record: eu-west-1 load balancer
+  Routing policy: FAILOVER (secondary only if primary health check fails)
+
+Failover trigger: 3 consecutive health check failures → 30s
+DNS TTL: 60s (lower = faster failover, higher cache invalidation cost)
+Total failover time: ~60-90s (health check failure + TTL expiry)
+      </div>
+    </section>
+
+    <!-- Health Checks -->
+    <section class="section" id="health-checks">
+      <div class="section-label">Observability</div>
+      <h2>Health Checks</h2>
+      <div class="arch-diagram">
+<span class="hl">THREE HEALTH CHECK ENDPOINTS</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="sv">GET /healthz</span> — liveness check
+  Is the process alive and not deadlocked?
+  Kubernetes liveness probe: restart pod if this fails.
+  Return: 200 OK immediately (no dependency checks)
+  Failure means: process needs to be killed and restarted
+
+<span class="em">GET /readyz</span> — readiness check
+  Is the service ready to receive traffic?
+  Kubernetes readiness probe: remove from load balancer if this fails.
+  Check: DB connection pool, critical dependencies, cache warm
+  Failure means: temporarily pull from rotation (not kill)
+
+<span class="bl">GET /metrics</span> — Prometheus scrape endpoint
+  Expose: request rate, error rate, latency histograms,
+          active connections, queue depth, business metrics
+  Scraped every 15s by Prometheus
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">DEEP HEALTH CHECK — include dependency checks</span>
+
+{
+  "status": "degraded",
+  "checks": {
+    "database":      { "status": "ok",       "latency_ms": 5  },
+    "redis":         { "status": "ok",       "latency_ms": 1  },
+    "payment_api":   { "status": "degraded", "latency_ms": 800 },
+    "email_service": { "status": "ok",       "latency_ms": 50 }
+  }
+}
+
+<span class="cm">→ Degraded is not the same as unhealthy</span>
+<span class="cm">→ Payment API slow doesn't mean remove from load balancer</span>
+<span class="cm">→ But it's surfaced to ops dashboards for immediate visibility</span>
+      </div>
+    </section>
+
+    <!-- Engineer Perspectives -->
+    <section class="section" id="eng-perspectives">
+      <div class="section-label">9 Lenses</div>
+      <h2>How Each Team Thinks About Reliability</h2>
+
+      <div class="eng-takes">
+
+        <div class="eng-take et-infra">
+          <div class="eng-take-header">🏗️ Infrastructure Engineer</div>
+          <div class="eng-take-body">
+            <p>We think in availability zones. Every compute resource, database, and load balancer has to span at least 2 AZs — preferably 3. A single-AZ deployment is a single point of failure that AWS's own AZ outages will eventually hit. Our baseline IaC template deploys auto-scaling groups across 3 AZs with cross-zone load balancing enabled, and we code-review any deviation from this pattern.</p>
+            <p>Instance replacement is our reliability mechanism for compute. We don't patch production servers — we replace them. Every EC2 instance or Kubernetes node is immutable: when a CVE requires patching, we spin up new instances with the patched AMI and terminate the old ones. This means we test deployment and startup paths constantly, not just during incidents, so we know they work.</p>
+            <p>Runbooks for every alert are not bureaucracy — they're reliability infrastructure. When an alert fires at 3 AM, a clear runbook with diagnosis steps, escalation paths, and rollback procedures is the difference between a 15-minute incident and a 2-hour one. We require every new service to have runbooks before it goes to production, and we run quarterly runbook drills to verify they're still accurate.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-network">
+          <div class="eng-take-header">🌐 Network Engineer</div>
+          <div class="eng-take-body">
+            <p>Network partitions are the failure mode that most software engineers don't design for because they're rare in a single datacenter. In multi-region or multi-cloud systems, they're a regular occurrence. We design routing policies assuming the inter-region link is unreliable: anycast routing that falls back automatically, BGP health checks that redirect traffic away from degraded regions, and client-side failover logic that doesn't wait for DNS TTL expiry.</p>
+            <p>TCP connection limits are a reliability concern people ignore until they hit them. A load balancer processing 100k concurrent WebSocket connections has 100k open TCP connections — each consuming kernel resources. We monitor TCP connection table utilization and set alerts at 70% of the configured max. Connection exhaustion looks like random timeouts, which is a very difficult failure mode to diagnose without pre-configured metrics.</p>
+            <p>DDoS resilience is part of reliability engineering, not just security. A volumetric DDoS attack that exhausts your network bandwidth has the same effect as a catastrophic failure: service unavailable. We deploy AWS Shield / Cloudflare / rate limiting at the network edge, and we've tested our response to synthetic volumetric traffic to verify that legitimate traffic still gets through during an attack.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-platform">
+          <div class="eng-take-header">⚙️ Platform Engineer</div>
+          <div class="eng-take-body">
+            <p>Platform reliability is about making reliability the path of least resistance for product teams. We provide a service template with circuit breakers, retries with backoff, health check endpoints, and structured logging pre-configured. A team that starts from our template has reliability built in — a team that starts from scratch has to consciously add each of these, and they often don't until they have their first incident.</p>
+            <p>Deployment reliability is platform reliability. We require blue-green deployments or canary releases through our CI/CD pipeline. A bad deploy that's caught at 5% canary traffic is an incident that 95% of users never experienced. Our canary automation watches error rate and p99 latency during the rollout — automatic rollback triggers if either exceeds baseline by more than 20% for 5 minutes.</p>
+            <p>SLO dashboards are a platform product we maintain. Every service registered in our catalog gets an auto-generated SLO dashboard in Grafana, fed from Prometheus. SLO burn rate alerts are pre-configured: fast burn (consuming 5% of error budget in 1 hour) pages immediately; slow burn (consuming 10% in 6 hours) sends a Slack notification. Teams don't have to set this up — it just works when they register the service.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-security">
+          <div class="eng-take-header">🔐 Security / Cyber Engineer</div>
+          <div class="eng-take-body">
+            <p>Availability is a security property — the A in CIA (Confidentiality, Integrity, Availability). A DDoS attack targeting availability is a security incident, not just an ops incident. We treat sustained traffic patterns that look like DoS (single IP, single ASN, single user agent) as security events and engage incident response, not just infrastructure auto-scaling.</p>
+            <p>Failover systems must be hardened the same way as primary systems. We've seen incident post-mortems where the DR site was less secured than production — it ran old versions, had open security groups, and missed authentication on admin endpoints. When you fail over to DR, you can't trade availability for security. Our runbook requires security controls validation as a pre-failover checklist item.</p>
+            <p>Chaos engineering includes security failure scenarios. We test: what happens if the certificate authority we use for mTLS is temporarily unreachable? Does service-to-service communication fail open (dangerous) or fail closed (correct)? What happens if the secrets manager is down during a service restart? Fail closed is almost always correct for security dependencies. We verify this with injected chaos, not by assuming the code is right.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-data">
+          <div class="eng-take-header">📊 Data Engineer</div>
+          <div class="eng-take-body">
+            <p>Data pipeline reliability has a different failure taxonomy than service reliability. A pipeline that produces wrong results silently is worse than one that fails loudly — wrong data influences business decisions and may not be noticed for weeks. Our SLOs include data quality metrics: freshness (data lag), completeness (row count vs expected), and schema conformance. A "green" pipeline that produces stale or corrupt data violates our SLO as much as a crashed pipeline.</p>
+            <p>We design pipelines for idempotent re-runs. If the pipeline fails at step 3 of 5, we should be able to re-run from the beginning and get the same result. This means: never overwrite output in-place (write to a versioned path, then atomic rename), use database UPSERT not INSERT (so re-runs don't duplicate rows), and track pipeline execution state in a metadata table so we know which steps completed.</p>
+            <p>Backfill is our recovery mechanism. When a data pipeline produces wrong output for 3 days (maybe due to a schema change we didn't catch), we fix the pipeline, then reprocess the 3 days of raw events from Kafka (using Kafka's replay capability) through the corrected pipeline. The Kafka retention period is our data reliability window — once an event ages out of Kafka, we can't backfill from it without raw source data archives.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-ml">
+          <div class="eng-take-header">🤖 ML / AI Engineer</div>
+          <div class="eng-take-body">
+            <p>ML model reliability has a unique failure mode: gradual degradation (model drift) rather than sudden failure. A model trained on last year's data serving this year's traffic produces increasingly incorrect predictions — but no circuit breaker trips, no error rate spikes. Our SLI for ML systems includes prediction quality metrics (click-through rate, conversion rate, user satisfaction scores) measured via A/B test, not just infrastructure metrics.</p>
+            <p>Model serving must degrade gracefully when the inference service is unavailable. For recommendation systems, the fallback is "popular items" from Redis — no ML needed, always available, acceptable quality. For safety classifiers (content moderation), the fallback must be fail-safe: if the classifier is down, treat all content as potentially unsafe and queue for human review. Fail-open for safety systems is unacceptable.</p>
+            <p>Model rollback is our most important reliability mechanism. Every model deployment is versioned. If a new model causes a measurable decrease in business metrics (measured via shadow mode or canary), we roll back to the previous model version within minutes. The rollback procedure is tested monthly — we practice it in staging so it's not improvised during a live incident. "We can't roll back the model" is a statement that means you haven't designed for reliability.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-backend">
+          <div class="eng-take-header">⚡ Backend Engineer</div>
+          <div class="eng-take-body">
+            <p>Every external call I make gets a timeout. This is not negotiable — a hanging HTTP client with no timeout is a thread leak in disguise. I set connect timeout (2s — fast fail if host is unreachable), read timeout (10s — give the service time to respond but not forever), and I propagate deadlines from incoming gRPC context so I never work past the caller's deadline. When the client has given up, continuing work server-side is waste.</p>
+            <p>Retry logic is in every outgoing call, but only for idempotent operations and only for transient errors. I distinguish between retryable (network timeout, 503 with Retry-After header, connection reset) and non-retryable (400, 401, 409, 422). Retrying a 400 is wasting capacity on guaranteed failures. Retrying a 503 without exponential backoff is DDoS-ing the recovering service. These details matter and I document them in the code.</p>
+            <p>Graceful shutdown is an often-forgotten reliability concern for backend services. When Kubernetes sends SIGTERM before terminating a pod, I catch it: stop accepting new requests, drain in-flight requests with a 30-second grace period, close DB connections cleanly, commit any pending async work. A pod that's killed mid-request without graceful shutdown causes a spike of user-visible errors during every rolling deploy. One developer's missed graceful shutdown handler causes thousands of user errors per deployment.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-frontend">
+          <div class="eng-take-header">🎨 Frontend Engineer</div>
+          <div class="eng-take-body">
+            <p>Frontend resilience starts with not making the full page dependent on every API call. I architect pages with a primary data requirement (must succeed) and secondary data requirements (show skeleton if unavailable). React Suspense boundaries with fallback UI let me declare these dependencies explicitly — a failed recommendation API shows a fallback component, not a broken page. Users shouldn't see a white screen because the recommendations service had a hiccup.</p>
+            <p>Offline-capable design is the extreme version of graceful degradation. Service workers can cache critical UI assets and the last-known API responses — users can view content even with no network. Writes that happen offline are queued and replayed when connectivity returns. This is more engineering effort, but for apps used in unreliable network conditions (mobile, rural, emerging markets), it's the difference between functional and unusable.</p>
+            <p>Loading states must accurately reflect what's happening. "Loading..." shown for 30 seconds while an API hangs is not graceful degradation — it's just a different flavor of bad UX. I set frontend timeouts on API calls (10-15 seconds), show meaningful error states after timeout ("This is taking longer than expected. Try again?"), and let users retry without refreshing the page. Frontend reliability includes communicating failure honestly and giving users agency to recover.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-sre">
+          <div class="eng-take-header">📡 SRE / Site Reliability Engineer</div>
+          <div class="eng-take-body">
+            <p>Our primary reliability metric is error budget burn rate. The burn rate alert pattern I use: page immediately if we're burning 5% of our monthly error budget in any 1-hour window (fast burn = likely active incident). Alert to Slack if we're burning 10% of budget in any 6-hour window (slow burn = something degraded, not critical yet). This catches both the acute incidents and the gradual reliability decay before it becomes a crisis.</p>
+            <p>Post-incident reviews (PIRs) are our reliability learning loop. After every P0/P1 incident, we conduct a blameless PIR within 48 hours: timeline reconstruction, contributing factors, what worked, what didn't, and 3-5 concrete action items with owners and deadlines. We publish the PIR internally so other teams learn from it. The action items get tracked and followed up — a PIR with no follow-through is theater, not engineering.</p>
+            <p>Chaos engineering is part of our quarterly reliability program. We run 2-3 targeted experiments per quarter per critical service, always starting in staging and promoting to production only after staging validates the hypothesis. We've found real bugs this way that our code review and load testing missed — a failover procedure that worked in theory but caused 4 minutes of partial unavailability in practice, caught via chaos before users experienced it in a real failure.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Real Problems -->
+    <section class="section" id="problems">
+      <div class="section-label">Real Problems</div>
+      <h2>Applied Reliability Design</h2>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <span class="problem-num">Problem 01</span>
+          <div class="problem-title">Design an API Gateway with Full Resilience Patterns</div>
+          <div class="problem-tags">
+            <span class="ptag">Circuit Breaker</span>
+            <span class="ptag">Bulkhead</span>
+            <span class="ptag">Retry</span>
+            <span class="ptag">Timeout</span>
+            <span class="ptag">Degradation</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>The Resilient Gateway Pipeline</h4>
+          <div class="arch-diagram">
+<span class="hl">RESILIENT REQUEST LIFECYCLE</span>
+
+<span class="c">Client</span>
+   │ timeout: 30s
+   ▼
+<span class="lb">[ API Gateway ]</span>
+   │
+   ├── Auth Check: JWT verify (timeout: 100ms, no retry)
+   │   └── fail: 401 immediately
+   │
+   ├── Rate Limit: Redis token bucket (timeout: 50ms)
+   │   └── fail: serve from local in-memory cache (degraded, eventually consistent)
+   │
+   ├── Request routing (4 downstream services, each in own bulkhead):
+   │
+   │   ┌─── <span class="sv">User Service</span> (pool: 50 threads, timeout: 3s, retry: 2×)
+   │   │    CB threshold: 5 failures/10s → open 30s
+   │   │    Fallback: cached user data from Redis (5min TTL)
+   │   │
+   │   ├─── <span class="em">Product Service</span> (pool: 100 threads, timeout: 5s, retry: 2×)
+   │   │    CB threshold: 10 failures/20s → open 60s
+   │   │    Fallback: CDN-cached product page
+   │   │
+   │   ├─── <span class="bl">Inventory Service</span> (pool: 30 threads, timeout: 2s, retry: 1×)
+   │   │    CB threshold: 3 failures/5s → open 20s
+   │   │    Fallback: show "Check availability" instead of live count
+   │   │
+   │   └─── <span class="ca">Recommendation Engine</span> (pool: 20 threads, timeout: 1s, NO retry)
+   │        CB threshold: 2 failures/5s → open 10s
+   │        Fallback: popular items from Redis (always available)
+   │        <span class="cm">← strictest CB: slowest, least critical, fails fast</span>
+   │
+   └── Response aggregation → client
+          </div>
+
+          <h4>Why Per-Service Bulkheads</h4>
+          <p>The recommendation engine regularly takes longer than 1 second during ML model evaluation. Without a bulkhead, this would exhaust the shared thread pool and starve inventory lookups (which users actually need for checkout). With a dedicated 20-thread pool, the recommendation engine can be slow without impacting checkout. The tight circuit breaker (2 failures in 5s → open) ensures a slow recommendation service is immediately bypassed, not retried.</p>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <span class="problem-num">Problem 02</span>
+          <div class="problem-title">Design a Multi-Region Failover System for a Financial App</div>
+          <div class="problem-tags">
+            <span class="ptag">Active-Passive</span>
+            <span class="ptag">RTO &lt;60s</span>
+            <span class="ptag">RPO ~0</span>
+            <span class="ptag">DNS Failover</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Requirements</h4>
+          <ul>
+            <li>RTO (Recovery Time Objective): &lt;60 seconds of user-visible downtime during region failure</li>
+            <li>RPO (Recovery Point Objective): near-zero — no financial transaction data can be lost</li>
+            <li>Normal operation: all traffic to us-east-1, EU region is warm standby</li>
+          </ul>
+
+          <h4>Architecture</h4>
+          <div class="arch-diagram">
+<span class="hl">FINANCIAL APP MULTI-REGION FAILOVER</span>
+
+<span class="em">us-east-1 (primary, all traffic)</span>
+  App servers (ECS tasks, 3 AZs)
+  RDS PostgreSQL primary (Multi-AZ: sync replica in same region)
+      │ synchronous replication to standby (same region, different AZ)
+      │ asynchronous replication (seconds lag) →
+                                               │
+<span class="bl">eu-west-1 (warm standby)</span>
+  App servers (pre-warmed, 1 task per AZ, no user traffic)
+  RDS PostgreSQL read replica (async from us-east-1 primary)
+  <span class="hl">Lag: typically &lt;5 seconds, monitored continuously</span>
+
+<span class="hl">FAILOVER TRIGGER:</span>
+  Route53 health check: HTTPS /healthz every 10s
+  Failure condition: 3 consecutive failures (30s detection)
+
+<span class="hl">FAILOVER PROCEDURE (automated, ~60s total):</span>
+  T+0:   3rd health check failure detected
+  T+30:  Route53 fails over DNS to eu-west-1 load balancer
+  T+30:  EU app servers receive first traffic
+  T+35:  RDS promotion: eu-west-1 read replica promoted to primary
+         (automated via EventBridge rule triggering Lambda)
+  T+60:  EU primary accepting writes, full service restored
+
+<span class="hl">RPO WINDOW:</span>
+  Replication lag at failover: 0-10 seconds (async lag)
+  Transactions in that window: potentially lost
+  Mitigation: synchronous replication to same-region standby (zero loss
+              within region), async to cross-region (small window)
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <span class="problem-num">Problem 03</span>
+          <div class="problem-title">Define and Implement SLOs for a Payment Processing Service</div>
+          <div class="problem-tags">
+            <span class="ptag">SLO</span>
+            <span class="ptag">Error Budget</span>
+            <span class="ptag">Prometheus</span>
+            <span class="ptag">Alerting</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>SLO Definition</h4>
+          <div class="table-wrap">
+            <table>
+              <tr><th>SLI</th><th>SLO Target</th><th>Measurement Window</th><th>SLA</th></tr>
+              <tr><td>Request success rate</td><td>99.95%</td><td>30-day rolling</td><td>99.9%</td></tr>
+              <tr><td>p99 latency /charge</td><td>&lt; 500ms</td><td>30-day rolling</td><td>&lt; 1000ms</td></tr>
+              <tr><td>p50 latency /charge</td><td>&lt; 100ms</td><td>30-day rolling</td><td>—</td></tr>
+              <tr><td>Durability (no lost txns)</td><td>100%</td><td>All-time</td><td>100%</td></tr>
+            </table>
+          </div>
+
+          <h4>Prometheus SLO Recording Rules</h4>
+          <div class="code-wrap">
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <pre><code class="language-yaml"># prometheus/rules/payment_slo.yml
+groups:
+  - name: payment_slo
+    interval: 30s
+    rules:
+      # SLI: success rate (5xx are bad events)
+      - record: payment:request_success_rate:5m
+        expr: |
+          1 - (
+            sum(rate(http_requests_total{service="payment",code=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{service="payment"}[5m]))
+          )
+
+      # Error budget burn rate (30-day window)
+      - record: payment:error_budget_burn_rate:1h
+        expr: |
+          (1 - payment:request_success_rate:5m) / (1 - 0.9995)
+          # burn_rate = 1 means consuming error budget at exact SLO rate
+          # burn_rate = 6 means burning 6× faster than allowed
+
+# Alert: fast burn (will exhaust monthly budget in ~5 days at this rate)
+- alert: PaymentSLOFastBurn
+  expr: payment:error_budget_burn_rate:1h > 14.4
+  for: 5m
+  labels:
+    severity: critical
+    team: payments
+  annotations:
+    summary: "Payment SLO fast burn rate: {{ $value }}×"
+    description: "At this rate, monthly error budget exhausted in < 50 hours"
+
+# Alert: slow burn (will exhaust monthly budget in ~10 days)
+- alert: PaymentSLOSlowBurn
+  expr: payment:error_budget_burn_rate:1h > 3
+  for: 30m
+  labels:
+    severity: warning</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trade-offs -->
+    <section class="section" id="tradeoffs">
+      <div class="section-label">Decision Guide</div>
+      <h2>Trade-offs Table</h2>
+
+      <div class="table-wrap">
+        <table>
+          <tr>
+            <th>Decision</th>
+            <th>Option A</th>
+            <th>Option B</th>
+            <th>When to Choose A</th>
+          </tr>
+          <tr>
+            <td><strong>Active-passive vs active-active</strong></td>
+            <td>Active-passive (warm standby)</td>
+            <td>Active-active (multi-region writes)</td>
+            <td>Active-passive when RPO of seconds is acceptable and you want to avoid write conflict complexity. Active-active for near-zero RPO and global users who need low latency</td>
+          </tr>
+          <tr>
+            <td><strong>Circuit breaker vs retry-only</strong></td>
+            <td>Circuit breaker + retry</td>
+            <td>Retry only</td>
+            <td>Always prefer circuit breaker. Retry without CB during a failing service multiplies load on the already-struggling downstream, accelerating the cascade</td>
+          </tr>
+          <tr>
+            <td><strong>Fail fast vs wait for retry</strong></td>
+            <td>Fail fast (tight timeout)</td>
+            <td>Aggressive retry</td>
+            <td>Fail fast for user-facing requests where UX matters. Aggressive retry for background jobs where eventual success is more important than latency</td>
+          </tr>
+          <tr>
+            <td><strong>SLO 99.9% vs 99.99%</strong></td>
+            <td>99.9% (single-region)</td>
+            <td>99.99% (multi-region)</td>
+            <td>99.9% is achievable with careful single-region design (Multi-AZ). 99.99% almost always requires multi-region and costs significantly more in both infra and engineering complexity</td>
+          </tr>
+          <tr>
+            <td><strong>Graceful degradation vs full availability</strong></td>
+            <td>Graceful degradation (tiered)</td>
+            <td>All-or-nothing</td>
+            <td>Graceful degradation almost always wins. All-or-nothing means every non-critical service dependency can cause a full outage. Degradation requires upfront design effort</td>
+          </tr>
+          <tr>
+            <td><strong>Chaos in staging vs production</strong></td>
+            <td>Staging first, then production</td>
+            <td>Production directly</td>
+            <td>Always staging first. Production chaos requires: small blast radius, feature flags to limit scope, immediate rollback, and on-call SRE standing by. Never chaos production cold</td>
+          </tr>
+          <tr>
+            <td><strong>Liveness vs readiness checks</strong></td>
+            <td>Separate liveness and readiness</td>
+            <td>Single health check</td>
+            <td>Always separate. Liveness failure → restart (nuclear option). Readiness failure → remove from load balancer (graceful). Conflating them causes unnecessary pod restarts during startup</td>
+          </tr>
+          <tr>
+            <td><strong>Tight vs loose error budget</strong></td>
+            <td>99.9% SLO (44 min/month)</td>
+            <td>99.99% SLO (4.4 min/month)</td>
+            <td>Set SLO to match actual user expectations, not aspirational targets. An overly tight SLO depletes budget on noise, freezes deployments constantly, and erodes team trust in SLOs as a tool</td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Anti-patterns -->
+    <section class="section" id="antipatterns">
+      <div class="section-label">What Not to Do</div>
+      <h2>Anti-patterns</h2>
+
+      <ul class="antipattern-list">
+        <li>
+          <strong>Retry without exponential backoff and jitter</strong>
+          Immediate retries on a failing service add load at the worst possible moment. Without jitter, all clients retry simultaneously, creating thundering herd spikes. Exponential backoff with jitter desynchronizes retriers and gives the recovering service breathing room. This pattern is specifically what AWS SDK, gRPC, and most HTTP client libraries implement — use their built-in retry logic, don't write your own without jitter.
+        </li>
+        <li>
+          <strong>Shared thread pool across all downstream calls (no bulkhead)</strong>
+          One slow or hanging service will eventually exhaust all available threads, blocking every other service call. Isolate each major dependency in its own bounded thread pool or connection pool. The cost is slightly higher memory and configuration; the benefit is blast-radius containment — one service failure can't bring down your whole service.
+        </li>
+        <li>
+          <strong>Setting SLAs tighter than SLOs</strong>
+          Your SLA is what you promise customers. Your SLO is what you achieve internally. If SLA = SLO = 99.9%, you have zero buffer — any SLO miss immediately breaches the customer contract. Set SLA conservatively below your SLO. The gap is your margin for measurement imprecision, external factors, and the occasional bad week.
+        </li>
+        <li>
+          <strong>Circuit breaker that never closes (stuck open)</strong>
+          A circuit breaker that opens but never half-opens means the downstream service can recover fully and your CB still rejects all calls. Verify your CB implementation transitions to HALF_OPEN after the recovery timeout. Also ensure the half-open probe doesn't itself time out too quickly — give the probe enough time to reflect actual service health.
+        </li>
+        <li>
+          <strong>Chaos engineering without defined steady state</strong>
+          Running chaos experiments without knowing what "normal" looks like means you can't tell if the experiment revealed a problem. Define your steady state metrics (error rate, p99 latency) before injecting failure. "Let's see what happens" is exploration, not engineering. "Hypothesis: killing one DB replica won't change error rate" is chaos engineering.
+        </li>
+        <li>
+          <strong>Single health check for both liveness and readiness</strong>
+          Liveness checks that include dependency checks (DB, Redis) will restart the pod if those dependencies are temporarily unavailable — even if the pod itself is fine. A DB blip causes every pod to restart simultaneously. Liveness should check only the process health. Readiness can check dependencies — it removes from load balancer, which is reversible.
+        </li>
+        <li>
+          <strong>Designing failover but never testing it</strong>
+          A DR runbook that hasn't been executed in 12 months is theoretical. DNS failover that hasn't been tested may have outdated IP ranges, wrong IAM permissions, or a missed dependency. Run quarterly failover drills. The first time you execute a failover should not be during an actual production incident. "We have DR" without regular drills means you have false confidence.
+        </li>
+        <li>
+          <strong>Error budget = 0 → full deployment freeze for the whole month</strong>
+          Exhausting error budget once doesn't mean all reliability-improving work stops. The freeze should cover risky feature deploys, not all deploys. Bug fixes, security patches, and reliability improvements should continue. An overly broad freeze causes safety patches to pile up, which itself becomes a risk.
+        </li>
+      </ul>
+    </section>
+
+    <!-- Interview Tips -->
+    <section class="section" id="interview-tips">
+      <div class="section-label">Interview Strategy</div>
+      <h2>Interview Tips for Reliability Questions</h2>
+
+      <div class="callout callout-red">
+        <div class="callout-title">The Reliability Interview Trap</div>
+        <p>Interviewers ask "how would you make this highly available?" Many candidates list infrastructure (multiple AZs, replicas, CDN). The signal interviewers are looking for is pattern knowledge: circuit breakers, bulkheads, graceful degradation, and SLOs. Infrastructure redundancy is necessary but not sufficient — the resilience patterns are what separate senior engineers from juniors.</p>
+      </div>
+
+      <div class="tips-grid">
+        <div class="tip-card">
+          <div class="tip-num">Tip 01</div>
+          <p><strong>Always define your SLO first.</strong> Before drawing any architecture, say "What's our availability target? 99.9% or 99.99%?" This shows you know the target determines the design — single-region for 99.9%, multi-region for 99.99%.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 02</div>
+          <p><strong>Name the circuit breaker when discussing service calls.</strong> Any time you draw a service-to-service call, say "I'd put a circuit breaker here with a fallback response." Name the states: closed, open, half-open. This signals you know the pattern, not just the concept.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 03</div>
+          <p><strong>Separate critical from non-critical dependencies.</strong> Explicitly tier your dependencies: "Recommendations are nice-to-have, so they have a tight circuit breaker and fall back to popular items. Payments are critical and must succeed." This shows product thinking alongside technical design.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 04</div>
+          <p><strong>Mention error budgets when discussing SLOs.</strong> "Our SLO is 99.9% availability, which gives us 43 minutes of downtime per month as our error budget. We freeze risky deploys when the budget is exhausted." This shows you've internalized how SLOs drive engineering decisions.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 05</div>
+          <p><strong>Distinguish RTO from RPO for DR questions.</strong> "RTO is how quickly we recover (how long is the service down). RPO is how much data we can afford to lose (how far back do we restore from)." These two numbers drive the entire failover architecture and few candidates can define both clearly.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 06</div>
+          <p><strong>Mention chaos engineering as a verification strategy.</strong> "I'd validate our circuit breaker and fallback behavior with chaos experiments — inject failure into the recommendation service and verify the fallback works without affecting user-facing checkout." This shows reliability thinking beyond design into verification.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p>KnowAlgo · Pattern 06: Reliability, Resilience &amp; Fault Tolerance · <a href="system-design.html">All Patterns</a> · <a href="index.html">DSA Guides</a></p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+<script>
+  window.addEventListener('scroll', () => {
+    const scrollTop = document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    document.getElementById('progress-bar').style.width = (scrollTop / scrollHeight * 100) + '%';
+  });
+
+  function copyCode(btn) {
+    const code = btn.nextElementSibling.querySelector('code');
+    navigator.clipboard.writeText(code.innerText).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  }
+
+  const tocLinks = document.querySelectorAll('.toc a');
+  const sections = document.querySelectorAll('section[id]');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.toc a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -75% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design Patterns – KnowAlgo</title>
+  <meta name="description" content="Master system design through 16 pattern clusters and 9 engineer perspectives. Learn what Infrastructure, Network, Platform, Security, Data, ML, Backend, Frontend, and SRE engineers think about for every problem type.">
+  <meta name="keywords" content="system design patterns, system design interview, load balancing, rate limiting, caching, distributed systems, microservices, cloud architecture, database design">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.netlify.app/system-design.html">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="System Design Patterns – KnowAlgo">
+  <meta property="og:description" content="16 pattern clusters. 9 engineer perspectives. Every type of system design problem covered.">
+  <meta property="og:url" content="https://knowalgo.netlify.app/system-design.html">
+  <meta property="og:site_name" content="KnowAlgo">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="System Design Patterns – KnowAlgo">
+  <meta name="twitter:description" content="16 pattern clusters. 9 engineer perspectives. Pattern-first system design.">
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <style>
+    :root {
+      --primary: #0d9488;
+      --primary-dark: #0f766e;
+      --primary-light: #f0fdfa;
+      --secondary: #4338ca;
+      --accent: #059669;
+      --bg: #f8fafc;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --card-bg: #ffffff;
+      --radius: 14px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Header ── */
+    header { background: #0f172a; position: sticky; top: 0; z-index: 100; }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto; padding: 0 1.5rem;
+      height: 64px; display: flex; align-items: center; gap: 2rem;
+    }
+    .logo { font-size: 1.3rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+    .logo span { color: #5eead4; }
+    .nav-links { display: flex; gap: 1.5rem; margin-left: auto; }
+    .nav-links a { color: #94a3b8; font-size: 0.9rem; font-weight: 500; }
+    .nav-links a:hover { color: #fff; text-decoration: none; }
+    .nav-links a.nav-active { color: #5eead4; }
+    .nav-cta {
+      background: var(--primary); color: #fff !important;
+      padding: 0.4rem 1rem; border-radius: 7px;
+    }
+    .nav-cta:hover { background: var(--primary-dark) !important; }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, #0f172a 0%, #134e4a 45%, #1e3a8a 100%);
+      color: white; padding: 5rem 1.5rem; text-align: center;
+    }
+    .hero-eyebrow {
+      display: inline-block;
+      background: rgba(94, 234, 212, 0.15);
+      border: 1px solid rgba(94, 234, 212, 0.3);
+      color: #5eead4; padding: 0.3rem 1rem; border-radius: 99px;
+      font-size: 0.8rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 1.25rem;
+    }
+    .back-pill {
+      display: inline-block;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #94a3b8; font-size: 0.82rem;
+      padding: 0.3rem 0.9rem; border-radius: 99px;
+      margin-bottom: 1.5rem;
+    }
+    .back-pill:hover { color: #fff; text-decoration: none; }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900;
+      line-height: 1.15; margin-bottom: 1.25rem; letter-spacing: -1px;
+    }
+    .hero h1 .accent { color: #5eead4; }
+    .hero p {
+      font-size: 1.15rem; opacity: 0.82; max-width: 640px;
+      margin: 0 auto 2rem; line-height: 1.7;
+    }
+    .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--primary); color: #fff;
+      padding: 0.75rem 1.75rem; border-radius: 10px;
+      font-weight: 700; font-size: 1rem;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      transition: background 0.15s;
+    }
+    .btn-primary:hover { background: var(--primary-dark); text-decoration: none; }
+    .btn-secondary {
+      background: rgba(255,255,255,0.1); color: #fff;
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 0.75rem 1.75rem; border-radius: 10px;
+      font-weight: 600; font-size: 1rem; transition: background 0.15s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.18); text-decoration: none; }
+
+    /* ── Stats ── */
+    .stats-bar { background: #fff; border-bottom: 1px solid var(--border); }
+    .stats-inner {
+      max-width: 1200px; margin: 0 auto; padding: 1.25rem 1.5rem;
+      display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap;
+    }
+    .stat { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; }
+    .stat-num { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+
+    /* ── Sections ── */
+    section { padding: 4rem 1.5rem; }
+    .section-inner { max-width: 1200px; margin: 0 auto; }
+    .section-tag {
+      display: inline-block; background: var(--primary-light); color: var(--primary);
+      padding: 0.2rem 0.8rem; border-radius: 99px; font-size: 0.75rem;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 800;
+      margin-bottom: 0.75rem; letter-spacing: -0.5px;
+    }
+    .section-subtitle {
+      color: var(--text-muted); font-size: 1.05rem;
+      max-width: 620px; margin-bottom: 2.5rem;
+    }
+
+    /* ── Cards ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.25rem;
+    }
+    .topic-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.15s; display: block;
+    }
+    .topic-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); text-decoration: none; }
+    .topic-card.soon { cursor: default; opacity: 0.78; }
+    .topic-card.soon:hover { transform: none; box-shadow: none; }
+    .card-banner { height: 6px; }
+    .b-blue    { background: linear-gradient(to right, #2563eb, #7c3aed); }
+    .b-cyan    { background: linear-gradient(to right, #0891b2, #2563eb); }
+    .b-teal    { background: linear-gradient(to right, #0d9488, #0891b2); }
+    .b-emerald { background: linear-gradient(to right, #16a34a, #0d9488); }
+    .b-violet  { background: linear-gradient(to right, #7c3aed, #db2777); }
+    .b-amber   { background: linear-gradient(to right, #f59e0b, #ef4444); }
+    .b-orange  { background: linear-gradient(to right, #f97316, #dc2626); }
+    .b-pink    { background: linear-gradient(to right, #db2777, #9333ea); }
+    .b-gray    { background: linear-gradient(to right, #475569, #64748b); }
+    .b-green   { background: linear-gradient(to right, #16a34a, #2563eb); }
+    .b-indigo  { background: linear-gradient(to right, #4338ca, #7c3aed); }
+    .b-red     { background: linear-gradient(to right, #dc2626, #7c3aed); }
+    .card-body { padding: 1.5rem; }
+    .card-icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
+    .card-title { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; }
+    .card-desc { font-size: 0.875rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1rem; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; }
+    .card-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .ctag {
+      background: #f1f5f9; color: #475569;
+      padding: 0.15rem 0.5rem; border-radius: 5px;
+      font-size: 0.72rem; font-weight: 600;
+    }
+    .card-status { font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 99px; white-space: nowrap; }
+    .s-live { background: #d1fae5; color: #065f46; }
+    .s-soon { background: #fef3c7; color: #92400e; }
+
+    /* ── Approach strip ── */
+    .approach-bg { background: #fff; }
+    .approach-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 2rem;
+    }
+    .approach-item { text-align: center; }
+    .approach-num { font-size: 2.25rem; font-weight: 900; color: var(--primary); line-height: 1; margin-bottom: 0.5rem; }
+    .approach-item h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .approach-item p { font-size: 0.875rem; color: var(--text-muted); }
+
+    /* ── Engineer cards ── */
+    .engineer-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .eng-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem; border-top: 3px solid;
+    }
+    .eng-icon { font-size: 1.75rem; margin-bottom: 0.5rem; }
+    .eng-name { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text); }
+    .eng-focus { font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; }
+    .ec-infra    { border-top-color: #2563eb; }
+    .ec-network  { border-top-color: #0891b2; }
+    .ec-platform { border-top-color: #7c3aed; }
+    .ec-security { border-top-color: #dc2626; }
+    .ec-data     { border-top-color: #059669; }
+    .ec-ml       { border-top-color: #d97706; }
+    .ec-backend  { border-top-color: #0f172a; }
+    .ec-frontend { border-top-color: #db2777; }
+    .ec-sre      { border-top-color: #16a34a; }
+
+    /* ── Problem taxonomy ── */
+    .ptag-cloud { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.5rem; }
+    .ptag {
+      background: #fff; border: 1px solid var(--border); color: var(--text);
+      padding: 0.4rem 0.9rem; border-radius: 99px; font-size: 0.85rem; font-weight: 500;
+    }
+    .ptag-hi {
+      background: var(--primary-light); border-color: #5eead4;
+      color: var(--primary); font-weight: 600;
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: linear-gradient(135deg, #0f172a 0%, #134e4a 50%, #1e3a8a 100%);
+      color: #fff; text-align: center; padding: 4rem 1.5rem;
+    }
+    .cta-section h2 { font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 800; margin-bottom: 0.75rem; }
+    .cta-section p { opacity: 0.82; font-size: 1.05rem; margin-bottom: 2rem; }
+
+    /* ── Footer ── */
+    footer { background: #0f172a; color: #94a3b8; text-align: center; padding: 2.5rem 1.5rem; font-size: 0.875rem; }
+    footer a { color: #5eead4; }
+    .footer-links { display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 1rem; flex-wrap: wrap; }
+
+    @media (max-width: 640px) {
+      .nav-links .hide-mob { display: none; }
+      .hero { padding: 3rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ HEADER ═══════════ -->
+<header>
+  <nav class="nav-inner">
+    <div class="logo">Know<span>Algo</span></div>
+    <div class="nav-links">
+      <a href="index.html" class="hide-mob">DSA</a>
+      <a href="system-design.html" class="nav-active hide-mob">System Design</a>
+      <a href="interview-prep.html" class="hide-mob">Interview Prep</a>
+      <a href="system-design-traffic.html" class="nav-cta">Start Learning →</a>
+    </div>
+  </nav>
+</header>
+
+<main>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero">
+  <a href="index.html" class="back-pill">← Back to DSA</a>
+  <div class="hero-eyebrow">Pattern-Based · Multi-Role · No Fluff</div>
+  <h1>Master <span class="accent">System Design</span><br>Through Patterns</h1>
+  <p>
+    16 pattern clusters. 9 engineer perspectives. Every problem type covered.
+    Learn what each role optimizes for — and how decisions compound into architecture.
+  </p>
+  <div class="hero-btns">
+    <a href="system-design-traffic.html" class="btn-primary">Start: Traffic Shaping →</a>
+    <a href="#patterns" class="btn-secondary">Browse All Patterns</a>
+  </div>
+</section>
+
+<!-- ═══════════ STATS ═══════════ -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat"><span class="stat-num">16</span><span class="stat-label">Pattern Clusters</span></div>
+    <div class="stat"><span class="stat-num">9</span><span class="stat-label">Engineer Perspectives</span></div>
+    <div class="stat"><span class="stat-num">15+</span><span class="stat-label">Problem Types</span></div>
+    <div class="stat"><span class="stat-num">100%</span><span class="stat-label">Free Forever</span></div>
+  </div>
+</div>
+
+<!-- ═══════════ APPROACH ═══════════ -->
+<section class="approach-bg">
+  <div class="section-inner">
+    <div class="section-tag">The Approach</div>
+    <h2 class="section-title">Pattern-First, Not Concept-First</h2>
+    <p class="section-subtitle">
+      Most resources teach what a CDN is. We teach when to reach for one,
+      who owns the decision, and what every engineering role trades off.
+    </p>
+    <div class="approach-grid">
+      <div class="approach-item">
+        <div class="approach-num">01</div>
+        <h3>Recognize the Trigger</h3>
+        <p>Each pattern has a problem shape that makes you reach for it. Identify it before opening your mouth.</p>
+      </div>
+      <div class="approach-item">
+        <div class="approach-num">02</div>
+        <h3>Apply the Pattern</h3>
+        <p>Canonical ASCII architecture diagrams and decision flowcharts — not vague descriptions.</p>
+      </div>
+      <div class="approach-item">
+        <div class="approach-num">03</div>
+        <h3>See Every Role's Lens</h3>
+        <p>Infra, Network, Platform, Security, Data, ML, Backend, Frontend, SRE — each role's take on every cluster.</p>
+      </div>
+      <div class="approach-item">
+        <div class="approach-num">04</div>
+        <h3>Know the Trade-offs</h3>
+        <p>No hand-waving. Every decision has a cost. We show both sides of every table.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ PATTERN CLUSTERS ═══════════ -->
+<section id="patterns">
+  <div class="section-inner">
+    <div class="section-tag">16 Pattern Clusters</div>
+    <h2 class="section-title">Every System Design Pattern</h2>
+    <p class="section-subtitle">
+      Organized by the problem shape you encounter in an interview — not by technology category.
+    </p>
+
+    <div class="cards-grid">
+
+      <!-- 01 Traffic Shaping — LIVE -->
+      <a href="system-design-traffic.html" class="topic-card">
+        <div class="card-banner b-blue"></div>
+        <div class="card-body">
+          <span class="card-icon">⚡</span>
+          <div class="card-title">Traffic Shaping & Load Distribution</div>
+          <div class="card-desc">Load balancing algorithms, rate limiting patterns (token bucket, leaky bucket, sliding window), auto-scaling reactive vs predictive, and traffic routing. The first thing every system design starts with.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">Load Balancing</span><span class="ctag">Rate Limiting</span><span class="ctag">Auto-Scaling</span></div>
+            <span class="card-status s-live">Live ✓</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 02 Caching -->
+      <a href="system-design-caching.html" class="topic-card">
+        <div class="card-banner b-cyan"></div>
+        <div class="card-body">
+          <span class="card-icon">🔥</span>
+          <div class="card-title">Caching & Latency Reduction</div>
+          <div class="card-desc">In-memory caching (Redis, Memcached), CDN patterns, write-through vs write-back vs write-around, cache invalidation strategies, cache stampede, and read-through patterns.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">Redis</span><span class="ctag">CDN</span><span class="ctag">Eviction</span></div>
+            <span class="card-status s-live">Live ✓</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 03 Data Storage -->
+      <a href="system-design-storage.html" class="topic-card">
+        <div class="card-banner b-emerald"></div>
+        <div class="card-body">
+          <span class="card-icon">🗄️</span>
+          <div class="card-title">Data Storage Selection & Schema Design</div>
+          <div class="card-desc">SQL vs NoSQL decision tree, sharding strategies (range, hash, directory), replication topologies, indexing, time-series databases, blob/object storage, and search engines.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">SQL vs NoSQL</span><span class="ctag">Sharding</span><span class="ctag">Replication</span></div>
+            <span class="card-status s-live">Live ✓</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 04 API & Communication -->
+      <a href="system-design-apis.html" class="topic-card">
+        <div class="card-banner b-violet"></div>
+        <div class="card-body">
+          <span class="card-icon">🔌</span>
+          <div class="card-title">API & Communication Protocols</div>
+          <div class="card-desc">REST vs gRPC vs GraphQL, sync vs async, long polling vs SSE vs WebSockets, API versioning strategies, API gateway patterns, and protocol selection decision tree.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">REST</span><span class="ctag">gRPC</span><span class="ctag">GraphQL</span></div>
+            <span class="card-status s-live">Live ✓</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 05 Async Processing -->
+      <a href="system-design-async.html" class="topic-card">
+        <div class="card-banner b-amber"></div>
+        <div class="card-body">
+          <span class="card-icon">📨</span>
+          <div class="card-title">Async Processing & Message Passing</div>
+          <div class="card-desc">Message queues (Kafka, SQS, RabbitMQ), pub/sub patterns, event streaming, worker pools, dead letter queues, at-least-once vs exactly-once delivery guarantees.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">Kafka</span><span class="ctag">Pub/Sub</span><span class="ctag">Workers</span></div>
+            <span class="card-status s-live">Live ✓</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 06 Reliability -->
+      <a href="system-design-reliability.html" class="topic-card">
+        <div class="card-banner b-orange"></div>
+        <div class="card-body">
+          <span class="card-icon">🛡️</span>
+          <div class="card-title">Reliability, Resilience & Fault Tolerance</div>
+          <div class="card-desc">Circuit breaker, retry with exponential backoff + jitter, bulkhead pattern, graceful degradation, health checks, chaos engineering, and SLA / SLO / SLI definitions.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">Circuit Breaker</span><span class="ctag">Retry</span><span class="ctag">Bulkhead</span></div>
+            <span class="card-status s-live">Live ✓</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 07 Distributed Consistency -->
+      <a href="system-design-consistency.html" class="topic-card">
+        <div class="card-banner b-pink"></div>
+        <div class="card-body">
+          <span class="card-icon">⚖️</span>
+          <div class="card-title">Distributed Consistency & Coordination</div>
+          <div class="card-desc">CAP theorem, PACELC, strong vs eventual consistency, distributed transactions, SAGA pattern, two-phase commit, consensus algorithms (Raft / Paxos), and distributed locks.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">CAP Theorem</span><span class="ctag">SAGA</span><span class="ctag">Raft/Paxos</span></div>
+            <span class="card-status s-live">Live ✓</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 08 Data Pipelines -->
+      <a href="system-design-pipelines.html" class="topic-card">
+        <div class="card-banner b-teal"></div>
+        <div class="card-body">
+          <span class="card-icon">🔄</span>
+          <div class="card-title">Data Processing Pipelines</div>
+          <div class="card-desc">Batch vs stream processing, ETL/ELT patterns, Lambda architecture, Kappa architecture, change data capture (CDC), data lineage, and backfill at scale.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">ETL/ELT</span><span class="ctag">Lambda</span><span class="ctag">CDC</span></div>
+            <span class="card-status s-live">Live ✓</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 09 Security -->
+      <div class="topic-card soon">
+        <div class="card-banner b-gray"></div>
+        <div class="card-body">
+          <span class="card-icon">🔒</span>
+          <div class="card-title">Security & Access Control</div>
+          <div class="card-desc">AuthN/AuthZ (OAuth 2.0, JWT, SSO, SAML), zero trust architecture, secrets management, encryption at rest and in transit, DDoS protection patterns, and WAF design.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">OAuth / JWT</span><span class="ctag">Zero Trust</span><span class="ctag">WAF</span></div>
+            <span class="card-status s-soon">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10 Observability -->
+      <div class="topic-card soon">
+        <div class="card-banner b-green"></div>
+        <div class="card-body">
+          <span class="card-icon">👁️</span>
+          <div class="card-title">Observability & SRE</div>
+          <div class="card-desc">The three pillars (metrics, logs, traces), alerting strategy, SLOs and error budgets, incident response design, on-call runbooks, and chaos engineering approaches.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">Metrics</span><span class="ctag">Tracing</span><span class="ctag">SLO</span></div>
+            <span class="card-status s-soon">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 11 Migration -->
+      <div class="topic-card soon">
+        <div class="card-banner b-amber"></div>
+        <div class="card-body">
+          <span class="card-icon">🚀</span>
+          <div class="card-title">Migration & System Evolution</div>
+          <div class="card-desc">Monolith to microservices (strangler fig), on-prem to cloud, mainframe modernization, database migration without downtime, blue-green and canary deployments, feature flags.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">Strangler Fig</span><span class="ctag">Blue-Green</span><span class="ctag">Canary</span></div>
+            <span class="card-status s-soon">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 12 Platform -->
+      <div class="topic-card soon">
+        <div class="card-banner b-indigo"></div>
+        <div class="card-body">
+          <span class="card-icon">🏗️</span>
+          <div class="card-title">Platform & Developer Infrastructure</div>
+          <div class="card-desc">Internal developer platforms, service mesh (Istio/Envoy), API gateways, Kubernetes patterns (HPA, pod disruption budgets), container orchestration, and CI/CD pipeline design.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">Kubernetes</span><span class="ctag">Service Mesh</span><span class="ctag">IDP</span></div>
+            <span class="card-status s-soon">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 13 ML/AI -->
+      <div class="topic-card soon">
+        <div class="card-banner b-pink"></div>
+        <div class="card-body">
+          <span class="card-icon">🤖</span>
+          <div class="card-title">ML / AI Systems Design</div>
+          <div class="card-desc">Feature stores, model training pipelines, online vs batch inference, A/B testing and shadow mode, vector databases, RAG architecture, embedding serving, and LLM infrastructure.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">Feature Store</span><span class="ctag">Model Serving</span><span class="ctag">Vector DB</span></div>
+            <span class="card-status s-soon">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 14 Real-Time -->
+      <div class="topic-card soon">
+        <div class="card-banner b-blue"></div>
+        <div class="card-body">
+          <span class="card-icon">📡</span>
+          <div class="card-title">Real-Time & Event-Driven Systems</div>
+          <div class="card-desc">WebSockets vs SSE vs long polling, event sourcing, CQRS pattern, collaborative editing (OT / CRDT), real-time analytics pipelines, and time-series database design.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">WebSockets</span><span class="ctag">Event Sourcing</span><span class="ctag">CQRS</span></div>
+            <span class="card-status s-soon">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 15 IoT & Edge -->
+      <div class="topic-card soon">
+        <div class="card-banner b-teal"></div>
+        <div class="card-body">
+          <span class="card-icon">🌐</span>
+          <div class="card-title">IoT & Edge Computing</div>
+          <div class="card-desc">MQTT and CoAP protocols, edge vs cloud compute decision tree, device management at scale, telemetry ingestion pipelines, OTA firmware updates, and digital twin patterns.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">MQTT</span><span class="ctag">Edge Computing</span><span class="ctag">OTA</span></div>
+            <span class="card-status s-soon">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 16 Global Distribution -->
+      <div class="topic-card soon">
+        <div class="card-banner b-violet"></div>
+        <div class="card-body">
+          <span class="card-icon">🌍</span>
+          <div class="card-title">Global Distribution & Multi-Region</div>
+          <div class="card-desc">Geographic routing, data residency requirements, multi-region active-active vs active-passive, cross-region replication, DNS-based failover, anycast, and latency SLA design.</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="ctag">Anycast</span><span class="ctag">Active-Active</span><span class="ctag">Data Residency</span></div>
+            <span class="card-status s-soon">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ ENGINEER PERSPECTIVES ═══════════ -->
+<section style="background:#fff">
+  <div class="section-inner">
+    <div class="section-tag">9 Engineering Roles</div>
+    <h2 class="section-title">Every Pattern, Every Perspective</h2>
+    <p class="section-subtitle">
+      The same system looks fundamentally different depending on who's building it.
+      Each cluster page breaks down exactly what each role owns and optimizes for.
+    </p>
+    <div class="engineer-grid">
+      <div class="eng-card ec-infra">
+        <div class="eng-icon">🖥️</div>
+        <div class="eng-name">Infrastructure Engineer</div>
+        <div class="eng-focus">Servers, cloud resources, auto-scaling groups, cost optimization, IaC (Terraform/Pulumi), provisioning, capacity planning, and on-call runbooks.</div>
+      </div>
+      <div class="eng-card ec-network">
+        <div class="eng-icon">🌐</div>
+        <div class="eng-name">Network Engineer</div>
+        <div class="eng-focus">Latency, bandwidth, DNS design, BGP routing, CDN edge placement, load balancer config, anycast, DDoS absorption, and TCP tuning.</div>
+      </div>
+      <div class="eng-card ec-platform">
+        <div class="eng-icon">🏗️</div>
+        <div class="eng-name">Platform Engineer</div>
+        <div class="eng-focus">Developer experience, service mesh, Kubernetes patterns, CI/CD pipelines, internal tooling, service catalog, and golden paths.</div>
+      </div>
+      <div class="eng-card ec-security">
+        <div class="eng-icon">🔒</div>
+        <div class="eng-name">Security / Cyber Engineer</div>
+        <div class="eng-focus">Threat modeling, encryption, AuthN/AuthZ, zero trust rollout, secrets management, compliance (SOC 2, GDPR, HIPAA, PCI-DSS).</div>
+      </div>
+      <div class="eng-card ec-data">
+        <div class="eng-icon">📊</div>
+        <div class="eng-name">Data Engineer</div>
+        <div class="eng-focus">Storage selection, pipeline design, consistency model, schema evolution, partitioning strategy, data lineage, and backfill.</div>
+      </div>
+      <div class="eng-card ec-ml">
+        <div class="eng-icon">🤖</div>
+        <div class="eng-name">ML / AI Engineer</div>
+        <div class="eng-focus">Feature stores, model serving latency, training pipeline design, drift detection, vector databases, and embedding serving infrastructure.</div>
+      </div>
+      <div class="eng-card ec-backend">
+        <div class="eng-icon">⚙️</div>
+        <div class="eng-name">Backend Engineer</div>
+        <div class="eng-focus">API design, database query optimization, caching strategy, service boundaries, connection pooling, and framework-level decisions.</div>
+      </div>
+      <div class="eng-card ec-frontend">
+        <div class="eng-icon">🎨</div>
+        <div class="eng-name">Frontend Engineer</div>
+        <div class="eng-focus">CDN for assets, SSR vs CSR vs SSG tradeoffs, API contracts, optimistic UI updates, offline-first design, and bundle strategy.</div>
+      </div>
+      <div class="eng-card ec-sre">
+        <div class="eng-icon">📈</div>
+        <div class="eng-name">SRE / Reliability Engineer</div>
+        <div class="eng-focus">SLOs, error budgets, incident response design, on-call philosophy, chaos engineering, runbooks, and postmortem culture.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ PROBLEM TAXONOMY ═══════════ -->
+<section>
+  <div class="section-inner">
+    <div class="section-tag">Problem Taxonomy</div>
+    <h2 class="section-title">Every Problem Shape Has a Pattern</h2>
+    <p class="section-subtitle">
+      System design interviews throw you a problem, not a pattern name. These are the problem types that map back to the 16 clusters above — work backwards from the problem to find your pattern.
+    </p>
+    <div class="ptag-cloud">
+      <span class="ptag ptag-hi">Scale Problems</span>
+      <span class="ptag ptag-hi">Monolith → Microservices</span>
+      <span class="ptag ptag-hi">Database Rearchitecture</span>
+      <span class="ptag ptag-hi">Mainframe Modernization</span>
+      <span class="ptag">On-Prem → Cloud</span>
+      <span class="ptag">Platform Port</span>
+      <span class="ptag">Latency SLA Problems</span>
+      <span class="ptag">Reliability &amp; SPOF Removal</span>
+      <span class="ptag">Security Compliance Gap</span>
+      <span class="ptag">Cost Optimization</span>
+      <span class="ptag">Real-Time System Design</span>
+      <span class="ptag">Data Pipeline Failures</span>
+      <span class="ptag">Building an Internal Platform</span>
+      <span class="ptag">ML / AI at Scale</span>
+      <span class="ptag">Global Expansion</span>
+      <span class="ptag">IoT Telemetry Ingestion</span>
+      <span class="ptag">Traffic Spike &amp; Viral Events</span>
+      <span class="ptag">Greenfield vs Legacy Evolution</span>
+      <span class="ptag">Storage Migration</span>
+      <span class="ptag">Capacity &amp; Cost Planning</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ CTA ═══════════ -->
+<section class="cta-section">
+  <h2>Start With the Most-Tested Pattern</h2>
+  <p>Traffic Shaping &amp; Load Distribution appears in nearly every system design interview. Load balancers, rate limiting, auto-scaling — all 9 engineer perspectives covered with ASCII diagrams and real interview problems.</p>
+  <a href="system-design-traffic.html" class="btn-primary">Traffic Shaping & Load Distribution →</a>
+</section>
+
+</main>
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer>
+  <div class="footer-links">
+    <a href="index.html">DSA Patterns</a>
+    <a href="system-design.html">System Design</a>
+    <a href="interview-prep.html">Interview Prep</a>
+    <a href="system-design-traffic.html">Traffic Shaping</a>
+  </div>
+  <p>KnowAlgo &mdash; Free forever. No ads, no paywalls.</p>
+</footer>
+
+</body>
+</html>

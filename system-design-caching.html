@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caching & Latency Reduction – System Design Patterns | KnowAlgo</title>
+  <meta name="description" content="Master caching patterns for system design: cache topology (L1/L2/CDN), write strategies (write-through, write-back, write-around), cache invalidation, thundering herd, CDN design, and eviction policies. 9 engineer perspectives included.">
+  <meta name="keywords" content="caching system design, Redis cache, CDN caching, write-through write-back, cache invalidation, thundering herd, LRU LFU eviction, distributed cache, cache aside pattern">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.netlify.app/system-design-caching.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Caching & Latency Reduction – System Design Patterns">
+  <meta property="og:description" content="Cache topology, write strategies, invalidation, CDN patterns, and eviction policies — with 9 engineer perspectives and 3 real interview problems.">
+  <meta property="og:url" content="https://knowalgo.netlify.app/system-design-caching.html">
+  <meta property="og:site_name" content="KnowAlgo">
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-light: #e0f2fe;
+      --secondary: #059669;
+      --accent: #7c3aed;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --bg: #f8fafc;
+      --bg-card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #1e293b;
+      --toc-width: 260px;
+      --header-h: 64px;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    ul, ol { padding-left: 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+
+    .reading-progress { position: fixed; top: 0; left: 0; height: 3px; width: 0; background: linear-gradient(to right, #06b6d4, #2563eb); z-index: 999; transition: width 0.1s; }
+
+    .topnav { position: sticky; top: 0; z-index: 200; background: #fff; border-bottom: 1px solid var(--border); height: var(--header-h); display: flex; align-items: center; padding: 0 1.5rem; gap: 1rem; box-shadow: var(--shadow); }
+    .topnav-logo { font-weight: 800; font-size: 1.25rem; color: #0284c7; letter-spacing: -0.5px; }
+    .topnav-sep { color: var(--border); }
+    .topnav-crumb { color: var(--text-muted); font-size: 0.9rem; }
+    .topnav-crumb-active { color: #0284c7; font-weight: 600; }
+    .topnav-links { margin-left: auto; display: flex; gap: 1rem; align-items: center; }
+    .topnav-links a { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
+    .topnav-links a:hover { color: var(--primary); text-decoration: none; }
+    .btn-home { background: #0284c7; color: #fff !important; padding: 0.35rem 0.9rem; border-radius: 6px; font-size: 0.85rem !important; }
+    .btn-home:hover { background: #0369a1; }
+
+    .page-layout { display: grid; grid-template-columns: var(--toc-width) 1fr; max-width: 1400px; margin: 0 auto; min-height: calc(100vh - var(--header-h)); }
+
+    .toc-sidebar { position: sticky; top: var(--header-h); height: calc(100vh - var(--header-h)); overflow-y: auto; padding: 1.5rem 1rem; border-right: 1px solid var(--border); background: #fff; }
+    .toc-sidebar::-webkit-scrollbar { width: 4px; }
+    .toc-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .toc-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .toc-list { list-style: none; padding: 0; }
+    .toc-list li { margin-bottom: 0; }
+    .toc-list a { display: block; padding: 0.3rem 0.75rem; border-radius: 6px; font-size: 0.875rem; color: var(--text-muted); transition: all 0.15s; border-left: 2px solid transparent; }
+    .toc-list a:hover, .toc-list a.active { color: var(--primary); background: var(--primary-light); border-left-color: var(--primary); text-decoration: none; }
+    .toc-list .toc-sub a { padding-left: 1.5rem; font-size: 0.82rem; }
+    .toc-divider { border: none; border-top: 1px solid var(--border); margin: 0.75rem 0; }
+    .toc-next { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .toc-next-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem; }
+    .toc-prev-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem; margin-top: 1rem; }
+
+    .main-content { padding: 2rem 2.5rem; max-width: 900px; }
+
+    .hero { background: linear-gradient(135deg, #0f172a 0%, #0c4a6e 45%, #1e3a8a 100%); color: white; border-radius: var(--radius); padding: 2.5rem; margin-bottom: 2.5rem; }
+    .hero-badge { display: inline-block; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); padding: 0.2rem 0.7rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1rem; }
+    .hero h1 { font-size: 2.25rem; font-weight: 800; line-height: 1.2; margin-bottom: 0.75rem; }
+    .hero p { font-size: 1.05rem; opacity: 0.88; max-width: 600px; margin-bottom: 1.25rem; }
+    .hero-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .hero-meta span { font-size: 0.85rem; opacity: 0.82; display: flex; align-items: center; gap: 0.4rem; }
+
+    .section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; margin-bottom: 1.75rem; scroll-margin-top: calc(var(--header-h) + 1rem); }
+    .section h2 { font-size: 1.5rem; font-weight: 700; color: var(--text); margin-bottom: 1rem; padding-bottom: 0.6rem; border-bottom: 2px solid var(--primary-light); display: flex; align-items: center; gap: 0.6rem; }
+    .section-icon { font-size: 1.3rem; }
+    .section h3 { font-size: 1.15rem; font-weight: 650; color: var(--text); margin: 1.5rem 0 0.6rem; }
+    .section h4 { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin: 1rem 0 0.4rem; text-transform: uppercase; letter-spacing: 0.3px; }
+    .section p { margin-bottom: 0.85rem; color: #334155; }
+    .section p:last-child { margin-bottom: 0; }
+
+    .callout { border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0; border-left: 4px solid; font-size: 0.9rem; }
+    .callout-info { background: #e0f2fe; border-color: #0284c7; color: #0c4a6e; }
+    .callout-tip { background: #f0fdf4; border-color: #059669; color: #065f46; }
+    .callout-warn { background: #fffbeb; border-color: #d97706; color: #92400e; }
+    .callout strong { display: block; margin-bottom: 0.3rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .arch-diagram { background: var(--code-bg); border-radius: 10px; padding: 1.5rem; margin: 1.25rem 0; font-family: 'Courier New', Courier, monospace; color: #94a3b8; font-size: 0.82rem; line-height: 1.9; overflow-x: auto; white-space: pre; }
+    .arch-diagram .c  { color: #f8fafc; font-weight: 700; }
+    .arch-diagram .lb { color: #fbbf24; font-weight: 700; }
+    .arch-diagram .sv { color: #34d399; font-weight: 700; }
+    .arch-diagram .db { color: #a78bfa; font-weight: 700; }
+    .arch-diagram .ca { color: #fb923c; font-weight: 700; }
+    .arch-diagram .ok { color: #34d399; font-weight: 700; }
+    .arch-diagram .er { color: #f87171; font-weight: 700; }
+    .arch-diagram .hl { color: #fbbf24; }
+    .arch-diagram .cm { color: #475569; font-style: italic; }
+    .arch-diagram .cy { color: #67e8f9; font-weight: 700; }   /* cyan — CDN / cache layer */
+
+    .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0; }
+    .insight-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+    .insight-card .ic-icon { font-size: 1.75rem; margin-bottom: 0.5rem; }
+    .insight-card h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.35rem; color: var(--text); text-transform: none; letter-spacing: 0; }
+    .insight-card p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+
+    .code-wrap { position: relative; margin: 1rem 0; border-radius: 10px; overflow: hidden; }
+    .code-header { background: #0f172a; padding: 0.6rem 1rem; display: flex; align-items: center; justify-content: space-between; }
+    .code-lang { font-size: 0.78rem; color: #64748b; font-family: 'Courier New', monospace; text-transform: uppercase; letter-spacing: 0.5px; }
+    .copy-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 0.25rem 0.65rem; border-radius: 5px; font-size: 0.75rem; cursor: pointer; transition: all 0.15s; }
+    .copy-btn:hover { background: #334155; color: #e2e8f0; }
+    .copy-btn.copied { color: #34d399; border-color: #34d399; }
+    .code-wrap pre[class*="language-"] { margin: 0; border-radius: 0; border: none; font-size: 0.875rem; max-height: 480px; }
+
+    .table-wrap { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { background: #0284c7; color: #fff; padding: 0.65rem 1rem; text-align: left; font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.3px; }
+    td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    .badge-a { color: #065f46; background: #d1fae5; padding: 0.15rem 0.5rem; border-radius: 99px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+    .badge-b { color: #92400e; background: #fef3c7; padding: 0.15rem 0.5rem; border-radius: 99px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+
+    .eng-take { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 1.25rem; }
+    .eng-take-header { padding: 1rem 1.25rem; display: flex; gap: 0.75rem; align-items: center; border-left: 4px solid; }
+    .eng-take-icon { font-size: 1.5rem; }
+    .eng-take-role { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+    .eng-take-focus { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.1rem; }
+    .eng-take-body { padding: 1.25rem 1.5rem; background: #fff; }
+    .eng-take-body p { font-size: 0.9rem; color: #334155; margin-bottom: 0.65rem; }
+    .eng-take-body p:last-child { margin-bottom: 0; }
+    .eng-take-body ul { font-size: 0.9rem; color: #334155; }
+    .et-infra .eng-take-header    { border-left-color: #2563eb; background: #eff6ff; }
+    .et-network .eng-take-header  { border-left-color: #0891b2; background: #ecfeff; }
+    .et-platform .eng-take-header { border-left-color: #7c3aed; background: #f5f3ff; }
+    .et-security .eng-take-header { border-left-color: #dc2626; background: #fef2f2; }
+    .et-data .eng-take-header     { border-left-color: #059669; background: #f0fdf4; }
+    .et-ml .eng-take-header       { border-left-color: #d97706; background: #fffbeb; }
+    .et-backend .eng-take-header  { border-left-color: #475569; background: #f8fafc; }
+    .et-frontend .eng-take-header { border-left-color: #db2777; background: #fdf2f8; }
+    .et-sre .eng-take-header      { border-left-color: #16a34a; background: #f0fdf4; }
+
+    .problem-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; scroll-margin-top: calc(var(--header-h) + 1rem); }
+    .problem-header { padding: 1.25rem 1.5rem; background: #f8fafc; border-bottom: 1px solid var(--border); }
+    .problem-num { font-size: 0.78rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 0.3rem; }
+    .problem-title { font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+    .problem-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .ptag { background: var(--primary-light); color: var(--primary); padding: 0.15rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
+    .problem-body { padding: 1.5rem; }
+    .problem-body h4 { color: var(--text); font-size: 0.88rem; text-transform: uppercase; letter-spacing: 0.3px; margin: 1.25rem 0 0.4rem; }
+    .problem-body h4:first-child { margin-top: 0; }
+    .problem-body p { font-size: 0.9rem; color: #334155; margin-bottom: 0.5rem; }
+    .problem-body ul { font-size: 0.9rem; color: #334155; }
+
+    .antipattern-list { list-style: none; padding: 0; }
+    .antipattern-list li { padding: 0.85rem 1rem; border-radius: 8px; margin-bottom: 0.6rem; border-left: 4px solid #dc2626; background: #fef2f2; font-size: 0.9rem; color: #334155; }
+    .antipattern-list li strong { color: #991b1b; display: block; margin-bottom: 0.2rem; }
+
+    .tip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+    .tip-card { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 1.25rem; }
+    .tip-card .tip-num { font-size: 1.5rem; font-weight: 900; color: #16a34a; line-height: 1; margin-bottom: 0.4rem; }
+    .tip-card h4 { font-size: 0.95rem; font-weight: 700; color: #065f46; margin-bottom: 0.35rem; text-transform: none; letter-spacing: 0; }
+    .tip-card p { font-size: 0.85rem; color: #166534; margin: 0; }
+
+    code:not([class]) { background: #f1f5f9; color: #7c3aed; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.88em; font-family: 'Courier New', monospace; }
+
+    .compare-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin: 1rem 0; }
+    .compare-card { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .compare-head { padding: 0.65rem 1rem; font-weight: 700; font-size: 0.85rem; text-align: center; }
+    .compare-body { padding: 0.75rem 1rem; }
+    .compare-body p { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.3rem; }
+    .compare-body p:last-child { margin-bottom: 0; }
+    .cc-blue  .compare-head { background: #dbeafe; color: #1d4ed8; }
+    .cc-green .compare-head { background: #d1fae5; color: #065f46; }
+    .cc-amber .compare-head { background: #fef3c7; color: #92400e; }
+
+    footer { background: #0f172a; color: #94a3b8; text-align: center; padding: 2rem 1rem; font-size: 0.875rem; margin-top: 3rem; }
+    footer a { color: #67e8f9; }
+
+    @media (max-width: 900px) { .page-layout { grid-template-columns: 1fr; } .toc-sidebar { display: none; } .main-content { padding: 1rem; } .hero h1 { font-size: 1.75rem; } }
+    @media (max-width: 600px) { .topnav-links .hide-mob { display: none; } .hero { padding: 1.5rem; } }
+  </style>
+</head>
+<body>
+
+<div class="reading-progress" id="readingProgress"></div>
+
+<nav class="topnav">
+  <span class="topnav-logo">KnowAlgo</span>
+  <span class="topnav-sep">/</span>
+  <a href="system-design.html" class="topnav-crumb">System Design</a>
+  <span class="topnav-sep">/</span>
+  <span class="topnav-crumb topnav-crumb-active">Caching</span>
+  <div class="topnav-links">
+    <a href="system-design.html" class="hide-mob">All Patterns</a>
+    <a href="index.html" class="hide-mob">DSA</a>
+    <a href="index.html" class="btn-home">← Home</a>
+  </div>
+</nav>
+
+<div class="page-layout">
+
+  <aside class="toc-sidebar">
+    <div class="toc-title">On This Page</div>
+    <ul class="toc-list">
+      <li><a href="#overview">Pattern Overview</a></li>
+      <li><a href="#problem">The Core Problem</a></li>
+      <li><a href="#topology">Cache Topology</a></li>
+      <li class="toc-sub"><a href="#l1-cache">L1: In-Process Cache</a></li>
+      <li class="toc-sub"><a href="#l2-cache">L2: Distributed Cache</a></li>
+      <li class="toc-sub"><a href="#l3-cdn">L3: CDN / Edge Cache</a></li>
+      <hr class="toc-divider">
+      <li><a href="#read-strategies">Read Strategies</a></li>
+      <li class="toc-sub"><a href="#cache-aside">Cache-Aside</a></li>
+      <li class="toc-sub"><a href="#read-through">Read-Through</a></li>
+      <hr class="toc-divider">
+      <li><a href="#write-strategies">Write Strategies</a></li>
+      <li class="toc-sub"><a href="#write-through">Write-Through</a></li>
+      <li class="toc-sub"><a href="#write-back">Write-Back</a></li>
+      <li class="toc-sub"><a href="#write-around">Write-Around</a></li>
+      <hr class="toc-divider">
+      <li><a href="#invalidation">Cache Invalidation</a></li>
+      <li class="toc-sub"><a href="#ttl-based">TTL-Based</a></li>
+      <li class="toc-sub"><a href="#event-driven">Event-Driven</a></li>
+      <li class="toc-sub"><a href="#stampede">Thundering Herd</a></li>
+      <hr class="toc-divider">
+      <li><a href="#cdn-patterns">CDN Patterns</a></li>
+      <li class="toc-sub"><a href="#static-assets">Static Assets</a></li>
+      <li class="toc-sub"><a href="#api-caching">API Response Caching</a></li>
+      <li class="toc-sub"><a href="#cache-control">Cache-Control Headers</a></li>
+      <hr class="toc-divider">
+      <li><a href="#eviction">Eviction Policies</a></li>
+      <hr class="toc-divider">
+      <li><a href="#perspectives">Engineer Perspectives</a></li>
+      <hr class="toc-divider">
+      <li><a href="#real-problems">Real Problems</a></li>
+      <li class="toc-sub"><a href="#newsfeed-cache">News Feed Cache</a></li>
+      <li class="toc-sub"><a href="#youtube-cdn">YouTube CDN</a></li>
+      <li class="toc-sub"><a href="#leaderboard-cache">Leaderboard Cache</a></li>
+      <hr class="toc-divider">
+      <li><a href="#tradeoffs">Trade-offs</a></li>
+      <li><a href="#antipatterns">Anti-patterns</a></li>
+      <li><a href="#interview-tips">Interview Tips</a></li>
+    </ul>
+    <div class="toc-next">
+      <div class="toc-prev-label">Previous</div>
+      <a href="system-design-traffic.html">← Traffic Shaping</a>
+      <div class="toc-next-label" style="margin-top:0.75rem;">Next Pattern</div>
+      <a href="system-design-storage.html">Data Storage →</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <div class="hero" id="overview">
+      <div class="hero-badge">Pattern 02 of 16 &nbsp;·&nbsp; System Design</div>
+      <h1>Caching &amp;<br>Latency Reduction</h1>
+      <p>When response time is dominated by slow data retrieval — database queries, external API calls, disk reads — a cache layer serves hot data from fast memory, turning 50ms round-trips into sub-millisecond lookups.</p>
+      <div class="hero-meta">
+        <span>⚡ Trigger: p99 latency above SLO, DB CPU-bound on reads</span>
+        <span>🎯 Goal: High hit ratio, low staleness, no stampede</span>
+        <span>👥 Primary owners: Backend, Infra, Data</span>
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <strong>When to reach for this pattern</strong>
+      Your database is the bottleneck on read queries. The same data is read far more often than it's written. Response time SLOs are being missed. Read traffic is scaling faster than you can vertically scale the database. Any of these is a trigger for a caching layer.
+    </div>
+
+    <!-- ═══ CORE PROBLEM ═══ -->
+    <div class="section" id="problem">
+      <h2><span class="section-icon">🔴</span> The Core Problem</h2>
+      <p>Every read path without a cache hits the database. At high read volume, the database becomes the bottleneck — not because writes are too fast, but because reads dominate and the DB is doing the same work repeatedly for the same data.</p>
+
+      <div class="arch-diagram"><span class="cm">Without cache — same data fetched from DB on every request:</span>
+
+<span class="c">User A</span>  ──► <span class="sv">API Server</span> ──► <span class="db">Database</span>  [<span class="hl">SELECT * FROM products WHERE id=42</span>]  50ms
+<span class="c">User B</span>  ──► <span class="sv">API Server</span> ──► <span class="db">Database</span>  [<span class="hl">SELECT * FROM products WHERE id=42</span>]  52ms
+<span class="c">User C</span>  ──► <span class="sv">API Server</span> ──► <span class="db">Database</span>  [<span class="hl">SELECT * FROM products WHERE id=42</span>]  49ms
+<span class="c">...10,000 users/sec</span>                   ↑ identical query, 10,000 times
+
+<span class="er">Result: DB CPU at 90%, p99 latency at 800ms, query queue backing up.</span>
+
+<span class="cm">With cache — DB fetched once, served from memory for all subsequent requests:</span>
+
+<span class="c">User A</span>  ──► <span class="sv">API Server</span> ──► <span class="ca">Cache MISS</span> ──► <span class="db">DB</span> ──► Store in cache  50ms
+<span class="c">User B</span>  ──► <span class="sv">API Server</span> ──► <span class="ca">Cache HIT</span>  ──► Return cached value          <span class="ok">0.5ms</span>
+<span class="c">User C</span>  ──► <span class="sv">API Server</span> ──► <span class="ca">Cache HIT</span>  ──► Return cached value          <span class="ok">0.5ms</span>
+<span class="c">...10,000 users/sec</span>               99% hit ratio → DB sees 100 req/sec
+
+<span class="ok">Result: DB CPU at 8%, p99 latency at 2ms, DB query queue empty.</span></div>
+
+      <p>The key insight: read traffic rarely needs the freshest possible data for every request. A product page that was accurate 10 seconds ago is good enough for 99.9% of use cases. The 10-second staleness window is what the cache exploits.</p>
+    </div>
+
+    <!-- ═══ CACHE TOPOLOGY ═══ -->
+    <div class="section" id="topology">
+      <h2><span class="section-icon">🏗️</span> Cache Topology</h2>
+      <p>Modern systems layer multiple caches at different distances from the data source. Each layer trades freshness for speed. Closer to the user = faster but smaller; closer to the DB = slower but larger and more accurate.</p>
+
+      <div class="arch-diagram"><span class="c">User</span>
+  │
+  ▼
+<span class="cy">CDN Edge (L3)</span>          ← Cloudflare, CloudFront, Fastly
+  │  Miss (first req)     Speed: 5–20ms   Size: PB range   Shared: globally
+  ▼
+<span class="ca">In-Process Cache (L1)</span>   ← Python dict, Guava LoadingCache, caffeine (Java)
+  │  Miss                 Speed: 0.1ms    Size: MB range   Shared: per-instance only
+  ▼
+<span class="ca">Distributed Cache (L2)</span>  ← Redis, Memcached, DragonflyDB
+  │  Miss                 Speed: 1–5ms    Size: TB range   Shared: all app servers
+  ▼
+<span class="db">Database / Origin</span>       ← Postgres, MySQL, MongoDB, S3
+                         Speed: 10–200ms  Size: unlimited  Source of truth</div>
+
+      <h3 id="l1-cache">L1: In-Process (Application-Level) Cache</h3>
+      <p>A dictionary or map living in the same process as the application. Zero network overhead — a lookup is a pointer dereference. Used for data that is read extremely frequently, changes very rarely, and is the same for all users.</p>
+
+      <div class="arch-diagram"><span class="cm">Example: Cache country list (changes once a year)</span>
+
+Application startup:
+  countries = load_from_db()           <span class="cm"># one DB call at boot</span>
+  _cache = {"countries": countries}    <span class="cm"># in-process dict, lives forever</span>
+
+Every request:
+  return _cache["countries"]           <span class="cm"># 0.05ms — pure memory access</span>
+
+<span class="er">Problems with L1 cache:</span>
+  • Each server has its own copy → 10 servers = 10 different versions of the same data
+  • An update to the DB is not reflected until each server restarts or its local cache expires
+  • Memory leak risk if keys grow unbounded — always set a max size + eviction policy
+
+<span class="ok">Good for:</span>
+  • Static config (feature flags, country codes, supported currencies)
+  • Compiled regex patterns, parsed templates
+  • Data fetched at startup that changes &lt; once per day</div>
+
+      <h3 id="l2-cache">L2: Distributed Cache (Redis / Memcached)</h3>
+      <p>A shared in-memory store reachable by all application servers. The standard cache layer for production systems. Redis is the default choice — it supports rich data structures (strings, hashes, lists, sets, sorted sets, bitmaps, streams) and optional persistence.</p>
+
+      <div class="arch-diagram"><span class="cm">All app servers share one Redis cluster:</span>
+
+<span class="sv">App Server 1</span> ─┐
+<span class="sv">App Server 2</span> ──┤──► <span class="ca">Redis Cluster</span>  ──► <span class="db">Database</span> (on cache miss)
+<span class="sv">App Server 3</span> ─┘     (3 shards, 6 nodes)
+
+Redis data structures and their use cases:
+  STRING    "user:42:name"  = "Alice"              <span class="cm">→ simple key-value, serialized JSON</span>
+  HASH      "user:42"       = {name, email, age}   <span class="cm">→ object fields, partial updates</span>
+  SORTED SET "leaderboard"  = {alice:9800, bob:9200} <span class="cm">→ rankings, top-K queries</span>
+  LIST      "user:42:feed"  = [post_id_1, post_id_2] <span class="cm">→ feed, queue, recent items</span>
+  SET       "user:42:following" = {user_id_1, ...} <span class="cm">→ membership checks O(1)</span>
+  BITMAP    "daily_active"  = bit per user_id      <span class="cm">→ HyperLogLog for unique counts</span>
+
+Redis vs Memcached:
+  Redis:      data structures, persistence, pub/sub, Lua scripts, cluster mode
+  Memcached:  simpler, multi-threaded, pure strings only, slightly faster for simple GET/SET</div>
+
+      <h3 id="l3-cdn">L3: CDN / Edge Cache</h3>
+      <p>A globally distributed network of edge servers (Points of Presence — PoPs) that cache content close to the user. The first cache hit happens before the request even leaves the user's region.</p>
+
+      <div class="arch-diagram"><span class="c">User in Tokyo</span>
+  │  GET /images/banner.png
+  ▼
+<span class="cy">Cloudflare Tokyo PoP</span>   ← edge server 8ms from user
+  │  Cache HIT → return immediately                 <span class="ok">8ms total</span>
+  │
+  │  Cache MISS → forward to origin
+  ▼
+<span class="sv">Origin Server</span> (US-East)  ← 160ms RTT from Tokyo
+  │  Send image + Cache-Control: max-age=86400
+  ▼
+<span class="cy">Tokyo PoP caches image</span>   ← all subsequent Tokyo requests: <span class="ok">8ms</span>
+
+CDN providers: Cloudflare, AWS CloudFront, Fastly, Akamai, GCP CDN
+
+Cache hit ratios by content type (typical):
+  Static images/CSS/JS:  99%+   (long TTL, content-addressed URLs)
+  Video segments:        95%+   (large files, re-watched)
+  API responses:         60–85% (depends on how query-specific the response is)
+  HTML pages:            50–75% (if not personalized)</div>
+    </div>
+
+    <!-- ═══ READ STRATEGIES ═══ -->
+    <div class="section" id="read-strategies">
+      <h2><span class="section-icon">📖</span> Read Strategies</h2>
+
+      <h3 id="cache-aside">Cache-Aside (Lazy Loading)</h3>
+      <p>The application manages the cache explicitly. On a read: check the cache. Hit → return. Miss → load from DB, populate cache, return. This is the most common pattern — the application code owns the caching logic.</p>
+
+      <div class="arch-diagram"><span class="cm">Cache-Aside read flow:</span>
+
+  def get_user(user_id):
+      key = f"user:{user_id}"
+
+      <span class="cm"># Step 1: Check cache</span>
+      cached = redis.get(key)
+      if cached:
+          return deserialize(cached)    <span class="ok"># cache HIT — 0.5ms</span>
+
+      <span class="cm"># Step 2: Cache miss — load from DB</span>
+      user = db.query("SELECT * FROM users WHERE id = ?", user_id)
+
+      <span class="cm"># Step 3: Populate cache for next request</span>
+      redis.setex(key, 300, serialize(user))   <span class="cm"># TTL = 5 minutes</span>
+
+      return user                              <span class="ok"># 50ms first time only</span>
+
+Characteristics:
+  <span class="ok">✓</span> Only caches data that is actually read (no wasted memory)
+  <span class="ok">✓</span> Cache failure is non-fatal — requests fall back to DB
+  <span class="ok">✓</span> Application controls exactly what is cached and for how long
+  <span class="er">✗</span> First request after cold start / expiry always hits DB (cold start penalty)
+  <span class="er">✗</span> Cache can become stale between TTL and event-driven invalidation</div>
+
+      <h3 id="read-through">Read-Through Cache</h3>
+      <p>The cache itself fetches from the DB on a miss, invisible to the application. The application only ever talks to the cache — it never touches the DB directly for reads.</p>
+
+      <div class="arch-diagram"><span class="cm">Read-Through flow:</span>
+
+  Application ──► <span class="ca">Cache Layer</span> ──► <span class="db">Database</span>  (on miss only)
+                      ↑
+            Application always reads from here.
+            Cache handles miss → DB fetch → populate → return.
+
+  Examples: AWS DAX (DynamoDB Accelerator), read-through proxies
+
+  Cache-Aside vs Read-Through:
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │  Cache-Aside:    App knows about both cache AND DB                  │
+  │  Read-Through:   App only knows about cache; cache knows about DB   │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  When to prefer Read-Through:
+    • Multiple services reading the same data — centralize cache logic
+    • ORM/DAL layer that can abstract the DB access
+    • When you want consistent caching behavior across all readers</div>
+    </div>
+
+    <!-- ═══ WRITE STRATEGIES ═══ -->
+    <div class="section" id="write-strategies">
+      <h2><span class="section-icon">✍️</span> Write Strategies</h2>
+      <p>How you handle writes determines cache consistency. There is no perfect answer — every strategy trades write latency for data freshness or durability risk.</p>
+
+      <h3 id="write-through">Write-Through</h3>
+      <div class="arch-diagram"><span class="cm">Write-Through: write to cache AND database synchronously</span>
+
+  <span class="c">Client</span> ──► <span class="sv">App</span> ──► Write to <span class="ca">Cache</span>  ──►  Write to <span class="db">DB</span>  ──► <span class="ok">Response</span>
+
+  def update_user(user_id, data):
+      db.update("UPDATE users SET ... WHERE id = ?", user_id, data)
+      redis.setex(f"user:{user_id}", 300, serialize(data))
+
+  <span class="ok">✓</span> Cache is always consistent with DB after every write
+  <span class="ok">✓</span> Subsequent reads always get fresh data from cache
+  <span class="er">✗</span> Write latency = DB write time + cache write time (additive)
+  <span class="er">✗</span> Writes data to cache even if it will never be read again (wasted memory)
+
+  Best for: data that is read frequently after writes (user profiles, settings)</div>
+
+      <h3 id="write-back">Write-Back (Write-Behind)</h3>
+      <div class="arch-diagram"><span class="cm">Write-Back: write to cache immediately, DB write is deferred/async</span>
+
+  <span class="c">Client</span> ──► <span class="sv">App</span> ──► Write to <span class="ca">Cache</span> ──► <span class="ok">Return immediately</span> (fast!)
+                                  │
+                             async worker
+                                  │
+                                  ▼
+                             Write to <span class="db">DB</span> (batched, every N seconds)
+
+  <span class="ok">✓</span> Extremely fast writes — client sees success after cache write only
+  <span class="ok">✓</span> DB writes can be batched — fewer, larger writes are more efficient
+  <span class="er">✗</span> <span class="er">Data loss risk:</span> if cache crashes before async DB write, data is gone
+  <span class="er">✗</span> More complex — requires durable queue or write-behind log
+  <span class="er">✗</span> Inconsistency window: DB lags behind cache by seconds to minutes
+
+  Best for: high-write, loss-tolerant data (view counts, like counts, analytics events)
+  Not for: financial transactions, order records, anything requiring durability</div>
+
+      <h3 id="write-around">Write-Around</h3>
+      <div class="arch-diagram"><span class="cm">Write-Around: write only to DB, skip the cache entirely</span>
+
+  <span class="c">Client</span> ──► <span class="sv">App</span> ──► Write to <span class="db">DB</span> only ──► <span class="ok">Response</span>
+                          (cache not touched)
+
+  Next read for this key:
+  <span class="c">Client</span> ──► <span class="sv">App</span> ──► <span class="ca">Cache MISS</span> ──► <span class="db">DB</span> ──► Populate cache ──► Return
+
+  <span class="ok">✓</span> Prevents polluting cache with data that may never be re-read
+  <span class="ok">✓</span> Cache memory used only for actually-read data
+  <span class="er">✗</span> First read after a write always goes to DB (cold read penalty)
+  <span class="er">✗</span> Temporary inconsistency: old cached value may be returned until TTL expires
+
+  Best for: write-heavy data that is rarely re-read (batch jobs, archive uploads,
+            event logs), or infrequently read items where cache pollution is a concern</div>
+
+      <div class="callout callout-tip">
+        <strong>Practical rule of thumb</strong>
+        Write-through for user-facing data where reads follow writes (profiles, settings). Write-around for batch/bulk data unlikely to be re-read soon. Write-back only when write throughput is the bottleneck and data loss is acceptable (view counts, analytics).
+      </div>
+    </div>
+
+    <!-- ═══ INVALIDATION ═══ -->
+    <div class="section" id="invalidation">
+      <h2><span class="section-icon">🗑️</span> Cache Invalidation</h2>
+      <p>"There are only two hard things in computer science: cache invalidation and naming things." The challenge: how do you ensure clients see updated data without hammering the DB on every request?</p>
+
+      <h3 id="ttl-based">TTL-Based Expiration</h3>
+      <div class="arch-diagram"><span class="cm">TTL (Time-To-Live): key automatically expires after N seconds</span>
+
+  redis.setex("user:42:profile", 300, value)    <span class="cm"># expires in 5 minutes</span>
+
+  t=0s:   Key set, TTL = 300s
+  t=150s: User updates their name in DB
+          <span class="er">Cache still has old value. Stale for up to 150 more seconds.</span>
+  t=300s: Key expires. Next request → DB → fresh value → re-cache
+
+  Design questions for TTL choice:
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │  How stale can this data be without affecting user experience?       │
+  │  How often does this data actually change?                          │
+  │  What is the cost of a cache miss (DB query time, DB load)?         │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  Typical TTLs by data type:
+    User profile:        5–30 min   (changes rarely, stale OK for short time)
+    Product inventory:   30–60 sec  (changes often, must be fairly fresh)
+    Session token:       match auth token lifetime (15–60 min)
+    Trending content:    10–60 sec  (freshness matters for relevance)
+    Static config:       1 hour+    (changes very rarely)
+    API rate limit counter: exact window size (60 sec for per-minute limit)</div>
+
+      <h3 id="event-driven">Event-Driven Invalidation</h3>
+      <div class="arch-diagram"><span class="cm">Event-driven: explicitly delete/update cache when data changes</span>
+
+  Write path:
+  <span class="c">User</span> updates profile ──► <span class="sv">User Service</span>
+                                   │
+                          ┌────────┤
+                          │        │
+                          ▼        ▼
+                   Update <span class="db">DB</span>    Delete from <span class="ca">Cache</span>
+                           (or publish "user_updated" event)
+                                   │
+                         <span class="ca">Cache subscriber</span> deletes key
+
+  Next read:
+  <span class="c">User</span> reads profile ──► <span class="ca">Cache MISS</span> ──► <span class="db">DB</span> ──► fresh value ──► re-cache ──► return
+
+  <span class="ok">✓</span> Data is fresh immediately after write (no stale window)
+  <span class="ok">✓</span> Works with event-driven architectures (Kafka, SNS, Redis Pub/Sub)
+  <span class="er">✗</span> Delete-on-write and populate-on-read has a race condition window
+  <span class="er">✗</span> If cache delete fails (network error), stale data persists until TTL
+  <span class="er">✗</span> More complex — requires coordination between write service and cache
+
+  Best practice: combine both — event-driven delete + short TTL as safety net
+  "Delete on write, TTL as backstop" is the production-proven pattern</div>
+
+      <h3 id="stampede">Thundering Herd / Cache Stampede</h3>
+      <div class="arch-diagram"><span class="cm">The problem: a popular key expires → thousands of requests hit DB simultaneously</span>
+
+  t=0s:   "trending:posts" key set, TTL=60s, 10,000 req/sec hitting this key
+  t=60s:  Key expires
+          All 10,000 concurrent requests see a cache miss
+          All 10,000 go to DB simultaneously
+          <span class="er">DB overwhelmed → timeouts → cascading failure</span>
+
+<span class="cm">── Fix 1: Probabilistic Early Expiration (PER) ────────────────────────</span>
+
+  As key approaches expiry, a random % of requests refresh it early.
+  The earlier you check, the higher the chance of early refresh.
+
+  def get_with_per(key, ttl, beta=1.0):
+      value, expiry = cache.get_with_ttl(key)
+      remaining = expiry - now()
+      if remaining - beta * log(random()) &lt; 0:
+          value = fetch_from_db()      <span class="cm"># refresh before expiry</span>
+          cache.setex(key, ttl, value)
+      return value
+
+<span class="cm">── Fix 2: Mutex / Lock ──────────────────────────────────────────────────</span>
+
+  On cache miss:
+    Try to acquire Redis lock "lock:trending:posts" (SETNX, expire 5s)
+    If lock acquired:  fetch DB → populate cache → release lock
+    If lock NOT acquired: wait briefly, then re-check cache (now populated)
+
+<span class="cm">── Fix 3: Background Refresh (Proactive) ───────────────────────────────</span>
+
+  A background worker refreshes the cache key before it expires.
+  Application always reads from cache — never experiences a miss.
+  Requires knowing which keys need proactive refresh (precomputed set).
+  Best for: small set of extremely hot keys (top trending, homepage data)</div>
+    </div>
+
+    <!-- ═══ CDN PATTERNS ═══ -->
+    <div class="section" id="cdn-patterns">
+      <h2><span class="section-icon">🌐</span> CDN Patterns</h2>
+
+      <h3 id="static-assets">Static Asset Caching</h3>
+      <div class="arch-diagram"><span class="cm">Content-addressed URLs — cache forever, invalidate by changing the URL:</span>
+
+  app.abc123.js    ← Cache-Control: max-age=31536000, immutable (1 year)
+  app.def456.js    ← New version → new hash → new URL → new cache entry
+  logo.v3.png      ← Same pattern for images
+
+  Why this works:
+    Content hash in filename ensures URL only changes when content changes.
+    CDN caches the file for 1 year — zero origin hits for returning users.
+    Deploying new version: new hash → new URL → CDN fetches fresh → old URL
+    still cached but app no longer references it.
+
+<span class="cm">Without content addressing (wrong approach):</span>
+
+  app.js           ← Cache-Control: max-age=3600
+  Deploy new version → CDN serves old version for up to 1 hour
+  Users see stale JS → broken UI
+  Emergency: purge CDN cache (expensive, not instant, inconsistent)</div>
+
+      <h3 id="api-caching">API Response Caching at CDN</h3>
+      <div class="arch-diagram"><span class="cm">Non-personalized API responses can be cached at the CDN edge:</span>
+
+  GET /api/trending/posts
+  Response headers: Cache-Control: public, s-maxage=60, stale-while-revalidate=30
+
+  Result:
+    CDN caches for 60 seconds.
+    During those 60s: 1 origin request serves millions of CDN cache hits.
+    After 60s + 30s stale window: serve stale, revalidate in background (SWR).
+
+<span class="cm">What CAN be CDN-cached:</span>
+  • GET /api/products/{id}         (product details — same for all users)
+  • GET /api/trending/posts        (trending feed — same for all users)
+  • GET /api/countries             (static lists)
+  • GET /api/events/upcoming       (same for all users in a region)
+
+<span class="cm">What CANNOT be CDN-cached:</span>
+  • GET /api/me                    (personalized — use Cache-Control: private)
+  • GET /api/user/42/notifications (user-specific)
+  • Any response that uses Authorization header for user context
+  • POST, PUT, DELETE, PATCH       (not idempotent)</div>
+
+      <h3 id="cache-control">Cache-Control Headers</h3>
+      <div class="arch-diagram"><span class="hl">Cache-Control directives:</span>
+
+  <span class="ok">public</span>               → CDN AND browser can cache
+  <span class="ok">private</span>              → browser only (NOT CDN) — for personalized responses
+  <span class="ok">no-cache</span>             → must revalidate with server before using cache (ETag check)
+  <span class="ok">no-store</span>             → never cache anywhere — for sensitive data (medical, banking)
+  <span class="ok">max-age=300</span>          → browser caches for 300s
+  <span class="ok">s-maxage=600</span>         → CDN caches for 600s (overrides max-age for CDNs only)
+  <span class="ok">stale-while-revalidate=30</span>  → serve stale for 30s while refreshing async
+  <span class="ok">immutable</span>            → content will never change — browser never revalidates
+
+<span class="cm">Decision guide:</span>
+
+  Is response user-specific?
+    YES → Cache-Control: private, max-age=60
+    NO  → Is content static and content-addressed?
+              YES → Cache-Control: public, max-age=31536000, immutable
+              NO  → Is freshness critical?
+                        YES → Cache-Control: public, s-maxage=30, stale-while-revalidate=10
+                        NO  → Cache-Control: public, s-maxage=300</div>
+    </div>
+
+    <!-- ═══ EVICTION ═══ -->
+    <div class="section" id="eviction">
+      <h2><span class="section-icon">🗂️</span> Eviction Policies</h2>
+      <p>When a cache is full, something must be removed to make room for new entries. The eviction policy determines which key gets sacrificed. Choosing the wrong policy causes hot keys to be evicted, destroying your hit ratio.</p>
+
+      <div class="arch-diagram"><span class="cm">── LRU (Least Recently Used) ── default for most caches ───────────────</span>
+
+  Access history: A → B → C → D → A → B   (capacity = 3)
+  Current cache: [A, B, D]   C was evicted as least recently used
+
+  <span class="ok">✓</span> Excellent for temporal locality (recently used = likely to be used again)
+  <span class="ok">✓</span> Simple to reason about and implement
+  <span class="er">✗</span> A one-time scan of many keys can evict hot keys (scan pollution)
+  Good for: general-purpose caches, hot-data access patterns
+
+<span class="cm">── LFU (Least Frequently Used) ─────────────────────────────────────────</span>
+
+  Access counts: A=500 B=3 C=7 D=45
+  Evict: B (fewest accesses over its lifetime)
+
+  <span class="ok">✓</span> Retains long-term popular items (viral videos, top products)
+  <span class="er">✗</span> New items start with count=1 and get evicted even if they become hot
+  <span class="er">✗</span> Frequency counts need decay or items from past dominate
+  Good for: recommendation caches, CDN edge caches, long-lived popularity
+
+<span class="cm">── FIFO (First In First Out) ────────────────────────────────────────────</span>
+
+  Evicts the oldest inserted key regardless of access frequency or recency.
+  Simple but ignores access patterns — often evicts still-hot data.
+  Good for: rate limit windows, event logs, time-bucketed data
+
+<span class="cm">── Redis maxmemory-policy options ──────────────────────────────────────</span>
+
+  allkeys-lru      → evict any key using LRU approximation        <span class="ok">← most common</span>
+  volatile-lru     → evict only keys with TTL set, using LRU
+  allkeys-lfu      → evict any key using LFU (Redis 4.0+)         <span class="ok">← good for CDN</span>
+  volatile-lfu     → evict only keys with TTL using LFU
+  allkeys-random   → evict random key (surprisingly OK for uniform access)
+  volatile-random  → evict random key with TTL
+  volatile-ttl     → evict key with shortest remaining TTL
+  <span class="er">noeviction</span>       → return error on writes when full (default — almost always wrong)</div>
+
+      <div class="callout callout-warn">
+        <strong>Never use noeviction in production</strong>
+        The default Redis <code>maxmemory-policy</code> is <code>noeviction</code> — Redis returns an error to the application when memory is full. Your application will crash or throw exceptions at exactly the worst moment (high traffic). Always set an eviction policy explicitly. <code>allkeys-lru</code> is the right default for most caches.
+      </div>
+    </div>
+
+    <!-- ═══ ENGINEER PERSPECTIVES ═══ -->
+    <div class="section" id="perspectives">
+      <h2><span class="section-icon">👥</span> Engineer Perspectives</h2>
+      <p>Every role interacts with caching differently. Here's what each one owns and optimizes for.</p>
+
+      <div class="eng-take et-infra">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">🖥️</span>
+          <div>
+            <div class="eng-take-role">Infrastructure Engineer</div>
+            <div class="eng-take-focus">Redis cluster sizing · Persistence · High availability · Cost</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p>My first job is sizing the Redis cluster correctly. Formula: <code>(avg_key_bytes + avg_value_bytes + 64 bytes overhead) × num_keys × 1.2 safety factor</code>. Redis reports memory usage via <code>INFO memory</code> — <code>used_memory_rss</code> is what the OS actually allocates. I provision Redis at no more than 75% of the instance's RAM, leaving headroom for memory spikes and the fork() call during RDB snapshot.</p>
+          <p>Persistence decisions: for a pure cache, I use <strong>RDB snapshots</strong> only (save every 5 minutes, accept losing up to 5 minutes of cache data on crash — it's just a cache, the DB is the source of truth). For a cache that doubles as a session store or rate limit counter, I add <strong>AOF (append-only file)</strong> with <code>appendfsync everysec</code> for better durability with acceptable performance.</p>
+          <p>For HA: <strong>Redis Sentinel</strong> for a single shard (primary + 2 replicas + 3 sentinel processes for quorum). <strong>Redis Cluster</strong> for horizontal scale (6 nodes minimum: 3 primary shards, 3 replicas). Managed services (AWS ElastiCache, Redis Cloud) handle failover automatically at higher cost — worth it for most teams.</p>
+        </div>
+      </div>
+
+      <div class="eng-take et-network">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">🌐</span>
+          <div>
+            <div class="eng-take-role">Network Engineer</div>
+            <div class="eng-take-focus">CDN PoP coverage · Egress cost · Latency · Connection pooling</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p>CDN hit ratio directly controls my egress bill. Every cache miss at the edge → origin pull → egress charges. At scale, the difference between 85% and 95% hit ratio is not 10% more traffic to origin — it's the difference between manageable and catastrophic egress costs. I optimize hit ratio by: increasing TTL where freshness allows, ensuring cache keys don't include query parameters that vary per user, and warming the CDN after deploys.</p>
+          <p>Redis latency: the round-trip time to Redis should be &lt;1ms for same-AZ co-located caches. If Redis is in a different AZ (cross-AZ latency = 1–2ms), or a different region (10–50ms), the cache stops being fast. I always co-locate Redis and app servers in the same AZ. Connection pooling matters: opening a new TCP connection to Redis per request costs 0.5–1ms. Keep a persistent connection pool — minimum 5 connections per app server thread/goroutine.</p>
+          <p>CDN cache bypass headers: some debugging tools or bots can send headers that bypass the CDN cache (<code>Cache-Control: no-cache</code>, <code>Pragma: no-cache</code>). In production I configure the CDN to <strong>ignore these request headers</strong> — only origin response headers should control CDN caching behavior. Otherwise, a crawler with no-cache headers can drain your CDN and hammer origin.</p>
+        </div>
+      </div>
+
+      <div class="eng-take et-platform">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">🏗️</span>
+          <div>
+            <div class="eng-take-role">Platform Engineer</div>
+            <div class="eng-take-focus">Cache as a platform service · K8s Redis patterns · Cache warm-up</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p>I provide Redis as a shared platform service — a multi-tenant Redis cluster where each service gets its own key namespace prefix (<code>svc-a:*</code>, <code>svc-b:*</code>). This is cost-effective but requires enforcing key prefixes and memory quotas per service (Redis doesn't natively enforce per-prefix quotas, so I track usage via keyspace notifications and alert when a service exceeds its allocation).</p>
+          <p>In Kubernetes: Redis is deployed as a <strong>StatefulSet</strong> (not a Deployment) because it needs stable pod identity and persistent storage (PV/PVC for RDB snapshots). The headless service gives each pod a stable DNS name. For production, I prefer a managed Redis (ElastiCache) over self-managed in K8s — running stateful workloads in K8s adds operational complexity for little gain unless you need very custom Redis configurations.</p>
+          <p><strong>Cache warm-up on deployment</strong>: a new app instance starts with an empty L1 cache and generates extra L2 cache misses. I add a warm-up step in the startup hook that pre-fetches the 100 most-accessed keys from Redis into the local in-process cache before the pod starts accepting traffic. The readiness probe doesn't pass until warm-up completes — prevents a cold instance from getting traffic before it's ready.</p>
+        </div>
+      </div>
+
+      <div class="eng-take et-security">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">🔒</span>
+          <div>
+            <div class="eng-take-role">Security / Cyber Engineer</div>
+            <div class="eng-take-focus">Redis auth · Encryption · Cache poisoning · PII in cache</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p>Redis ships with <strong>no authentication and no TLS by default</strong>. In any production environment: (1) enable <code>requirepass</code> with a strong password, (2) bind Redis to a private IP only (never 0.0.0.0), (3) enable TLS (<code>tls-port</code> in Redis 6+), (4) put Redis on a private subnet with a security group allowing only app server IPs. A misconfigured Redis open to the internet is one of the most common breach vectors — attackers use Shodan to find open Redis instances and execute arbitrary commands.</p>
+          <p><strong>PII in cache</strong>: what you cache is what you must protect. If you cache user objects containing name, email, and address, the cache needs the same data-at-rest protection as the database. AWS ElastiCache supports encryption at rest. For self-managed Redis: consider encrypting values at the application layer before storing in Redis, using AES-256. Key: the encryption adds latency but removes the risk of cached PII being exposed if Redis memory is dumped.</p>
+          <p><strong>Cache key injection / poisoning</strong>: if the cache key is derived from user input without sanitization, an attacker can craft a key that collides with another user's cached data. Example: if cache key = <code>"user:" + request.headers["X-User-ID"]</code> and the header is user-controlled, the attacker sets the header to another user's ID. Fix: always derive cache keys from authenticated, server-side identity — never from unvalidated request parameters.</p>
+        </div>
+      </div>
+
+      <div class="eng-take et-data">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">📊</span>
+          <div>
+            <div class="eng-take-role">Data Engineer</div>
+            <div class="eng-take-focus">Cache key design · Read patterns · Aggregate caching · Stampede at data scale</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p>Cache is a read concern — design keys around your read access patterns, not your write access patterns. If your API serves user data by user_id, your cache key is <code>user:{user_id}</code>. If it serves by email, you need <code>user_email:{email}</code> → <code>user_id</code>, then <code>user:{user_id}</code>. Storing the same data under multiple keys for different access patterns is normal and expected.</p>
+          <p><strong>Cache key versioning</strong> is how you invalidate the entire cache without flushing it. Instead of <code>user:42:profile</code>, use <code>v1:user:42:profile</code>. When the schema changes, bump the version to <code>v2:</code> — all old keys are now unreachable (they'll expire via TTL) and new reads populate fresh v2 keys. Zero downtime invalidation of potentially millions of keys.</p>
+          <p>For aggregated data (leaderboards, trending counts, daily active users), I use Redis native data structures rather than caching serialized DB query results. A <strong>Redis Sorted Set</strong> for a leaderboard is more memory-efficient and query-efficient than caching a JSON array. <code>ZADD</code>, <code>ZRANK</code>, <code>ZRANGE</code> are O(log N) — faster than even a cached SELECT query at scale.</p>
+        </div>
+      </div>
+
+      <div class="eng-take et-ml">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">🤖</span>
+          <div>
+            <div class="eng-take-role">ML / AI Engineer</div>
+            <div class="eng-take-focus">Embedding cache · Feature store serving layer · Prediction cache</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p><strong>Embedding caches</strong>: computing embeddings is expensive (GPU time, API costs). If the same text input appears multiple times — product descriptions, FAQ entries, support ticket templates — cache the embedding keyed by a hash of the input text. Content hash as key ensures the cache is invalidated automatically when the text changes. Redis string with a 24-hour TTL works well for most embedding caches.</p>
+          <p>The <strong>online feature store</strong> is a specialized cache. Feast, Tecton, and similar tools use Redis as the low-latency serving layer for feature vectors. A feature store fetches precomputed features (last 30 purchases, user demographics, real-time event counts) from Redis in &lt;5ms to feed into inference. The alternative — computing features in real-time from raw data — would add 100–500ms to every inference request. The trade-off: feature freshness is bounded by the feature pipeline update frequency (typically minutes to hours).</p>
+          <p><strong>LLM prediction caching</strong>: for deterministic LLM calls (same system prompt + same user input), cache the completion. Hash the full prompt as the key. For user-facing chat, this rarely helps (each conversation differs). For batch processing or API users making identical calls, it can cut inference costs 40–60%. Semantic caching (cache if embeddings of input are similar, not just identical) is a newer pattern — higher complexity, higher cache hit rate for near-duplicate queries.</p>
+        </div>
+      </div>
+
+      <div class="eng-take et-backend">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">⚙️</span>
+          <div>
+            <div class="eng-take-role">Backend Engineer</div>
+            <div class="eng-take-focus">Cache-aside pattern · Serialization · Key namespacing · Connection pooling</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p>The cache-aside pattern is my daily implementation. Three rules I always follow: (1) Set a <strong>TTL on every key</strong> — keys without TTL are a memory leak. (2) Use <strong>namespaced keys</strong> like <code>v1:user:{id}:profile</code> — the version prefix enables bulk invalidation without FLUSHDB. (3) <strong>Handle cache errors gracefully</strong> — if Redis is down, fall back to the DB. Never let a cache error propagate to the user as a 500.</p>
+          <p><strong>Serialization format</strong> matters at scale. JSON is human-readable but large. MessagePack is compact binary — 20–40% smaller than JSON, faster to deserialize. Protocol Buffers (protobuf) are even smaller and have schema evolution built-in. For a cache storing millions of objects, switching from JSON to MessagePack can reduce Redis memory usage by 30% and improve hit throughput significantly.</p>
+          <p>The most common bug I see: <strong>caching None/null on DB miss</strong>. If the DB returns no result, you must cache a sentinel value (e.g., <code>"__NULL__"</code> with a short TTL). If you don't cache the miss, every request for a non-existent key hits the DB — this is called a <strong>cache miss attack</strong>. An attacker repeatedly requesting non-existent IDs can bypass your cache entirely and hammer your DB.</p>
+        </div>
+      </div>
+
+      <div class="eng-take et-frontend">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">🎨</span>
+          <div>
+            <div class="eng-take-role">Frontend Engineer</div>
+            <div class="eng-take-focus">Browser cache · SWR pattern · Service Worker · Cache busting</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p>The browser is a cache. I control it with <code>Cache-Control</code> headers and manage it through asset versioning. For JavaScript and CSS: content-hashed filenames + <code>Cache-Control: max-age=31536000, immutable</code>. The file never changes, so the browser never revalidates. When I deploy, the new hash means a new URL, which the browser fetches fresh. This pattern eliminates the "old JS after deploy" problem entirely.</p>
+          <p><strong>SWR (stale-while-revalidate)</strong> in client-side data fetching (swr.js, React Query, TanStack Query): show the cached data immediately, fetch fresh data in the background, update the UI when it arrives. This makes navigating back to a page feel instant — the user sees old data for milliseconds while the fresh data loads. For most UI contexts, this is the right UX trade-off. The stale data is clearly labeled or the update is seamless.</p>
+          <p><strong>Service Worker caching</strong> for offline-first: the Service Worker intercepts all fetch requests and can serve from a local cache (Cache Storage API) even with no network. Strategy choices: Cache First (serve from cache, update in background — fast, potentially stale), Network First (try network, fall back to cache — fresh but slower), Stale While Revalidate (serve cache, update in background — best of both). For an app that needs to work offline, Cache First for static assets and SWR for API data is the standard combination.</p>
+        </div>
+      </div>
+
+      <div class="eng-take et-sre">
+        <div class="eng-take-header">
+          <span class="eng-take-icon">📈</span>
+          <div>
+            <div class="eng-take-role">SRE / Reliability Engineer</div>
+            <div class="eng-take-focus">Cache hit ratio · Cold start playbook · Redis memory alerts · Stampede incidents</div>
+          </div>
+        </div>
+        <div class="eng-take-body">
+          <p><strong>Cache hit ratio is the north-star metric</strong> for cache health. I alert at &lt;90% hit ratio for a cache that should be running at 95%+. A sudden drop in hit ratio means: (1) Redis restarted (cold cache), (2) new traffic pattern hitting uncached keys, (3) TTLs were made too short, or (4) a code change broke cache key construction. I track hit ratio per cache key prefix to isolate which data type dropped.</p>
+          <p><strong>The cold cache disaster</strong>: Redis restarts, cache is empty, all traffic falls through to the DB. If your DB can't handle the full production read load (which is why you added the cache), this causes a cascade failure. My runbook: (1) immediately throttle incoming traffic or enable graceful degradation (return stale data from backup), (2) warm critical keys from DB in priority order, (3) only open full traffic after hit ratio recovers to 80%+. I test this quarterly with a scheduled Redis flush in staging.</p>
+          <p>Redis memory alerts: I page at 80% memory usage, investigate at 85%, and treat 90% as a critical incident. Beyond 90%, Redis eviction rate spikes and hit ratio collapses. The fix is either: increase instance size (fast), add a shard (fast for Redis Cluster), or reduce TTL on low-value keys (free but requires analysis). I use <code>redis-cli --bigkeys</code> monthly to identify keys with unexpectedly large values that should be compressed or split.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ REAL PROBLEMS ═══ -->
+    <div class="section" id="real-problems">
+      <h2><span class="section-icon">🎯</span> Real Interview Problems</h2>
+
+      <div class="problem-card" id="newsfeed-cache">
+        <div class="problem-header">
+          <div class="problem-num">Problem 01</div>
+          <div class="problem-title">Design a News Feed Caching Layer</div>
+          <div class="problem-tags">
+            <span class="ptag">Cache-Aside</span>
+            <span class="ptag">Redis</span>
+            <span class="ptag">Invalidation</span>
+            <span class="ptag">Thundering Herd</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>The Scenario</h4>
+          <p>Design the caching strategy for a social media home feed. 300M DAU, each user loads their feed 8–10 times/day. Feed is personalized (different for each user). Feed content changes as new posts arrive. Target: p99 feed load &lt;100ms.</p>
+
+          <h4>What Makes It Hard</h4>
+          <p>Personalized feeds can't be shared across users like a trending feed can. Each user's cache entry is unique. At 300M users × 8 loads/day = 2.4B requests/day. You can't cache everything in Redis (too expensive), but you also can't compute feeds from scratch on every request (too slow).</p>
+
+          <h4>Architecture</h4>
+          <div class="arch-diagram"><span class="c">User</span>
+  │  GET /feed
+  ▼
+<span class="sv">Feed Service</span>
+  │
+  ├── 1. Check <span class="ca">L1 cache</span> (in-process, 100ms TTL)     <span class="ok">HIT → 0.1ms</span>
+  │       feeds cached for user's current session
+  │
+  ├── 2. Check <span class="ca">L2 Redis</span>: "feed:{user_id}" (5 min TTL) <span class="ok">HIT → 2ms</span>
+  │       stores last N post IDs in a Redis List
+  │
+  ├── 3. Cache MISS → compute feed
+  │       │  Fetch followed-user post IDs from <span class="db">Post DB</span>
+  │       │  Score by recency + engagement
+  │       │  Store in Redis: LPUSH "feed:{user_id}" post_id_1 post_id_2...
+  │       │  EXPIRE "feed:{user_id}" 300
+  │       └► Return feed                                        50–200ms
+  │
+  └── 4. Hydrate post IDs with post content
+          │  Batch GET from Redis: "post:{id}" for each post ID
+          │  Cache miss per post → fetch from <span class="db">Post DB</span>
+          └► Return hydrated feed
+
+<span class="cm">Write path (new post arrives):</span>
+  New post published → invalidate cached feeds of all followers
+  But 1M followers → 1M cache deletes (fan-out problem)
+
+  Fix: don't invalidate on write. Use short TTL (5 min) as backstop.
+  Accept 5-min eventual consistency. High-frequency users see fresher feeds
+  because their L1 TTL is shorter (30s for active sessions).</div>
+
+          <h4>Key Decisions</h4>
+          <ul>
+            <li><strong>Two-level TTL:</strong> L1 (30s, in-process, session-scoped) + L2 Redis (5min, shared). Active users refresh frequently; inactive users are fine with 5-min staleness.</li>
+            <li><strong>Store IDs, not content:</strong> Cache post IDs in the feed, hydrate content separately. Post content is shared across all feeds — one Redis key per post, not per (user, post) pair. Massive memory saving.</li>
+            <li><strong>Stampede on popular accounts:</strong> When a celebrity posts, millions of feed caches miss simultaneously. Use Redis Pub/Sub to notify feed services to start warming caches before users request them.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="problem-card" id="youtube-cdn">
+        <div class="problem-header">
+          <div class="problem-num">Problem 02</div>
+          <div class="problem-title">Design YouTube's Video Serving Infrastructure</div>
+          <div class="problem-tags">
+            <span class="ptag">CDN</span>
+            <span class="ptag">Cache-Control</span>
+            <span class="ptag">LFU Eviction</span>
+            <span class="ptag">Static Assets</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>The Scenario</h4>
+          <p>YouTube serves 500 hours of video uploaded per minute and 1 billion hours watched per day. Most bandwidth is video. Design the caching and delivery infrastructure that keeps p99 video start time under 3 seconds globally.</p>
+
+          <h4>Architecture</h4>
+          <div class="arch-diagram"><span class="c">User</span>  GET /videoplayback?vid=abc123&range=0-2097151
+  │
+  ▼
+<span class="cy">CDN Edge PoP</span>  (nearest city — ~10ms)
+  │  Key: vid=abc123, range=0-2MB (first segment)
+  │
+  ├── Cache HIT (popular video) → stream first segment  <span class="ok">start in &lt;500ms</span>
+  │
+  └── Cache MISS (new/rare video)
+          │
+          ▼
+      <span class="cy">Regional CDN</span>  (continental — ~50ms)
+          │
+          ├── Cache HIT → fill edge PoP → stream
+          │
+          └── Cache MISS
+                  │
+                  ▼
+              <span class="sv">Origin (Google data center)</span>   (~200ms)
+                  ├── Fetch video segment from distributed blob store
+                  └── Return with:
+                      Cache-Control: public, max-age=86400
+                      CDN fills regional, regional fills edge, edge serves user
+
+<span class="cm">Eviction at CDN edge (limited storage):</span>
+  Policy: LFU — retain the most frequently accessed videos
+  Viral new video starts at count=1 but quickly surpasses old rarely-watched content
+  Bias toward large files: 1 video serving 10K views/hour beats 1000 images each viewed 10×
+
+<span class="cm">Cache-Control for video segments:</span>
+  max-age=86400 (1 day)  — segments are immutable, URL includes content hash
+  s-maxage=604800 (1 week) — CDN holds for a week for popular content
+  stale-while-revalidate=3600 — serve stale while checking freshness</div>
+
+          <h4>Key Decisions</h4>
+          <ul>
+            <li><strong>Segment-based streaming:</strong> Videos are split into 2MB segments. CDN caches segments independently. A user watching only the first 10 minutes only warms the cache for those segments — saves storage vs caching full video files.</li>
+            <li><strong>Popularity-aware prefetch:</strong> When a video is trending, CDN controllers push its first few segments to all edge PoPs before users in those regions request them. Proactive population eliminates cold-start latency on trending content.</li>
+            <li><strong>Range request caching:</strong> CDN must correctly handle HTTP Range requests (<code>Range: bytes=0-2097151</code>) — different ranges of the same video are different cache entries. Each segment URL is unique, simplifying CDN logic.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="problem-card" id="leaderboard-cache">
+        <div class="problem-header">
+          <div class="problem-num">Problem 03</div>
+          <div class="problem-title">Design a Real-Time Leaderboard with Redis</div>
+          <div class="problem-tags">
+            <span class="ptag">Redis Sorted Set</span>
+            <span class="ptag">Cache</span>
+            <span class="ptag">Write-Back</span>
+            <span class="ptag">Aggregation</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>The Scenario</h4>
+          <p>Design a leaderboard for a mobile game with 10M active players. Players earn points continuously during gameplay. Players view the global top-100 and their own rank. Score updates: 50K/sec. Leaderboard reads: 200K/sec. Must be real-time (rank updates within seconds).</p>
+
+          <h4>Architecture</h4>
+          <div class="arch-diagram"><span class="cm">Write path (score update):</span>
+
+<span class="c">Game Server</span>
+  │  Player 42 earned 500 points
+  ▼
+<span class="ca">Redis ZADD</span> "leaderboard:global" 9800 "player:42"
+  (atomic update — no race condition, O(log N))
+
+  Redis Sorted Set:
+    score=9800  player:42
+    score=9750  player:77
+    score=9200  player:13
+    ...10M entries
+
+<span class="cm">Read path (top 100):</span>
+
+<span class="c">Client</span>  GET /leaderboard/top100
+  │
+  ▼
+<span class="sv">Leaderboard API</span>
+  │
+  ├── ZREVRANGE "leaderboard:global" 0 99 WITHSCORES   <span class="ok">O(log N + 100) = fast</span>
+  │   Returns top 100 players with scores
+  │
+  └── Hydrate player names: HMGET "player:{id}:info" for each
+      (batch Redis GET — single round trip with pipeline)
+
+<span class="cm">Read path (my rank):</span>
+
+  ZREVRANK "leaderboard:global" "player:42"  → 4,823   <span class="ok">O(log N)</span>
+
+<span class="cm">Persistence (write-back pattern):</span>
+
+  Redis Sorted Set = real-time cache + source of truth for rankings
+  Periodic sync (every 5 min): dump top 1M scores from Redis → <span class="db">PostgreSQL</span>
+  Redis restart recovery: reload last checkpoint from PostgreSQL → ZADD bulk import</div>
+
+          <h4>Key Decisions</h4>
+          <ul>
+            <li><strong>Redis as the primary store for rankings:</strong> This is write-back caching — Redis is the fast layer, PostgreSQL is the durable backup. Acceptable for a leaderboard because losing 5 minutes of score data on Redis failure is recoverable.</li>
+            <li><strong>Sorted Set vs caching a query result:</strong> ZADD + ZREVRANGE is more memory-efficient and faster than caching a JSON array of the top-100. The Sorted Set supports arbitrary rank queries (ZREVRANK for any player) without storing separate data.</li>
+            <li><strong>Sharding at 10M players:</strong> A single Redis Sorted Set handles 10M entries fine (~400MB memory). At 100M players, shard by score range (0–1M points → shard 1, 1M–2M → shard 2) and merge top-K from each shard for global rankings.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TRADE-OFFS ═══ -->
+    <div class="section" id="tradeoffs">
+      <h2><span class="section-icon">⚖️</span> Trade-offs</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Decision</th><th>Option A</th><th>Option B</th><th>Choose A when</th><th>Choose B when</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Write strategy</strong></td>
+              <td><span class="badge-a">Write-Through</span></td>
+              <td><span class="badge-b">Write-Back</span></td>
+              <td>Data must be durable; reads follow writes (profiles, orders)</td>
+              <td>High write throughput, some data loss acceptable (view counts, analytics)</td>
+            </tr>
+            <tr>
+              <td><strong>Read strategy</strong></td>
+              <td><span class="badge-a">Cache-Aside</span></td>
+              <td><span class="badge-b">Read-Through</span></td>
+              <td>Application needs control over caching logic; different TTLs per key type</td>
+              <td>Multiple services share same read path; want centralized caching abstraction</td>
+            </tr>
+            <tr>
+              <td><strong>Invalidation</strong></td>
+              <td><span class="badge-a">TTL-based</span></td>
+              <td><span class="badge-b">Event-driven delete</span></td>
+              <td>Slight staleness acceptable; simpler implementation; no write-path coupling</td>
+              <td>Data must be fresh immediately after write; event-driven architecture already in place</td>
+            </tr>
+            <tr>
+              <td><strong>Stampede fix</strong></td>
+              <td><span class="badge-a">Mutex lock</span></td>
+              <td><span class="badge-b">Background refresh</span></td>
+              <td>Irregular access patterns; don't know which keys will go hot</td>
+              <td>Small set of known-hot keys; can predict which keys need proactive refresh</td>
+            </tr>
+            <tr>
+              <td><strong>Eviction policy</strong></td>
+              <td><span class="badge-a">LRU</span></td>
+              <td><span class="badge-b">LFU</span></td>
+              <td>General-purpose cache; temporal locality; recent = likely to reuse</td>
+              <td>CDN / media cache; long-term popularity matters more than recency</td>
+            </tr>
+            <tr>
+              <td><strong>Cache layer</strong></td>
+              <td><span class="badge-a">In-process (L1)</span></td>
+              <td><span class="badge-b">Distributed Redis (L2)</span></td>
+              <td>Ultra-low latency; data same for all users; changes rarely; single-server OK</td>
+              <td>Multiple servers; user-specific data; needs shared state; larger data size</td>
+            </tr>
+            <tr>
+              <td><strong>CDN for APIs</strong></td>
+              <td><span class="badge-a">Cache at CDN edge</span></td>
+              <td><span class="badge-b">No CDN caching</span></td>
+              <td>Non-personalized GET endpoints; same response for all users; high read volume</td>
+              <td>Personalized responses; Authorization-dependent; POST/PUT/DELETE; real-time data</td>
+            </tr>
+            <tr>
+              <td><strong>Serialization</strong></td>
+              <td><span class="badge-a">JSON</span></td>
+              <td><span class="badge-b">MessagePack / protobuf</span></td>
+              <td>Human-readable debugging valuable; modest data volume; simple types</td>
+              <td>Redis memory is a bottleneck; high throughput; millions of objects in cache</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ ANTI-PATTERNS ═══ -->
+    <div class="section" id="antipatterns">
+      <h2><span class="section-icon">❌</span> Anti-patterns at Scale</h2>
+      <ul class="antipattern-list">
+        <li>
+          <strong>noeviction policy in Redis</strong>
+          The default Redis memory policy returns errors when full. Under memory pressure at peak traffic, your application starts getting write errors from Redis, causing cascading failures. Always set an explicit eviction policy — <code>allkeys-lru</code> is the right default.
+        </li>
+        <li>
+          <strong>Caching without a TTL</strong>
+          Keys without TTL are permanent residents in Redis memory. They grow over time, never evict voluntarily, and eventually cause OOM or trigger mass eviction of other keys. Every cache key must have a TTL, even if it's a long one (24 hours).
+        </li>
+        <li>
+          <strong>Not caching null / empty results (cache miss attack)</strong>
+          If a key doesn't exist in the DB, you don't populate the cache. An attacker can make millions of requests for non-existent IDs — each bypasses the cache and hits the DB. Cache a sentinel value (<code>"__NULL__"</code>) with a short TTL (30–60s) for DB misses.
+        </li>
+        <li>
+          <strong>Using the cache as the primary store (no DB backup)</strong>
+          Redis is fast but not designed for permanent durability by default. If Redis restarts without a recent RDB/AOF snapshot and your DB doesn't have the canonical data, you've lost data permanently. Cache complements the DB — never replaces it for source-of-truth data.
+        </li>
+        <li>
+          <strong>Cache keys derived from user input without sanitization</strong>
+          If the cache key includes unvalidated user input, attackers can craft keys that collide with other users' data or inject control characters. Always build cache keys from server-side, authenticated identifiers.
+        </li>
+        <li>
+          <strong>No stampede protection on high-traffic keys</strong>
+          A popular key expiring during a traffic spike sends thousands of concurrent requests to the DB simultaneously. For any key with &gt;1,000 reads/sec, implement mutex locking or probabilistic early expiration to prevent thundering herd.
+        </li>
+        <li>
+          <strong>Caching mutable aggregations without a write-invalidation path</strong>
+          Caching a "total order count" computed from a JOIN — then having no mechanism to invalidate it when an order is placed. The count stays stale for its entire TTL. Use write-through or event-driven invalidation for aggregated values that change on writes.
+        </li>
+        <li>
+          <strong>One Redis cluster for everything (cache + queues + sessions + rate limiting)</strong>
+          When the cache evicts aggressively under memory pressure, it can evict session data (logging users out) or rate limit counters (resetting limits). Separate concerns: use different Redis instances (or at minimum, different databases) for cache, sessions, queues, and rate limiters.
+        </li>
+      </ul>
+    </div>
+
+    <!-- ═══ INTERVIEW TIPS ═══ -->
+    <div class="section" id="interview-tips">
+      <h2><span class="section-icon">💡</span> Interview Application Tips</h2>
+      <div class="tip-grid">
+        <div class="tip-card">
+          <div class="tip-num">01</div>
+          <h4>Name the cache layer and justify it</h4>
+          <p>Don't just say "add a cache." Say "L2 Redis cache in cache-aside pattern with a 5-minute TTL, because reads are 100× more frequent than writes and 5-minute staleness is acceptable for this use case."</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">02</div>
+          <h4>Always discuss invalidation</h4>
+          <p>Interviewers probe cache design with "what happens when the data changes?" Have an answer ready: TTL as backstop + event-driven delete on write is the production-proven combination.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">03</div>
+          <h4>Bring up the thundering herd problem</h4>
+          <p>Mention it proactively for any high-traffic system: "For popular keys, I'd add probabilistic early expiration or a mutex to prevent a thundering herd when the TTL expires." This signals production experience.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">04</div>
+          <h4>Distinguish L1, L2, CDN clearly</h4>
+          <p>"I'd use an in-process L1 cache for config data (sub-millisecond), Redis L2 for user data shared across servers (1–2ms), and CDN for public API responses (serve from edge, no origin hit)."</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">05</div>
+          <h4>Know when NOT to cache</h4>
+          <p>Personalised data at CDN (use Cache-Control: private), financial transactions (consistency over speed), write-heavy data that is never read (write-around or don't cache). Knowing the limits shows maturity.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">06</div>
+          <h4>Redis data structures are a caching superpower</h4>
+          <p>"For the leaderboard I'd use a Redis Sorted Set — ZADD for updates, ZREVRANGE for top-K, ZREVRANK for any player's rank. More efficient than caching a serialised query result."</p>
+        </div>
+      </div>
+      <div class="callout callout-tip" style="margin-top:1.5rem;">
+        <strong>The cache hit ratio question</strong>
+        Interviewers sometimes ask "how do you know if your cache is working?" The answer: cache hit ratio (hits / (hits + misses)). Target &gt;95% for hot data. Monitor it per key prefix, not just globally. A drop in hit ratio is your earliest warning of a cache problem.
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<footer>
+  <p>Built by <strong>KnowAlgo</strong> — System Design Patterns Made Deep</p>
+  <p style="margin-top:0.5rem;">
+    <a href="system-design-traffic.html">Traffic Shaping</a> &nbsp;·&nbsp;
+    <a href="system-design.html">All Patterns</a> &nbsp;·&nbsp;
+    <a href="index.html">DSA</a> &nbsp;·&nbsp;
+    <a href="interview-prep.html">Interview Prep</a>
+  </p>
+  <p style="margin-top:1rem;font-size:0.8rem;opacity:0.6;">© 2026 KnowAlgo. Free forever. No ads, no paywalls.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+
+<script>
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    document.getElementById('readingProgress').style.width = (total > 0 ? (scrolled / total) * 100 : 0) + '%';
+  });
+
+  function copyCode(btn) {
+    const pre = btn.closest('.code-wrap').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'Copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  const sections = document.querySelectorAll('[id]');
+  const tocLinks = document.querySelectorAll('.toc-list a[href^="#"]');
+  const observer = new IntersectionObserver(
+    (entries) => entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        tocLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${id}`));
+      }
+    }),
+    { rootMargin: '-60px 0px -70% 0px', threshold: 0 }
+  );
+  sections.forEach(sec => observer.observe(sec));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Distributed Consistency & Coordination – KnowAlgo System Design</title>
+  <meta name="description" content="CAP theorem, PACELC, consistency models, Raft consensus, distributed locks, CRDTs, vector clocks, and leader election. Pattern 07 of 16.">
+  <meta name="keywords" content="CAP theorem, PACELC, Raft consensus, distributed consistency, eventual consistency, CRDTs, vector clocks, distributed locks, system design interview">
+  <meta name="author" content="KnowAlgo">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://knowalgo.netlify.app/system-design-consistency.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Distributed Consistency & Coordination – KnowAlgo">
+  <meta property="og:description" content="CAP theorem, Raft, distributed locks, CRDTs, and conflict resolution with 9 engineer perspectives.">
+  <meta property="og:url" content="https://knowalgo.netlify.app/system-design-consistency.html">
+  <meta property="og:site_name" content="KnowAlgo">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Distributed Consistency & Coordination – KnowAlgo">
+  <meta name="twitter:description" content="CAP theorem, Raft consensus, distributed locks, and CRDT conflict resolution patterns.">
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2Z1EQCZBXH');
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #4338ca;
+      --primary-light: #eef2ff;
+      --secondary: #0891b2;
+      --accent: #059669;
+      --bg: #f8fafc;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --card-bg: #ffffff;
+      --radius: 14px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+    #progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(to right, #4f46e5, #0891b2); z-index: 9999; transition: width 0.1s linear; }
+
+    nav { position: sticky; top: 0; z-index: 100; background: #0f172a; border-bottom: 1px solid #1e293b; }
+    .nav-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+    .nav-logo { font-weight: 700; font-size: 1.1rem; color: #f1f5f9; text-decoration: none; letter-spacing: -0.3px; }
+    .nav-logo span { color: #818cf8; }
+    .nav-links { display: flex; gap: 8px; align-items: center; }
+    .nav-links a { color: #94a3b8; text-decoration: none; font-size: 0.875rem; padding: 6px 12px; border-radius: 8px; transition: all 0.2s; }
+    .nav-links a:hover { color: #f1f5f9; background: #1e293b; }
+    .nav-links .nav-cta { background: var(--primary); color: #fff; font-weight: 600; }
+    .nav-links .nav-cta:hover { background: var(--primary-dark); }
+    .hide-mobile { display: none; }
+    @media(min-width:768px) { .hide-mobile { display: inline; } }
+
+    .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 45%, #0c4a6e 100%); padding: 64px 24px 48px; text-align: center; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(129,140,248,0.15); border: 1px solid rgba(129,140,248,0.3); color: #a5b4fc; padding: 6px 16px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 20px; }
+    .hero h1 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; color: #f1f5f9; letter-spacing: -0.5px; line-height: 1.15; margin-bottom: 16px; }
+    .hero h1 span { color: #a5b4fc; }
+    .hero p { font-size: 1.05rem; color: #94a3b8; max-width: 700px; margin: 0 auto 24px; }
+    .hero-pills { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .hero-pill { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); color: #cbd5e1; padding: 4px 14px; border-radius: 99px; font-size: 0.78rem; }
+    .hero-back { display: inline-flex; align-items: center; gap: 6px; margin-top: 24px; color: #64748b; font-size: 0.85rem; text-decoration: none; }
+    .hero-back:hover { color: #94a3b8; }
+
+    .page-body { max-width: 1280px; margin: 0 auto; padding: 40px 24px; display: grid; grid-template-columns: 240px 1fr; gap: 40px; align-items: start; }
+    @media(max-width:900px) { .page-body { grid-template-columns: 1fr; } }
+
+    .toc { position: sticky; top: 72px; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .toc-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+    .toc ul { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+    .toc ul li a { display: block; font-size: 0.8rem; color: var(--text-muted); text-decoration: none; padding: 4px 8px; border-radius: 6px; border-left: 2px solid transparent; transition: all 0.15s; }
+    .toc ul li a:hover, .toc ul li a.active { color: var(--primary); border-left-color: var(--primary); background: var(--primary-light); }
+    .toc-next { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .toc-prev-label, .toc-next-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .toc-next a { font-size: 0.82rem; color: var(--primary); text-decoration: none; font-weight: 600; }
+
+    .section { margin-bottom: 56px; }
+    .section-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 8px; }
+    .section h2 { font-size: 1.65rem; font-weight: 800; color: var(--text); letter-spacing: -0.3px; margin-bottom: 16px; }
+    .section h3 { font-size: 1.15rem; font-weight: 700; color: var(--text); margin: 28px 0 12px; }
+    .section h4 { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 20px 0 8px; }
+    .section p { color: #334155; margin-bottom: 14px; }
+    .section ul, .section ol { padding-left: 20px; color: #334155; margin-bottom: 14px; }
+    .section li { margin-bottom: 6px; }
+
+    .callout { border-radius: 10px; padding: 16px 20px; margin: 20px 0; border-left: 4px solid; }
+    .callout-green  { background: #f0fdf4; border-color: #16a34a; }
+    .callout-blue   { background: #eff6ff; border-color: #2563eb; }
+    .callout-amber  { background: #fffbeb; border-color: #d97706; }
+    .callout-red    { background: #fef2f2; border-color: #dc2626; }
+    .callout-indigo { background: #eef2ff; border-color: #4f46e5; }
+    .callout-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; }
+    .callout-green  .callout-title { color: #15803d; }
+    .callout-blue   .callout-title { color: #1d4ed8; }
+    .callout-amber  .callout-title { color: #b45309; }
+    .callout-red    .callout-title { color: #b91c1c; }
+    .callout-indigo .callout-title { color: #4338ca; }
+    .callout p { margin-bottom: 0; font-size: 0.9rem; }
+
+    .code-wrap { position: relative; margin: 16px 0; border-radius: 10px; overflow: hidden; }
+    .code-wrap pre { margin: 0 !important; border-radius: 10px !important; font-size: 0.82rem !important; }
+    .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; transition: all 0.2s; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); color: #f1f5f9; }
+
+    .arch-diagram { background: #0f172a; border-radius: 10px; padding: 20px 24px; font-family: 'Courier New', Courier, monospace; font-size: 0.78rem; line-height: 1.6; overflow-x: auto; margin: 16px 0; color: #94a3b8; }
+    .arch-diagram .c  { color: #f1f5f9; font-weight: 600; }
+    .arch-diagram .db { color: #a78bfa; font-weight: 600; }
+    .arch-diagram .ca { color: #fb923c; font-weight: 600; }
+    .arch-diagram .sv { color: #4ade80; font-weight: 600; }
+    .arch-diagram .lb { color: #fbbf24; font-weight: 600; }
+    .arch-diagram .em { color: #34d399; font-weight: 600; }
+    .arch-diagram .ok { color: #4ade80; }
+    .arch-diagram .er { color: #f87171; }
+    .arch-diagram .hl { color: #fbbf24; }
+    .arch-diagram .cm { color: #475569; font-style: italic; }
+    .arch-diagram .bl { color: #60a5fa; font-weight: 600; }
+    .arch-diagram .in { color: #818cf8; font-weight: 600; }
+    .arch-diagram .rd { color: #f87171; font-weight: 600; }
+
+    .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th { background: #4f46e5; color: #fff; font-weight: 700; text-align: left; padding: 10px 14px; }
+    td { padding: 10px 14px; border-top: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    td code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 0.8rem; font-family: monospace; }
+
+    .eng-takes { display: flex; flex-direction: column; gap: 16px; margin: 20px 0; }
+    .eng-take { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .eng-take-header { padding: 10px 16px; font-weight: 700; font-size: 0.82rem; display: flex; align-items: center; gap: 8px; }
+    .eng-take-body { padding: 14px 16px; font-size: 0.88rem; color: #334155; display: flex; flex-direction: column; gap: 8px; }
+    .et-infra   .eng-take-header { background: #dbeafe; color: #1d4ed8; border-left: 4px solid #2563eb; }
+    .et-network .eng-take-header { background: #cffafe; color: #0e7490; border-left: 4px solid #0891b2; }
+    .et-platform .eng-take-header { background: #ede9fe; color: #6d28d9; border-left: 4px solid #7c3aed; }
+    .et-security .eng-take-header { background: #fee2e2; color: #b91c1c; border-left: 4px solid #dc2626; }
+    .et-data    .eng-take-header { background: #d1fae5; color: #065f46; border-left: 4px solid #059669; }
+    .et-ml      .eng-take-header { background: #fef3c7; color: #92400e; border-left: 4px solid #d97706; }
+    .et-backend .eng-take-header { background: #f1f5f9; color: #1e293b; border-left: 4px solid #475569; }
+    .et-frontend .eng-take-header { background: #fce7f3; color: #9d174d; border-left: 4px solid #db2777; }
+    .et-sre     .eng-take-header { background: #d1fae5; color: #064e3b; border-left: 4px solid #10b981; }
+
+    .problem-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin: 24px 0; box-shadow: var(--shadow); }
+    .problem-header { padding: 16px 20px; background: linear-gradient(to right, #1e1b4b, #0c4a6e); display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+    .problem-num { background: rgba(255,255,255,0.15); color: #fff; font-weight: 800; font-size: 0.75rem; padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
+    .problem-title { color: #f1f5f9; font-weight: 700; font-size: 1rem; flex: 1; }
+    .problem-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ptag { background: rgba(255,255,255,0.1); color: #cbd5e1; font-size: 0.72rem; padding: 2px 9px; border-radius: 99px; }
+    .problem-body { padding: 20px; }
+    .problem-body h4 { color: var(--text); font-size: 0.88rem; font-weight: 700; margin: 16px 0 8px; }
+    .problem-body p { font-size: 0.9rem; color: #334155; margin-bottom: 10px; }
+    .problem-body ul { font-size: 0.9rem; color: #334155; padding-left: 18px; }
+    .problem-body li { margin-bottom: 5px; }
+
+    .antipattern-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .antipattern-list li { background: #fff5f5; border-left: 4px solid #ef4444; border-radius: 8px; padding: 12px 16px; font-size: 0.875rem; }
+    .antipattern-list li strong { color: #b91c1c; display: block; margin-bottom: 3px; }
+
+    .tips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+    .tip-card { background: var(--card-bg); border: 1px solid #c7d2fe; border-radius: 10px; padding: 16px 18px; }
+    .tip-num { font-size: 0.7rem; font-weight: 700; color: #4f46e5; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 6px; }
+    .tip-card p { font-size: 0.875rem; color: #334155; margin: 0; }
+
+    .model-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin: 16px 0; }
+    .model-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .model-card-head { padding: 10px 14px; font-weight: 700; font-size: 0.85rem; }
+    .model-card-body { padding: 10px 14px; font-size: 0.8rem; color: #334155; }
+    .mc-strong .model-card-head { background: #dbeafe; color: #1d4ed8; }
+    .mc-causal  .model-card-head { background: #d1fae5; color: #065f46; }
+    .mc-eventual .model-card-head { background: #fef3c7; color: #92400e; }
+    .mc-read     .model-card-head { background: #ede9fe; color: #6d28d9; }
+
+    footer { background: #0f172a; color: #64748b; text-align: center; padding: 40px 24px; font-size: 0.875rem; }
+    footer a { color: #94a3b8; text-decoration: none; }
+    footer a:hover { color: #f1f5f9; }
+  </style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">Know<span>Algo</span></a>
+    <div class="nav-links">
+      <a href="index.html" class="hide-mobile">DSA</a>
+      <a href="system-design.html" class="hide-mobile">System Design</a>
+      <a href="interview-prep.html" class="nav-cta">Interview Prep →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">Pattern 07 of 16 · System Design</div>
+  <h1>Distributed Consistency<br><span>&amp; Coordination</span></h1>
+  <p>CAP theorem, consensus algorithms, distributed locks, CRDTs, and conflict resolution — the hardest problems in distributed systems, explained without hand-waving.</p>
+  <div class="hero-pills">
+    <span class="hero-pill">CAP Theorem</span>
+    <span class="hero-pill">PACELC</span>
+    <span class="hero-pill">Raft Consensus</span>
+    <span class="hero-pill">Distributed Locks</span>
+    <span class="hero-pill">CRDTs</span>
+    <span class="hero-pill">Vector Clocks</span>
+    <span class="hero-pill">Leader Election</span>
+    <span class="hero-pill">9 Perspectives</span>
+  </div>
+  <a href="system-design.html" class="hero-back">← Back to System Design Patterns</a>
+</div>
+
+<div class="page-body">
+
+  <aside class="toc">
+    <div class="toc-title">Contents</div>
+    <ul>
+      <li><a href="#cap">CAP Theorem</a></li>
+      <li><a href="#pacelc">PACELC Extension</a></li>
+      <li><a href="#consistency-models">Consistency Models</a></li>
+      <li><a href="#raft">Raft Consensus</a></li>
+      <li><a href="#distributed-locks">Distributed Locks</a></li>
+      <li><a href="#fencing">Fencing Tokens</a></li>
+      <li><a href="#vector-clocks">Vector Clocks</a></li>
+      <li><a href="#crdts">CRDTs</a></li>
+      <li><a href="#two-pc">Two-Phase Commit</a></li>
+      <li><a href="#eng-perspectives">Engineer Perspectives</a></li>
+      <li><a href="#problems">Real Problems</a></li>
+      <li><a href="#tradeoffs">Trade-offs Table</a></li>
+      <li><a href="#antipatterns">Anti-patterns</a></li>
+      <li><a href="#interview-tips">Interview Tips</a></li>
+    </ul>
+    <div class="toc-next">
+      <div class="toc-prev-label">Previous</div>
+      <a href="system-design-reliability.html">← Reliability</a>
+      <div class="toc-next-label" style="margin-top:0.75rem;">Next Pattern</div>
+      <a href="system-design-pipelines.html">Data Pipelines →</a>
+    </div>
+  </aside>
+
+  <main>
+
+    <!-- CAP -->
+    <section class="section" id="cap">
+      <div class="section-label">Foundation</div>
+      <h2>CAP Theorem</h2>
+      <p>CAP states that a distributed system can guarantee at most two of three properties simultaneously during a network partition. The key insight: partitions are not optional — networks fail. So the real choice is what to sacrifice <em>when</em> a partition occurs.</p>
+
+      <div class="arch-diagram">
+<span class="hl">CAP THEOREM — the three properties</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="sv">Consistency</span> (C):
+  Every read returns the most recent write (or an error).
+  All nodes see the same data at the same time.
+  "There is one true value and everyone sees it."
+
+<span class="em">Availability</span> (A):
+  Every request receives a (non-error) response.
+  The system keeps serving requests even if some nodes are down.
+  "The system never refuses to answer."
+
+<span class="bl">Partition Tolerance</span> (P):
+  The system continues operating when the network splits.
+  Messages between nodes may be lost or delayed.
+  "The system keeps running even with network failures."
+
+<span class="hl">The practical constraint:</span>
+  Partitions WILL happen (network is unreliable).
+  Therefore P is non-optional → choose between C and A during partitions.
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">CP SYSTEMS — sacrifice availability for consistency</span>
+
+  During partition: reject requests rather than return stale data.
+  Example: <span class="sv">HBase, Zookeeper, etcd</span> (Raft-based)
+  Behavior: "I'd rather say 'I don't know' than give you wrong data."
+
+<span class="hl">AP SYSTEMS — sacrifice consistency for availability</span>
+
+  During partition: continue serving, accept stale reads.
+  Example: <span class="in">Cassandra, CouchDB, DynamoDB</span> (tunable)
+  Behavior: "I'll give you something, even if it's not perfectly fresh."
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">COMMON MISCONCEPTION:</span>
+  "CA systems" (no partition tolerance) don't exist in practice.
+  A single-node PostgreSQL is "CA" only because it has no distributed
+  component to partition — it's not a distributed system at all.
+  Once you have replication, you have P (and lose CA as a unified option).
+      </div>
+
+      <div class="callout callout-indigo">
+        <div class="callout-title">CAP is a Partition-Time Choice, Not a System Design Choice</div>
+        <p>In normal operation (no partition), you can have both C and A. CAP only forces a trade-off <em>during</em> a network partition. The real question is: when a partition occurs and I can't guarantee both, which do I prioritize? This is a product decision as much as a technical one: financial transactions demand C, social media feeds can accept A.</p>
+      </div>
+    </section>
+
+    <!-- PACELC -->
+    <section class="section" id="pacelc">
+      <div class="section-label">Extended Model</div>
+      <h2>PACELC — Beyond CAP</h2>
+      <p>CAP only describes partition behavior. PACELC extends it: even when the system is running normally (no partition), there's a trade-off between latency (L) and consistency (C). Lower consistency → lower latency. Higher consistency → higher latency. This is the trade-off you live with every day, not just during failures.</p>
+
+      <div class="arch-diagram">
+<span class="hl">PACELC FRAMEWORK</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+IF   <span class="rd">Partition</span>:  choose between <span class="sv">Availability</span> or <span class="er">Consistency</span>
+ELSE <span class="ok">Normal op</span>:  choose between <span class="hl">Latency</span> or <span class="sv">Consistency</span>
+
+<span class="hl">System classifications:</span>
+
+System          P behavior    E behavior    Classification
+──────────────  ────────────  ────────────  ──────────────
+DynamoDB        Avail (AP)    Low latency   PA/EL
+Cassandra       Avail (AP)    Low latency   PA/EL  (tunable)
+Zookeeper/etcd  Consist (CP)  Consistency   PC/EC
+Google Spanner  Consist (CP)  Consistency   PC/EC  (strong)
+MongoDB         Consist (CP)  Low latency   PC/EL  (tunable)
+PostgreSQL      Consist (CP)  Consistency   PC/EC  (single node)
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">THE LATENCY/CONSISTENCY TRADE-OFF (normal operation):</span>
+
+Strong consistency requires:
+  1. Primary node processes write
+  2. Write replicates to all replicas (sync)
+  3. All replicas confirm receipt
+  4. Primary acknowledges to client
+
+Time: network RTT × number of replicas
+At 3 replicas in same DC: +5-20ms latency per write
+
+Eventual consistency requires:
+  1. Primary node processes write
+  2. Client immediately gets success
+  3. Write replicates async in background
+
+Time: minimal write latency, replicas catch up within seconds
+      </div>
+    </section>
+
+    <!-- Consistency Models -->
+    <section class="section" id="consistency-models">
+      <div class="section-label">Spectrum</div>
+      <h2>Consistency Models</h2>
+      <p>Consistency is not binary — it's a spectrum from strict linearizability to eventual consistency. Each level has different performance implications and use cases.</p>
+
+      <div class="model-grid">
+        <div class="model-card mc-strong">
+          <div class="model-card-head">Linearizability (Strict)</div>
+          <div class="model-card-body">Reads always return the most recent write. Operations appear instantaneous and sequential. Real-time ordering guaranteed.<br><br><strong>Cost:</strong> Highest latency (consensus required per op)<br><strong>Use:</strong> Financial transactions, distributed locks, leader election</div>
+        </div>
+        <div class="model-card mc-read">
+          <div class="model-card-head">Sequential Consistency</div>
+          <div class="model-card-body">All processes see the same order of operations. Each process's operations appear in order, but may not reflect wall-clock time.<br><br><strong>Cost:</strong> High latency<br><strong>Use:</strong> Multi-player game state, collaborative tools</div>
+        </div>
+        <div class="model-card mc-causal">
+          <div class="model-card-head">Causal Consistency</div>
+          <div class="model-card-body">Causally related operations seen in order. Concurrent operations may be seen in different orders by different nodes.<br><br><strong>Cost:</strong> Medium latency (vector clocks or DAG)<br><strong>Use:</strong> Comments, social feeds, collaborative editing</div>
+        </div>
+        <div class="model-card mc-eventual">
+          <div class="model-card-head">Eventual Consistency</div>
+          <div class="model-card-body">Given no new writes, all replicas converge to the same value eventually. No ordering guarantees. Highest performance.<br><br><strong>Cost:</strong> Lowest latency, conflict resolution needed<br><strong>Use:</strong> DNS, shopping cart, user preferences, social likes</div>
+        </div>
+      </div>
+
+      <h3>Read Your Own Writes (RYOW)</h3>
+      <div class="arch-diagram">
+<span class="hl">READ-YOUR-OWN-WRITES — a practical consistency guarantee</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Problem with async replication:
+  User writes profile picture update
+  App reads from replica (async lag: 500ms)
+  User sees OLD profile picture → confusing UX
+
+RYOW solutions:
+
+1. <span class="sv">Read from primary</span> after writes (simple but increases primary load)
+   Track per-user "last_write_timestamp"
+   If time_since_write &lt; 1 minute → read from primary
+
+2. <span class="sv">Monotonic read + sticky session</span>
+   User always reads from same replica
+   Replica may be stale but their reads are monotonically consistent
+   Implement via session-based replica affinity
+
+3. <span class="sv">Client-side merge</span>
+   Cache the user's own writes in client state
+   Overlay locally on top of server response
+   Used by Facebook, Twitter for optimistic UI
+
+4. <span class="sv">Version token</span>
+   Write returns a version: {user_id, version: 42}
+   Next read includes "read-after: version 42" header
+   Load balancer routes to replica that has replicated version 42+
+      </div>
+    </section>
+
+    <!-- Raft -->
+    <section class="section" id="raft">
+      <div class="section-label">Consensus Algorithm</div>
+      <h2>Raft Consensus</h2>
+      <p>Raft is the consensus algorithm that powers etcd (and therefore Kubernetes), CockroachDB, TiKV, and most modern distributed databases. It solves a fundamental problem: how do multiple nodes agree on a single value (or sequence of values) when any node can fail or messages can be lost?</p>
+
+      <div class="arch-diagram">
+<span class="hl">RAFT — THREE ROLES</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="sv">Leader</span>:    Receives all client writes. Replicates to followers.
+           One leader at a time (per Raft term).
+           Sends heartbeats every 150ms to maintain authority.
+
+<span class="bl">Follower</span>:  Accepts log entries from leader. Votes in elections.
+           If no heartbeat for election timeout (150-300ms) → candidate.
+
+<span class="hl">Candidate</span>: Requests votes from all nodes. If majority → new leader.
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">RAFT LOG REPLICATION (happy path):</span>
+
+Client → <span class="sv">Leader</span>: "set x = 5"
+Leader appends to own log: [... | {term:3, cmd: "set x=5"}]
+Leader → <span class="bl">Follower A</span>, <span class="bl">Follower B</span>: AppendEntries RPC
+Followers append to their logs, reply OK
+Leader receives majority (2 of 3): entry committed
+Leader applies to state machine, replies to client
+Leader notifies followers: "entry 42 committed, apply it"
+
+<span class="hl">Commit rule:</span> An entry is committed once stored on a <span class="hl">majority</span> of nodes.
+             With 3 nodes: commit after 2 store it.
+             With 5 nodes: commit after 3 store it.
+             → Tolerate (n-1)/2 failures: 3-node cluster survives 1 failure.
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">LEADER ELECTION:</span>
+
+Leader fails → no heartbeat → followers time out (random delay)
+Candidate increments term, votes for self, requests votes from others
+Majority vote (2 of 3) → becomes new leader for new term
+Random election timeout (150-300ms) prevents split votes
+
+<span class="hl">Split vote:</span> 2 candidates simultaneously, each gets 1 vote → retry
+Random timeouts statistically prevent repeated splits
+      </div>
+
+      <div class="callout callout-indigo">
+        <div class="callout-title">Raft vs Paxos</div>
+        <p>Paxos is the original consensus algorithm (Lamport, 1989) but is notoriously difficult to understand and implement correctly. Raft was designed specifically to be understandable — it produces equivalent results but structures the algorithm around leader-based log replication with explicit leader election. Production systems use Raft (etcd, CockroachDB, TiKV); Paxos is largely academic at this point or used in legacy Google systems (Chubby, Spanner uses a Paxos variant).</p>
+      </div>
+    </section>
+
+    <!-- Distributed Locks -->
+    <section class="section" id="distributed-locks">
+      <div class="section-label">Coordination Primitive</div>
+      <h2>Distributed Locks</h2>
+      <p>A distributed lock ensures only one process in a distributed system holds a resource at a time. The challenge: the lock holder can fail mid-operation without releasing the lock. Every distributed lock implementation must handle this case.</p>
+
+      <h3>Redis-based Lock (Redlock)</h3>
+      <div class="arch-diagram">
+<span class="hl">REDIS DISTRIBUTED LOCK (SETNX + EXPIRE)</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Acquire lock:
+  SET lock:resource_id {unique_token} NX PX 30000
+  NX = only set if key doesn't exist (atomic acquire)
+  PX 30000 = expire in 30 seconds (safety net if holder crashes)
+
+Release lock (Lua for atomicity):
+  if redis.call("get", KEYS[1]) == ARGV[1] then
+      return redis.call("del", KEYS[1])
+  else
+      return 0
+  end
+
+<span class="cm">→ Check-then-delete is atomic via Lua script</span>
+<span class="cm">→ Only the holder with the correct token can release</span>
+<span class="cm">→ If holder crashes: lock auto-expires after 30s</span>
+
+<span class="hl">THE CRITICAL EXPIRY PROBLEM:</span>
+
+Process A acquires lock (30s TTL)
+Process A does work... takes 35s (long GC pause, slow DB)
+Lock expires after 30s
+Process B acquires the same lock (thinks it's free)
+Process A finishes, does the write (lock already held by B!)
+→ <span class="er">Two processes think they hold the lock simultaneously</span>
+
+<span class="ok">Solution:</span> Fencing tokens (see next section)
+      </div>
+
+      <h3>etcd / Zookeeper Locks (Strongly Consistent)</h3>
+      <div class="arch-diagram">
+<span class="hl">ETCD DISTRIBUTED LOCK — Raft-backed, no expiry race</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+etcd uses leases (TTL-based, auto-renewed by holder):
+  1. Create lease: lease_id = etcd.grant(ttl=30)
+  2. Acquire lock: etcd.put(key="/lock/resource", lease=lease_id, prev_kv=nil)
+     → Only succeeds if key doesn't exist (atomic via Raft)
+  3. Holder renews lease every 10s (keepAlive goroutine)
+  4. If holder crashes: lease expires, etcd deletes the key
+  5. Waiters watch the key: notified when it's deleted → re-acquire
+
+<span class="hl">Why etcd &gt; Redis for critical locks:</span>
+  Raft-backed: lock operations are serialized through consensus
+  No split-brain: only one leader can commit the lock grant
+  Session expiry detected immediately (watch mechanism)
+  Used by: Kubernetes leader election, distributed job schedulers
+
+<span class="hl">When Redis SETNX is fine:</span>
+  Best-effort mutual exclusion where occasional double-execution is OK
+  Rate limiting (not critical correctness)
+  Cache population locks (thundering herd prevention)
+  Short-duration locks where expiry is very unlikely
+      </div>
+    </section>
+
+    <!-- Fencing -->
+    <section class="section" id="fencing">
+      <div class="section-label">Safety Mechanism</div>
+      <h2>Fencing Tokens</h2>
+      <p>Fencing tokens solve the lock expiry race condition: even if a lock holder believes it holds the lock, the storage system rejects its writes if a newer lock holder has superseded it.</p>
+
+      <div class="arch-diagram">
+<span class="hl">FENCING TOKEN PATTERN</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+Lock service issues monotonically increasing token per grant:
+  Process A acquires lock → token = 33
+  Process A takes too long → lock expires
+  Process B acquires lock → token = 34  (higher number)
+
+Process A (delayed) tries to write:
+  WRITE data WHERE lock_token &gt;= 33  → <span class="er">rejected!</span>
+  Storage sees current token is 34 → 33 &lt; 34 → reject stale write
+
+Process B writes successfully:
+  WRITE data WHERE lock_token &gt;= 34  → <span class="ok">accepted</span>
+
+<span class="hl">Implementation in storage:</span>
+  Each protected resource stores last_seen_token
+  Any write must include its token
+  Storage: if write.token &lt; resource.last_seen_token → reject (stale lock holder)
+  Storage: if write.token &gt;= resource.last_seen_token → accept, update token
+
+<span class="cm">→ Storage itself enforces exclusivity, not just the lock service</span>
+<span class="cm">→ Network partitions, GC pauses, and lock expiry can't cause split writes</span>
+<span class="cm">→ Used in: HDFS NameNode lease tokens, etcd compare-and-swap</span>
+      </div>
+    </section>
+
+    <!-- Vector Clocks -->
+    <section class="section" id="vector-clocks">
+      <div class="section-label">Causality Tracking</div>
+      <h2>Vector Clocks</h2>
+      <p>Physical clocks in distributed systems cannot be trusted — clocks drift, NTP synchronization is imperfect. Vector clocks track causality between events using logical timestamps, enabling systems to determine if event A happened before B, after B, or concurrently with B.</p>
+
+      <div class="arch-diagram">
+<span class="hl">VECTOR CLOCK — causality tracking</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+3 nodes: A, B, C. Each maintains a vector [A_count, B_count, C_count]
+
+Initial state: A=[0,0,0], B=[0,0,0], C=[0,0,0]
+
+A writes x=1:   A=[1,0,0], sends to B
+B receives:     B=[1,1,0], writes y=2
+C writes z=3:   C=[0,0,1]  (concurrent with B — C doesn't know about A's write)
+
+Now B and C both want to update the same key "foo":
+  B's value: "hello" with clock [1,1,0]
+  C's value: "world" with clock [0,0,1]
+
+Compare clocks:
+  Is [1,1,0] &lt; [0,0,1]?  → NO (B is ahead in B_count)
+  Is [0,0,1] &lt; [1,1,0]?  → NO (C is ahead in C_count)
+  → <span class="hl">Concurrent writes — CONFLICT</span>
+
+Resolution strategies:
+  1. <span class="sv">Last-Write-Wins</span>: Pick higher timestamp (requires physical clock — imprecise)
+  2. <span class="sv">Multi-value return</span>: Return both values, let client resolve (Amazon shopping cart)
+  3. <span class="sv">CRDT merge</span>: Merge automatically based on data type semantics
+  4. <span class="sv">Application merge</span>: Business logic decides winner (Google Docs OT)
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">HAPPENED-BEFORE RULES (→ means "happened before"):</span>
+  A=[1,0,0] → B=[1,1,0]  (B has seen A's write)
+  Two clocks are concurrent if neither dominates the other
+  Concurrent = neither knows about the other's changes
+      </div>
+    </section>
+
+    <!-- CRDTs -->
+    <section class="section" id="crdts">
+      <div class="section-label">Conflict-Free Replication</div>
+      <h2>CRDTs (Conflict-free Replicated Data Types)</h2>
+      <p>CRDTs are data structures designed so that concurrent modifications can always be merged automatically without conflicts. The data type itself embeds the merge function, making eventual consistency achievable without application-level conflict resolution.</p>
+
+      <div class="arch-diagram">
+<span class="hl">CRDT TYPES AND USE CASES</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="sv">G-Counter (Grow-only counter)</span>:
+  Each node has its own count. Global value = sum of all.
+  Node A increments its slot: [A:5, B:3, C:2] → total = 10
+  Concurrent increments auto-merge: take max per slot.
+  Use: Page view counts, like counts, event tallies
+
+<span class="em">PN-Counter (Positive-Negative counter)</span>:
+  Two G-counters: one for increments, one for decrements.
+  Value = G-Counter(P) - G-Counter(N)
+  Use: Inventory counts, bank balances (simplified)
+
+<span class="bl">G-Set (Grow-only set)</span>:
+  Elements can only be added, never removed.
+  Merge = union of both sets.
+  No conflicts possible (union is always valid).
+  Use: Tags, metadata collections where items are never removed
+
+<span class="in">OR-Set (Observed-Remove set)</span>:
+  Each element tagged with unique ID on insert.
+  Remove marks the specific instance (by ID) as deleted.
+  Supports add-and-remove with concurrent modifications.
+  Use: Shopping cart, collaborative whiteboard items
+
+<span class="hl">LWW-Register (Last-Write-Wins register)</span>:
+  Scalar value with timestamp.
+  Merge: take value with higher timestamp.
+  Simple but requires synchronized clocks (problematic).
+  Use: User preferences, configuration settings
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="hl">CRDT IN PRACTICE — Redis Shopping Cart:</span>
+
+User adds item A on device 1: cart = {A: 1}
+User adds item B on device 2 (offline): cart = {B: 1}
+Network reconnects → merge:
+  OR-Set merge: {A: 1, B: 1}  ← no conflict, both additions preserved
+
+User removes A on device 1: cart = {B: 1}
+Concurrently, user also increments A on device 2: cart = {A: 2, B: 1}
+Merge: <span class="hl">conflict — was A added or removed?</span>
+OR-Set rule: if a remove is concurrent with an add, the add wins
+Result: {A: 2, B: 1}  ← this is the "add wins" CRDT semantics
+
+Real systems: Riak uses CRDTs natively. Redis has CRDT modules.
+Figma uses CRDTs for collaborative design multiplayer.
+      </div>
+    </section>
+
+    <!-- Two-Phase Commit -->
+    <section class="section" id="two-pc">
+      <div class="section-label">Distributed Transactions</div>
+      <h2>Two-Phase Commit (2PC)</h2>
+      <p>2PC is the classic protocol for coordinating writes across multiple nodes in a distributed transaction. It guarantees atomicity (all commit or all abort) but is blocking and has a known failure scenario that makes it unsuitable for high-availability systems.</p>
+
+      <div class="arch-diagram">
+<span class="hl">2PC PROTOCOL</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+
+<span class="sv">PHASE 1 — Prepare:</span>
+  <span class="lb">Coordinator</span> → all <span class="bl">Participants</span>: "Can you commit transaction T?"
+  Each Participant:
+    Writes undo/redo log to durable storage
+    Acquires all necessary locks
+    Replies VOTE_COMMIT or VOTE_ABORT
+
+<span class="sv">PHASE 2 — Commit/Abort:</span>
+  If ALL voted COMMIT:
+    Coordinator → all Participants: GLOBAL_COMMIT
+    Participants commit, release locks, reply ACK
+  If ANY voted ABORT:
+    Coordinator → all Participants: GLOBAL_ABORT
+    Participants rollback using undo log, release locks
+
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="er">THE BLOCKING PROBLEM — why 2PC is avoided in production:</span>
+
+  1. Participant votes COMMIT (locks held, can't proceed without coordinator)
+  2. Coordinator crashes before sending phase 2
+  3. Participant is stuck: committed? aborted? Don't know.
+  4. Locks are held indefinitely until coordinator recovers.
+  5. Other transactions waiting on those locks are blocked.
+
+<span class="cm">→ 2PC is a "blocking" protocol — one crash can block the system indefinitely</span>
+
+<span class="hl">Why 2PC is still used:</span>
+  Most databases use 2PC internally for XA transactions
+  (JDBC distributed transactions, JTA in Java EE)
+  Acceptable when coordinator recovery is fast and MTTR is low
+  Not acceptable when you need millisecond-level availability
+
+<span class="hl">Better alternatives:</span>
+  Saga pattern (see Async pattern) — non-blocking, compensating txns
+  Google Spanner — external consistency via TrueTime + 2PC hybrid
+      </div>
+    </section>
+
+    <!-- Engineer Perspectives -->
+    <section class="section" id="eng-perspectives">
+      <div class="section-label">9 Lenses</div>
+      <h2>How Each Team Thinks About Consistency</h2>
+
+      <div class="eng-takes">
+
+        <div class="eng-take et-infra">
+          <div class="eng-take-header">🏗️ Infrastructure Engineer</div>
+          <div class="eng-take-body">
+            <p>Consistency guarantees are only as strong as the underlying infrastructure. Synchronous replication across AZs adds network latency — we measure the round-trip time between our AZs and factor it into write latency budgets before committing to a consistency model. A promise of "synchronous replication" between AZs 50ms apart means every write has at minimum 50ms added to its tail latency.</p>
+            <p>etcd clusters (which back Kubernetes) require careful capacity planning and network isolation. etcd is latency-sensitive — disk I/O jitter during Raft log writes can cause leader elections and transient unavailability. We run etcd on dedicated nodes with SSDs (not network storage), reserved CPU, and isolated network interfaces. A noisy neighbor on the same host as the etcd leader has caused Kubernetes control plane instability in past incidents.</p>
+            <p>We never allow quorum-based systems (Raft, Paxos) to have even numbers of nodes. Even numbers create split-brain risk where neither half can reach majority. Three nodes, five nodes, or seven nodes — never two, four, or six. When someone requests a "two-node HA setup," we push back: two nodes can't achieve consensus when one fails. You need three or an external tiebreaker.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-network">
+          <div class="eng-take-header">🌐 Network Engineer</div>
+          <div class="eng-take-body">
+            <p>Network partitions are the forcing function of CAP theorem. We design network topology to minimize the probability of partitions within a cluster: redundant switch paths, LACP bonding on physical servers, dedicated cluster network segments separate from user traffic. But partitions can still occur — split-brain between two AZs during a routing loop, packet loss causing Raft leader heartbeat failures. We cannot eliminate partitions, so we design systems that handle them gracefully.</p>
+            <p>The choice between CP and AP has network throughput implications. CP systems (Raft-based) require all writes to flow through the leader — this creates an ingress bottleneck at the leader's network interface. AP systems (Cassandra-style) accept writes at any node — write traffic is distributed across all nodes and their network interfaces. At 10 GB/s write throughput, this difference is significant for network capacity planning.</p>
+            <p>MTU and packet fragmentation matter for consensus algorithms. Raft AppendEntries RPCs carry log entries that can be large (multi-KB batch entries). Packets fragmented by MTU mismatches cause reassembly delays that look like latency spikes, which can trigger false leader elections. We verify MTU consistency across all nodes in the cluster and disable TCP segmentation offload (TSO) in environments where it causes issues with Raft timing.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-platform">
+          <div class="eng-take-header">⚙️ Platform Engineer</div>
+          <div class="eng-take-body">
+            <p>We provide consistency level as a configurable parameter, not a fixed property. Teams declare their consistency requirement in the service manifest: "strong" (routes to primary-only reads), "bounded-staleness" (reads from replica with max 5s lag), or "eventual" (reads from any replica). The platform enforces this routing — teams don't configure database connection strings manually and accidentally bypass consistency guarantees.</p>
+            <p>Distributed lock management is a platform service we operate. Teams request a named lock via a gRPC API; we handle the etcd lease management, TTL renewal, and failure detection. Application code calls `lock.acquire()` and `lock.release()` — the distributed systems complexity is hidden. This avoids teams writing their own buggy Redis-based locking code and having the associated incidents.</p>
+            <p>Leader election for stateful services (job schedulers, singleton workers) goes through our platform's leader election service (backed by etcd). We expose a simple API: register as a candidate, watch for leadership changes, resign gracefully on shutdown. The Kubernetes leader election library is our reference implementation — it handles all the edge cases that hand-rolled implementations miss.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-security">
+          <div class="eng-take-header">🔐 Security / Cyber Engineer</div>
+          <div class="eng-take-body">
+            <p>Consistency models have security implications that aren't obvious. Eventual consistency means a permission revocation might not be immediately reflected across all nodes. If we revoke a user's access token and the system is eventually consistent, they might still succeed in making API calls to nodes that haven't received the revocation yet. For auth and permissions, we require strong consistency — revocations take effect immediately, not eventually.</p>
+            <p>Distributed locks protect critical sections, and lock implementations have known vulnerabilities. Redis SETNX with no TTL creates deadlock if the holder crashes — we've seen this happen with a CPU spike killing a lock holder before it could release. We audit all distributed lock usage in code review: every lock must have a TTL, the release must be guarded against releasing someone else's lock (unique token check), and the lock scope must be as narrow as possible.</p>
+            <p>The consensus layer (etcd, Zookeeper) must be secured as tightly as the database. etcd contains every Kubernetes secret, configuration, and state — it's the single most sensitive datastore in the cluster. We enforce: mTLS between etcd nodes and between API server and etcd, restricted network access (only the API server communicates with etcd, not application pods), and encrypted etcd storage at rest (EBS encryption + encryption-at-rest flag).</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-data">
+          <div class="eng-take-header">📊 Data Engineer</div>
+          <div class="eng-take-body">
+            <p>Consistency models determine what data pipelines can assume. If we're reading from a Cassandra table with eventual consistency, our pipeline might see different values for the same key across different reads in the same batch. We handle this by reading from a single coordinator node with LOCAL_QUORUM, or by deduplicating by primary key and taking the highest timestamp within our pipeline. We never assume an eventually consistent source gives us a clean, point-in-time snapshot.</p>
+            <p>The "exactly-once" processing guarantee in Kafka Streams and Flink is a consistency guarantee at the processing level. It relies on exactly-once semantics from the source (Kafka transactional producer) and idempotent writes to the sink (upsert by primary key rather than append). The entire pipeline must support exactly-once for the end-to-end guarantee to hold — a single non-idempotent step breaks the chain.</p>
+            <p>Vector clocks appear in our change data capture pipelines. Debezium attaches the WAL LSN (log sequence number) to each event — this is effectively a monotonic vector timestamp for the Postgres WAL. We use LSN ordering to deduplicate events and ensure our pipeline processes changes in the correct causal order. An event with a lower LSN always happened before one with a higher LSN on the same Postgres instance.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-ml">
+          <div class="eng-take-header">🤖 ML / AI Engineer</div>
+          <div class="eng-take-body">
+            <p>Feature consistency is our version of the distributed consistency problem. When we train a model, each training example uses a consistent snapshot of features at a point in time. When we serve the model, we need to reconstruct those features from the online store in real time. If the online feature store is eventually consistent, a prediction at time T might use a feature value that was actually computed at T-2 minutes — a consistency skew. For time-sensitive features (current cart value, recent activity), this skew can significantly degrade prediction quality.</p>
+            <p>ML training requires consistent snapshots. We use a two-phase snapshot: first, copy all table metadata and record current timestamps; second, export data where created_at &lt;= snapshot_time. This gives a consistent view even if new rows are being written during the export. Using a read replica with a known replication lag and exporting from it with lag offset is another approach. Inconsistent training data produces non-reproducible experiments — a consistency problem that shows up as statistical noise.</p>
+            <p>Distributed hyperparameter search (Optuna, Ray Tune) uses a shared trial database with concurrent writes from many workers. The consistency model here is best-effort: workers occasionally see slightly stale trial results and may explore the same hyperparameter region twice. This is acceptable because the loss from inconsistency is bounded (slightly redundant trials), not catastrophic (wrong model deployed). Eventual consistency with deduplication on the completed trial ID is the correct choice here.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-backend">
+          <div class="eng-take-header">⚡ Backend Engineer</div>
+          <div class="eng-take-body">
+            <p>Choosing a consistency level is a per-query decision in Cassandra, and I make it consciously. Read-after-write consistency for a user's own data: LOCAL_QUORUM (strong within the datacenter). Background analytics reads that can be slightly stale: ONE (fastest). Cross-DC reads where we need global consistency: QUORUM (majority of all replicas across DCs). Defaulting to ONE everywhere is a bug waiting to become an incident.</p>
+            <p>Optimistic concurrency control (OCC) is my preferred approach over distributed locks for write conflicts. Instead of acquiring a lock before writing, I include a version field in the row. The UPDATE statement includes WHERE version = $expected_version. If another writer updated the row between my read and my write, the version won't match and the UPDATE affects 0 rows — I detect the conflict and retry. No locks, no distributed coordination, much simpler failure modes.</p>
+            <p>Compare-and-swap (CAS) operations are the building block for coordination primitives in my application code. Redis SETNX is CAS. Postgres UPDATE WHERE version=$expected is CAS. DynamoDB conditional writes are CAS. etcd compare-and-swap is CAS. All distributed coordination reduces to CAS at some level. When I see complex locking code, I ask: can this be expressed as a CAS loop instead? The CAS version is almost always simpler and has clearer failure semantics.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-frontend">
+          <div class="eng-take-header">🎨 Frontend Engineer</div>
+          <div class="eng-take-body">
+            <p>Consistency is a UX problem as much as a technical one. When a user edits their profile and immediately navigates to the profile page, seeing the old data is jarring even if it's "technically correct" under eventual consistency. I implement client-side read-your-own-writes by caching recent writes locally and overlaying them on server responses. The server is eventually consistent; the client shows the user their own writes immediately regardless.</p>
+            <p>Conflict resolution UX in collaborative tools is the frontend manifestation of distributed consistency. Google Docs resolves conflicts invisibly via operational transforms. Figma shows "this layer was moved by Alice" when a conflict occurs. Linear shows a "conflict" state when two people edit the same issue simultaneously. The choice of CRDT vs OT vs last-write-wins determines what conflict UI is even possible — CRDTs allow invisible merges, LWW requires showing who won.</p>
+            <p>Offline-first apps are a consistency design challenge. When the user is offline, they write to a local store (IndexedDB). When they reconnect, changes must be merged with the server state. If another user edited the same data while they were offline, there's a conflict. The merge strategy must be designed upfront: last-write-wins (data loss risk), three-way merge (complex), or CRDT (data-type-specific auto-merge). Most apps choose last-write-wins because it's simple, but this silently discards data that users care about.</p>
+          </div>
+        </div>
+
+        <div class="eng-take et-sre">
+          <div class="eng-take-header">📡 SRE / Site Reliability Engineer</div>
+          <div class="eng-take-body">
+            <p>Consistency anomalies are hard to detect with standard monitoring. Error rates and latency look fine; the system appears healthy. But stale reads, phantom reads, or lost updates are silently corrupting business state. We instrument data consistency checks: periodic reconciliation jobs that compare expected vs actual state across replicas, alert if divergence exceeds thresholds. For critical data (financial balances, inventory counts), we run these checks every 5 minutes.</p>
+            <p>Raft leader elections show up in our metrics as latency spikes. The election window (150-300ms timeout + voting + new leader establishing authority) causes requests to queue or fail during leader transitions. We alert on Raft leader change frequency — more than 2 leader changes per hour indicates a sick cluster (network instability, overloaded leader, disk latency). etcd provides `/metrics` with leader change rate via Prometheus.</p>
+            <p>Distributed lock contention is a capacity signal. When many processes compete for the same lock, lock acquisition time increases and throughput drops. We instrument lock acquisition latency and contention rate (how often acquire fails because lock is held). High contention is usually a design smell — the lock is protecting a hot resource that should be partitioned or redesigned to avoid the serialization point. We surface this to the backend team before it becomes a performance incident.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Real Problems -->
+    <section class="section" id="problems">
+      <div class="section-label">Real Problems</div>
+      <h2>Applied Consistency Design</h2>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <span class="problem-num">Problem 01</span>
+          <div class="problem-title">Design a Distributed Counter for Real-Time Leaderboard (100M writes/day)</div>
+          <div class="problem-tags">
+            <span class="ptag">CRDT G-Counter</span>
+            <span class="ptag">Eventual Consistency</span>
+            <span class="ptag">Redis Sorted Set</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Requirements</h4>
+          <ul>
+            <li>Users earn points for completing actions. Points update in real time.</li>
+            <li>Leaderboard shows top 100 players, refreshed every second.</li>
+            <li>100M point-award events per day = ~1200 writes/second peak.</li>
+            <li>Leaderboard may show slightly stale values (1-2s lag acceptable).</li>
+          </ul>
+
+          <h4>Why Not Strong Consistency</h4>
+          <p>Serializing all point-award writes through a single strongly consistent source (a single Postgres primary) creates a write bottleneck. At 1200 writes/second, each touching the same leaderboard data structure, lock contention becomes severe. The business tolerance for 1-2 seconds of stale leaderboard values makes eventual consistency the right choice.</p>
+
+          <h4>Architecture: CRDT G-Counter + Redis Sorted Set</h4>
+          <div class="arch-diagram">
+<span class="hl">LEADERBOARD CONSISTENCY DESIGN</span>
+
+<span class="c">Events</span> → <span class="in">Kafka: game.points.awarded</span>
+    │  partitioned by user_id (all events for user go same partition)
+    ▼
+<span class="sv">[ Points Consumer ]</span>
+    │  ZINCRBY leaderboard {points} {user_id}  (Redis Sorted Set)
+    │  atomically increments — no lock needed
+    ▼
+<span class="ca">[ Redis Sorted Set: "leaderboard" ]</span>
+    ZADD uses score = cumulative points per user
+    ZREVRANGE leaderboard 0 99 WITHSCORES → top 100
+
+<span class="hl">Durability:</span>
+    Redis is the hot view (fast, eventually consistent)
+    Postgres is the source of truth (all events persisted before Kafka)
+    If Redis flushes → rebuild from Postgres in minutes
+    Periodic Postgres→Redis sync every 60s (catch any drift)
+
+<span class="hl">Partition-by-user ensures ordering:</span>
+    All point events for user X processed in sequence
+    No race condition on user X's score
+    Concurrent events for different users are independent (no shared lock)
+          </div>
+
+          <div class="code-wrap">
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <pre><code class="language-python">import redis
+
+r = redis.Redis(host='redis', decode_responses=True)
+
+def award_points(user_id: str, points: int, event_type: str) -> float:
+    pipe = r.pipeline(transaction=True)
+    pipe.zincrby('leaderboard:global', points, user_id)
+    pipe.zincrby(f'leaderboard:daily:{today()}', points, user_id)
+    results = pipe.execute()
+    return results[0]  # new total score
+
+def get_top_100() -> list:
+    return r.zrevrange('leaderboard:global', 0, 99, withscores=True)
+
+def get_user_rank(user_id: str) -> int:
+    rank = r.zrevrank('leaderboard:global', user_id)
+    return rank + 1 if rank is not None else None
+
+def get_user_score(user_id: str) -> float:
+    return r.zscore('leaderboard:global', user_id) or 0</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <span class="problem-num">Problem 02</span>
+          <div class="problem-title">Implement a Distributed Job Scheduler (Run Job Exactly Once)</div>
+          <div class="problem-tags">
+            <span class="ptag">Distributed Lock</span>
+            <span class="ptag">Fencing Tokens</span>
+            <span class="ptag">Leader Election</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>The Problem</h4>
+          <p>A cron-style job must run exactly once per scheduled interval across 10 instances of a service. Without coordination, all 10 instances run the job simultaneously — 10× the side effects (duplicate emails, double charges, redundant index builds).</p>
+
+          <h4>Architecture: etcd-based Leader Election + Fencing</h4>
+          <div class="code-wrap">
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <pre><code class="language-python">import etcd3
+import uuid
+
+etcd = etcd3.client()
+
+def try_acquire_job_lock(job_name: str, ttl: int = 60) -> tuple:
+    """Returns (acquired: bool, token: str)"""
+    token = str(uuid.uuid4())
+    lock_key = f"/job-locks/{job_name}"
+
+    # Create lease — auto-expires if this process crashes
+    lease = etcd.lease(ttl)
+
+    # Atomic compare-and-swap: only set if key doesn't exist
+    success, _ = etcd.transaction(
+        compare=[etcd.transactions.version(lock_key) == 0],
+        success=[etcd.transactions.put(lock_key, token, lease=lease)],
+        failure=[]
+    )
+
+    if success:
+        # Start background lease keepalive
+        lease.keepalive()
+        return True, token, lease
+    return False, None, None
+
+def run_scheduled_job(job_name: str, job_fn):
+    """Only one instance in the cluster runs this."""
+    acquired, token, lease = try_acquire_job_lock(job_name)
+    if not acquired:
+        return  # Another instance holds the lock — skip
+
+    try:
+        # Pass fencing token to job — storage layer checks it
+        job_fn(fencing_token=token)
+    finally:
+        # Release lock: only delete if our token still matches
+        etcd.transaction(
+            compare=[etcd.transactions.value(f"/job-locks/{job_name}") == token],
+            success=[etcd.transactions.delete(f"/job-locks/{job_name}")],
+            failure=[]
+        )
+        lease.revoke()</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <span class="problem-num">Problem 03</span>
+          <div class="problem-title">Design a Multi-Region Shopping Cart (Offline-First, CRDT)</div>
+          <div class="problem-tags">
+            <span class="ptag">OR-Set CRDT</span>
+            <span class="ptag">AP System</span>
+            <span class="ptag">Conflict Resolution</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Requirements &amp; Trade-offs</h4>
+          <p>Users add/remove items from a shopping cart. The cart must work offline (mobile app). Conflicting edits (item added on device 1 while removed on device 2) must be resolved without data loss. The cart is not a financial instrument — availability trumps strict consistency.</p>
+
+          <h4>CRDT OR-Set Cart</h4>
+          <div class="arch-diagram">
+<span class="hl">SHOPPING CART AS OR-SET CRDT</span>
+
+Each add assigns a unique tag: {item_id, device_id, timestamp}
+
+Device 1 (online):  adds "Book" → {book, dev1, T1}
+Device 2 (offline): adds "Pen"  → {pen, dev2, T2}
+Device 2 (offline): removes "Book"  ← removes {book, dev1, T1}
+
+Reconnect → merge:
+  Device 1 has: {book, dev1, T1}, removes={}
+  Device 2 has: {pen, dev2, T2}, removes={book, dev1, T1}
+
+  OR-Set merge: union of adds, union of removes
+  Effective items = adds - removes
+  = { {book,dev1,T1}, {pen,dev2,T2} } - { {book,dev1,T1} }
+  = { {pen,dev2,T2} }  → Cart: ["Pen"]
+
+  If Device 2 concurrently added a new tag for "Book":
+  = { {book,dev1,T1}, {pen,dev2,T2}, {book,dev2,T3} } - { {book,dev1,T1} }
+  = { {pen,dev2,T2}, {book,dev2,T3} }  → Cart: ["Pen", "Book"]
+  <span class="ok">Add wins over concurrent remove</span> — acceptable for shopping carts
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Trade-offs -->
+    <section class="section" id="tradeoffs">
+      <div class="section-label">Decision Guide</div>
+      <h2>Trade-offs Table</h2>
+
+      <div class="table-wrap">
+        <table>
+          <tr>
+            <th>Decision</th>
+            <th>Option A</th>
+            <th>Option B</th>
+            <th>When to Choose A</th>
+          </tr>
+          <tr>
+            <td><strong>CP vs AP during partition</strong></td>
+            <td>CP (consistency)</td>
+            <td>AP (availability)</td>
+            <td>CP for financial data, auth, inventory (stale = wrong business decision). AP for social feeds, user preferences, view counts (stale = acceptable)</td>
+          </tr>
+          <tr>
+            <td><strong>Strong vs eventual consistency</strong></td>
+            <td>Strong (linearizable)</td>
+            <td>Eventual</td>
+            <td>Strong for read-your-own-writes, payment operations, leader election. Eventual for high-write analytics, like counts, leaderboards</td>
+          </tr>
+          <tr>
+            <td><strong>Redis lock vs etcd lock</strong></td>
+            <td>etcd (Raft-backed)</td>
+            <td>Redis SETNX</td>
+            <td>etcd for critical mutual exclusion (job scheduler, singleton worker). Redis for best-effort (cache population, rate limit, non-critical coordination)</td>
+          </tr>
+          <tr>
+            <td><strong>2PC vs Saga</strong></td>
+            <td>Saga pattern</td>
+            <td>2PC</td>
+            <td>Saga for microservices (non-blocking, compensating transactions). 2PC only for XA transactions within a single database cluster where coordinator recovery is fast</td>
+          </tr>
+          <tr>
+            <td><strong>Optimistic vs pessimistic concurrency</strong></td>
+            <td>Optimistic (version check)</td>
+            <td>Pessimistic (lock)</td>
+            <td>Optimistic when conflicts are rare (most web apps). Pessimistic when contention is high and retry cost is significant (batch processing, inventory reservation)</td>
+          </tr>
+          <tr>
+            <td><strong>LWW vs CRDT conflict resolution</strong></td>
+            <td>CRDT (auto-merge)</td>
+            <td>LWW (last-write-wins)</td>
+            <td>CRDT when concurrent modifications are semantically mergeable (counters, sets, strings via OT). LWW when only one value can be correct and losing concurrent writes is acceptable</td>
+          </tr>
+          <tr>
+            <td><strong>3-node vs 5-node Raft cluster</strong></td>
+            <td>5-node cluster</td>
+            <td>3-node cluster</td>
+            <td>5-node for production critical systems (tolerates 2 failures). 3-node acceptable for most cases (tolerates 1 failure) with significantly lower hardware cost</td>
+          </tr>
+          <tr>
+            <td><strong>Vector clocks vs physical timestamps</strong></td>
+            <td>Vector clocks</td>
+            <td>Physical timestamps (NTP)</td>
+            <td>Vector clocks when causal ordering matters and clocks can't be trusted. Physical timestamps only when using GPS-synchronized clocks (Google TrueTime / AWS Time Sync)</td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Anti-patterns -->
+    <section class="section" id="antipatterns">
+      <div class="section-label">What Not to Do</div>
+      <h2>Anti-patterns</h2>
+
+      <ul class="antipattern-list">
+        <li>
+          <strong>Assuming eventual consistency means "eventually correct"</strong>
+          Eventual consistency means replicas converge to the same value if no new writes occur. It does NOT mean the value will eventually be the one you wrote — it means the last write wins. If two nodes receive conflicting writes, one will be discarded. "Eventually consistent" data can permanently lose writes without error if conflict resolution (LWW or CRDT) discards your value.
+        </li>
+        <li>
+          <strong>Redis distributed lock without TTL (deadlock risk)</strong>
+          SETNX without EXPIRE creates a permanent lock if the holder crashes before releasing it. The lock key lives forever in Redis, blocking all future lock holders. Always use atomic SET key value NX PX ttl_ms — never SETNX followed by a separate EXPIRE (non-atomic, crashes between the two commands leave no TTL).
+        </li>
+        <li>
+          <strong>Even-number Raft cluster (2, 4, 6 nodes)</strong>
+          A 2-node Raft cluster cannot elect a leader if either node fails — neither can reach majority (1 of 2 = 50%, not &gt;50%). Always use odd numbers: 3, 5, or 7. Three nodes tolerate 1 failure. Five nodes tolerate 2. The "two-node HA" pattern for cost savings is a latent split-brain waiting to happen.
+        </li>
+        <li>
+          <strong>Using distributed locks as a substitute for proper data modeling</strong>
+          A distributed lock around a shared counter prevents concurrent modification. But so does an atomic INCR in Redis, or an UPDATE WHERE version=$v in Postgres. Reaching for a distributed lock first is a code smell — often there's a simpler atomic primitive (CAS, INCR, conditional write) that avoids the coordination entirely. Locks serialize throughput; atomic operations don't.
+        </li>
+        <li>
+          <strong>Ignoring the lock expiry window in critical operations</strong>
+          If a lock holder experiences a GC pause, network delay, or CPU throttle and the lock expires, another process acquires the lock. Both processes now believe they hold the lock. Without fencing tokens, the first holder's write will corrupt data after the second holder has already proceeded. Critical sections that modify external state must use fencing tokens or Raft-backed locks that don't expire while the session is alive.
+        </li>
+        <li>
+          <strong>Strong consistency everywhere "to be safe"</strong>
+          Strong consistency requires consensus per write — adding latency and reducing write throughput. Applying it to all data regardless of business need is waste. User preferences, analytics events, and read counts don't need linearizability. Measure the actual cost (latency, throughput) of consistency at each storage layer and choose the weakest consistency that meets the business requirement.
+        </li>
+        <li>
+          <strong>Two-phase commit in a microservices architecture</strong>
+          2PC across microservice boundaries requires all services to implement the XA protocol and coordinate through a single transaction coordinator. Any service that doesn't support XA breaks the protocol. Any coordinator failure leaves all participants blocked with locks held. The Saga pattern solves this correctly for microservices — local transactions with compensating actions, no distributed coordinator.
+        </li>
+        <li>
+          <strong>Relying on physical timestamps for event ordering</strong>
+          NTP synchronization can drift by 100ms or more between nodes. Two events written 1ms apart at different nodes can appear in the wrong order when sorted by wall-clock time. For event ordering, use Kafka partition offsets (monotonic within partition), Postgres LSN (monotonic within WAL), or logical timestamps (vector clocks). Physical timestamps are for humans to read, not for machines to order events.
+        </li>
+      </ul>
+    </section>
+
+    <!-- Interview Tips -->
+    <section class="section" id="interview-tips">
+      <div class="section-label">Interview Strategy</div>
+      <h2>Interview Tips for Consistency Questions</h2>
+
+      <div class="callout callout-indigo">
+        <div class="callout-title">The Consistency Interview Signal</div>
+        <p>When interviewers ask about distributed systems design, the consistency question is usually implicit: "What if two users update the same thing simultaneously?" or "What if the database replica is slightly behind?" Proactively raising this question and providing a nuanced answer (not just "we'll use strong consistency everywhere") is what separates senior candidates.</p>
+      </div>
+
+      <div class="tips-grid">
+        <div class="tip-card">
+          <div class="tip-num">Tip 01</div>
+          <p><strong>Lead with CAP's practical framing.</strong> "Partitions happen, so the choice is: do we sacrifice consistency (serve stale data) or availability (reject requests) when a partition occurs?" This shows you understand CAP is a partition-time decision, not an architectural one.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 02</div>
+          <p><strong>Classify each data type separately.</strong> "Financial data needs strong consistency. User profile photos can be eventually consistent. The leaderboard can be eventual with 2s staleness." Don't pick one consistency model for the whole system — different data has different requirements.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 03</div>
+          <p><strong>For concurrent writes, name your resolution strategy.</strong> "If two users edit the same document simultaneously, we need a conflict resolution strategy — last-write-wins with timestamps, operational transforms, or a CRDT based on the data type." Naming the options shows distributed systems depth.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 04</div>
+          <p><strong>For distributed locks, mention fencing tokens.</strong> "I'd use a distributed lock via etcd with a fencing token — even if the lock expires, the storage layer rejects writes from stale lock holders via the token comparison." This is the detail that shows you've thought about failure modes.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 05</div>
+          <p><strong>Mention Raft for "how does this coordinate" questions.</strong> etcd, CockroachDB, TiKV, and Kubernetes control plane all use Raft. Saying "I'd use etcd for leader election — it's Raft-backed and handles network partitions correctly" shows awareness of production tools.</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">Tip 06</div>
+          <p><strong>Use "read-your-own-writes" as a concrete consistency discussion.</strong> "After a user saves their profile, they should see their own changes immediately — I'd ensure this via sticky routing to the primary for that user's next read, or client-side caching of the write." This is concrete, testable, and shows you think about UX impact of consistency choices.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p>KnowAlgo · Pattern 07: Distributed Consistency &amp; Coordination · <a href="system-design.html">All Patterns</a> · <a href="index.html">DSA Guides</a></p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+<script>
+  window.addEventListener('scroll', () => {
+    const scrollTop = document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    document.getElementById('progress-bar').style.width = (scrollTop / scrollHeight * 100) + '%';
+  });
+
+  function copyCode(btn) {
+    const code = btn.nextElementSibling.querySelector('code');
+    navigator.clipboard.writeText(code.innerText).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  }
+
+  const tocLinks = document.querySelectorAll('.toc a');
+  const sections = document.querySelectorAll('section[id]');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.toc a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -75% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

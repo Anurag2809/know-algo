@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Processing Pipelines – System Design Pattern 08 | KnowAlgo</title>
+  <meta name="description" content="Master data processing pipelines: batch vs stream, Lambda/Kappa architecture, Apache Spark, Apache Flink, ETL/ELT, data lakehouse, Airflow orchestration, and data quality patterns." />
+  <meta name="keywords" content="data pipelines, Apache Spark, Apache Flink, Lambda architecture, Kappa architecture, ETL ELT, data lakehouse, Airflow, stream processing, batch processing, system design" />
+  <link rel="canonical" href="https://knowalgo.netlify.app/system-design-pipelines.html" />
+  <meta property="og:title" content="Data Processing Pipelines – System Design | KnowAlgo" />
+  <meta property="og:description" content="Complete guide to data pipeline architecture: batch vs stream, Spark, Flink, Lakehouse, and orchestration patterns." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://knowalgo.netlify.app/system-design-pipelines.html" />
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2Z1EQCZBXH');</script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+  <style>
+    :root {
+      --primary: #db2777;
+      --primary-dark: #9d174d;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --code-bg: #1e293b;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.13);
+      --radius: 12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui,-apple-system,sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Progress bar */
+    #progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(to right, #db2777, #7c3aed); z-index: 9999; transition: width .15s; }
+
+    /* Header */
+    .site-header { background: #0f172a; padding: 14px 24px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+    .site-header a.logo { color: #fff; font-weight: 700; font-size: 1.15rem; letter-spacing: -.3px; }
+    .site-header .breadcrumb { color: #94a3b8; font-size: .85rem; }
+    .site-header .breadcrumb a { color: #94a3b8; }
+    .site-header .breadcrumb a:hover { color: #fff; }
+
+    /* Hero */
+    .hero { background: linear-gradient(135deg, #0f172a 0%, #4a044e 45%, #2e1065 100%); color: #fff; padding: 64px 24px 56px; text-align: center; }
+    .hero-badge { display: inline-block; background: rgba(219,39,119,.25); border: 1px solid rgba(219,39,119,.5); color: #f9a8d4; font-size: .78rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: 4px 14px; border-radius: 20px; margin-bottom: 20px; }
+    .hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; margin-bottom: 16px; letter-spacing: -.5px; }
+    .hero p { font-size: 1.08rem; color: #cbd5e1; max-width: 680px; margin: 0 auto 28px; }
+    .hero-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .hero-tag { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #e2e8f0; font-size: .78rem; padding: 4px 12px; border-radius: 20px; }
+
+    /* Layout */
+    .page-body { display: grid; grid-template-columns: 260px 1fr; gap: 32px; max-width: 1200px; margin: 40px auto; padding: 0 24px 80px; }
+    @media (max-width: 900px) { .page-body { grid-template-columns: 1fr; } .toc-sidebar { display: none; } }
+
+    /* TOC */
+    .toc-sidebar { position: sticky; top: 72px; height: fit-content; max-height: calc(100vh - 90px); overflow-y: auto; }
+    .toc-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .toc-box h3 { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); margin-bottom: 12px; }
+    .toc-box a { display: block; font-size: .82rem; color: var(--text-muted); padding: 4px 8px; border-radius: 6px; border-left: 2px solid transparent; transition: all .2s; margin-bottom: 2px; }
+    .toc-box a:hover { color: var(--primary); background: rgba(219,39,119,.06); text-decoration: none; }
+    .toc-box a.active { color: var(--primary); background: rgba(219,39,119,.08); border-left-color: var(--primary); font-weight: 600; }
+    .toc-nav { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+    .toc-nav a { font-size: .8rem; font-weight: 600; padding: 8px 12px; border-radius: 8px; background: rgba(219,39,119,.08); color: var(--primary); border: 1px solid rgba(219,39,119,.2); text-align: center; }
+    .toc-nav a:hover { background: rgba(219,39,119,.15); text-decoration: none; }
+
+    /* Content */
+    .content section { margin-bottom: 56px; }
+    .content h2 { font-size: 1.55rem; font-weight: 800; color: var(--text); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid var(--border); }
+    .content h3 { font-size: 1.15rem; font-weight: 700; color: var(--text); margin: 28px 0 12px; }
+    .content p { margin-bottom: 14px; color: #334155; }
+    .content ul, .content ol { margin: 0 0 14px 20px; color: #334155; }
+    .content li { margin-bottom: 6px; }
+
+    /* Arch diagram */
+    .arch-diagram { background: #0f172a; border-radius: var(--radius); padding: 24px; font-family: 'Courier New', monospace; font-size: .82rem; line-height: 1.6; overflow-x: auto; margin: 20px 0; color: #94a3b8; border: 1px solid #1e293b; }
+    .arch-diagram .pk { color: #f472b6; }
+    .arch-diagram .cy { color: #22d3ee; }
+    .arch-diagram .gn { color: #4ade80; }
+    .arch-diagram .am { color: #fbbf24; }
+    .arch-diagram .vi { color: #a78bfa; }
+    .arch-diagram .or { color: #fb923c; }
+    .arch-diagram .dim { color: #475569; }
+
+    /* Cards */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
+    .card h4 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+
+    /* Paradigm grid */
+    .paradigm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 20px 0; }
+    .para-card { background: var(--surface); border-radius: var(--radius); padding: 20px; border: 2px solid var(--border); }
+    .para-card h4 { font-size: 1rem; font-weight: 700; margin-bottom: 10px; }
+    .para-card ul { margin-left: 16px; font-size: .88rem; }
+    .pc-batch { border-top: 4px solid #0891b2; }
+    .pc-batch h4 { color: #0891b2; }
+    .pc-stream { border-top: 4px solid #db2777; }
+    .pc-stream h4 { color: #db2777; }
+    .pc-hybrid { border-top: 4px solid #7c3aed; }
+    .pc-hybrid h4 { color: #7c3aed; }
+    .pc-micro { border-top: 4px solid #059669; }
+    .pc-micro h4 { color: #059669; }
+
+    /* Comparison table */
+    .table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius); border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    th { background: #db2777; color: #fff; padding: 11px 14px; text-align: left; font-weight: 600; }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) { background: #f8fafc; }
+    .yes { color: #059669; font-weight: 700; }
+    .no { color: #dc2626; font-weight: 700; }
+    .partial { color: #d97706; font-weight: 700; }
+
+    /* Engineer perspectives */
+    .eng-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 20px 0; }
+    .eng-take { background: var(--surface); border-radius: var(--radius); padding: 18px 20px; border: 1px solid var(--border); border-left: 4px solid #ccc; box-shadow: var(--shadow-sm); }
+    .eng-take h4 { font-size: .88rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .eng-take p { font-size: .87rem; color: #334155; margin: 0; }
+    .et-infra { border-left-color: #0891b2; } .et-infra h4 { color: #0891b2; }
+    .et-net { border-left-color: #7c3aed; } .et-net h4 { color: #7c3aed; }
+    .et-platform { border-left-color: #059669; } .et-platform h4 { color: #059669; }
+    .et-security { border-left-color: #dc2626; } .et-security h4 { color: #dc2626; }
+    .et-data { border-left-color: #db2777; } .et-data h4 { color: #db2777; }
+    .et-ml { border-left-color: #d97706; } .et-ml h4 { color: #d97706; }
+    .et-backend { border-left-color: #0f172a; } .et-backend h4 { color: #334155; }
+    .et-frontend { border-left-color: #6366f1; } .et-frontend h4 { color: #6366f1; }
+    .et-sre { border-left-color: #f59e0b; } .et-sre h4 { color: #b45309; }
+
+    /* Problem cards */
+    .problem-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; margin-bottom: 28px; box-shadow: var(--shadow-sm); }
+    .problem-header { background: linear-gradient(135deg, #4a044e, #2e1065); color: #fff; padding: 18px 22px; }
+    .problem-header h3 { font-size: 1.05rem; font-weight: 700; margin: 0; }
+    .problem-header p { font-size: .85rem; color: #e2e8f0; margin: 6px 0 0; }
+    .problem-body { padding: 20px 22px; }
+
+    /* Anti-patterns */
+    .anti-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 16px 0; }
+    .anti-card { background: #fff5f5; border: 1px solid #fecaca; border-radius: var(--radius); padding: 16px 18px; }
+    .anti-card h4 { font-size: .9rem; font-weight: 700; color: #991b1b; margin-bottom: 6px; }
+    .anti-card p { font-size: .84rem; color: #7f1d1d; margin: 0; }
+
+    /* Interview tips */
+    .tips-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin: 16px 0; }
+    .tip-card { background: linear-gradient(135deg, rgba(219,39,119,.05), rgba(124,58,237,.05)); border: 1px solid rgba(219,39,119,.2); border-radius: var(--radius); padding: 16px 18px; }
+    .tip-card h4 { font-size: .88rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+    .tip-card p { font-size: .84rem; color: #475569; margin: 0; }
+
+    /* Code */
+    pre[class*="language-"] { border-radius: var(--radius) !important; margin: 16px 0 !important; font-size: .83rem !important; }
+    .copy-btn { float: right; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #e2e8f0; font-size: .72rem; padding: 3px 10px; border-radius: 6px; cursor: pointer; margin: -4px -4px 0 0; }
+    .copy-btn:hover { background: rgba(255,255,255,.2); }
+
+    /* Callout */
+    .callout { border-radius: var(--radius); padding: 16px 18px; margin: 16px 0; border-left: 4px solid; }
+    .callout-info { background: rgba(219,39,119,.06); border-color: #db2777; }
+    .callout-warn { background: rgba(234,179,8,.06); border-color: #eab308; }
+    .callout-ok { background: rgba(5,150,105,.06); border-color: #059669; }
+    .callout p { margin: 0; font-size: .9rem; }
+    .callout strong { display: block; margin-bottom: 4px; }
+
+    /* Nines-style cards for latency classes */
+    .latency-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 20px 0; }
+    .lat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
+    .lat-card .lat-label { font-size: .78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .lat-card .lat-val { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
+    .lat-card .lat-desc { font-size: .78rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* Tool comparison */
+    .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 20px 0; }
+    .tool-card { background: var(--surface); border-radius: var(--radius); padding: 18px; border: 2px solid var(--border); }
+    .tool-card h4 { font-size: .95rem; font-weight: 700; margin-bottom: 10px; }
+    .tool-card ul { margin-left: 16px; font-size: .84rem; }
+    .tc-spark { border-top: 4px solid #e25d33; } .tc-spark h4 { color: #e25d33; }
+    .tc-flink { border-top: 4px solid #e6526f; } .tc-flink h4 { color: #e6526f; }
+    .tc-airflow { border-top: 4px solid #017cee; } .tc-airflow h4 { color: #017cee; }
+    .tc-dbt { border-top: 4px solid #ff694a; } .tc-dbt h4 { color: #ff694a; }
+    .tc-kafka { border-top: 4px solid #231f20; } .tc-kafka h4 { color: #334155; }
+    .tc-dask { border-top: 4px solid #ee5a24; } .tc-dask h4 { color: #ee5a24; }
+  </style>
+</head>
+<body>
+<div id="progress-bar"></div>
+
+<header class="site-header">
+  <a href="index.html" class="logo">KnowAlgo</a>
+  <span class="breadcrumb"> / <a href="system-design.html">System Design</a> / Data Processing Pipelines</span>
+</header>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-badge">Pattern 08 of 16 · System Design</div>
+  <h1>Data Processing Pipelines</h1>
+  <p>Batch vs. stream, Lambda & Kappa architecture, Apache Spark, Apache Flink, data lakehouse, orchestration, ETL/ELT, and data quality at scale.</p>
+  <div class="hero-tags">
+    <span class="hero-tag">Batch vs Stream</span>
+    <span class="hero-tag">Apache Spark</span>
+    <span class="hero-tag">Apache Flink</span>
+    <span class="hero-tag">Lambda / Kappa</span>
+    <span class="hero-tag">Data Lakehouse</span>
+    <span class="hero-tag">Airflow / dbt</span>
+    <span class="hero-tag">ETL / ELT</span>
+    <span class="hero-tag">Backfill Patterns</span>
+  </div>
+</div>
+
+<div class="page-body">
+  <!-- Sidebar TOC -->
+  <aside class="toc-sidebar">
+    <div class="toc-box">
+      <h3>On This Page</h3>
+      <a href="#fundamentals">Batch vs. Stream</a>
+      <a href="#architectures">Lambda & Kappa</a>
+      <a href="#etl-elt">ETL vs. ELT</a>
+      <a href="#spark">Apache Spark</a>
+      <a href="#flink">Apache Flink</a>
+      <a href="#lakehouse">Data Lakehouse</a>
+      <a href="#orchestration">Orchestration</a>
+      <a href="#quality">Data Quality & Lineage</a>
+      <a href="#perspectives">Engineer Perspectives</a>
+      <a href="#problems">Real Problems</a>
+      <a href="#tradeoffs">Trade-offs</a>
+      <a href="#antipatterns">Anti-Patterns</a>
+      <a href="#interview">Interview Tips</a>
+      <div class="toc-nav">
+        <a href="system-design-consistency.html">← Consistency</a>
+        <a href="system-design-security.html">Security →</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="content">
+
+    <!-- Batch vs. Stream -->
+    <section id="fundamentals">
+      <h2>Batch vs. Stream Processing</h2>
+      <p>Every data pipeline sits somewhere on the spectrum between processing <strong>finite bounded datasets</strong> (batch) and processing <strong>infinite unbounded event streams</strong> (stream). The right choice depends on your freshness requirement — how stale is the data allowed to be when consumers read it?</p>
+
+      <div class="arch-diagram">
+<span class="pk">Bounded (Batch) Input</span>                <span class="pk">Unbounded (Stream) Input</span>
+
+<span class="gn">Database / S3 / HDFS</span>               <span class="cy">Kafka / Kinesis / Pub/Sub</span>
+         │                                        │
+         ▼                                        ▼
+  <span class="am">┌─────────────────────┐</span>          <span class="am">┌─────────────────────────┐</span>
+  <span class="am">│   Batch Job (Spark) │</span>          <span class="am">│ Stream Job (Flink/Spark) │</span>
+  <span class="am">│ reads ALL records   │</span>          <span class="am">│  processes per event    │</span>
+  <span class="am">│ per run             │</span>          <span class="am">│  or micro-batch         │</span>
+  <span class="am">└────────┬────────────┘</span>          <span class="am">└──────────┬──────────────┘</span>
+           │                                     │
+           ▼                                     ▼
+  <span class="vi">Warehouse / Data Lake</span>          <span class="vi">Sink: Kafka / DB / Cache / Dashboard</span>
+
+Latency:    <span class="or">minutes → hours</span>          <span class="gn">milliseconds → seconds</span>
+Throughput: <span class="gn">very high (GBs→TBs)</span>       <span class="or">medium (tunable)</span>
+Cost:       <span class="gn">low (spot instances)</span>       <span class="or">higher (always-on)</span>
+Fault tol.: <span class="gn">re-run entire job</span>         <span class="am">checkpointing + exactly-once</span>
+      </div>
+
+      <div class="paradigm-grid">
+        <div class="para-card pc-batch">
+          <h4>Batch Processing</h4>
+          <ul>
+            <li>Process all data up to time T in one run</li>
+            <li>High throughput, low operational cost</li>
+            <li>Nightly ETL, monthly billing aggregations</li>
+            <li>Retry is cheap — just re-run the job</li>
+            <li>Simple programming model</li>
+          </ul>
+        </div>
+        <div class="para-card pc-stream">
+          <h4>Stream Processing</h4>
+          <ul>
+            <li>Process each event or micro-batch as it arrives</li>
+            <li>Low latency (sub-second possible)</li>
+            <li>Fraud detection, live dashboards, alerting</li>
+            <li>Fault tolerance via checkpointing</li>
+            <li>Out-of-order events &amp; watermarks required</li>
+          </ul>
+        </div>
+        <div class="para-card pc-hybrid">
+          <h4>Micro-Batch (Spark Streaming)</h4>
+          <ul>
+            <li>Batches of 100ms–30s treated as mini-batch</li>
+            <li>Simpler semantics than pure streaming</li>
+            <li>Latency: seconds (not milliseconds)</li>
+            <li>High throughput via batch optimizations</li>
+            <li>Trigger: fixed interval or processingTime</li>
+          </ul>
+        </div>
+        <div class="para-card pc-micro">
+          <h4>Incremental Batch</h4>
+          <ul>
+            <li>Process only new records since last run</li>
+            <li>Watermark column: updated_at, event_time</li>
+            <li>Reduces compute cost vs full batch</li>
+            <li>Late data handled by re-processing window</li>
+            <li>Common in data warehouse refresh patterns</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Time Semantics</h3>
+      <p>Three time concepts matter in stream processing, and confusing them causes incorrect aggregations:</p>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Time Type</th><th>Definition</th><th>Use Case</th><th>Pitfall</th></tr>
+          <tr><td><strong>Event Time</strong></td><td>When the event actually occurred (in the source system)</td><td>Analytics, billing, compliance</td><td>Out-of-order arrival; must buffer</td></tr>
+          <tr><td><strong>Processing Time</strong></td><td>When the pipeline processes the event</td><td>Simple alerting, real-time feeds</td><td>Results differ on retry / replay</td></tr>
+          <tr><td><strong>Ingestion Time</strong></td><td>When the message arrives at the message broker</td><td>Compromise when event time missing</td><td>Network delay skews it</td></tr>
+        </table>
+      </div>
+
+      <div class="callout callout-warn">
+        <p><strong>Watermarks:</strong> A watermark W(t) tells the engine "all events with event_time &lt; t have arrived." Events arriving after the watermark are late data — you must decide: drop them, update results, or route to a side output for reconciliation. Flink's <code>BoundedOutOfOrdernessWatermarks</code> lets you configure max lateness (e.g., 5 minutes).</p>
+      </div>
+    </section>
+
+    <!-- Lambda / Kappa -->
+    <section id="architectures">
+      <h2>Lambda &amp; Kappa Architecture</h2>
+      <p>These are two competing blueprints for building systems that serve both historical analytics and low-latency results.</p>
+
+      <h3>Lambda Architecture</h3>
+      <div class="arch-diagram">
+<span class="cy">Raw Events</span>  (Kafka / S3 event store)
+         │
+         ├──────────────────────────────────┐
+         │                                  │
+         ▼                                  ▼
+<span class="am">┌──────────────────────┐</span>      <span class="gn">┌──────────────────────┐</span>
+<span class="am">│     Batch Layer      │</span>      <span class="gn">│    Speed Layer       │</span>
+<span class="am">│ (Spark on S3/HDFS)   │</span>      <span class="gn">│  (Flink / Spark SS)  │</span>
+<span class="am">│ Recomputes from raw  │</span>      <span class="gn">│  Processes real-time │</span>
+<span class="am">│ Every N hours/days   │</span>      <span class="gn">│  Last N minutes/hrs  │</span>
+<span class="am">└──────────┬───────────┘</span>      <span class="gn">└──────────┬───────────┘</span>
+           │                             │
+           ▼                             ▼
+<span class="am">  Batch Views (DWH)</span>          <span class="gn">  Realtime Views (Redis)</span>
+           │                             │
+           └────────────┬────────────────┘
+                        ▼
+               <span class="vi">┌───────────────────┐</span>
+               <span class="vi">│    Serving Layer   │</span>
+               <span class="vi">│ Merges batch +     │</span>
+               <span class="vi">│ realtime views     │</span>
+               <span class="vi">└───────────────────┘</span>
+
+<span class="dim">Pros: high accuracy (batch), low latency (speed)</span>
+<span class="dim">Cons: TWO codebases to maintain — same logic implemented twice</span>
+      </div>
+
+      <h3>Kappa Architecture</h3>
+      <div class="arch-diagram">
+<span class="cy">Raw Events</span>  (Kafka — permanent log retention)
+         │
+         ▼
+<span class="pk">┌─────────────────────────────────────────────┐</span>
+<span class="pk">│         Single Stream Processing Layer       │</span>
+<span class="pk">│              (Flink / Spark SS)              │</span>
+<span class="pk">│                                              │</span>
+<span class="pk">│  Normal mode: process live events            │</span>
+<span class="pk">│  Reprocessing: replay Kafka from offset 0   │</span>
+<span class="pk">│  Run v2 job in parallel → swap output       │</span>
+<span class="pk">└───────────────────┬─────────────────────────┘</span>
+                    │
+                    ▼
+          <span class="gn">Serving Layer (DB / Cache)</span>
+
+<span class="dim">Pros: single codebase, simpler operations</span>
+<span class="dim">Cons: Kafka must retain full history (expensive); reprocessing is slow</span>
+      </div>
+
+      <div class="card">
+        <h4>Which to Choose?</h4>
+        <ul>
+          <li><strong>Lambda</strong>: When batch accuracy &gt; operational complexity. Legacy teams often have Spark batch already. Good for compliance reports that must match exactly.</li>
+          <li><strong>Kappa</strong>: When you can keep Kafka logs forever (or object-store offloading). Best for teams with strong Flink/Spark Streaming skills. Simpler DevOps.</li>
+          <li><strong>Modern trend</strong>: Kappa with Lakehouse. Store raw events in S3/GCS with Iceberg/Delta, replay from object store instead of Kafka for reprocessing. Best of both worlds.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ETL / ELT -->
+    <section id="etl-elt">
+      <h2>ETL vs. ELT</h2>
+      <p>The shift from ETL to ELT mirrors the shift from on-premise data warehouses to cloud-native compute separation.</p>
+
+      <div class="table-wrap">
+        <table>
+          <tr><th>Dimension</th><th>ETL (Extract–Transform–Load)</th><th>ELT (Extract–Load–Transform)</th></tr>
+          <tr><td>Transform location</td><td>Intermediate compute layer (Spark, custom)</td><td>Inside the warehouse (BigQuery SQL, dbt)</td></tr>
+          <tr><td>Raw data retained?</td><td class="no">No — transformed data loaded</td><td class="yes">Yes — raw layer always available</td></tr>
+          <tr><td>Schema flexibility</td><td class="partial">Schema-on-write (rigid)</td><td class="yes">Schema-on-read (flexible)</td></tr>
+          <tr><td>Latency</td><td class="partial">Higher (transform before load)</td><td class="yes">Lower for ingestion</td></tr>
+          <tr><td>Cost model</td><td>Separate compute cluster cost</td><td>Warehouse query cost (per-byte)</td></tr>
+          <tr><td>Best for</td><td>PII masking before load, legacy DWH</td><td>Cloud DWH (BigQuery, Snowflake, Redshift)</td></tr>
+          <tr><td>Tools</td><td>Informatica, Talend, Spark pipelines</td><td>Fivetran + dbt, Airbyte + dbt</td></tr>
+        </table>
+      </div>
+
+      <h3>dbt (Data Build Tool)</h3>
+      <p>dbt is the de-facto ELT transformation layer. It runs SQL SELECT statements in your warehouse, materializing them as tables or views, with lineage, testing, and documentation built in.</p>
+      <div style="position:relative;">
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.querySelector('code').innerText)">Copy</button>
+        <pre><code class="language-sql">-- models/marts/fct_orders.sql
+-- dbt model: one SELECT → materialized as table in warehouse
+
+{{ config(
+    materialized='incremental',          -- only process new rows
+    unique_key='order_id',               -- merge on this key
+    on_schema_change='sync_all_columns'
+) }}
+
+WITH source_orders AS (
+    SELECT *
+    FROM {{ ref('stg_orders') }}         -- ref() builds the DAG
+    WHERE status != 'cancelled'
+    {% if is_incremental() %}
+        AND created_at > (SELECT MAX(created_at) FROM {{ this }})
+    {% endif %}
+),
+enriched AS (
+    SELECT
+        o.order_id,
+        o.user_id,
+        o.created_at,
+        o.total_amount,
+        u.country,
+        u.plan_tier,
+        -- surrogate key for SCD Type 2 tracking
+        {{ dbt_utils.generate_surrogate_key(['order_id', 'created_at']) }} AS sk
+    FROM source_orders o
+    LEFT JOIN {{ ref('dim_users') }} u USING (user_id)
+)
+SELECT * FROM enriched</code></pre>
+      </div>
+
+      <div class="callout callout-info">
+        <p><strong>dbt Tests:</strong> Add <code>schema.yml</code> with <code>tests: [unique, not_null, accepted_values, relationships]</code>. Run <code>dbt test</code> in CI to catch data quality regressions before they reach dashboards.</p>
+      </div>
+    </section>
+
+    <!-- Apache Spark -->
+    <section id="spark">
+      <h2>Apache Spark</h2>
+      <p>Spark is the dominant batch and micro-batch engine. Its key insight is keeping intermediate data in memory across stages rather than writing to disk after each MapReduce step.</p>
+
+      <h3>Execution Model</h3>
+      <div class="arch-diagram">
+<span class="am">Driver Program</span>  (SparkSession, DAG scheduler)
+         │
+         │  submits tasks
+         ▼
+<span class="gn">┌──────────────────────────────────────────┐</span>
+<span class="gn">│             Cluster Manager              │</span>
+<span class="gn">│    (YARN / Kubernetes / Standalone)      │</span>
+<span class="gn">└──────────────────┬───────────────────────┘</span>
+                   │ allocates
+    ┌──────────────┼──────────────┐
+    ▼              ▼              ▼
+<span class="cy">Executor 1</span>    <span class="cy">Executor 2</span>    <span class="cy">Executor 3</span>
+<span class="cy">├─ Task A</span>     <span class="cy">├─ Task B</span>     <span class="cy">├─ Task C</span>
+<span class="cy">└─ Task D</span>     <span class="cy">└─ Task E</span>     <span class="cy">└─ Task F</span>
+  (JVM)          (JVM)          (JVM)
+
+<span class="dim">Stage boundary: wide transformation (groupBy, join) causes shuffle</span>
+<span class="dim">Within stage: pipelined narrow transforms (map, filter) — no shuffle</span>
+      </div>
+
+      <h3>DataFrame API — Key Patterns</h3>
+      <div style="position:relative;">
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.querySelector('code').innerText)">Copy</button>
+        <pre><code class="language-python">from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+from pyspark.sql.window import Window
+
+spark = SparkSession.builder \
+    .appName("UserEventAggregation") \
+    .config("spark.sql.adaptive.enabled", "true")   \  # AQE: auto tune joins
+    .config("spark.sql.adaptive.coalescePartitions.enabled", "true") \
+    .getOrCreate()
+
+# Read from S3 with partition pruning
+events = spark.read.parquet("s3://data-lake/events/year=2024/month=*/") \
+    .filter(F.col("event_type").isin(["purchase", "refund"])) \
+    .filter(F.col("country") == "US")
+
+# Avoid shuffle: broadcast small dimension table
+users = spark.read.parquet("s3://data-lake/users/").cache()
+spark.conf.set("spark.sql.autoBroadcastJoinThreshold", 50 * 1024 * 1024)  # 50MB
+
+enriched = events.join(F.broadcast(users), "user_id", "left")
+
+# Window function — running total per user per day
+window = Window.partitionBy("user_id", "date") \
+               .orderBy("event_ts") \
+               .rowsBetween(Window.unboundedPreceding, Window.currentRow)
+
+result = enriched.withColumn(
+    "running_spend",
+    F.sum("amount").over(window)
+).groupBy("date", "country", "plan_tier") \
+ .agg(
+    F.count("order_id").alias("order_count"),
+    F.sum("amount").alias("revenue"),
+    F.approx_count_distinct("user_id").alias("unique_buyers")  # HLL
+ )
+
+# Write with partitioning — downstream pruning
+result.write \
+    .mode("overwrite") \
+    .partitionBy("date", "country") \
+    .parquet("s3://data-warehouse/fct_daily_revenue/")</code></pre>
+      </div>
+
+      <h3>Spark Tuning Cheat Sheet</h3>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Problem</th><th>Symptom</th><th>Fix</th></tr>
+          <tr><td>Data skew</td><td>One task takes 10× longer than others</td><td>Salting key with random suffix 0–N; Adaptive Query Execution skew join hint</td></tr>
+          <tr><td>Small files</td><td>Thousands of 1KB Parquet files slow reads</td><td><code>coalesce(N)</code> before write; <code>spark.sql.files.maxPartitionBytes</code></td></tr>
+          <tr><td>OOM executor</td><td>GC pressure, OOM kills</td><td>Increase <code>spark.executor.memory</code>; reduce <code>spark.sql.shuffle.partitions</code>; switch to off-heap</td></tr>
+          <tr><td>Too many shuffles</td><td>Slow stages, network I/O peaks</td><td>Persist intermediate DataFrames; use broadcast joins; filter early</td></tr>
+          <tr><td>Slow job startup</td><td>Minutes before first task runs</td><td>Pre-warm executor pool; use Databricks Photon or spot + on-demand mixed</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Apache Flink -->
+    <section id="flink">
+      <h2>Apache Flink</h2>
+      <p>Flink is the leading true stream processing engine. Unlike Spark's micro-batch model, Flink processes each event individually with exactly-once guarantees via distributed snapshots (Chandy-Lamport algorithm).</p>
+
+      <h3>Windows &amp; State</h3>
+      <div class="arch-diagram">
+<span class="cy">Kafka Source</span>  ──▶  <span class="pk">Flink JobManager</span>  ──▶  <span class="cy">Kafka/DB Sink</span>
+                          │
+              ┌───────────┼───────────┐
+              ▼           ▼           ▼
+         <span class="gn">TaskManager</span>  <span class="gn">TaskManager</span>  <span class="gn">TaskManager</span>
+          (slots)        (slots)      (slots)
+              │
+         ┌────┴─────┐
+         │  State   │  ← RocksDB (large) or heap (small)
+         │ Backend  │
+         └────┬─────┘
+              │  checkpoint every N seconds
+              ▼
+         <span class="am">S3 / HDFS</span>  (checkpoint storage)
+
+<span class="dim">Window Types:</span>
+<span class="gn"> Tumbling</span>:  [0–5min] [5–10min] [10–15min]  — no overlap
+<span class="am"> Sliding</span>:   [0–5min] [1–6min] [2–7min]     — overlap (every 1min)
+<span class="vi"> Session</span>:   events grouped by inactivity gap (e.g., 30min idle)
+<span class="cy"> Global</span>:    one window, custom trigger (count-based, etc.)
+      </div>
+
+      <div style="position:relative;">
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.querySelector('code').innerText)">Copy</button>
+        <pre><code class="language-python">from pyflink.datastream import StreamExecutionEnvironment
+from pyflink.datastream.connectors.kafka import FlinkKafkaConsumer, FlinkKafkaProducer
+from pyflink.datastream.window import TumblingEventTimeWindows, Time
+from pyflink.common.watermark_strategy import WatermarkStrategy, Duration
+
+env = StreamExecutionEnvironment.get_execution_environment()
+env.set_parallelism(4)
+env.enable_checkpointing(60_000)  # checkpoint every 60s (ms)
+
+# Source with watermark strategy (5 min max lateness)
+watermark_strategy = WatermarkStrategy \
+    .for_bounded_out_of_orderness(Duration.of_minutes(5)) \
+    .with_timestamp_assigner(lambda event, _: event["event_ts"])
+
+stream = env.add_source(FlinkKafkaConsumer(
+    topics="user-events",
+    deserialization_schema=...,
+    properties={"bootstrap.servers": "kafka:9092", "group.id": "flink-agg"}
+)).assign_timestamps_and_watermarks(watermark_strategy)
+
+# Stateful aggregation: count purchases per user per 10-min tumbling window
+result = stream \
+    .filter(lambda e: e["event_type"] == "purchase") \
+    .key_by(lambda e: e["user_id"]) \
+    .window(TumblingEventTimeWindows.of(Time.minutes(10))) \
+    .reduce(lambda a, b: {
+        "user_id": a["user_id"],
+        "count": a["count"] + b["count"],
+        "revenue": a["revenue"] + b["revenue"],
+        "window_end": b["window_end"]
+    })
+
+# Late data side output (events arriving after watermark)
+late_tag = OutputTag("late-events")
+# ... configure allowed lateness and side output sink
+
+result.add_sink(FlinkKafkaProducer("purchase-aggregates", ...))
+env.execute("PurchaseAggregationJob")</code></pre>
+      </div>
+
+      <h3>Flink vs Spark Streaming</h3>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Dimension</th><th>Apache Flink</th><th>Spark Structured Streaming</th></tr>
+          <tr><td>Processing model</td><td>True per-event streaming</td><td>Micro-batch (100ms+)</td></tr>
+          <tr><td>Latency</td><td>Milliseconds</td><td>Seconds (100ms minimum)</td></tr>
+          <tr><td>Exactly-once</td><td class="yes">Native (Chandy-Lamport)</td><td class="yes">Via WAL + idempotent sinks</td></tr>
+          <tr><td>State management</td><td>Rich: ValueState, MapState, ListState</td><td>Limited: aggregations only</td></tr>
+          <tr><td>SQL support</td><td>Flink SQL (streaming-native)</td><td>Spark SQL (micro-batch)</td></tr>
+          <tr><td>Backfill/reprocessing</td><td>Replay Kafka offsets</td><td>Same (Spark batch job)</td></tr>
+          <tr><td>Ecosystem</td><td>Standalone, AWS Kinesis DA</td><td>Databricks, EMR, GCP Dataproc</td></tr>
+          <tr><td>Operational complexity</td><td class="partial">Higher (JobManager HA)</td><td class="yes">Lower (unified with batch)</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Data Lakehouse -->
+    <section id="lakehouse">
+      <h2>Data Lakehouse</h2>
+      <p>A lakehouse combines the low-cost object storage of a data lake with the ACID transactions, schema enforcement, and query performance of a data warehouse. The key innovation is an open table format layer sitting on top of Parquet files in S3/GCS.</p>
+
+      <div class="arch-diagram">
+<span class="dim">Data Sources</span>
+   CDC (Debezium) + Kafka + App Logs + Click Events
+         │
+         ▼
+<span class="cy">┌───────────────────────────────────────────────────┐</span>
+<span class="cy">│              Raw / Bronze Layer                   │</span>
+<span class="cy">│  S3: s3://lake/raw/{source}/{date}/               │</span>
+<span class="cy">│  Format: Parquet + Iceberg/Delta table format     │</span>
+<span class="cy">│  No transforms — append-only, full history        │</span>
+<span class="cy">└─────────────────────┬─────────────────────────────┘</span>
+                      │  dbt / Spark transform
+                      ▼
+<span class="gn">┌───────────────────────────────────────────────────┐</span>
+<span class="gn">│            Cleaned / Silver Layer                 │</span>
+<span class="gn">│  Deduplicated, validated, joined dimensions       │</span>
+<span class="gn">│  Partition by (date, region, event_type)          │</span>
+<span class="gn">└─────────────────────┬─────────────────────────────┘</span>
+                      │  aggregation
+                      ▼
+<span class="am">┌───────────────────────────────────────────────────┐</span>
+<span class="am">│          Business / Gold Layer                    │</span>
+<span class="am">│  Fact + Dimension tables (star schema)            │</span>
+<span class="am">│  Served to: BI tools, dashboards, ML features    │</span>
+<span class="am">└───────────────────────────────────────────────────┘</span>
+
+<span class="pk">Open Table Formats (choose one):</span>
+<span class="pk">  Apache Iceberg</span>  — Netflix origin, best time-travel, hidden partitioning
+<span class="am">  Delta Lake</span>      — Databricks, tight Spark integration, MERGE support
+<span class="vi">  Apache Hudi</span>     — Uber origin, upsert-optimized, two table types (CoW/MoR)
+      </div>
+
+      <h3>Iceberg Table Features</h3>
+      <div style="position:relative;">
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.querySelector('code').innerText)">Copy</button>
+        <pre><code class="language-sql">-- Create Iceberg table with hidden partitioning
+CREATE TABLE catalog.db.events (
+    event_id     BIGINT,
+    user_id      BIGINT,
+    event_type   STRING,
+    amount       DECIMAL(12,2),
+    event_ts     TIMESTAMP,
+    country      STRING
+)
+USING iceberg
+PARTITIONED BY (days(event_ts), country)  -- hidden partitioning by day
+TBLPROPERTIES (
+    'write.target-file-size-bytes' = '134217728',  -- 128MB files
+    'write.delete.mode'            = 'merge-on-read',
+    'history.expire.max-snapshot-age-ms' = '604800000'  -- 7 days
+);
+
+-- MERGE (upsert) — atomic, no duplicate risk
+MERGE INTO catalog.db.events AS target
+USING new_events AS source ON target.event_id = source.event_id
+WHEN MATCHED THEN UPDATE SET *
+WHEN NOT MATCHED THEN INSERT *;
+
+-- Time travel: audit or reprocess
+SELECT * FROM catalog.db.events
+TIMESTAMP AS OF '2024-01-15 00:00:00';
+
+-- Snapshot rollback after bad write
+CALL catalog.system.rollback_to_snapshot('db.events', 8170963818875623621);</code></pre>
+      </div>
+
+      <div class="callout callout-ok">
+        <p><strong>Z-Ordering for query performance:</strong> <code>OPTIMIZE table ZORDER BY (user_id, event_type)</code> co-locates related data in the same Parquet files. Query filters on user_id skip 90%+ of files via Iceberg's min/max statistics per file.</p>
+      </div>
+    </section>
+
+    <!-- Orchestration -->
+    <section id="orchestration">
+      <h2>Pipeline Orchestration</h2>
+      <p>Orchestrators schedule, monitor, and retry pipeline tasks. They manage DAG (Directed Acyclic Graph) dependencies — task B runs only after task A succeeds.</p>
+
+      <div class="tool-grid">
+        <div class="tool-card tc-airflow">
+          <h4>Apache Airflow</h4>
+          <ul>
+            <li>Most widely deployed orchestrator</li>
+            <li>Python-defined DAGs</li>
+            <li>Rich operator ecosystem</li>
+            <li>Backfill: <code>airflow dags backfill</code></li>
+            <li>Weakness: scheduler bottleneck, no dynamic tasks in older versions</li>
+            <li>Managed: MWAA (AWS), Cloud Composer (GCP)</li>
+          </ul>
+        </div>
+        <div class="tool-card tc-dbt">
+          <h4>Prefect</h4>
+          <ul>
+            <li>Python-native, dynamic workflows</li>
+            <li>Tasks are decorated functions</li>
+            <li>Hybrid execution (cloud + local agents)</li>
+            <li>Better error messages than Airflow</li>
+            <li>Flows can be parameterized at runtime</li>
+            <li>Good for ML training pipelines</li>
+          </ul>
+        </div>
+        <div class="tool-card tc-dask">
+          <h4>Dagster</h4>
+          <ul>
+            <li>Asset-centric (not task-centric)</li>
+            <li>Data-aware: knows schema of each asset</li>
+            <li>Built-in data quality testing</li>
+            <li>Lineage graph out of the box</li>
+            <li>Partitioned assets for incremental loads</li>
+            <li>Best for data platform teams</li>
+          </ul>
+        </div>
+        <div class="tool-card tc-spark">
+          <h4>dbt + orchestrator</h4>
+          <ul>
+            <li>dbt Cloud has built-in scheduling</li>
+            <li>Or trigger dbt from Airflow/Prefect</li>
+            <li>Slim CI: only run changed models</li>
+            <li>State: compare to production artifacts</li>
+            <li>Integration: dbt-airflow operators</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Airflow DAG Example with Backfill</h3>
+      <div style="position:relative;">
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.querySelector('code').innerText)">Copy</button>
+        <pre><code class="language-python">from airflow import DAG
+from airflow.providers.amazon.aws.operators.emr import EmrServerlessStartJobRunOperator
+from airflow.providers.common.sql.operators.sql import SQLCheckOperator
+from airflow.utils.dates import days_ago
+from datetime import timedelta
+
+DEFAULT_ARGS = {
+    "owner": "data-platform",
+    "retries": 3,
+    "retry_delay": timedelta(minutes=10),
+    "retry_exponential_backoff": True,
+    "max_retry_delay": timedelta(hours=1),
+    "email_on_failure": True,
+    "email": ["data-alerts@company.com"],
+}
+
+with DAG(
+    dag_id="daily_revenue_pipeline",
+    default_args=DEFAULT_ARGS,
+    schedule_interval="0 4 * * *",       # 4AM UTC daily
+    start_date=days_ago(90),              # backfill 90 days on first run
+    catchup=True,                         # enable backfill
+    max_active_runs=3,                    # parallel backfill days
+    tags=["revenue", "finance"],
+) as dag:
+
+    # Step 1: Run Spark job on EMR Serverless
+    run_spark = EmrServerlessStartJobRunOperator(
+        task_id="run_spark_aggregation",
+        application_id="{{ var.value.emr_app_id }}",
+        execution_role_arn="{{ var.value.emr_role_arn }}",
+        job_driver={
+            "sparkSubmit": {
+                "entryPoint": "s3://scripts/revenue_aggregation.py",
+                "entryPointArguments": [
+                    "--date", "{{ ds }}",  # Airflow template: execution date
+                    "--env", "prod",
+                ],
+            }
+        },
+        configuration_overrides={
+            "monitoringConfiguration": {
+                "s3MonitoringConfiguration": {"logUri": "s3://logs/emr/"}
+            }
+        },
+    )
+
+    # Step 2: Data quality check
+    quality_check = SQLCheckOperator(
+        task_id="check_row_count",
+        conn_id="snowflake_prod",
+        sql="""
+            SELECT COUNT(*) > 0 AND COUNT(*) < 10000000
+            FROM fct_daily_revenue
+            WHERE date = '{{ ds }}'
+        """,
+    )
+
+    # Step 3: dbt transformation (downstream models)
+    dbt_run = BashOperator(
+        task_id="dbt_mart_models",
+        bash_command="dbt run --select tag:revenue --vars '{\"run_date\": \"{{ ds }}\"}' --target prod",
+    )
+
+    run_spark >> quality_check >> dbt_run</code></pre>
+      </div>
+
+      <h3>Backfill Patterns</h3>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Pattern</th><th>When to Use</th><th>Approach</th></tr>
+          <tr><td>Full re-run</td><td>Logic change affecting all history</td><td>Clear output table, re-run from day 0</td></tr>
+          <tr><td>Partition backfill</td><td>Airflow catchup=True on new DAG</td><td>Run N parallel instances for past dates</td></tr>
+          <tr><td>Incremental merge</td><td>Late-arriving data correction</td><td>Iceberg MERGE or INSERT OVERWRITE partition</td></tr>
+          <tr><td>Replay Kafka</td><td>Kappa architecture reprocessing</td><td>Deploy v2 job, reset consumer group offset to 0</td></tr>
+          <tr><td>Dual-write transition</td><td>Migrating pipeline logic</td><td>Write to old + new output in parallel, compare, cut over</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Data Quality -->
+    <section id="quality">
+      <h2>Data Quality &amp; Lineage</h2>
+      <p>In complex pipelines, bad data propagates silently and corrupts downstream models. Proactive quality gates and complete lineage are essential.</p>
+
+      <div class="arch-diagram">
+<span class="dim">Data Quality Dimensions:</span>
+
+<span class="gn">Completeness</span>    — are expected rows and columns present?
+<span class="cy">Freshness</span>       — how old is the latest partition?
+<span class="am">Accuracy</span>        — does it match source-of-truth (reconciliation)?
+<span class="pk">Consistency</span>     — does it agree across tables? (referential integrity)
+<span class="vi">Uniqueness</span>      — are primary keys truly unique?
+<span class="or">Validity</span>        — are values within expected domain/range?
+
+<span class="dim">Tools:</span>
+<span class="gn">dbt tests</span>        — schema.yml: unique, not_null, accepted_values, relationships
+<span class="cy">Great Expectations</span> — Python-native, rich expectation library
+<span class="am">Soda Core</span>       — SQL-based checks, push alerts to Slack/PagerDuty
+<span class="pk">Monte Carlo</span>     — ML-based anomaly detection (row count, distribution drift)
+      </div>
+
+      <h3>Data Lineage</h3>
+      <p>Lineage tracks data from source to sink — "which source tables feed dashboard X?" — enabling impact analysis when upstream schemas change.</p>
+      <div class="card">
+        <h4>Lineage Stack</h4>
+        <ul>
+          <li><strong>Column-level lineage:</strong> OpenLineage standard (facets), consumed by Marquez or DataHub</li>
+          <li><strong>dbt lineage:</strong> <code>dbt docs generate</code> produces a full DAG; integrated in dbt Cloud</li>
+          <li><strong>Spark lineage:</strong> Spark Listener emits OpenLineage events per job</li>
+          <li><strong>Flink lineage:</strong> Flink SQL lineage with OpenLineage Flink integration</li>
+          <li><strong>Data catalog:</strong> DataHub (LinkedIn), Apache Atlas, Google Dataplex — search + govern</li>
+        </ul>
+      </div>
+
+      <div class="callout callout-warn">
+        <p><strong>Schema Evolution Strategy:</strong> Use backward-compatible schema changes (add nullable columns, never remove/rename). Enforce with Schema Registry (Confluent) for Kafka topics. Set <code>avro.evolution.allow</code> = BACKWARD in registry to block breaking changes.</p>
+      </div>
+    </section>
+
+    <!-- Engineer Perspectives -->
+    <section id="perspectives">
+      <h2>Engineer Perspectives</h2>
+      <div class="eng-grid">
+        <div class="eng-take et-infra">
+          <h4>Infrastructure Engineer</h4>
+          <p>Right-size your compute separately from storage. EMR Serverless or Databricks serverless lets you pay per job rather than maintaining always-on clusters. Use spot instances for batch jobs (2–10× cheaper) with on-demand fallback. Store intermediate shuffle data on local NVMe SSDs, not EBS — shuffle spills to EBS kill performance by 5–10×. Set up auto-termination on clusters (30 min idle) to prevent bill creep.</p>
+        </div>
+        <div class="eng-take et-net">
+          <h4>Network Engineer</h4>
+          <p>Shuffle traffic is the dominant intra-cluster network cost. Keep Spark executors in the same Availability Zone to avoid cross-AZ data transfer charges (which add up to thousands of dollars/month at petabyte scale). Place Kafka brokers in the same VPC as Flink TaskManagers. Use VPC endpoints for S3 to avoid NAT gateway costs for high-throughput jobs reading from object storage.</p>
+        </div>
+        <div class="eng-take et-platform">
+          <h4>Platform / DevEx Engineer</h4>
+          <p>Standardize on one orchestrator and enforce it. Rogue cron jobs running on EC2 are the #1 cause of data freshness incidents — they fail silently. Provide a pipeline template repository: one git repo per pipeline, standard CI that runs <code>dbt test</code> on PR, auto-deploys to staging, requires data quality gate before prod deploy. The best platform makes the right way the easy way.</p>
+        </div>
+        <div class="eng-take et-security">
+          <h4>Security / Compliance Engineer</h4>
+          <p>PII flows through pipelines invisibly until it lands in a BI dashboard accessible to 1,000 employees. Tag PII columns at the source (DataHub tags or BigQuery column-level policy tags), propagate tags through transformations, and enforce masking at query time for non-privileged roles. For GDPR right-to-erasure: either delete the raw partition and re-derive, or use Iceberg's Row-Level Deletes (merge-on-read) with periodic compaction.</p>
+        </div>
+        <div class="eng-take et-data">
+          <h4>Data Engineer</h4>
+          <p>Choose your partitioning strategy before launch — repartitioning a petabyte table later is expensive. Partition by the column most frequently in WHERE clauses (usually date + a high-cardinality key). Never partition by a boolean or low-cardinality column — you'll have two giant partitions and Spark won't skip anything. Use Z-ordering (Iceberg/Delta) to cluster within partitions for point lookups on user_id.</p>
+        </div>
+        <div class="eng-take et-ml">
+          <h4>ML / AI Engineer</h4>
+          <p>Feature pipelines have unique requirements: point-in-time correct joins (no data leakage), feature freshness SLAs (stale features degrade model performance), and reproducibility (same data for training and serving). Use a feature store (Feast, Tecton, Vertex AI Feature Store) to centralize feature computation. Stream features require exactly-once writes — use Flink + Kafka + Redis for sub-second feature freshness in online serving.</p>
+        </div>
+        <div class="eng-take et-backend">
+          <h4>Backend Engineer</h4>
+          <p>Operational databases are not analytics engines — avoid complex analytics queries on Postgres/MySQL in production. Instead, use CDC (Debezium → Kafka) to stream changes to the lakehouse in near real-time. Use the read replica only as a short-term bridge, not a permanent analytics solution. Design your source schemas with analytics in mind: include <code>created_at</code> and <code>updated_at</code> on every table — these are mandatory for incremental ingestion.</p>
+        </div>
+        <div class="eng-take et-frontend">
+          <h4>Frontend / Product Engineer</h4>
+          <p>Dashboard users confuse freshness with correctness. A daily batch pipeline that says "data as of yesterday 4AM" is not wrong — it just needs to be clearly labeled. Work with the data team to add a data freshness indicator to dashboards. If business users demand real-time, quantify the cost: a streaming pipeline replacing a $50/month batch job typically costs $500–2000/month in always-on infrastructure. Make the tradeoff visible before committing.</p>
+        </div>
+        <div class="eng-take et-sre">
+          <h4>SRE / Reliability Engineer</h4>
+          <p>Define SLOs for pipeline freshness: "fct_daily_revenue must be available by 6AM UTC with ≤1% row count deviation from yesterday." Alert on freshness lag (Airflow SLA missed) and data quality (row count anomaly). Set up dead-man's switch alerts: if no successful run in 26 hours, page on-call. Budget for reprocessing capacity — keep 20% headroom so backfills don't starve production jobs during incident recovery.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Real Problems -->
+    <section id="problems">
+      <h2>Real Applied Problems</h2>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <h3>Problem 1: Real-Time Fraud Detection Pipeline</h3>
+          <p>Process 500K payment events/second, detect fraud within 200ms, 99.9% uptime requirement</p>
+        </div>
+        <div class="problem-body">
+          <p><strong>Architecture:</strong> Flink stateful stream processing with keyed state per user.</p>
+          <div class="arch-diagram">
+<span class="cy">Payment Service</span>
+    │  Kafka topic: payments (100 partitions)
+    ▼
+<span class="pk">Flink Fraud Detection Job</span>
+    │
+    ├─ Key by user_id
+    ├─ ValueState: last_5_txn_amounts, last_country, velocity_count
+    │
+    ├─ Rule Engine (stateless):
+    │    velocity: &gt;5 txn in 60s → SUSPICIOUS
+    │    geo_jump: country changed in &lt;10min → SUSPICIOUS
+    │    amount: &gt;3σ from user 30-day avg → SUSPICIOUS
+    │
+    └─ ML Score (Flink async I/O → model serving endpoint)
+         │ latency: p99 &lt;50ms via async I/O
+         ▼
+<span class="am">Decision Stream</span>  (APPROVE / DECLINE / REVIEW)
+    │
+    ├──▶ <span class="gn">Payment Processor</span>  (approve/decline)
+    └──▶ <span class="vi">Review Queue</span>  (Kafka → fraud analyst UI)
+          </div>
+          <div style="position:relative;">
+            <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.querySelector('code').innerText)">Copy</button>
+            <pre><code class="language-python">from pyflink.datastream import StreamExecutionEnvironment, KeyedStream
+from pyflink.datastream.state import ValueStateDescriptor, ListStateDescriptor
+from pyflink.common import Types
+import asyncio, aiohttp
+
+class FraudDetector(KeyedProcessFunction):
+    """Stateful per-user fraud detection with 60s velocity window."""
+
+    def open(self, ctx):
+        # Per-user state — stored in RocksDB for large state
+        self.velocity_count = self.runtime_context.get_state(
+            ValueStateDescriptor("velocity_60s", Types.INT())
+        )
+        self.last_country = self.runtime_context.get_state(
+            ValueStateDescriptor("last_country", Types.STRING())
+        )
+        self.last_txn_ts = self.runtime_context.get_state(
+            ValueStateDescriptor("last_txn_ts", Types.LONG())
+        )
+        self.running_avg = self.runtime_context.get_state(
+            ValueStateDescriptor("avg_amount", Types.FLOAT())
+        )
+
+    def process_element(self, event, ctx):
+        now = ctx.timestamp()
+        velocity = self.velocity_count.value() or 0
+        last_ts = self.last_txn_ts.value() or 0
+        avg_amt = self.running_avg.value() or event["amount"]
+
+        flags = []
+
+        # Velocity: decay counter if &gt;60s since last txn
+        if now - last_ts &gt; 60_000:
+            velocity = 0
+        velocity += 1
+        if velocity &gt; 5:
+            flags.append("VELOCITY_EXCEEDED")
+
+        # Geo jump
+        if self.last_country.value() and \
+           self.last_country.value() != event["country"] and \
+           (now - last_ts) &lt; 600_000:   # 10 min
+            flags.append("GEO_JUMP")
+
+        # Amount anomaly: simple z-score
+        z_score = abs(event["amount"] - avg_amt) / (avg_amt * 0.3 + 1)
+        if z_score &gt; 3:
+            flags.append("AMOUNT_ANOMALY")
+
+        # Update state
+        self.velocity_count.update(velocity)
+        self.last_country.update(event["country"])
+        self.last_txn_ts.update(now)
+        # EMA of amount
+        self.running_avg.update(0.95 * avg_amt + 0.05 * event["amount"])
+
+        # Register cleanup timer (TTL after 24h of inactivity)
+        ctx.timer_service().register_event_time_timer(now + 86_400_000)
+
+        event["fraud_flags"] = flags
+        event["decision"] = "REVIEW" if flags else "APPROVE"
+        yield event
+
+    def on_timer(self, timestamp, ctx):
+        # Clean up state for inactive users
+        self.velocity_count.clear()
+        self.last_country.clear()
+        self.last_txn_ts.clear()</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <h3>Problem 2: Multi-Region Data Lake Ingestion with CDC</h3>
+          <p>Replicate 10 PostgreSQL databases across 3 regions into a central Iceberg lakehouse with &lt;5 minute lag</p>
+        </div>
+        <div class="problem-body">
+          <div class="arch-diagram">
+<span class="gn">PostgreSQL (us-east-1)</span>  +  <span class="gn">PostgreSQL (eu-west-1)</span>  +  <span class="gn">PostgreSQL (ap-east-1)</span>
+         │ WAL                        │ WAL                        │ WAL
+         ▼                            ▼                            ▼
+<span class="cy">Debezium Connector</span>         <span class="cy">Debezium Connector</span>         <span class="cy">Debezium Connector</span>
+         │                            │                            │
+         └──────────────┬─────────────┘────────────────────────────┘
+                        │  Kafka (MSK cross-region replication)
+                        ▼
+              <span class="pk">Flink Lakehouse Sink Job</span>
+              ├─ Deduplicate (by LSN / event_id)
+              ├─ Schema registry validation
+              ├─ Transform: flatten nested JSON
+              └─ Iceberg MERGE (upsert by PK)
+                        │
+                        ▼
+               <span class="am">S3: s3://lakehouse/bronze/</span>
+               <span class="am">Iceberg table per source table</span>
+               <span class="am">Partitioned by (date, region)</span>
+          </div>
+          <div style="position:relative;">
+            <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.querySelector('code').innerText)">Copy</button>
+            <pre><code class="language-python"># Flink SQL: CDC ingestion into Iceberg with MERGE
+# Run as a long-running streaming job
+
+# 1. Define Kafka CDC source (Debezium JSON format)
+CREATE TABLE kafka_users_cdc (
+    op          STRING,       -- 'c' create, 'u' update, 'd' delete, 'r' read
+    before      ROW&lt;user_id BIGINT, email STRING, plan STRING, updated_at TIMESTAMP&gt;,
+    after       ROW&lt;user_id BIGINT, email STRING, plan STRING, updated_at TIMESTAMP&gt;,
+    source      ROW&lt;db STRING, table STRING, lsn BIGINT&gt;,
+    ts_ms       BIGINT,
+    PRIMARY KEY (source.lsn) NOT ENFORCED
+) WITH (
+    'connector'                     = 'kafka',
+    'topic'                         = 'pg.public.users',
+    'properties.bootstrap.servers'  = 'kafka:9092',
+    'properties.group.id'           = 'flink-iceberg-sink',
+    'format'                        = 'debezium-json',
+    'scan.startup.mode'             = 'earliest-offset'
+);
+
+-- 2. Define Iceberg sink table
+CREATE TABLE iceberg_catalog.bronze.users (
+    user_id     BIGINT,
+    email       STRING,
+    plan        STRING,
+    updated_at  TIMESTAMP(6),
+    _cdc_op     STRING,       -- track operation type
+    _ingested_at TIMESTAMP(6) NOT ENFORCED,
+    PRIMARY KEY (user_id) NOT ENFORCED
+) WITH (
+    'connector'    = 'iceberg',
+    'catalog-name' = 'iceberg_catalog',
+    'database-name'= 'bronze',
+    'table-name'   = 'users',
+    'write.upsert.enabled' = 'true'   -- MERGE mode
+);
+
+-- 3. Streaming INSERT: flatten CDC events
+INSERT INTO iceberg_catalog.bronze.users
+SELECT
+    COALESCE(after.user_id, before.user_id) AS user_id,
+    after.email,
+    after.plan,
+    after.updated_at,
+    op AS _cdc_op,
+    TO_TIMESTAMP_LTZ(ts_ms, 3) AS _ingested_at
+FROM kafka_users_cdc
+WHERE op IN ('c', 'u', 'r');  -- ignore deletes (soft-delete in warehouse)</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <h3>Problem 3: ML Feature Pipeline with Point-in-Time Correctness</h3>
+          <p>Compute user features for a fraud model — training data must reflect what the model would have seen at prediction time, not future data</p>
+        </div>
+        <div class="problem-body">
+          <p><strong>The training data leakage problem:</strong> If you naively join user features as they are today with historical labels, your model trains on information that wasn't available at prediction time (future leakage). This creates optimistic training metrics that don't hold in production.</p>
+          <div class="arch-diagram">
+<span class="pk">Wrong (leaky join):</span>
+<span class="or">  label_ts=2024-01-10</span>  joined with  <span class="or">feature computed_at=2024-01-15</span>  ← LEAK
+
+<span class="gn">Correct (point-in-time join):</span>
+<span class="gn">  label_ts=2024-01-10</span>  joined with  <span class="gn">feature.as_of(2024-01-10)</span>  ← SAFE
+
+Implementation:
+  ┌──────────────────────────────────────────────────────────┐
+  │  Feature Store (Feast / Tecton)                          │
+  │                                                          │
+  │  Historical feature values stored per (entity, ts)       │
+  │                                                          │
+  │  get_historical_features(                               │
+  │    entity_df = label_df[["user_id", "event_timestamp"]], │
+  │    features  = ["user_stats:txn_count_7d",               │
+  │                 "user_stats:avg_amount_30d",              │
+  │                 "device:is_new_device"]                  │
+  │  )  →  snapshot of features AT each event_timestamp      │
+  └──────────────────────────────────────────────────────────┘
+          </div>
+          <div style="position:relative;">
+            <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.querySelector('code').innerText)">Copy</button>
+            <pre><code class="language-python">import pandas as pd
+from feast import FeatureStore
+
+store = FeatureStore(repo_path="feature_repo/")
+
+# Label dataset: fraud labels with the timestamp of the event
+labels = pd.read_parquet("s3://ml-data/fraud_labels_2024.parquet")
+# Columns: user_id, event_timestamp, is_fraud
+
+# Point-in-time correct feature retrieval
+# Feast looks up the latest feature value BEFORE event_timestamp for each row
+training_df = store.get_historical_features(
+    entity_df=labels,
+    features=[
+        "user_transaction_stats:txn_count_7d",
+        "user_transaction_stats:avg_amount_30d",
+        "user_transaction_stats:unique_merchants_14d",
+        "user_device_features:is_new_device",
+        "user_device_features:device_count_30d",
+        "user_geo_features:countries_visited_7d",
+    ]
+).to_df()
+
+# No data leakage: features are as they were at event_timestamp
+print(training_df.head())
+#    user_id  event_timestamp  is_fraud  txn_count_7d  avg_amount_30d  ...
+# 0  1001     2024-01-10T14:23  1         12             85.50          ...
+# 1  2003     2024-01-11T09:45  0          3             220.00         ...
+
+# Train model
+from sklearn.ensemble import GradientBoostingClassifier
+X = training_df.drop(["user_id", "event_timestamp", "is_fraud"], axis=1)
+y = training_df["is_fraud"]
+model = GradientBoostingClassifier(n_estimators=500, max_depth=5)
+model.fit(X, y)</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trade-offs -->
+    <section id="tradeoffs">
+      <h2>Trade-offs</h2>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Decision</th><th>Option A</th><th>Option B</th><th>When to Pick A</th><th>When to Pick B</th></tr>
+          <tr><td><strong>Batch vs Stream</strong></td><td>Batch (Spark)</td><td>Stream (Flink)</td><td>Latency &gt;5min acceptable; lower cost; high throughput</td><td>Sub-minute latency needed; fraud, alerting, live dashboards</td></tr>
+          <tr><td><strong>Lambda vs Kappa</strong></td><td>Lambda</td><td>Kappa</td><td>Different teams own batch/stream; strict accuracy required</td><td>Single team; Kafka history available; operational simplicity</td></tr>
+          <tr><td><strong>ETL vs ELT</strong></td><td>ETL (Spark transforms)</td><td>ELT (dbt in DWH)</td><td>PII masking before load; legacy warehouse; cross-cloud moves</td><td>Cloud DWH (BigQuery/Snowflake); SQL-native team; fast iteration</td></tr>
+          <tr><td><strong>Data Lake vs Warehouse</strong></td><td>Data Lake (S3 + Spark)</td><td>Data Warehouse (BigQuery)</td><td>Semi-structured / unstructured data; ML workloads; cost at scale</td><td>BI-heavy; standard SQL; sub-second dashboard queries needed</td></tr>
+          <tr><td><strong>Table format</strong></td><td>Apache Iceberg</td><td>Delta Lake</td><td>Open ecosystem; multiple compute engines; best time-travel</td><td>Databricks-centric shop; tight Spark integration; MERGE heavy</td></tr>
+          <tr><td><strong>Orchestrator</strong></td><td>Airflow</td><td>Dagster</td><td>Existing Airflow knowledge; wide operator ecosystem</td><td>New platform; asset-centric thinking; data quality built-in</td></tr>
+          <tr><td><strong>Flink state backend</strong></td><td>Heap state</td><td>RocksDB state</td><td>Small state (&lt;1GB); lowest latency; dev/test</td><td>Large state (100GB+); production; memory-constrained pods</td></tr>
+          <tr><td><strong>Schema format</strong></td><td>Avro + Schema Registry</td><td>Parquet (self-describing)</td><td>Kafka topics; schema evolution enforcement; compact wire format</td><td>Batch file storage; columnar analytics; no broker required</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Anti-patterns -->
+    <section id="antipatterns">
+      <h2>Anti-Patterns</h2>
+      <div class="anti-grid">
+        <div class="anti-card">
+          <h4>1. Overusing Streaming</h4>
+          <p>Building a Flink job when a nightly Spark batch job would satisfy requirements. Streaming pipelines are 10× harder to operate and 5× more expensive. Only stream when latency truly requires it.</p>
+        </div>
+        <div class="anti-card">
+          <h4>2. SELECT * From Kafka</h4>
+          <p>Reading all fields from wide Kafka messages when only 3 are needed. Deserializes the entire payload on every event. Project only required fields at the source operator to reduce GC pressure and memory.</p>
+        </div>
+        <div class="anti-card">
+          <h4>3. No Partitioning Strategy</h4>
+          <p>Writing all data into a single Parquet file or unpartitioned table. Downstream queries scan 100% of data for any filter. Always partition by the most common query filter (date, region). Profile before writing.</p>
+        </div>
+        <div class="anti-card">
+          <h4>4. Tight Coupling to Source Schema</h4>
+          <p>Pipeline that breaks when a source column is renamed. Use schema registry with BACKWARD compatibility checks. Add integration tests that validate pipeline against real source data in staging.</p>
+        </div>
+        <div class="anti-card">
+          <h4>5. No Idempotency</h4>
+          <p>Pipeline that produces duplicate rows on retry. Every write must be idempotent: use MERGE/upsert (Iceberg), deduplication by message ID, or INSERT OVERWRITE for partition-level idempotency.</p>
+        </div>
+        <div class="anti-card">
+          <h4>6. Skipping Data Quality Checks</h4>
+          <p>"We'll add tests later." Bad data in a warehouse corrupts months of downstream models and dashboards. Add basic not_null, unique, range checks on every pipeline output before it reaches consumers.</p>
+        </div>
+        <div class="anti-card">
+          <h4>7. Fan-out Without Back-Pressure</h4>
+          <p>One pipeline feeding 20 downstream consumers directly. When one consumer slows down, it backs up the entire pipeline. Use Kafka as the fan-out buffer — each consumer maintains its own offset.</p>
+        </div>
+        <div class="anti-card">
+          <h4>8. Training Data Leakage</h4>
+          <p>Joining ML training labels with "current" feature values rather than features as-of the label timestamp. Models appear highly accurate in training but fail in production. Always use point-in-time correct joins.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interview Tips -->
+    <section id="interview">
+      <h2>Interview Tips</h2>
+      <div class="tips-list">
+        <div class="tip-card">
+          <h4>Start with freshness requirements</h4>
+          <p>Before designing any pipeline, ask: "How stale can the data be?" This immediately determines batch vs stream and budget. A 1-hour SLA is 100× cheaper than a 1-second SLA — make the interviewer confirm which they actually need.</p>
+        </div>
+        <div class="tip-card">
+          <h4>Name the layers explicitly</h4>
+          <p>Use Bronze/Silver/Gold (or Raw/Cleaned/Business) language. Interviewers at data-heavy companies (Meta, Airbnb, Lyft) expect you to know Medallion architecture. Describe what changes at each layer and why.</p>
+        </div>
+        <div class="tip-card">
+          <h4>Address the late data problem</h4>
+          <p>Every stream processing question should mention watermarks and late data handling. What's your max lateness tolerance? What happens to events that arrive after the watermark — drop, side output, or allowed lateness? Shows you understand real-world stream complexity.</p>
+        </div>
+        <div class="tip-card">
+          <h4>Mention exactly-once semantics</h4>
+          <p>Explain: at-most-once (simplest, data loss possible), at-least-once (duplicates possible, handle with idempotent writes), exactly-once (most expensive, Flink checkpointing + transactional sink). Production systems usually target at-least-once + idempotent writes rather than true exactly-once.</p>
+        </div>
+        <div class="tip-card">
+          <h4>Quantify the schema evolution risk</h4>
+          <p>Describe backward vs forward compatibility. Say: "I'd put all Kafka topics behind Schema Registry with BACKWARD_TRANSITIVE compatibility — producers can add nullable fields, but removing or renaming fields requires a breaking change process." This signals production experience.</p>
+        </div>
+        <div class="tip-card">
+          <h4>Always mention monitoring</h4>
+          <p>A pipeline without observability is a black box. Mention: consumer lag alerts (Kafka), freshness SLO checks (Airflow SLA), row count anomaly detection, data quality scores trending. Ask: "What's our SLO for pipeline freshness and who gets paged when it misses?"</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+<script>
+  // Reading progress bar
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const pct = (doc.scrollTop / (doc.scrollHeight - doc.clientHeight)) * 100;
+    document.getElementById('progress-bar').style.width = pct + '%';
+  });
+
+  // TOC active section via IntersectionObserver
+  const sections = document.querySelectorAll('section[id]');
+  const tocLinks = document.querySelectorAll('.toc-box a[href^="#"]');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        tocLinks.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.toc-box a[href="#${e.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
