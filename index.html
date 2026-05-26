@@ -3,48 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KnowAlgo – Data Structures & Algorithms Explained Deeply</title>
-  <meta name="description" content="KnowAlgo teaches Data Structures and Algorithms with deep explanations, visual diagrams, Python code, and LeetCode solutions. Trie, Hash Map, Linked List, Binary Tree, BST, Heap, Stack, Queue, Graph Traversal, Weighted Graph Algorithms, Dynamic Programming and more.">
-  <meta name="keywords" content="data structures, algorithms, trie, hash map, linked list, binary tree, bst, binary search tree, heap, stack, queue, graph, dynamic programming, dijkstra, union find, topological sort, leetcode solutions, python dsa, learn algorithms, computer science, coding interview prep">
+  <title>KnowAlgo – Technical Interview Prep: DSA, System Design & More</title>
+  <meta name="description" content="KnowAlgo covers everything for the technical interview: 16 DSA deep-dive guides, 16 system design patterns, 90+ LeetCode solutions, and an 8-week interview prep plan. Free forever.">
+  <meta name="keywords" content="data structures algorithms, system design interview, leetcode solutions, python dsa, technical interview prep, coding interview, trie, dynamic programming, graph algorithms, load balancing, caching, distributed systems">
   <meta name="author" content="KnowAlgo">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://knowalgo.netlify.app/">
 
-  <!-- Open Graph -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="KnowAlgo – Data Structures & Algorithms Explained Deeply">
-  <meta property="og:description" content="Deep-dive guides for every data structure and algorithm. Python code, LeetCode solutions, visual diagrams.">
+  <meta property="og:title" content="KnowAlgo – Technical Interview Prep: DSA, System Design & More">
+  <meta property="og:description" content="16 DSA guides, 16 system design patterns, 90+ LC solutions. Everything for the technical interview, free forever.">
   <meta property="og:url" content="https://knowalgo.netlify.app/">
   <meta property="og:site_name" content="KnowAlgo">
 
-  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="KnowAlgo – Data Structures & Algorithms Explained Deeply">
-  <meta name="twitter:description" content="Deep-dive guides for every data structure and algorithm. Python code, LeetCode solutions, visual diagrams.">
+  <meta name="twitter:title" content="KnowAlgo – Technical Interview Prep">
+  <meta name="twitter:description" content="16 DSA guides, 16 system design patterns, 90+ LC solutions. Free forever.">
 
-  <!-- Structured Data -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
     "name": "KnowAlgo",
-    "description": "Deep-dive tutorials for Data Structures and Algorithms with Python code and LeetCode solutions.",
-    "url": "https://knowalgo.netlify.app/",
-    "sameAs": []
+    "description": "Deep-dive guides for Data Structures, Algorithms, and System Design — with Python code and LeetCode solutions.",
+    "url": "https://knowalgo.netlify.app/"
   }
   </script>
 
-  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-2Z1EQCZBXH');
-  </script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2Z1EQCZBXH');</script>
 
   <style>
-    /* ── Variables ──────────────────────────────── */
     :root {
       --primary: #2563eb;
       --primary-dark: #1d4ed8;
@@ -57,700 +46,397 @@
       --border: #e2e8f0;
       --card-bg: #ffffff;
       --radius: 14px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
-      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+      --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.05);
     }
-
-    /* ── Reset ──────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
     a { color: var(--primary); text-decoration: none; }
     a:hover { text-decoration: underline; }
 
-    /* ── Header / Nav ───────────────────────────── */
-    header {
-      background: #0f172a;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .nav-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 1.5rem;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      gap: 2rem;
-    }
-    .logo {
-      font-size: 1.3rem;
-      font-weight: 800;
-      color: #fff;
-      letter-spacing: -0.5px;
-    }
+    /* ── Header ── */
+    header { background: #0f172a; position: sticky; top: 0; z-index: 100; }
+    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; height: 64px; display: flex; align-items: center; gap: 2rem; }
+    .logo { font-size: 1.3rem; font-weight: 800; color: #fff; letter-spacing: -.5px; }
     .logo span { color: #60a5fa; }
-    .nav-links { display: flex; gap: 1.5rem; margin-left: auto; }
-    .nav-links a { color: #94a3b8; font-size: 0.9rem; font-weight: 500; }
+    .nav-links { display: flex; gap: 1.5rem; margin-left: auto; align-items: center; }
+    .nav-links a { color: #94a3b8; font-size: .9rem; font-weight: 500; }
     .nav-links a:hover { color: #fff; text-decoration: none; }
-    .nav-cta {
-      background: var(--primary);
-      color: #fff !important;
-      padding: 0.4rem 1rem;
-      border-radius: 7px;
-    }
+    .nav-search { color: #94a3b8; font-size: .9rem; font-weight: 500; display: flex; align-items: center; gap: .3rem; cursor: pointer; }
+    .nav-search:hover { color: #fff; text-decoration: none; }
+    .nav-cta { background: var(--primary); color: #fff !important; padding: .4rem 1rem; border-radius: 7px; }
     .nav-cta:hover { background: var(--primary-dark) !important; }
 
-    /* ── Hero ───────────────────────────────────── */
-    .hero {
-      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #4c1d95 100%);
-      color: white;
-      padding: 5rem 1.5rem;
-      text-align: center;
-    }
-    .hero-eyebrow {
-      display: inline-block;
-      background: rgba(96, 165, 250, 0.15);
-      border: 1px solid rgba(96, 165, 250, 0.3);
-      color: #93c5fd;
-      padding: 0.3rem 1rem;
-      border-radius: 99px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 1.25rem;
-    }
-    .hero h1 {
-      font-size: clamp(2rem, 5vw, 3.5rem);
-      font-weight: 900;
-      line-height: 1.15;
-      margin-bottom: 1.25rem;
-      letter-spacing: -1px;
-    }
+    /* ── Hero ── */
+    .hero { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #4c1d95 100%); color: #fff; padding: 5rem 1.5rem 4rem; text-align: center; }
+    .hero-eyebrow { display: inline-block; background: rgba(96,165,250,.15); border: 1px solid rgba(96,165,250,.3); color: #93c5fd; padding: .3rem 1rem; border-radius: 99px; font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1.25rem; }
+    .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; line-height: 1.15; margin-bottom: 1.25rem; letter-spacing: -1px; }
     .hero h1 .accent { color: #60a5fa; }
-    .hero p {
-      font-size: 1.15rem;
-      opacity: 0.8;
-      max-width: 600px;
-      margin: 0 auto 2rem;
-      line-height: 1.7;
-    }
-    .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-    .btn-primary {
-      background: var(--primary);
-      color: #fff;
-      padding: 0.75rem 1.75rem;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 1rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      transition: background 0.15s;
-    }
+    .hero > div > p { font-size: 1.15rem; opacity: .82; max-width: 600px; margin: 0 auto 2rem; line-height: 1.7; }
+
+    /* Search form in hero */
+    .hero-search { display: flex; max-width: 560px; margin: 0 auto 2rem; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2); border-radius: 12px; overflow: hidden; transition: border-color .2s; }
+    .hero-search:focus-within { border-color: rgba(96,165,250,.6); background: rgba(255,255,255,.12); }
+    .hero-search input { flex: 1; background: transparent; border: none; outline: none; padding: .85rem 1.1rem; font-size: .97rem; color: #fff; }
+    .hero-search input::placeholder { color: rgba(255,255,255,.45); }
+    .hero-search button { background: var(--primary); border: none; color: #fff; font-size: .9rem; font-weight: 700; padding: .85rem 1.25rem; cursor: pointer; white-space: nowrap; }
+    .hero-search button:hover { background: var(--primary-dark); }
+
+    .hero-btns { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary { background: var(--primary); color: #fff; padding: .7rem 1.5rem; border-radius: 10px; font-weight: 700; font-size: .95rem; display: inline-flex; align-items: center; gap: .4rem; transition: background .15s; }
     .btn-primary:hover { background: var(--primary-dark); text-decoration: none; }
-    .btn-secondary {
-      background: rgba(255,255,255,0.1);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.25);
-      padding: 0.75rem 1.75rem;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 1rem;
-      transition: background 0.15s;
-    }
-    .btn-secondary:hover { background: rgba(255,255,255,0.18); text-decoration: none; }
+    .btn-ghost { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.25); padding: .7rem 1.5rem; border-radius: 10px; font-weight: 600; font-size: .95rem; transition: background .15s; }
+    .btn-ghost:hover { background: rgba(255,255,255,.18); text-decoration: none; }
 
-    /* ── Stats ──────────────────────────────────── */
-    .stats-bar {
-      background: #fff;
-      border-bottom: 1px solid var(--border);
-    }
-    .stats-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1.25rem 1.5rem;
-      display: flex;
-      gap: 2rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    .stat {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.15rem;
-    }
-    .stat-num {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: var(--primary);
-    }
-    .stat-label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
+    /* ── Stats ── */
+    .stats-bar { background: #fff; border-bottom: 1px solid var(--border); }
+    .stats-inner { max-width: 1200px; margin: 0 auto; padding: 1.25rem 1.5rem; display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; }
+    .stat { display: flex; flex-direction: column; align-items: center; gap: .15rem; }
+    .stat-num { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+    .stat-label { font-size: .8rem; color: var(--text-muted); font-weight: 500; }
 
-    /* ── Sections ───────────────────────────────── */
+    /* ── Sections ── */
     section { padding: 4rem 1.5rem; }
     .section-inner { max-width: 1200px; margin: 0 auto; }
-    .section-tag {
-      display: inline-block;
-      background: var(--primary-light);
-      color: var(--primary);
-      padding: 0.2rem 0.8rem;
-      border-radius: 99px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 0.75rem;
-    }
-    .section-title {
-      font-size: clamp(1.5rem, 3vw, 2.25rem);
-      font-weight: 800;
-      margin-bottom: 0.75rem;
-      letter-spacing: -0.5px;
-    }
-    .section-subtitle {
-      color: var(--text-muted);
-      font-size: 1.05rem;
-      max-width: 580px;
-      margin-bottom: 2.5rem;
-    }
+    .section-tag { display: inline-block; background: var(--primary-light); color: var(--primary); padding: .2rem .8rem; border-radius: 99px; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: .75rem; }
+    .section-title { font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 800; margin-bottom: .75rem; letter-spacing: -.5px; }
+    .section-subtitle { color: var(--text-muted); font-size: 1.05rem; max-width: 580px; margin-bottom: 2.5rem; }
 
-    /* ── Cards Grid ─────────────────────────────── */
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.25rem;
-    }
-
-    /* ── Topic Card ─────────────────────────────── */
-    .topic-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-    .topic-card:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-md);
-      text-decoration: none;
-    }
-    .card-banner {
-      height: 6px;
-    }
-    .banner-blue { background: linear-gradient(to right, #2563eb, #7c3aed); }
-    .banner-green { background: linear-gradient(to right, #059669, #0891b2); }
-    .banner-orange { background: linear-gradient(to right, #d97706, #dc2626); }
-    .banner-pink { background: linear-gradient(to right, #db2777, #7c3aed); }
-    .banner-teal { background: linear-gradient(to right, #0891b2, #2563eb); }
-    .banner-gray { background: linear-gradient(to right, #475569, #64748b); }
+    /* ── Topic cards ── */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
+    .topic-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: transform .15s, box-shadow .15s; display: block; }
+    .topic-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); text-decoration: none; }
+    .card-banner { height: 6px; }
+    .banner-blue    { background: linear-gradient(to right, #2563eb, #7c3aed); }
+    .banner-green   { background: linear-gradient(to right, #059669, #0891b2); }
+    .banner-orange  { background: linear-gradient(to right, #d97706, #dc2626); }
+    .banner-pink    { background: linear-gradient(to right, #db2777, #7c3aed); }
+    .banner-teal    { background: linear-gradient(to right, #0891b2, #2563eb); }
+    .banner-gray    { background: linear-gradient(to right, #475569, #64748b); }
     .banner-emerald { background: linear-gradient(to right, #16a34a, #2563eb); }
-    .banner-cyan { background: linear-gradient(to right, #0891b2, #7c3aed); }
-    .banner-amber { background: linear-gradient(to right, #f59e0b, #ef4444); }
-    .banner-violet { background: linear-gradient(to right, #7c3aed, #db2777); }
-    .banner-indigo { background: linear-gradient(to right, #7c3aed, #2563eb); }
+    .banner-cyan    { background: linear-gradient(to right, #0891b2, #7c3aed); }
+    .banner-amber   { background: linear-gradient(to right, #f59e0b, #ef4444); }
+    .banner-violet  { background: linear-gradient(to right, #7c3aed, #db2777); }
+    .banner-indigo  { background: linear-gradient(to right, #7c3aed, #2563eb); }
     .banner-featured { background: linear-gradient(to right, #2563eb, #7c3aed, #059669); }
-
     .card-body { padding: 1.5rem; }
-    .card-icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
-    .card-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 0.4rem;
-    }
-    .card-desc {
-      font-size: 0.875rem;
-      color: var(--text-muted);
-      line-height: 1.6;
-      margin-bottom: 1rem;
-    }
-    .card-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .card-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-    .ctag {
-      background: #f1f5f9;
-      color: #475569;
-      padding: 0.15rem 0.5rem;
-      border-radius: 5px;
-      font-size: 0.72rem;
-      font-weight: 600;
-    }
-    .card-status {
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 0.2rem 0.6rem;
-      border-radius: 99px;
-    }
+    .card-icon { font-size: 2rem; margin-bottom: .75rem; display: block; }
+    .card-title { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: .4rem; }
+    .card-desc { font-size: .875rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1rem; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+    .card-tags { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .ctag { background: #f1f5f9; color: #475569; padding: .15rem .5rem; border-radius: 5px; font-size: .72rem; font-weight: 600; }
+    .card-status { font-size: .75rem; font-weight: 700; padding: .2rem .6rem; border-radius: 99px; white-space: nowrap; }
     .status-live { background: #d1fae5; color: #065f46; }
     .status-soon { background: #fef3c7; color: #92400e; }
 
-    /* ── Feature Strip ──────────────────────────── */
+    /* ── System Design section ── */
+    .sd-section { background: linear-gradient(135deg, #0f172a 0%, #134e4a 50%, #1e3a8a 100%); padding: 4rem 1.5rem; }
+    .sd-inner { max-width: 1200px; margin: 0 auto; }
+    .sd-tag { display: inline-block; background: rgba(94,234,212,.15); border: 1px solid rgba(94,234,212,.3); color: #5eead4; padding: .25rem .8rem; border-radius: 99px; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: .75rem; }
+    .sd-title { font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 800; color: #fff; margin-bottom: .75rem; letter-spacing: -.5px; }
+    .sd-subtitle { color: #94a3b8; font-size: 1.05rem; max-width: 580px; margin-bottom: 2rem; }
+    .sd-pattern-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .65rem; margin-bottom: 2rem; }
+    .sd-pattern { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: .65rem 1rem; display: flex; align-items: center; gap: .6rem; color: #e2e8f0; font-size: .85rem; font-weight: 500; text-decoration: none; transition: background .15s, border-color .15s; }
+    .sd-pattern:hover { background: rgba(255,255,255,.12); border-color: rgba(94,234,212,.4); color: #fff; text-decoration: none; }
+    .sd-pattern-num { font-size: .68rem; font-weight: 700; color: #5eead4; min-width: 22px; }
+    .sd-cta { display: flex; gap: .75rem; flex-wrap: wrap; }
+    .btn-teal { background: #0d9488; color: #fff; padding: .75rem 1.5rem; border-radius: 10px; font-weight: 700; font-size: .95rem; display: inline-flex; align-items: center; gap: .4rem; transition: background .15s; }
+    .btn-teal:hover { background: #0f766e; text-decoration: none; }
+    .btn-outline-light { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.3); padding: .75rem 1.5rem; border-radius: 10px; font-weight: 600; font-size: .95rem; transition: background .15s; }
+    .btn-outline-light:hover { background: rgba(255,255,255,.1); text-decoration: none; }
+
+    /* ── Features ── */
     .features-bg { background: #fff; }
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 2rem;
-    }
-    .feature { text-align: center; }
-    .feature-icon {
-      font-size: 2.5rem;
-      margin-bottom: 0.75rem;
-    }
-    .feature h3 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      margin-bottom: 0.4rem;
-    }
-    .feature p { font-size: 0.875rem; color: var(--text-muted); }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
+    .feature { padding: 1.25rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); }
+    .feature-icon { font-size: 1.75rem; margin-bottom: .6rem; }
+    .feature h3 { font-size: 1rem; font-weight: 700; margin-bottom: .4rem; }
+    .feature p { font-size: .875rem; color: var(--text-muted); }
 
-    /* ── CTA Banner ─────────────────────────────── */
-    .cta-section {
-      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #7c3aed 100%);
-      color: #fff;
-      text-align: center;
-      padding: 4rem 1.5rem;
-    }
-    .cta-section h2 {
-      font-size: clamp(1.5rem, 3vw, 2.25rem);
-      font-weight: 800;
-      margin-bottom: 0.75rem;
-    }
-    .cta-section p {
-      opacity: 0.82;
-      font-size: 1.05rem;
-      margin-bottom: 2rem;
-    }
+    /* ── CTA ── */
+    .cta-section { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #4c1d95 100%); color: #fff; text-align: center; padding: 4rem 1.5rem; }
+    .cta-section h2 { font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 800; margin-bottom: .75rem; }
+    .cta-section p { opacity: .82; font-size: 1.05rem; margin-bottom: 2rem; max-width: 560px; margin-left: auto; margin-right: auto; }
+    .cta-btns { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
 
-    /* ── Footer ─────────────────────────────────── */
-    footer {
-      background: #0f172a;
-      color: #94a3b8;
-      text-align: center;
-      padding: 2.5rem 1.5rem;
-      font-size: 0.875rem;
-    }
-    footer a { color: #60a5fa; }
-    .footer-links {
-      display: flex;
-      gap: 1.5rem;
-      justify-content: center;
-      margin-bottom: 1rem;
-    }
+    /* ── Footer ── */
+    footer { background: #0f172a; color: #94a3b8; text-align: center; padding: 2.5rem 1.5rem; font-size: .875rem; }
+    footer a { color: #5eead4; }
+    .footer-links { display: flex; gap: 1rem; justify-content: center; margin-bottom: .75rem; flex-wrap: wrap; }
+    .footer-divider { width: 1px; background: #334155; margin: 0 .25rem; }
 
-    /* ── On the Horizon ─────────────────────────── */
-    .horizon-section { background: #f1f5f9; padding: 3rem 1.5rem; }
-    .horizon-tag { background: #e2e8f0; color: #94a3b8; }
-    .horizon-heading { opacity: 0.45; }
-    .horizon-grid { opacity: 0.38; pointer-events: none; user-select: none; }
-    .horizon-card { border-style: dashed; border-color: #cbd5e1; }
-    .horizon-card:hover { transform: none; box-shadow: none; }
-
-    /* ── Responsive ─────────────────────────────── */
     @media (max-width: 640px) {
-      .nav-links .hide-mobile { display: none; }
-      .hero { padding: 3rem 1rem; }
-      .stats-inner { gap: 1.25rem; }
+      .hide-mobile { display: none; }
+      .hero { padding: 3rem 1rem 2.5rem; }
     }
   </style>
 </head>
 <body>
 
-<!-- ════════════════════ HEADER ════════════════════ -->
-<header role="banner">
-  <nav class="nav-inner" role="navigation" aria-label="Main navigation">
+<header>
+  <nav class="nav-inner">
     <div class="logo">Know<span>Algo</span></div>
     <div class="nav-links">
-      <a href="#topics" class="hide-mobile">Topics</a>
       <a href="system-design.html" class="hide-mobile">System Design</a>
-      <a href="#about" class="hide-mobile">About</a>
-      <a href="interview-prep.html" class="nav-cta">Start Learning →</a>
+      <a href="interview-prep.html" class="hide-mobile">Interview Prep</a>
+      <a href="search.html" class="nav-search hide-mobile">⌕ Search</a>
+      <a href="interview-prep.html" class="nav-cta">Start Prepping →</a>
     </div>
   </nav>
 </header>
 
-<!-- ════════════════════ HERO ════════════════════ -->
-<main role="main">
-<section class="hero" aria-labelledby="hero-title">
-  <div class="hero-eyebrow">Free · Open Source · No Ads</div>
-  <h1 id="hero-title">
-    Master <span class="accent">Data Structures</span><br>
-    &amp; Algorithms
-  </h1>
-  <p>
-    Deep-dive guides that explain <em>why</em> things work — not just how to code them.
-    Every topic includes visual diagrams, Python implementations, and real LeetCode solutions.
-  </p>
-  <div class="hero-btns">
-    <a href="interview-prep.html" class="btn-primary">Interview Prep Guide →</a>
-    <a href="#topics" class="btn-secondary">Browse All Topics</a>
+<main>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<section class="hero">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="hero-eyebrow">DSA · System Design · Interview Prep · Free</div>
+    <h1>Master technical interviews,<br><span class="accent">pattern by pattern</span></h1>
+    <p>Deep-dive guides covering every DSA topic, 16 system design patterns, and a battle-tested 8-week prep plan. No fluff, no paywalls.</p>
+
+    <form class="hero-search" action="search.html" method="get">
+      <input type="text" name="q" placeholder="Search topics, patterns, problems…" autocomplete="off">
+      <button type="submit">Search →</button>
+    </form>
+
+    <div class="hero-btns">
+      <a href="#dsa" class="btn-primary">DSA Guides ↓</a>
+      <a href="system-design.html" class="btn-ghost">System Design →</a>
+      <a href="interview-prep.html" class="btn-ghost">Interview Prep →</a>
+    </div>
   </div>
 </section>
 
-<!-- ════════════════════ STATS ════════════════════ -->
-<div class="stats-bar" aria-label="Site statistics">
+<!-- ═══════════════════ STATS ═══════════════════ -->
+<div class="stats-bar">
   <div class="stats-inner">
-    <div class="stat">
-      <span class="stat-num">15</span>
-      <span class="stat-label">Deep-Dive Guides</span>
-    </div>
-    <div class="stat">
-      <span class="stat-num">90+</span>
-      <span class="stat-label">LeetCode Solutions</span>
-    </div>
-    <div class="stat">
-      <span class="stat-num">15</span>
-      <span class="stat-label">Topics Covered</span>
-    </div>
-    <div class="stat">
-      <span class="stat-num">100%</span>
-      <span class="stat-label">Free Forever</span>
-    </div>
+    <div class="stat"><span class="stat-num">16</span><span class="stat-label">DSA Guides</span></div>
+    <div class="stat"><span class="stat-num">16</span><span class="stat-label">System Design Patterns</span></div>
+    <div class="stat"><span class="stat-num">90+</span><span class="stat-label">LeetCode Solutions</span></div>
+    <div class="stat"><span class="stat-num">100%</span><span class="stat-label">Free Forever</span></div>
   </div>
 </div>
 
-<!-- ════════════════════ TOPICS ════════════════════ -->
-<section id="topics" aria-labelledby="topics-title">
+<!-- ═══════════════════ DSA TOPICS ═══════════════════ -->
+<section id="dsa">
   <div class="section-inner">
     <div class="section-tag">Data Structures &amp; Algorithms</div>
-    <h2 class="section-title" id="topics-title">15 Topics Covered</h2>
-    <p class="section-subtitle">
-      Every guide goes deep — not surface-level. We explain the intuition, the implementation, and the trade-offs.
-    </p>
+    <h2 class="section-title">Deep-Dive Guides</h2>
+    <p class="section-subtitle">Every guide explains the intuition first — not just how to implement it. Visual diagrams, Python code, and real LeetCode solutions.</p>
 
-    <div class="cards-grid" role="list">
+    <div class="cards-grid">
 
-      <!-- TRIE — LIVE -->
-      <a href="trie.html" class="topic-card" role="listitem" aria-label="Trie data structure guide">
+      <a href="trie.html" class="topic-card">
         <div class="card-banner banner-blue"></div>
         <div class="card-body">
           <span class="card-icon">🌳</span>
           <div class="card-title">Trie (Prefix Tree)</div>
-          <div class="card-desc">
-            The tree that stores strings character-by-character. Powers autocomplete, spell checkers, IP routing, and word games. O(m) for every operation.
-          </div>
+          <div class="card-desc">The tree that stores strings character-by-character. Powers autocomplete, spell checkers, IP routing. O(m) for every operation.</div>
           <div class="card-footer">
-            <div class="card-tags">
-              <span class="ctag">Strings</span>
-              <span class="ctag">Prefix Search</span>
-              <span class="ctag">6 LC Problems</span>
-            </div>
+            <div class="card-tags"><span class="ctag">Strings</span><span class="ctag">Prefix Search</span><span class="ctag">6 LC</span></div>
             <span class="card-status status-live">Live ✓</span>
           </div>
         </div>
       </a>
 
-      <!-- HASH MAP — LIVE -->
-      <a href="hash-map.html" class="topic-card" role="listitem" aria-label="Hash Map guide">
+      <a href="hash-map.html" class="topic-card">
         <div class="card-banner banner-green"></div>
         <div class="card-body">
           <span class="card-icon">🗂️</span>
           <div class="card-title">Hash Map / Hash Table</div>
-          <div class="card-desc">
-            The workhorse of coding interviews. O(1) average lookups, insertions, and deletions. Collision resolution, load factors, LRU Cache, and 6 LeetCode solutions.
-          </div>
+          <div class="card-desc">The workhorse of coding interviews. O(1) lookups, insertions, deletions. Collision resolution, load factors, LRU Cache.</div>
           <div class="card-footer">
-            <div class="card-tags">
-              <span class="ctag">Hashing</span>
-              <span class="ctag">O(1)</span>
-              <span class="ctag">6 LC Problems</span>
-            </div>
+            <div class="card-tags"><span class="ctag">Hashing</span><span class="ctag">O(1)</span><span class="ctag">6 LC</span></div>
             <span class="card-status status-live">Live ✓</span>
           </div>
         </div>
       </a>
 
-      <!-- LINKED LIST — LIVE -->
-      <a href="linked-list.html" class="topic-card" role="listitem" aria-label="Linked List guide">
+      <a href="linked-list.html" class="topic-card">
         <div class="card-banner banner-orange"></div>
         <div class="card-body">
           <span class="card-icon">🔗</span>
           <div class="card-title">Linked List</div>
-          <div class="card-desc">
-            Singly, doubly, circular. Master Floyd's cycle detection, the runner technique, and the dummy-head trick. 6 LeetCode solutions including Merge k Sorted Lists.
-          </div>
+          <div class="card-desc">Singly, doubly, circular. Floyd's cycle detection, the runner technique, and the dummy-head trick. 6 LC including Merge k Sorted Lists.</div>
           <div class="card-footer">
-            <div class="card-tags">
-              <span class="ctag">Pointers</span>
-              <span class="ctag">Two-Pointer</span>
-              <span class="ctag">6 LC Problems</span>
-            </div>
+            <div class="card-tags"><span class="ctag">Pointers</span><span class="ctag">Two-Pointer</span><span class="ctag">6 LC</span></div>
             <span class="card-status status-live">Live ✓</span>
           </div>
         </div>
       </a>
 
-      <!-- BINARY TREE — LIVE -->
-      <a href="binary-tree.html" class="topic-card" role="listitem" aria-label="Binary Tree guide">
+      <a href="binary-tree.html" class="topic-card">
         <div class="card-banner banner-pink"></div>
         <div class="card-body">
           <span class="card-icon">🌲</span>
           <div class="card-title">Binary Tree</div>
-          <div class="card-desc">
-            All 4 traversals (pre/in/post/level-order), iterative &amp; recursive. DFS patterns: return value from subtrees, pass state down, LCA, global max. 6 LC solutions.
-          </div>
+          <div class="card-desc">All 4 traversals iterative &amp; recursive. DFS patterns: return from subtrees, pass state down, LCA, global max. 6 LC solutions.</div>
           <div class="card-footer">
-            <div class="card-tags">
-              <span class="ctag">Trees</span>
-              <span class="ctag">DFS/BFS</span>
-              <span class="ctag">6 LC Problems</span>
-            </div>
+            <div class="card-tags"><span class="ctag">Trees</span><span class="ctag">DFS/BFS</span><span class="ctag">6 LC</span></div>
             <span class="card-status status-live">Live ✓</span>
           </div>
         </div>
       </a>
 
-      <!-- BST — LIVE -->
-      <a href="bst.html" class="topic-card" role="listitem" aria-label="Binary Search Tree guide">
+      <a href="bst.html" class="topic-card">
         <div class="card-banner banner-emerald"></div>
         <div class="card-body">
           <span class="card-icon">🔍</span>
           <div class="card-title">Binary Search Tree</div>
-          <div class="card-desc">
-            BST insert, delete (3-case), search, kth smallest/largest, floor/ceiling, and range queries. BSTIterator, sortedcontainers.SortedList. 6 LeetCode solutions.
-          </div>
+          <div class="card-desc">BST insert, delete (3-case), search, kth smallest/largest, floor/ceiling. BSTIterator, sortedcontainers. 6 LeetCode solutions.</div>
           <div class="card-footer">
-            <div class="card-tags">
-              <span class="ctag">BST</span>
-              <span class="ctag">Inorder</span>
-              <span class="ctag">6 LC Problems</span>
-            </div>
+            <div class="card-tags"><span class="ctag">BST</span><span class="ctag">Inorder</span><span class="ctag">6 LC</span></div>
             <span class="card-status status-live">Live ✓</span>
           </div>
         </div>
       </a>
 
-      <!-- HEAP — LIVE -->
-      <a href="heap.html" class="topic-card" role="listitem" aria-label="Heap / Priority Queue guide">
+      <a href="heap.html" class="topic-card">
         <div class="card-banner banner-teal"></div>
         <div class="card-body">
           <span class="card-icon">⛰️</span>
           <div class="card-title">Heap / Priority Queue</div>
-          <div class="card-desc">
-            Min-heap, max-heap, heapify in O(n). Top-K patterns, Median from data stream, Merge k Sorted Lists. 5 LeetCode solutions.
-          </div>
+          <div class="card-desc">Min-heap, max-heap, heapify in O(n). Top-K patterns, Median from data stream, Merge k Sorted Lists. 5 LC solutions.</div>
           <div class="card-footer">
-            <div class="card-tags">
-              <span class="ctag">O(log n)</span>
-              <span class="ctag">Top-K</span>
-              <span class="ctag">5 LC Problems</span>
-            </div>
+            <div class="card-tags"><span class="ctag">O(log n)</span><span class="ctag">Top-K</span><span class="ctag">5 LC</span></div>
             <span class="card-status status-live">Live ✓</span>
           </div>
         </div>
       </a>
 
-      <!-- STACK & QUEUE — LIVE -->
-      <a href="stack-queue.html" class="topic-card" role="listitem" aria-label="Stack and Queue guide">
+      <a href="stack-queue.html" class="topic-card">
         <div class="card-banner banner-gray"></div>
         <div class="card-body">
           <span class="card-icon">📚</span>
           <div class="card-title">Stack &amp; Queue</div>
-          <div class="card-desc">
-            LIFO vs FIFO. Monotonic stack for "next greater element" and histogram problems. Sliding window maximum with deque. 6 LeetCode solutions including 2 Hards.
-          </div>
+          <div class="card-desc">LIFO vs FIFO. Monotonic stack for "next greater element" and histogram problems. Sliding window max with deque. 6 LC including 2 Hards.</div>
           <div class="card-footer">
-            <div class="card-tags">
-              <span class="ctag">LIFO/FIFO</span>
-              <span class="ctag">Monotonic</span>
-              <span class="ctag">6 LC Problems</span>
-            </div>
+            <div class="card-tags"><span class="ctag">Monotonic</span><span class="ctag">Deque</span><span class="ctag">6 LC</span></div>
             <span class="card-status status-live">Live ✓</span>
           </div>
         </div>
       </a>
 
-      <!-- GRAPH: TRAVERSAL — LIVE -->
-      <a href="graph.html" class="topic-card" role="listitem" aria-label="Graph Traversal guide">
+      <a href="graph.html" class="topic-card">
         <div class="card-banner banner-violet"></div>
         <div class="card-body">
           <span class="card-icon">🕸️</span>
           <div class="card-title">Graph: Traversal</div>
-          <div class="card-desc">
-            BFS &amp; DFS on adjacency lists and grids. Multi-source BFS, cycle detection (undirected &amp; directed), connected components. 6 LeetCode solutions including Word Ladder (Hard).
-          </div>
+          <div class="card-desc">BFS, DFS, grid graphs, cycle detection, bipartite check, connected components. Adjacency list vs matrix. 6 LC solutions.</div>
           <div class="card-footer">
-            <div class="card-tags">
-              <span class="ctag">BFS/DFS</span>
-              <span class="ctag">Grid</span>
-              <span class="ctag">6 LC Problems</span>
-            </div>
+            <div class="card-tags"><span class="ctag">BFS/DFS</span><span class="ctag">Grid</span><span class="ctag">6 LC</span></div>
             <span class="card-status status-live">Live ✓</span>
           </div>
         </div>
       </a>
 
-      <!-- GRAPH: WEIGHTED ALGORITHMS — LIVE -->
-      <a href="graph-algorithms.html" class="topic-card" role="listitem" aria-label="Weighted Graph Algorithms guide">
+      <a href="graph-algorithms.html" class="topic-card">
         <div class="card-banner banner-cyan"></div>
         <div class="card-body">
-          <span class="card-icon">⚖️</span>
+          <span class="card-icon">⚡</span>
           <div class="card-title">Graph: Weighted Algorithms</div>
-          <div class="card-desc">
-            Dijkstra, Bellman-Ford, Floyd-Warshall, Topological Sort, Union-Find DSU, Kruskal's MST. Covers all 6 weight combinations. 6 LeetCode solutions.
-          </div>
+          <div class="card-desc">Dijkstra, Bellman-Ford, Floyd-Warshall, Topological Sort, Union-Find (DSU), Prim's / Kruskal's MST. 6 LC solutions.</div>
           <div class="card-footer">
-            <div class="card-tags">
-              <span class="ctag">Dijkstra</span>
-              <span class="ctag">Union-Find</span>
-              <span class="ctag">6 LC Problems</span>
-            </div>
+            <div class="card-tags"><span class="ctag">Dijkstra</span><span class="ctag">Union-Find</span><span class="ctag">6 LC</span></div>
             <span class="card-status status-live">Live ✓</span>
           </div>
         </div>
       </a>
 
-      <!-- DYNAMIC PROGRAMMING — LIVE -->
-      <a href="dp.html" class="topic-card" role="listitem" aria-label="Dynamic Programming guide">
+      <a href="dp.html" class="topic-card">
         <div class="card-banner banner-amber"></div>
         <div class="card-body">
           <span class="card-icon">🧩</span>
           <div class="card-title">Dynamic Programming</div>
-          <div class="card-desc">
-            Memoization vs tabulation, 1D &amp; 2D DP patterns, LCS, LIS (O(n log n)), knapsack, space optimization. 8 LeetCode solutions including Edit Distance (Hard).
-          </div>
+          <div class="card-desc">1D/2D patterns, knapsack, LCS, LIS with O(n log n) patience sort. Memoization vs tabulation decision tree. 8 LC solutions.</div>
           <div class="card-footer">
-            <div class="card-tags">
-              <span class="ctag">Memoization</span>
-              <span class="ctag">Tabulation</span>
-              <span class="ctag">8 LC Problems</span>
-            </div>
+            <div class="card-tags"><span class="ctag">Memoization</span><span class="ctag">Tabulation</span><span class="ctag">8 LC</span></div>
             <span class="card-status status-live">Live ✓</span>
           </div>
         </div>
       </a>
 
-      <!-- ARRAYS & STRINGS — LIVE -->
-      <a href="arrays-strings.html" class="topic-card" role="listitem" aria-label="Arrays and Strings guide">
+      <a href="arrays-strings.html" class="topic-card">
         <div class="card-banner" style="height:6px;background:linear-gradient(to right,#2563eb,#06b6d4)"></div>
         <div class="card-body">
           <span class="card-icon">📊</span>
           <div class="card-title">Arrays &amp; Strings</div>
-          <div class="card-desc">
-            Two pointers, sliding window (fixed &amp; variable), prefix sums, binary search (3 templates). The foundation of every coding interview. 8 LeetCode solutions including Trapping Rain Water (Hard).
-          </div>
+          <div class="card-desc">Two pointers, sliding window, prefix sums, binary search (3 templates). The most-tested category in FAANG interviews. 8 LC solutions.</div>
           <div class="card-footer">
-            <div class="card-tags">
-              <span class="ctag">Sliding Window</span>
-              <span class="ctag">Binary Search</span>
-              <span class="ctag">8 LC Problems</span>
-            </div>
+            <div class="card-tags"><span class="ctag">Sliding Window</span><span class="ctag">Prefix Sum</span><span class="ctag">8 LC</span></div>
             <span class="card-status status-live">Live ✓</span>
           </div>
         </div>
       </a>
 
-      <!-- BACKTRACKING — LIVE -->
-      <a href="backtracking.html" class="topic-card" role="listitem" aria-label="Backtracking guide">
+      <a href="backtracking.html" class="topic-card">
         <div class="card-banner" style="height:6px;background:linear-gradient(to right,#dc2626,#7c3aed)"></div>
         <div class="card-body">
           <span class="card-icon">🔄</span>
           <div class="card-title">Backtracking</div>
-          <div class="card-desc">
-            Subsets, permutations, combinations, palindrome partitioning, word search, N-queens, Sudoku. Choose / Explore / Unchoose — and know when to prune. 8 LeetCode solutions.
-          </div>
+          <div class="card-desc">Subsets, permutations, combinations, grid DFS, N-Queens, Sudoku. Template that solves every backtracking problem. 8 LC solutions.</div>
           <div class="card-footer">
-            <div class="card-tags">
-              <span class="ctag">Recursion</span>
-              <span class="ctag">Pruning</span>
-              <span class="ctag">8 LC Problems</span>
-            </div>
+            <div class="card-tags"><span class="ctag">Subsets</span><span class="ctag">Permutations</span><span class="ctag">8 LC</span></div>
             <span class="card-status status-live">Live ✓</span>
           </div>
         </div>
       </a>
 
-      <!-- INTERVALS — LIVE -->
-      <a href="intervals.html" class="topic-card" role="listitem" aria-label="Intervals guide">
+      <a href="intervals.html" class="topic-card">
         <div class="card-banner banner-green"></div>
         <div class="card-body">
-          <span class="card-icon">📅</span>
+          <span class="card-icon">📐</span>
           <div class="card-title">Intervals</div>
-          <div class="card-desc">
-            Merge, insert, overlap detection, meeting rooms, and sweep line. Sort-by-start vs sort-by-end — know when to use each. 7 LeetCode solutions including Minimum Interval per Query (Hard).
-          </div>
+          <div class="card-desc">Merge, Insert, Meeting Rooms, Non-Overlapping, Sweep Line. Sort-then-scan pattern that handles every interval problem. 7 LC solutions.</div>
           <div class="card-footer">
-            <div class="card-tags">
-              <span class="ctag">Sorting</span>
-              <span class="ctag">Sweep Line</span>
-              <span class="ctag">7 LC Problems</span>
-            </div>
+            <div class="card-tags"><span class="ctag">Merge</span><span class="ctag">Sweep Line</span><span class="ctag">7 LC</span></div>
             <span class="card-status status-live">Live ✓</span>
           </div>
         </div>
       </a>
 
-      <!-- GREEDY — LIVE -->
-      <a href="greedy.html" class="topic-card" role="listitem" aria-label="Greedy Algorithms guide">
+      <a href="greedy.html" class="topic-card">
         <div class="card-banner banner-amber"></div>
         <div class="card-body">
-          <span class="card-icon">💚</span>
+          <span class="card-icon">💡</span>
           <div class="card-title">Greedy Algorithms</div>
-          <div class="card-desc">
-            Jump Game I/II, Gas Station, Task Scheduler, Candy, Partition Labels. Exchange argument proof, greedy vs DP decision framework. 8 LeetCode solutions.
-          </div>
+          <div class="card-desc">Jump Game I/II, Gas Station, Task Scheduler, Candy, Partition Labels. When to reach for greedy vs DP — a clear decision framework. 8 LC solutions.</div>
           <div class="card-footer">
-            <div class="card-tags">
-              <span class="ctag">Local Optimal</span>
-              <span class="ctag">Scheduling</span>
-              <span class="ctag">8 LC Problems</span>
-            </div>
+            <div class="card-tags"><span class="ctag">Greedy</span><span class="ctag">Greedy vs DP</span><span class="ctag">8 LC</span></div>
             <span class="card-status status-live">Live ✓</span>
           </div>
         </div>
       </a>
 
-      <!-- BIT MANIPULATION — LIVE -->
-      <a href="bit-manipulation.html" class="topic-card" role="listitem" aria-label="Bit Manipulation guide">
+      <a href="bit-manipulation.html" class="topic-card">
         <div class="card-banner banner-indigo"></div>
         <div class="card-body">
-          <span class="card-icon">⚡</span>
+          <span class="card-icon">🔢</span>
           <div class="card-title">Bit Manipulation</div>
-          <div class="card-desc">
-            XOR tricks, Brian Kernighan's algorithm, bitmasks, and counting set bits. Solve "impossible" problems in O(1) space. 8 LeetCode solutions including Single Number II and Sum Without +.
-          </div>
+          <div class="card-desc">XOR tricks, Brian Kernighan, bitmask patterns, counting bits DP, bitmask DP. Bit tricks that crack hard problems in O(1). 8 LC solutions.</div>
           <div class="card-footer">
-            <div class="card-tags">
-              <span class="ctag">XOR</span>
-              <span class="ctag">Bitmask</span>
-              <span class="ctag">8 LC Problems</span>
-            </div>
+            <div class="card-tags"><span class="ctag">XOR</span><span class="ctag">Bitmask</span><span class="ctag">8 LC</span></div>
             <span class="card-status status-live">Live ✓</span>
           </div>
         </div>
       </a>
 
-      <!-- INTERVIEW PREP — LIVE (featured) -->
-      <a href="interview-prep.html" class="topic-card" role="listitem" aria-label="Interview Prep Master Guide" style="grid-column:1/-1">
+      <!-- Featured: Interview Prep -->
+      <a href="interview-prep.html" class="topic-card" style="grid-column:1/-1">
         <div class="card-banner banner-featured" style="height:8px"></div>
-        <div class="card-body" style="display:grid;grid-template-columns:auto 1fr;gap:1.5rem;align-items:center">
-          <span class="card-icon" style="font-size:3rem;margin:0">🎯</span>
+        <div class="card-body" style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap">
+          <div style="flex:1;min-width:220px">
+            <span class="card-icon">🎯</span>
+            <div class="card-title" style="font-size:1.25rem">Coding Interview Prep — Master Guide</div>
+            <div class="card-desc">8-week study plan, 90-problem curated list (Blind 75 + NeetCode 150 tagged), 15-pattern cheatsheet, interview strategy, and complexity rules of thumb. The single guide that ties everything together.</div>
+          </div>
           <div>
-            <div class="card-title" style="font-size:1.3rem">Coding Interview Prep — Master Guide</div>
-            <div class="card-desc" style="margin-bottom:.75rem">
-              8-week study plan + curated 90-problem list covering every NeetCode 150 and Blind 75 pattern. Pattern recognition cheatsheet, difficulty tags, time-management strategy, and links to every KnowAlgo deep-dive.
-            </div>
-            <div class="card-footer">
+            <div class="card-footer" style="flex-direction:column;align-items:flex-start;gap:.6rem">
               <div class="card-tags">
-                <span class="ctag">8-Week Plan</span>
-                <span class="ctag">NeetCode 150</span>
-                <span class="ctag">Blind 75</span>
-                <span class="ctag">90+ Problems</span>
+                <span class="ctag">8-Week Plan</span><span class="ctag">NeetCode 150</span>
+                <span class="ctag">Blind 75</span><span class="ctag">90+ Problems</span>
                 <span class="ctag">Pattern Cheatsheet</span>
               </div>
               <span class="card-status status-live">Live ✓</span>
@@ -763,190 +449,118 @@
   </div>
 </section>
 
-<!-- ════════════════════ ON THE HORIZON ════════════════════ -->
-<section id="horizon" class="horizon-section">
-  <div class="section-inner">
-    <div class="section-tag horizon-tag">On the Horizon</div>
-    <h2 class="section-title horizon-heading">More Knowledge Areas</h2>
-    <p class="section-subtitle horizon-heading">
-      Expanding beyond DSA. Each area will become its own collection of deep-dive guides — coming later.
-    </p>
-    <div class="cards-grid horizon-grid">
+<!-- ═══════════════════ SYSTEM DESIGN ═══════════════════ -->
+<section class="sd-section">
+  <div class="sd-inner">
+    <div class="sd-tag">All 16 Patterns Live</div>
+    <h2 class="sd-title">System Design Patterns</h2>
+    <p class="sd-subtitle">16 pattern clusters, each with architecture diagrams, 9 engineer perspectives, real problems with Python code, and trade-off tables.</p>
 
-      <div class="topic-card horizon-card">
-        <div class="card-banner" style="height:6px;background:#cbd5e1"></div>
-        <div class="card-body">
-          <span class="card-icon">🏗️</span>
-          <div class="card-title">System Design</div>
-          <div class="card-desc">Scalability, distributed systems, load balancing, caching, databases, and real-world architecture trade-offs.</div>
-          <div class="card-footer">
-            <div class="card-tags"><span class="ctag">Distributed</span><span class="ctag">Scalability</span></div>
-            <span class="card-status status-soon">Coming Soon</span>
-          </div>
-        </div>
-      </div>
+    <div class="sd-pattern-grid">
+      <a href="system-design-traffic.html" class="sd-pattern"><span class="sd-pattern-num">01</span> ⚡ Traffic Shaping</a>
+      <a href="system-design-caching.html" class="sd-pattern"><span class="sd-pattern-num">02</span> 🔥 Caching &amp; Latency</a>
+      <a href="system-design-storage.html" class="sd-pattern"><span class="sd-pattern-num">03</span> 🗄️ Data Storage</a>
+      <a href="system-design-apis.html" class="sd-pattern"><span class="sd-pattern-num">04</span> 🔌 APIs &amp; Communication</a>
+      <a href="system-design-async.html" class="sd-pattern"><span class="sd-pattern-num">05</span> 📨 Async Processing</a>
+      <a href="system-design-reliability.html" class="sd-pattern"><span class="sd-pattern-num">06</span> 🛡️ Reliability</a>
+      <a href="system-design-consistency.html" class="sd-pattern"><span class="sd-pattern-num">07</span> ⚖️ Distributed Consistency</a>
+      <a href="system-design-pipelines.html" class="sd-pattern"><span class="sd-pattern-num">08</span> 🔄 Data Pipelines</a>
+      <a href="system-design-security.html" class="sd-pattern"><span class="sd-pattern-num">09</span> 🔒 Security</a>
+      <a href="system-design-observability.html" class="sd-pattern"><span class="sd-pattern-num">10</span> 👁️ Observability</a>
+      <a href="system-design-migration.html" class="sd-pattern"><span class="sd-pattern-num">11</span> 🚀 Migration</a>
+      <a href="system-design-platform.html" class="sd-pattern"><span class="sd-pattern-num">12</span> 🏗️ Platform &amp; DevInfra</a>
+      <a href="system-design-ml.html" class="sd-pattern"><span class="sd-pattern-num">13</span> 🤖 ML / AI Systems</a>
+      <a href="system-design-realtime.html" class="sd-pattern"><span class="sd-pattern-num">14</span> 📡 Real-Time &amp; Events</a>
+      <a href="system-design-iot.html" class="sd-pattern"><span class="sd-pattern-num">15</span> 🌐 IoT &amp; Edge</a>
+      <a href="system-design-global.html" class="sd-pattern"><span class="sd-pattern-num">16</span> 🌍 Global Distribution</a>
+    </div>
 
-      <div class="topic-card horizon-card">
-        <div class="card-banner" style="height:6px;background:#cbd5e1"></div>
-        <div class="card-body">
-          <span class="card-icon">🔧</span>
-          <div class="card-title">Low Level Design</div>
-          <div class="card-desc">Design patterns, SOLID principles, OOP fundamentals, and building extensible systems from the ground up.</div>
-          <div class="card-footer">
-            <div class="card-tags"><span class="ctag">Design Patterns</span><span class="ctag">OOP</span></div>
-            <span class="card-status status-soon">Coming Soon</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="topic-card horizon-card">
-        <div class="card-banner" style="height:6px;background:#cbd5e1"></div>
-        <div class="card-body">
-          <span class="card-icon">🤖</span>
-          <div class="card-title">ML Algorithms</div>
-          <div class="card-desc">Core machine learning algorithms explained from first principles — regression, trees, clustering, SVMs, and more.</div>
-          <div class="card-footer">
-            <div class="card-tags"><span class="ctag">Supervised</span><span class="ctag">Unsupervised</span></div>
-            <span class="card-status status-soon">Coming Soon</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="topic-card horizon-card">
-        <div class="card-banner" style="height:6px;background:#cbd5e1"></div>
-        <div class="card-body">
-          <span class="card-icon">🧠</span>
-          <div class="card-title">ML System Design</div>
-          <div class="card-desc">Feature stores, model serving, training pipelines, monitoring, and MLOps patterns for production ML systems.</div>
-          <div class="card-footer">
-            <div class="card-tags"><span class="ctag">MLOps</span><span class="ctag">Model Serving</span></div>
-            <span class="card-status status-soon">Coming Soon</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="topic-card horizon-card">
-        <div class="card-banner" style="height:6px;background:#cbd5e1"></div>
-        <div class="card-body">
-          <span class="card-icon">✨</span>
-          <div class="card-title">AI &amp; Gen AI</div>
-          <div class="card-desc">LLMs, RAG architectures, agents, prompt engineering, fine-tuning, and building AI-native applications.</div>
-          <div class="card-footer">
-            <div class="card-tags"><span class="ctag">LLMs</span><span class="ctag">RAG</span><span class="ctag">Agents</span></div>
-            <span class="card-status status-soon">Coming Soon</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="topic-card horizon-card">
-        <div class="card-banner" style="height:6px;background:#cbd5e1"></div>
-        <div class="card-body">
-          <span class="card-icon">🔬</span>
-          <div class="card-title">Research &amp; Ideas</div>
-          <div class="card-desc">Personal research notes, experiment write-ups, and ideas worth sharing — the messy, exploratory work in progress.</div>
-          <div class="card-footer">
-            <div class="card-tags"><span class="ctag">Research</span><span class="ctag">Ideas</span></div>
-            <span class="card-status status-soon">Coming Soon</span>
-          </div>
-        </div>
-      </div>
-
+    <div class="sd-cta">
+      <a href="system-design.html" class="btn-teal">Explore System Design →</a>
+      <a href="system-design-traffic.html" class="btn-outline-light">Start: Pattern 01 →</a>
     </div>
   </div>
 </section>
 
-<!-- ════════════════════ FEATURES ════════════════════ -->
-<section class="features-bg" id="about" aria-labelledby="features-title">
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section class="features-bg" id="about">
   <div class="section-inner">
     <div class="section-tag">Why KnowAlgo</div>
-    <h2 class="section-title" id="features-title">Built for Real Understanding</h2>
-    <p class="section-subtitle">
-      We don't just show code. We explain the <em>intuition</em> behind every algorithm.
-    </p>
+    <h2 class="section-title">Built for Real Understanding</h2>
+    <p class="section-subtitle">Not another list of definitions. Every guide explains the intuition behind the algorithm, not just the code.</p>
 
     <div class="features-grid">
       <div class="feature">
         <div class="feature-icon">🔬</div>
-        <h3>Deep Explanations</h3>
-        <p>Every concept explained from first principles — why it works, not just how to implement it.</p>
+        <h3>First-Principles Explanations</h3>
+        <p>Every concept explained from the ground up — why it works, when to reach for it, and what it trades off.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🏗️</div>
+        <h3>9 Engineer Perspectives</h3>
+        <p>System design guides show how SRE, Backend, Security, Data, ML, Platform, Frontend, Mobile, and Architect roles each see the same problem.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">🎯</div>
-        <h3>LeetCode Solutions</h3>
-        <p>Each guide includes 5–7 real LeetCode problems with optimized solutions and complexity analysis.</p>
+        <h3>Real LeetCode Solutions</h3>
+        <p>Every DSA guide includes 5–8 curated problems with full Python solutions, not just hints.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">📊</div>
-        <h3>Visual Diagrams</h3>
-        <p>Step-by-step visual walkthroughs of how data structures change as operations are performed.</p>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">🐍</div>
-        <h3>Python Code</h3>
-        <p>Clean, well-commented Python implementations you can copy, run, and adapt for interviews.</p>
+        <h3>Visual Architecture Diagrams</h3>
+        <p>ASCII-art arch diagrams that show exactly how data flows through every system design — no vague boxes and arrows.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">⚡</div>
-        <h3>Complexity Analysis</h3>
-        <p>Every operation analyzed with Time and Space complexity, compared against alternatives.</p>
+        <h3>Trade-off Tables</h3>
+        <p>Every decision comes with a comparison table. Both sides of every trade-off shown — no hand-waving.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">🌐</div>
-        <h3>100% Free</h3>
-        <p>No paywalls, no sign-ups, no ads. Just clear technical content for everyone.</p>
+        <h3>100% Free, No Sign-up</h3>
+        <p>No paywalls, no accounts, no ads. Clear technical content for everyone preparing for a technical interview.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ════════════════════ CTA ════════════════════ -->
-<section class="cta-section" aria-labelledby="cta-title">
-  <h2 id="cta-title">15 Deep-Dive Guides. All Free.</h2>
-  <p>Every guide has visual diagrams, complete Python implementations, complexity analysis, and real LeetCode solutions — not just hints.</p>
-  <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;margin-top:0.5rem">
+<!-- ═══════════════════ CTA ═══════════════════ -->
+<section class="cta-section">
+  <h2>Start where you need to.</h2>
+  <p>Pick your weak area and dive in — every guide is self-contained, deeply explained, and free.</p>
+  <div class="cta-btns">
     <a href="interview-prep.html" class="btn-primary">Interview Prep Guide →</a>
-    <a href="arrays-strings.html" class="btn-secondary">Arrays &amp; Strings →</a>
-    <a href="dp.html" class="btn-secondary">Dynamic Programming →</a>
-    <a href="backtracking.html" class="btn-secondary">Backtracking →</a>
-    <a href="intervals.html" class="btn-secondary">Intervals →</a>
-    <a href="greedy.html" class="btn-secondary">Greedy →</a>
-    <a href="bit-manipulation.html" class="btn-secondary">Bit Manipulation →</a>
-    <a href="graph.html" class="btn-secondary">Graph: Traversal →</a>
-    <a href="graph-algorithms.html" class="btn-secondary">Graph: Algorithms →</a>
-    <a href="trie.html" class="btn-secondary">Trie →</a>
-    <a href="hash-map.html" class="btn-secondary">Hash Map →</a>
-    <a href="heap.html" class="btn-secondary">Heap →</a>
-    <a href="binary-tree.html" class="btn-secondary">Binary Tree →</a>
-    <a href="bst.html" class="btn-secondary">BST →</a>
-    <a href="stack-queue.html" class="btn-secondary">Stack &amp; Queue →</a>
-    <a href="linked-list.html" class="btn-secondary">Linked List →</a>
+    <a href="system-design.html" class="btn-ghost">System Design →</a>
+    <a href="search.html" class="btn-ghost">⌕ Search Everything</a>
   </div>
 </section>
+
 </main>
 
-<!-- ════════════════════ FOOTER ════════════════════ -->
-<footer role="contentinfo">
+<footer>
   <div class="footer-links">
     <a href="index.html">Home</a>
+    <a href="system-design.html">System Design</a>
     <a href="interview-prep.html">Interview Prep</a>
+    <a href="search.html">Search</a>
+    <span class="footer-divider"></span>
     <a href="arrays-strings.html">Arrays &amp; Strings</a>
-    <a href="dp.html">Dynamic Programming</a>
+    <a href="dp.html">DP</a>
     <a href="backtracking.html">Backtracking</a>
-    <a href="intervals.html">Intervals</a>
-    <a href="greedy.html">Greedy</a>
-    <a href="bit-manipulation.html">Bit Manipulation</a>
+    <a href="graph.html">Graph</a>
     <a href="trie.html">Trie</a>
-    <a href="hash-map.html">Hash Map</a>
-    <a href="linked-list.html">Linked List</a>
+    <a href="heap.html">Heap</a>
     <a href="binary-tree.html">Binary Tree</a>
     <a href="bst.html">BST</a>
-    <a href="heap.html">Heap</a>
+    <a href="hash-map.html">Hash Map</a>
     <a href="stack-queue.html">Stack &amp; Queue</a>
-    <a href="graph.html">Graph: Traversal</a>
-    <a href="graph-algorithms.html">Graph: Algorithms</a>
+    <a href="linked-list.html">Linked List</a>
+    <a href="bit-manipulation.html">Bit Manipulation</a>
+    <a href="intervals.html">Intervals</a>
+    <a href="greedy.html">Greedy</a>
   </div>
-  <p>Built with ❤️ by <strong style="color:#e2e8f0;">KnowAlgo</strong> — Data Structures &amp; Algorithms Made Clear</p>
-  <p style="margin-top: 0.5rem; font-size: 0.8rem; opacity: 0.5;">© 2026 KnowAlgo. Free to use for educational purposes.</p>
+  <p>Built by <strong style="color:#e2e8f0">KnowAlgo</strong> — Technical interview prep, explained deeply.</p>
+  <p style="margin-top:.5rem;font-size:.8rem;opacity:.45">© 2026 KnowAlgo. Free to use for educational purposes.</p>
 </footer>
 
 </body>
