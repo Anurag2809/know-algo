@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Distribution & Multi-Region – Pattern 16 | KnowAlgo System Design</title>
+<meta name="description" content="Anycast routing, CDN strategies, geo-routing, data sovereignty, global databases, active-active multi-region, and conflict resolution patterns.">
+<link rel="canonical" href="https://knowalgo.netlify.app/system-design-global.html">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2Z1EQCZBXH');</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<style>
+:root {
+  --primary: #0c4a6e; --primary-dark: #082f49; --primary-light: #e0f2fe;
+  --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+  --bg: #f8fafc; --card-bg: #ffffff; --radius: 12px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: system-ui,-apple-system,sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(to right, #0c4a6e, #0284c7); z-index: 9999; transition: width .1s; }
+.site-header { background: #0f172a; padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 3px; z-index: 100; }
+.site-header a.logo { color: #f1f5f9; font-weight: 800; font-size: 1.1rem; text-decoration: none; }
+.site-header nav a { color: #94a3b8; text-decoration: none; font-size: .88rem; margin-left: 1.5rem; }
+.site-header nav a:hover { color: #f1f5f9; }
+.hero { background: linear-gradient(135deg, #0f172a 0%, #0c2a4a 50%, #052e16 100%); color: #fff; padding: 3.5rem 2rem 3rem; }
+.hero-badge { display: inline-flex; align-items: center; gap: .5rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 20px; padding: .3rem .9rem; font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #7dd3fc; margin-bottom: 1.2rem; }
+.hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.15; margin-bottom: .8rem; }
+.hero h1 span { color: #38bdf8; }
+.hero p { font-size: 1.08rem; color: #7dd3fc; max-width: 680px; margin-bottom: 1.5rem; }
+.hero-tags { display: flex; flex-wrap: wrap; gap: .5rem; }
+.hero-tag { background: rgba(255,255,255,.12); border-radius: 20px; padding: .25rem .75rem; font-size: .78rem; color: #bae6fd; }
+.page-body { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; display: grid; grid-template-columns: 240px 1fr 220px; gap: 2rem; align-items: start; }
+.toc-sidebar { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.toc-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.toc-title { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); margin-bottom: .9rem; }
+.toc-nav a { display: block; font-size: .82rem; color: var(--text-muted); text-decoration: none; padding: .28rem .5rem; border-radius: 6px; border-left: 2px solid transparent; transition: all .2s; margin-bottom: 2px; }
+.toc-nav a:hover, .toc-nav a.active { color: var(--primary); border-left-color: var(--primary); background: var(--primary-light); }
+.toc-divider { height: 1px; background: var(--border); margin: .6rem 0; }
+.toc-nav-links { display: flex; gap: .5rem; margin-top: .8rem; }
+.toc-nav-links a { flex: 1; text-align: center; font-size: .72rem; font-weight: 600; color: var(--primary); background: var(--primary-light); border-radius: 6px; padding: .35rem .4rem; text-decoration: none; }
+.main-content section { margin-bottom: 3rem; }
+.section-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--primary); margin-bottom: .5rem; }
+.section-title { font-size: 1.6rem; font-weight: 800; color: var(--text); margin-bottom: 1rem; }
+.section-intro { font-size: 1rem; color: var(--text-muted); margin-bottom: 1.5rem; max-width: 760px; }
+.concept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.concept-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.concept-card h4 { font-size: .95rem; font-weight: 700; color: var(--text); margin-bottom: .4rem; }
+.concept-card p { font-size: .85rem; color: var(--text-muted); }
+.concept-card .cc-icon { font-size: 1.4rem; margin-bottom: .5rem; }
+.arch-diagram { background: #ffffff; border: 1px solid #cbd5e1; border-radius: var(--radius); padding: 1.25rem; margin: 1rem 0; font-family: monospace; font-size: .8rem; overflow-x: auto; line-height: 1.6; white-space: pre; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.arch-diagram .cm { color: #94a3b8; font-style: italic; }
+.arch-diagram .lb { color: #92400e; font-weight: 700; }
+.arch-diagram .sv { color: #166534; font-weight: 700; }
+.arch-diagram .db { color: #5b21b6; font-weight: 700; }
+.arch-diagram .er { color: #991b1b; font-weight: 700; }
+.arch-diagram .em { color: #065f46; font-weight: 700; }
+.arch-diagram .bl { color: #1e40af; font-weight: 700; }
+.arch-diagram .ok { color: #166534; }
+.arch-diagram .or { color: #9a3412; }
+.arch-diagram .rd { color: #991b1b; }
+.arch-diagram .cy { color: #0e7490; font-weight: 700; }
+.arch-diagram .pk { color: #be185d; font-weight: 700; }
+.code-block { position: relative; margin: 1rem 0; border-radius: var(--radius); overflow: hidden; }
+.code-block pre { margin: 0 !important; border-radius: var(--radius) !important; font-size: .82rem !important; }
+.copy-btn { position: absolute; top: .6rem; right: .6rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #94a3b8; font-size: .72rem; padding: .25rem .6rem; border-radius: 6px; cursor: pointer; }
+.copy-btn:hover { background: rgba(255,255,255,.2); color: #fff; }
+.data-table { width: 100%; border-collapse: collapse; font-size: .88rem; margin: 1rem 0; background: var(--card-bg); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.data-table th { background: var(--primary); color: #fff; padding: .7rem 1rem; text-align: left; font-size: .8rem; font-weight: 700; }
+.data-table td { padding: .65rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: #f0f9ff; }
+.eng-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+.eng-take { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.et-sre { border-left-color: #0369a1; } .et-backend { border-left-color: #7c3aed; } .et-security { border-left-color: #dc2626; }
+.et-data { border-left-color: #059669; } .et-platform { border-left-color: #d97706; } .et-ml { border-left-color: #db2777; }
+.et-frontend { border-left-color: #0891b2; } .et-mobile { border-left-color: #16a34a; } .et-architect { border-left-color: #475569; }
+.eng-role { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: .3rem; }
+.eng-take p { font-size: .85rem; color: var(--text); }
+.problem-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; box-shadow: var(--shadow-sm); }
+.problem-header { padding: 1.25rem 1.5rem; background: linear-gradient(135deg, #0c4a6e, #0284c7); border-bottom: none; }
+.problem-num { font-size: .78rem; font-weight: 700; color: #7dd3fc; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem; }
+.problem-title { font-size: 1.15rem; font-weight: 700; color: #f1f5f9; margin-bottom: .5rem; }
+.ptags { display: flex; flex-wrap: wrap; gap: .4rem; }
+.ptag { background: rgba(255,255,255,.15); color: #bae6fd; font-size: .72rem; font-weight: 600; padding: .2rem .55rem; border-radius: 10px; }
+.problem-body { padding: 1.5rem; }
+.problem-body h4 { font-size: .9rem; font-weight: 700; color: var(--text); margin: 1rem 0 .4rem; }
+.problem-body p { font-size: .9rem; color: var(--text-muted); margin-bottom: .75rem; }
+.antipattern-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.ap-item { background: #fff5f5; border: 1px solid #fecaca; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.ap-item h4 { font-size: .9rem; font-weight: 700; color: #991b1b; margin-bottom: .3rem; }
+.ap-item p { font-size: .83rem; color: #7f1d1d; }
+.tip-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.tip-item { background: var(--primary-light); border: 1px solid #bae6fd; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.tip-item h4 { font-size: .9rem; font-weight: 700; color: var(--primary-dark); margin-bottom: .3rem; }
+.tip-item p { font-size: .83rem; color: #082f49; }
+.notes-sidebar { align-self: start; }
+.notes-sticky { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.notes-heading { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: 10px; }
+.note-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: border-color .25s; }
+.note-item.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(12,74,110,.07); }
+.note-head { display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px; cursor: pointer; }
+.note-bullet { width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: .78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: transform .2s; }
+.note-item.open .note-bullet { transform: rotate(45deg); }
+.note-label { font-size: .78rem; font-weight: 600; color: #1e293b; flex: 1; line-height: 1.35; }
+.note-body { display: none; font-size: .76rem; color: #475569; line-height: 1.55; padding: 0 11px 11px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+.note-item.open .note-body, .note-item.active .note-body { display: block; }
+@media (max-width: 1150px) { .notes-sidebar { display: none !important; } .page-body { grid-template-columns: 240px 1fr !important; } }
+@media (max-width: 768px) { .page-body { grid-template-columns: 1fr !important; } .toc-sidebar { display: none; } }
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<header class="site-header">
+  <a href="index.html" class="logo">KnowAlgo</a>
+  <nav>
+    <a href="index.html">DSA</a>
+    <a href="system-design.html">System Design</a>
+    <a href="interview-prep.html">Interview Prep</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div style="max-width:1400px;margin:0 auto;padding:0 1.5rem">
+    <div class="hero-badge"><span>🌐</span> Pattern 16 of 16 · System Design</div>
+    <h1>Global Distribution &amp; <span>Multi-Region</span></h1>
+    <p>Anycast routing, CDN strategy, geo-routing, data sovereignty, globally distributed databases, active-active replication, and conflict resolution at planetary scale.</p>
+    <div class="hero-tags">
+      <span class="hero-tag">Anycast</span><span class="hero-tag">CDN</span>
+      <span class="hero-tag">Geo-Routing</span><span class="hero-tag">Data Sovereignty</span>
+      <span class="hero-tag">CockroachDB / Spanner</span><span class="hero-tag">Active-Active</span>
+      <span class="hero-tag">CRDT / LWW</span><span class="hero-tag">Latency Optimization</span>
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+  <aside class="toc-sidebar">
+    <div class="toc-card">
+      <div class="toc-title">On this page</div>
+      <nav class="toc-nav">
+        <a href="#global-overview">Global Architecture</a>
+        <a href="#anycast">Anycast Routing</a>
+        <a href="#cdn">CDN Strategy</a>
+        <a href="#geo-routing">Geo-Routing</a>
+        <a href="#data-sovereignty">Data Sovereignty</a>
+        <a href="#global-databases">Global Databases</a>
+        <a href="#active-active">Active-Active</a>
+        <a href="#conflict-resolution">Conflict Resolution</a>
+        <div class="toc-divider"></div>
+        <a href="#perspectives">Engineer Perspectives</a>
+        <a href="#problems">Real Problems</a>
+        <a href="#tradeoffs">Trade-offs</a>
+        <a href="#antipatterns">Anti-patterns</a>
+        <a href="#interview">Interview Tips</a>
+      </nav>
+      <div class="toc-nav-links">
+        <a href="system-design-iot.html">← IoT</a>
+        <a href="system-design.html">All Patterns</a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <section id="global-overview">
+      <div class="section-label">Foundation</div>
+      <h2 class="section-title">Global Architecture Overview</h2>
+      <p class="section-intro">Distributing a system globally means placing compute, data, and network resources close to users across continents. The fundamental constraints are physics (speed of light ≈ 200 km/ms in fiber), regulatory divergence (GDPR, China Cybersecurity Law, India PDPB), and the CAP theorem at planetary scale. Every global architecture decision is a trade-off between latency, consistency, and operational complexity.</p>
+
+      <div class="arch-diagram"><span class="cm">Global multi-region architecture overview</span>
+
+<span class="bl">User → Anycast/CDN Edge</span> (200+ PoPs worldwide)
+  ├── Static assets: S3/GCS + CDN (cache-hit → 5ms response)
+  ├── Dynamic API: Route 53 latency-based → nearest region
+  └── WebSocket/long-poll: Anycast to nearest edge, tunnel to origin
+
+<span class="sv">Region A (us-east-1)</span>          <span class="sv">Region B (eu-west-1)</span>           <span class="sv">Region C (ap-southeast-1)</span>
+  Primary (writes)              Secondary (reads + failover)     Secondary (reads + failover)
+  ├── App tier (K8s)            ├── App tier (K8s)               ├── App tier (K8s)
+  ├── RDS Primary               ├── RDS Read Replica             ├── RDS Read Replica
+  ├── Redis Primary             ├── Redis replica                └── Redis replica
+  └── Kafka source              └── Kafka mirror (MirrorMaker 2)
+
+<span class="em">Cross-region replication flows</span>
+  Database: async replication (RPO ~1s), sync optional (RPO=0, +15ms write latency)
+  Cache: TTL-based invalidation or event-driven (Kafka → invalidation topic)
+  Blob/Object: S3 Cross-Region Replication, GCS Object Replication
+
+<span class="lb">Data Sovereignty Boundaries</span>
+  EU data: pinned to eu-west-1 / eu-central-1 (GDPR compliance)
+  US data: us-east-1 / us-west-2
+  China: isolated vpc + ICP license required (separate deployment)
+  Tenant-level routing: shard key includes region → always land on correct region</div>
+
+      <div class="concept-grid">
+        <div class="concept-card"><div class="cc-icon">⚡</div><h4>Speed of Light Constraint</h4><p>New York → London RTT is ~70ms (fiber). You cannot beat physics — the only win is reducing the distance between user and data. Every CDN and regional edge deployment is an attempt to get closer.</p></div>
+        <div class="concept-card"><div class="cc-icon">🗺️</div><h4>Region vs Availability Zone</h4><p>A <strong>region</strong> is a geographic area (us-east-1 = Virginia). An <strong>AZ</strong> is an isolated data center inside a region. Multi-AZ protects against data center failure; multi-region protects against regional failure or regulatory requirements.</p></div>
+        <div class="concept-card"><div class="cc-icon">⚖️</div><h4>CAP at Global Scale</h4><p>Global systems can't be both strongly consistent and always available under network partitions. Most choose AP (eventual consistency) for reads with strong consistency only where required (financial writes). CockroachDB and Spanner are CP — they sacrifice availability for correctness.</p></div>
+        <div class="concept-card"><div class="cc-icon">🏛️</div><h4>Regulatory Isolation</h4><p>GDPR mandates EU personal data stays in the EU. China requires data residency + ICP license. India PDPB, Brazil LGPD, and others add more boundaries. Many global systems maintain isolated deployments per regulatory zone with no cross-border data flow.</p></div>
+      </div>
+    </section>
+
+    <section id="anycast">
+      <div class="section-label">Networking</div>
+      <h2 class="section-title">Anycast Routing</h2>
+      <p class="section-intro">Anycast assigns the same IP address to multiple servers in different locations. BGP routes each user's request to the topologically nearest server. This is how Cloudflare, Google (8.8.8.8), and modern CDNs route traffic with zero application-layer logic.</p>
+
+      <div class="arch-diagram"><span class="cm">How Anycast works</span>
+
+<span class="bl">Traditional Unicast</span>
+  User (Tokyo) ──────────────────────────────→ Server IP 203.0.113.10 (Virginia)
+                         70ms RTT across ocean
+
+<span class="sv">Anycast</span>
+  Same IP 203.0.113.10 announced from <span class="em">5 PoPs</span> via BGP:
+    Tokyo PoP     → announced 203.0.113.10 (AS 12345)
+    Frankfurt PoP → announced 203.0.113.10 (AS 12345)
+    Virginia PoP  → announced 203.0.113.10 (AS 12345)
+    Singapore PoP → announced 203.0.113.10 (AS 12345)
+    São Paulo PoP → announced 203.0.113.10 (AS 12345)
+
+  User (Tokyo) → BGP selects nearest → <span class="sv">Tokyo PoP</span> (5ms RTT)
+  User (London) → BGP selects nearest → <span class="sv">Frankfurt PoP</span> (8ms RTT)
+  No DNS resolution needed — routing is at the IP layer
+
+<span class="lb">Anycast use cases</span>
+  DNS resolvers: 8.8.8.8, 1.1.1.1, authoritative nameservers
+  DDoS mitigation: attack traffic absorbed by 200+ PoPs, no single target
+  CDN ingestion: Cloudflare, Fastly, Akamai all use anycast for TCP termination
+  Load balancing: ECMP (Equal-Cost Multi-Path) distributes within a PoP
+
+<span class="er">Anycast limitation</span>
+  Stateful TCP: BGP can reroute mid-connection during network events → session drop
+  Mitigation: QUIC (UDP-based) handles rerouting better; or use anycast only for
+  TCP termination at edge, then proxy to origin over stable tunnel</div>
+
+      <div class="concept-grid">
+        <div class="concept-card"><div class="cc-icon">📡</div><h4>BGP & AS Numbers</h4><p>Border Gateway Protocol (BGP) is the routing protocol of the internet. Each network operator has an Autonomous System Number (ASN). Anycast works by advertising the same IP prefix from multiple ASes — BGP shortest-path selection routes each packet to the nearest announcement.</p></div>
+        <div class="concept-card"><div class="cc-icon">🛡️</div><h4>Anycast DDoS Mitigation</h4><p>A 10 Tbps DDoS attack distributed across 200 PoPs with 50 Gbps capacity each is manageable — no single PoP sees more than a fraction. Cloudflare's 321 Tbps global network absorbs volumetric attacks that would saturate any single data center.</p></div>
+      </div>
+    </section>
+
+    <section id="cdn">
+      <div class="section-label">Performance</div>
+      <h2 class="section-title">CDN Strategy</h2>
+      <p class="section-intro">Content Delivery Networks cache content at edge PoPs close to users. The key decisions are what to cache, for how long, and how to invalidate. A well-configured CDN can serve 95%+ of traffic without hitting your origin, reducing both latency and cost.</p>
+
+      <div class="arch-diagram"><span class="cm">CDN caching hierarchy & invalidation</span>
+
+<span class="bl">Cache hierarchy (L1 → L2 → Origin)</span>
+  Browser cache (user's machine, private)
+    └── CDN Edge PoP (e.g., Cloudflare Frankfurt)  ← L1 cache
+          └── CDN Regional cache (e.g., Cloudflare EU hub)  ← L2 cache
+                └── Origin server (your data center)
+
+<span class="sv">Cache-Control header strategy</span>
+  Static assets (JS/CSS/images with content hash):
+    Cache-Control: public, max-age=31536000, immutable
+    → Cache for 1 year; filename changes on deploy (hash in filename)
+
+  HTML pages (SSR or SPA shell):
+    Cache-Control: public, max-age=0, s-maxage=60, stale-while-revalidate=300
+    → CDN caches 60s; serves stale up to 5min while background-revalidating
+
+  API responses (user-specific):
+    Cache-Control: private, max-age=0
+    → Never cache at CDN; browser may cache briefly
+
+  Vary: Accept-Encoding, Accept-Language
+    → CDN maintains separate cache entries per language
+
+<span class="em">Cache invalidation strategies</span>
+  Purge by URL: instant, precise — call CDN API on deploy for changed URLs
+  Purge by tag/surrogate key: tag objects with entity IDs → purge all pages showing Product #42
+  Cache-key normalization: strip UTM params from cache key to avoid cache fragmentation
+  Stale-while-revalidate: serve stale immediately, refresh in background (best UX)
+
+<span class="lb">Edge compute (CDN Workers)</span>
+  A/B testing at edge: no origin round-trip for experiment assignment
+  Auth token validation: verify JWT at edge, reject before hitting origin
+  Geolocation-based redirect: CF-IPCountry header → redirect to localized URL
+  Image optimization: resize/format-convert at edge (WebP for Chrome, AVIF for new browsers)</div>
+
+    </section>
+
+    <section id="geo-routing">
+      <div class="section-label">Traffic Management</div>
+      <h2 class="section-title">Geo-Routing & Traffic Steering</h2>
+      <p class="section-intro">Geo-routing directs users to the geographically or topologically closest server. DNS-based geo-routing (Route 53, Cloudflare DNS) operates at resolution time. Load-balancer-level geo-routing (Global Load Balancing) operates at connection time for finer control.</p>
+
+      <div class="arch-diagram"><span class="cm">Route 53 routing policy comparison</span>
+
+<span class="bl">Latency-based routing</span> (recommended default)
+  Route 53 measures RTT from each AWS region to DNS resolvers globally.
+  User DNS query → Route 53 picks region with lowest measured latency.
+  Not the same as geographic proximity! A user in South Africa might be routed
+  to eu-west-1 (Ireland) if that has lower latency than af-south-1.
+
+<span class="sv">Geolocation routing</span>
+  Routes based on where DNS query originates (country / continent / US state).
+  Use case: serve localized content, enforce data residency (EU → eu-west-1 only).
+  Fallback: must define a "default" record for unmatched locations.
+
+<span class="em">Weighted routing</span> (for canary / gradual rollout)
+  Record A: us-east-1, weight 90
+  Record B: us-west-2, weight 10
+  → 10% of traffic to new region; increase weight as confidence grows.
+
+<span class="lb">Geoproximity routing</span> (Traffic Flow required)
+  Like latency-based but you can add a "bias" — expand or shrink a region's
+  effective coverage area. Useful when a new region opens and you want to
+  gradually shift users away from an old one.
+
+<span class="cy">Failover routing</span>
+  Primary record: active region. Secondary: standby region.
+  Health check monitors primary → if unhealthy, all traffic shifts to secondary.
+  Warm standby vs cold standby: warm keeps capacity running (faster RTO);
+  cold shuts down (cheaper but slower to bring up).
+
+<span class="er">Global Load Balancer alternatives</span>
+  Cloudflare Load Balancing: anycast + health checks, sub-second failover
+  GCP Global Load Balancer: single Anycast IP, Google's backbone routing
+  Azure Traffic Manager: DNS-based, similar to Route 53
+  AWS Global Accelerator: Anycast entry, fixed IPs, routes over AWS backbone</div>
+
+      <div class="concept-grid">
+        <div class="concept-card"><div class="cc-icon">🏥</div><h4>Health Checks</h4><p>Route 53 health checks probe your endpoints every 10–30s. A region is removed from DNS when 3 consecutive checks fail (~1 min). Combine with CloudWatch alarms for application-level health (not just TCP connectivity).</p></div>
+        <div class="concept-card"><div class="cc-icon">⏱️</div><h4>DNS TTL Trade-offs</h4><p>Low TTL (30s) enables fast failover but increases DNS query volume and costs. High TTL (300s) reduces DNS load but means users are stuck on a failed endpoint longer. Typical production: 60s for geo-routed records, 300s for stable records.</p></div>
+        <div class="concept-card"><div class="cc-icon">🔄</div><h4>Warm Standby Pattern</h4><p>Keep a small but running capacity (e.g., 20% of primary) in the standby region. On failover, autoscaling kicks in to reach full capacity. RTO is minutes rather than hours of a cold standby. Cost: ~20% premium on compute in standby region.</p></div>
+      </div>
+    </section>
+
+    <section id="data-sovereignty">
+      <div class="section-label">Compliance</div>
+      <h2 class="section-title">Data Sovereignty & Compliance</h2>
+      <p class="section-intro">Data sovereignty means that data is subject to the laws of the country where it is stored or processed. GDPR (EU), PDPB (India), PIPL (China), LGPD (Brazil), and dozens of other regulations impose geographic restrictions on personal data. Failure to comply results in fines up to 4% of global annual revenue (GDPR Art. 83).</p>
+
+      <div class="arch-diagram"><span class="cm">Tenant-based data residency architecture</span>
+
+<span class="bl">Tenant metadata store</span> (global, read-heavy, eventual consistency OK)
+  tenant_id → { region: "eu-west-1", data_class: "GDPR", encryption_key_arn: "..." }
+
+<span class="sv">Request flow with residency enforcement</span>
+  1. User authenticates → JWT contains tenant_id + region claim
+  2. API gateway reads region claim from JWT
+  3. Request routed to correct regional cluster (eu-west-1 for EU tenants)
+  4. Data never leaves that region (no cross-region DB queries)
+  5. Audit log records every data access with user, timestamp, purpose
+
+<span class="em">Data classification tiers</span>
+  PII (Personally Identifiable): names, emails, addresses → region-locked, encrypted at rest
+  Sensitive PII: health, financial, biometric → field-level encryption, strict access
+  Non-personal: aggregated metrics, anonymized analytics → can move freely across regions
+  Pseudonymized: replaced with tokens → can cross regions; token mapping stays in home region
+
+<span class="lb">GDPR technical controls</span>
+  Right to erasure: soft-delete + scheduled purge job (not archive-and-forget)
+  Data portability: export API that returns all user data in machine-readable format
+  Consent logging: immutable append-only log of consent events (what, when, how)
+  Data minimization: collect only what's needed — DPO review before adding new fields
+  Breach notification: 72-hour window to notify DPA → requires automated detection pipeline
+
+<span class="er">China PIPL / ICP requirements</span>
+  Data must be processed within China; cross-border transfer requires government approval.
+  ICP license required for any website serving Chinese users from Chinese servers.
+  Typical solution: fully isolated China deployment (separate infra, accounts, domain).
+  VPN to connect China ops team to corporate network — no data flows out.</div>
+
+    </section>
+
+    <section id="global-databases">
+      <div class="section-label">Data Layer</div>
+      <h2 class="section-title">Global Database Deployment</h2>
+      <p class="section-intro">Global databases must balance consistency guarantees with write latency (strong consistency requires cross-region round trips). The main options span from single-region with replicas (simple, eventual reads) to fully distributed ACID databases (complex, but strong guarantees everywhere).</p>
+
+      <div class="arch-diagram"><span class="cm">Global database options compared</span>
+
+<span class="bl">Option 1: Single-region primary + read replicas</span>
+  Write path: all writes → us-east-1 primary (strong consistency)
+  Read path: reads → nearest read replica (eventual, ~100ms lag)
+  Failover: promote replica to primary (minutes of downtime or data loss)
+  Best for: apps where writes concentrate in one region, reads are global
+  Tools: RDS Multi-AZ + read replicas, MySQL + Vitess with follower reads
+
+<span class="sv">Option 2: Active-active with regional primaries (partitioned by key)</span>
+  Shard by tenant/geography: EU writes → eu-west-1, US writes → us-east-1
+  Each region is primary for its shard — no cross-region write latency
+  Cross-region: async replication for reporting; no cross-shard transactions
+  Risk: hot-shard if user distribution is uneven; no cross-region joins
+  Tools: Cassandra, DynamoDB Global Tables, custom sharding + Vitess
+
+<span class="em">Option 3: NewSQL — globally distributed ACID</span>
+  CockroachDB: PostgreSQL-compatible, serializable isolation, geo-partitioning
+    - Pin a table's ranges to specific regions (data residency built-in)
+    - Consensus via Raft across 3+ replicas spanning regions
+    - Write latency ≈ 2× RTT to quorum region (~150ms cross-continent)
+
+  Google Spanner: TrueTime (atomic clocks + GPS) for external consistency
+    - Globally consistent reads at any timestamp without locking
+    - Write latency ~10ms within a region, ~80ms multi-region
+    - Expensive; used by Google Ads, Stripe, and others at global scale
+
+<span class="lb">Option 4: Event sourcing + CQRS multi-region</span>
+  Event log (Kafka or Kinesis) is source of truth — replicated globally.
+  Each region maintains its own read model (projection) from the event log.
+  Writes go to the user's home region event log; other regions consume asynchronously.
+  Consistency: eventual for cross-region reads; strong within home region.
+  Good for: audit-heavy systems, financial ledgers, collaboration tools.</div>
+
+      <table class="data-table">
+        <thead><tr><th>Database</th><th>Consistency</th><th>Write Latency</th><th>Cost</th><th>Best For</th></tr></thead>
+        <tbody>
+          <tr><td>RDS + read replicas</td><td>Eventual reads, strong writes</td><td>Single-region fast</td><td>Low</td><td>Simple global reads, regional writes</td></tr>
+          <tr><td>DynamoDB Global Tables</td><td>Eventual (last-writer-wins)</td><td>&lt;10ms local</td><td>Medium</td><td>High-scale, simple key-value, multi-region</td></tr>
+          <tr><td>Cassandra multi-DC</td><td>Tunable (ONE to QUORUM)</td><td>Local write fast</td><td>Medium</td><td>Time-series, sensor data, wide columns</td></tr>
+          <tr><td>CockroachDB</td><td>Serializable ACID</td><td>~150ms cross-region</td><td>Medium-High</td><td>Financial, compliance-heavy, SQL at global scale</td></tr>
+          <tr><td>Google Spanner</td><td>External consistency</td><td>~80ms multi-region</td><td>High</td><td>Largest scale, Google ecosystem</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="active-active">
+      <div class="section-label">Replication</div>
+      <h2 class="section-title">Active-Active vs Active-Passive</h2>
+      <p class="section-intro">Active-active means every region can accept writes. Active-passive (or active-standby) means only one region takes writes; others are read-only replicas that can be promoted. Active-active dramatically reduces write latency for globally distributed users but introduces conflict risk.</p>
+
+      <div class="arch-diagram"><span class="cm">Active-passive vs active-active comparison</span>
+
+<span class="bl">Active-Passive</span>
+  us-east-1 (PRIMARY) ──async repl──→ eu-west-1 (STANDBY)
+                      ──async repl──→ ap-southeast-1 (STANDBY)
+
+  Pros: no conflicts possible, simple consistency model
+  Cons: global write latency (Tokyo user → Virginia → reply: 300ms+)
+        failover takes minutes; RPO depends on replication lag
+  Use when: writes must be strongly consistent; user base concentrated in one region
+
+<span class="sv">Active-Active (same data, multi-master)</span>
+  us-east-1 ←──────────────────────────── ap-southeast-1
+      ↕  bidirectional replication             ↕
+  eu-west-1 ────────────────────────────────────
+
+  Every region accepts writes to any record → conflict risk!
+  Conflict resolution needed: LWW (last-write-wins), CRDTs, or custom logic
+  Pros: local writes for all users (~5ms vs 300ms), regional isolation
+  Cons: operational complexity; conflict resolution bugs are insidious
+
+<span class="em">Active-Active (partitioned writes — best practice)</span>
+  Partition writes by owner: EU user's data is ONLY written in eu-west-1.
+  Other regions can read that data (via replication) but won't write it.
+  No conflicts possible — each record has a canonical home region.
+  Failover: if eu-west-1 goes down, route EU writes to us-east-1 temporarily.
+  This is the most common "active-active" in practice — it avoids true multi-master.
+
+<span class="lb">Replication topology</span>
+  Full mesh: every region replicates to all others (N² connections, most resilient)
+  Hub-and-spoke: one hub region replicates to all (simpler, hub is SPOF)
+  Ring: us-east → eu-west → ap-southeast → us-east (simple, 2-hop lag)
+  Recommended: full mesh for ≤4 regions; hub-and-spoke for 5+ with secondary hubs</div>
+
+      <div class="concept-grid">
+        <div class="concept-card"><div class="cc-icon">🎯</div><h4>RTO vs RPO</h4><p><strong>RTO</strong> (Recovery Time Objective): how long can you be down? Active-passive: minutes. Active-active: seconds (no failover needed — users rerouted to another live region). <strong>RPO</strong> (Recovery Point Objective): how much data can you lose? Sync replication: RPO=0. Async: RPO = replication lag (often &lt;1s).</p></div>
+        <div class="concept-card"><div class="cc-icon">🔀</div><h4>Replication Lag Monitoring</h4><p>Always monitor replication lag — a stale replica serving reads leads to stale data bugs that are hard to debug. Alert at 5s lag, page at 30s. Use `pg_stat_replication` (Postgres) or CloudWatch `ReplicaLag` (RDS) metrics.</p></div>
+      </div>
+    </section>
+
+    <section id="conflict-resolution">
+      <div class="section-label">Consistency</div>
+      <h2 class="section-title">Conflict Resolution</h2>
+      <p class="section-intro">When two regions concurrently write to the same record, you have a conflict. Resolution strategies range from blindly picking a winner (LWW) to mathematically correct data structures (CRDTs) to domain-specific logic. The right choice depends on data semantics — not one size fits all.</p>
+
+      <div class="arch-diagram"><span class="cm">Conflict resolution strategies</span>
+
+<span class="bl">1. Last-Write-Wins (LWW)</span>
+  Compare timestamps; highest wins. Simple to implement.
+  Problem: clock skew between regions (NTP accuracy ±1ms, not enough for sub-ms writes)
+  Solution: Hybrid Logical Clocks (HLC) — combine wall clock + logical counter.
+  DynamoDB Global Tables uses LWW. Cassandra uses LWW by default.
+  Risk: concurrent writes in different regions silently lose one write — no error returned.
+
+<span class="sv">2. CRDTs (Conflict-free Replicated Data Types)</span>
+  Math-based structures that merge automatically with no conflicts:
+    G-Counter: grow-only counter. Merge = max per replica. Sum = sum all replicas.
+    PN-Counter: positive + negative counters. Merge each separately.
+    G-Set: grow-only set. Merge = union. (no deletes)
+    OR-Set (Observed-Remove Set): supports deletes with unique tags per add.
+    LWW-Register: single value with timestamp. Merge = highest timestamp.
+    LWW-Map: map of LWW-Registers. Good for user profile-like data.
+  Used by: Riak, Redis (CRDT module), collaborative editors (Yjs, Automerge)
+
+<span class="em">3. Operational Transformation (OT)</span>
+  Transform concurrent operations to be compatible before applying.
+  Used by Google Docs, Etherpad for collaborative text editing.
+  Complex to implement correctly; mostly replaced by CRDTs in new systems.
+
+<span class="lb">4. Application-level conflict resolution</span>
+  Store conflicting versions (siblings in Riak, vector clocks in Dynamo).
+  Expose conflict to application layer → business logic decides.
+  Example: shopping cart — union of all versions (don't lose items).
+  Example: bank balance — reject concurrent debits via optimistic locking.
+
+<span class="cy">5. Avoid conflicts via design</span>
+  Single-writer per entity: each entity has a home region (partitioned active-active).
+    → No concurrent cross-region writes to same record → no conflicts.
+  Fencing tokens: distributed lock (ZooKeeper, DynamoDB conditional writes).
+  Saga pattern: break multi-step operations into compensatable steps.</div>
+
+      <div class="concept-grid">
+        <div class="concept-card"><div class="cc-icon">🕰️</div><h4>Vector Clocks</h4><p>A vector clock tracks causality across nodes: {A:3, B:1, C:2} means node A has seen 3 events, B seen 1, C seen 2. If two versions have incomparable vectors, they're concurrent (conflict). Amazon Dynamo pioneered using vector clocks to detect conflicts and present them to the application layer.</p></div>
+        <div class="concept-card"><div class="cc-icon">🔢</div><h4>G-Counter CRDT Example</h4><p>Shopping site page-view counter across 3 regions. Each region increments its slot: A=1000, B=500, C=300. Total = 1800. On merge, take max per slot — works even if regions have diverged for hours. No coordination needed.</p></div>
+        <div class="concept-card"><div class="cc-icon">🔐</div><h4>Optimistic Locking</h4><p>Include a version number in writes: `UPDATE accounts SET balance=900, version=6 WHERE id=1 AND version=5`. If another region already wrote version 6, this update fails with 0 rows affected → retry from application. Safe for financial data; higher write latency under contention.</p></div>
+      </div>
+    </section>
+
+    <section id="perspectives">
+      <div class="section-label">Viewpoints</div>
+      <h2 class="section-title">Engineer Perspectives</h2>
+      <div class="eng-grid">
+        <div class="eng-take et-architect">
+          <div class="eng-role">Solutions Architect</div>
+          <p>Start with latency goals per region and work backwards. If P99 API latency must be under 100ms globally, static assets must be CDN-cached, API servers must be in each region, and the database either accepts eventual reads or uses a NewSQL like Spanner. Never promise "global" without knowing where users actually are.</p>
+        </div>
+        <div class="eng-take et-backend">
+          <div class="eng-role">Backend Engineer</div>
+          <p>Partition writes by owner region from day one — retrofitting single-region code to handle multi-region conflicts is enormously painful. Use a region field in every tenant record, enforce it at the ORM layer, and make cross-region reads explicit in code (not transparent). Transparency hides bugs.</p>
+        </div>
+        <div class="eng-take et-sre">
+          <div class="eng-role">SRE</div>
+          <p>Multi-region doubles your operational surface. Automate failover but gate it behind a manual approval step for production — fully automated region failover has caused more incidents than it prevented when triggered by monitoring false positives. Practice failover drills quarterly. Track cross-region replication lag as an SLI.</p>
+        </div>
+        <div class="eng-take et-security">
+          <div class="eng-role">Security Engineer</div>
+          <p>Data sovereignty is not just about where data lives at rest — it's about where it's processed, logged, and who has access. Ensure audit logs are also region-isolated. Use AWS KMS Regional keys (not multi-region) for GDPR-sensitive data. Prohibit cross-region replication of PII by IAM policy, not just documentation.</p>
+        </div>
+        <div class="eng-take et-data">
+          <div class="eng-role">Data Engineer</div>
+          <p>Global analytics pipelines need to handle timezone normalization, regional schema divergence, and GDPR restrictions on EU data leaving the EU. Use a data lakehouse per region and aggregate only anonymized/pseudonymized metrics cross-region. Never pull EU PII into a US data warehouse — even for analytics.</p>
+        </div>
+        <div class="eng-take et-platform">
+          <div class="eng-role">Platform Engineer</div>
+          <p>Treat each region as an independent deployment target in your CD pipeline. GitOps (ArgoCD) per region with separate cluster configs. Use Terraform workspaces or Atlantis per-region state files. Config drift between regions causes subtle production bugs — enforce config-as-code strictly and diff regions in CI.</p>
+        </div>
+        <div class="eng-take et-frontend">
+          <div class="eng-role">Frontend Engineer</div>
+          <p>Geo-routing is only as good as the user's perceived latency. CDN cache-hit rate is the metric to watch — if it's below 80%, investigate cache key fragmentation (too many query params, missing normalization). Use the `Timing-Allow-Origin` header to expose PerformanceResourceTiming data from CDN edge servers.</p>
+        </div>
+        <div class="eng-take et-ml">
+          <div class="eng-role">ML Engineer</div>
+          <p>Training data aggregation across regions must respect sovereignty. Use federated learning for models that require EU + US data: train local models per region, aggregate gradients (not data) centrally. For inference, deploy model replicas per region — a single inference endpoint across regions adds 100-200ms latency unnecessarily.</p>
+        </div>
+        <div class="eng-take et-mobile">
+          <div class="eng-role">Mobile Engineer</div>
+          <p>On mobile, network switches (WiFi → LTE, region border crossing) can cause TCP connection resets. Use QUIC (HTTP/3) where possible — it handles path migration without reconnecting. Implement a local cache with optimistic updates for offline-first behavior; sync to the nearest region's API on reconnect.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="problems">
+      <div class="section-label">Applied Practice</div>
+      <h2 class="section-title">Real-World Problems</h2>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 1 of 3</div>
+          <div class="problem-title">Multi-Region Active-Active with Geo-Partitioned Writes</div>
+          <div class="ptags">
+            <span class="ptag">CockroachDB</span><span class="ptag">Geo-Partitioning</span>
+            <span class="ptag">Route 53</span><span class="ptag">Active-Active</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Scenario</h4>
+          <p>B2B SaaS platform with 5,000 enterprise tenants across US, EU, and APAC. EU customers require GDPR-compliant data residency (no data outside EU). US customers want sub-50ms API latency. You currently have a single us-east-1 PostgreSQL cluster — EU customers see 200ms+ latency and you're at risk of GDPR fines.</p>
+          <h4>Architecture</h4>
+          <p>Deploy CockroachDB across three regions with geo-partitioning to pin EU tenant data to EU nodes. Use Route 53 geolocation routing to direct EU users to eu-west-1 API servers and US users to us-east-1 servers, each connecting only to their local CockroachDB leaseholders.</p>
+          <div class="code-block">
+            <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.querySelector('code').textContent)">Copy</button>
+            <pre><code class="language-python">
+# CockroachDB geo-partitioning setup and tenant routing
+
+import psycopg2
+from typing import Optional
+
+REGION_DSN = {
+    "us": "postgresql://user:pass@cockroachdb-us.internal:26257/saas?sslmode=verify-full",
+    "eu": "postgresql://user:pass@cockroachdb-eu.internal:26257/saas?sslmode=verify-full",
+    "ap": "postgresql://user:pass@cockroachdb-ap.internal:26257/saas?sslmode=verify-full",
+}
+
+# SQL: create geo-partitioned tenant table
+SETUP_SQL = """
+-- Partition tenants table by region; each partition's range leases stay in that region
+ALTER TABLE tenants PARTITION BY LIST (region) (
+    PARTITION us_tenants VALUES IN ('us'),
+    PARTITION eu_tenants VALUES IN ('eu'),
+    PARTITION ap_tenants VALUES IN ('ap')
+);
+
+-- Pin each partition's range leases to the matching region
+ALTER PARTITION us_tenants OF TABLE tenants
+    CONFIGURE ZONE USING lease_preferences = '[[+region=us-east-1]]';
+ALTER PARTITION eu_tenants OF TABLE tenants
+    CONFIGURE ZONE USING lease_preferences = '[[+region=eu-west-1]]';
+ALTER PARTITION ap_tenants OF TABLE tenants
+    CONFIGURE ZONE USING lease_preferences = '[[+region=ap-southeast-1]]';
+
+-- Same for all tenant-data tables (partitioned by tenant_region FK)
+ALTER TABLE orders PARTITION BY LIST (tenant_region) (
+    PARTITION eu_orders VALUES IN ('eu'),
+    PARTITION us_orders VALUES IN ('us'),
+    PARTITION ap_orders VALUES IN ('ap')
+);
+ALTER PARTITION eu_orders OF TABLE orders
+    CONFIGURE ZONE USING lease_preferences = '[[+region=eu-west-1]]';
+"""
+
+class TenantRouter:
+    """Routes DB connections to the correct regional CockroachDB leaseholder."""
+    def __init__(self):
+        self._conns: dict[str, psycopg2.extensions.connection] = {}
+
+    def conn(self, region: str) -> psycopg2.extensions.connection:
+        if region not in self._conns:
+            self._conns[region] = psycopg2.connect(REGION_DSN[region])
+        return self._conns[region]
+
+    def get_tenant(self, tenant_id: str, requesting_region: str) -> Optional[dict]:
+        """Always read from tenant's home region to ensure strong consistency."""
+        # First, determine tenant's home region from global metadata
+        # (tiny metadata table replicated globally — no PII)
+        meta_conn = self.conn(requesting_region)
+        with meta_conn.cursor() as cur:
+            cur.execute(
+                "SELECT region FROM tenant_meta WHERE tenant_id = %s",
+                (tenant_id,)
+            )
+            row = cur.fetchone()
+            if not row:
+                return None
+            home_region = row[0]
+
+        # Route to tenant's home region for actual data
+        home_conn = self.conn(home_region)
+        with home_conn.cursor() as cur:
+            cur.execute(
+                "SELECT tenant_id, name, plan, created_at FROM tenants WHERE tenant_id = %s AND region = %s",
+                (tenant_id, home_region)
+            )
+            row = cur.fetchone()
+            if not row:
+                return None
+            return {"tenant_id": row[0], "name": row[1], "plan": row[2], "region": home_region}
+
+    def write_order(self, tenant_id: str, home_region: str, order_data: dict) -> str:
+        """Write order to tenant's home region — avoids cross-region writes entirely."""
+        conn = self.conn(home_region)
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO orders (order_id, tenant_id, tenant_region, amount, status, created_at)
+                   VALUES (gen_random_uuid(), %s, %s, %s, 'pending', now())
+                   RETURNING order_id""",
+                (tenant_id, home_region, order_data["amount"])
+            )
+            conn.commit()
+            return cur.fetchone()[0]
+
+
+# FastAPI middleware: inject tenant region from JWT claim
+# (Region claim set during login based on tenant metadata)
+from fastapi import Request, HTTPException
+import jwt as pyjwt
+
+async def tenant_region_middleware(request: Request, call_next):
+    token = request.headers.get("Authorization", "").removeprefix("Bearer ")
+    if token:
+        try:
+            claims = pyjwt.decode(token, options={"verify_signature": False})
+            request.state.tenant_region = claims.get("tenant_region", "us")
+            request.state.tenant_id = claims.get("sub")
+        except Exception:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    return await call_next(request)
+</code></pre>
+          </div>
+          <h4>Result</h4>
+          <p>EU tenant writes land on eu-west-1 CockroachDB leaseholders (data never leaves EU). Latency for EU customers drops from 210ms to 18ms. US customers unchanged. GDPR audit shows zero cross-border PII transfers. CockroachDB handles the replication topology; the application layer only needs to know "which region is this tenant's home?"</p>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 2 of 3</div>
+          <div class="problem-title">Global CDN with Intelligent Cache Invalidation</div>
+          <div class="ptags">
+            <span class="ptag">Cloudflare Workers</span><span class="ptag">Cache Tags</span>
+            <span class="ptag">Stale-While-Revalidate</span><span class="ptag">Edge Auth</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Scenario</h4>
+          <p>E-commerce platform with 50M daily active users across 40 countries. Product pages are server-side rendered and must show real-time inventory ("Only 3 left!"). Currently every page request hits origin — CDN cache-hit rate is 12% because the inventory count breaks caching. You need to serve product pages in &lt;50ms globally while keeping inventory accurate.</p>
+          <h4>Architecture</h4>
+          <p>Separate page shell (cacheable for 5 min) from inventory count (fetched client-side from a regional API). Use Cloudflare Cache Tags to surgically invalidate only the affected product's cached pages when inventory changes, rather than purging everything. Add a Cloudflare Worker to validate auth tokens at the edge without hitting origin.</p>
+          <div class="code-block">
+            <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.querySelector('code').textContent)">Copy</button>
+            <pre><code class="language-python">
+# Cloudflare Worker (JavaScript-like pseudocode in Python syntax for clarity)
+# Deployed at edge — runs before request reaches origin
+
+import hashlib, json, time
+
+# Edge auth token validation (avoids origin round-trip for auth)
+def validate_session_token(token: str, public_key: bytes) -> dict | None:
+    """Called at edge — verifies JWT signature locally. No origin call needed."""
+    try:
+        import jwt
+        return jwt.decode(token, public_key, algorithms=["RS256"])
+    except Exception:
+        return None
+
+# Origin server: set Cache-Control + Surrogate-Key (Cloudflare Cache Tag) headers
+from fastapi import FastAPI, Response
+
+app = FastAPI()
+
+@app.get("/products/{product_id}")
+async def product_page(product_id: str, response: Response):
+    product = await db.get_product(product_id)
+    category_id = product["category_id"]
+
+    # Cache for 5 minutes; serve stale for 1 hour while revalidating in background
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
+    # Cloudflare Cache Tags — allows surgical invalidation
+    response.headers["Cache-Tag"] = f"product-{product_id},category-{category_id},site-products"
+    # Vary only on Accept-Encoding (not Cookie — logged-in state handled client-side)
+    response.headers["Vary"] = "Accept-Encoding"
+
+    # Return page WITHOUT inventory count — inventory fetched client-side
+    return {
+        "product_id": product_id,
+        "name": product["name"],
+        "price": product["price"],
+        "description": product["description"],
+        # inventory_count intentionally omitted — makes page cacheable
+    }
+
+# Inventory service — NOT cached, serves from nearest regional read replica
+@app.get("/inventory/{product_id}/count")
+async def inventory_count(product_id: str, response: Response):
+    count = await inventory_db.get_count(product_id)
+    # Cache for just 10 seconds — short enough to be "real-time" feeling
+    response.headers["Cache-Control"] = "public, max-age=10, stale-while-revalidate=30"
+    return {"product_id": product_id, "count": count, "available": count > 0}
+
+
+# Kafka consumer: purge Cloudflare cache when product data changes
+import httpx, asyncio
+
+CLOUDFLARE_ZONE_ID = "abc123"
+CLOUDFLARE_API_TOKEN = "..."  # from env
+
+async def handle_product_updated_event(event: dict):
+    """Called when a product's price, description, or image changes."""
+    product_id = event["product_id"]
+    category_id = event["category_id"]
+
+    async with httpx.AsyncClient() as client:
+        # Purge by tag — invalidates all edge caches holding this product's pages
+        # Across all 200+ Cloudflare PoPs simultaneously in ~150ms
+        resp = await client.post(
+            f"https://api.cloudflare.com/client/v4/zones/{CLOUDFLARE_ZONE_ID}/purge_cache",
+            headers={"Authorization": f"Bearer {CLOUDFLARE_API_TOKEN}"},
+            json={"tags": [f"product-{product_id}"]}
+        )
+        resp.raise_for_status()
+        print(f"Purged cache for product {product_id} across all PoPs")
+
+    # Inventory changes don't need purge — 10s TTL + stale-while-revalidate handles it
+
+
+# Monitoring: track CDN cache-hit rate
+def emit_cache_metrics(cf_cache_status: str):
+    """Parse CF-Cache-Status header from Cloudflare: HIT, MISS, EXPIRED, BYPASS, STALE."""
+    # HIT: served from edge cache — target >85% for product pages
+    # MISS: origin was called — triggers caching for next request
+    # STALE: stale-while-revalidate served stale, background refresh triggered
+    # BYPASS: Cache-Control: private or Worker bypassed cache
+    metrics.increment(f"cdn.cache.{cf_cache_status.lower()}")
+</code></pre>
+          </div>
+          <h4>Result</h4>
+          <p>CDN cache-hit rate goes from 12% to 91%. Product page P99 latency globally: 23ms (was 380ms from origin). Inventory data is separately served with 10s cache — users see "3 left" within 10 seconds of it changing. Cloudflare tag purge after product edit propagates to all 200+ PoPs in ~150ms. Origin traffic reduced by 89%.</p>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 3 of 3</div>
+          <div class="problem-title">Multi-Region Failover with Zero Data Loss</div>
+          <div class="ptags">
+            <span class="ptag">PostgreSQL Sync Replication</span><span class="ptag">Route 53 Failover</span>
+            <span class="ptag">Fencing Tokens</span><span class="ptag">RTO &lt; 60s</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Scenario</h4>
+          <p>Payments platform processing $2M/hour. Primary region us-east-1 goes down. You have async replication to eu-west-1 (typical lag 800ms) and need RPO=0 (no financial transactions lost) and RTO&lt;60s (back online in under a minute). Current setup uses async replication and manual failover — last DR test took 12 minutes with 2 lost transactions.</p>
+          <h4>Architecture</h4>
+          <p>Switch to synchronous replication for the write path (at the cost of +15ms write latency). Implement automated health-check-based DNS failover with a distributed lock (fencing token) to prevent split-brain writes during the transition window.</p>
+          <div class="code-block">
+            <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.querySelector('code').textContent)">Copy</button>
+            <pre><code class="language-python">
+import asyncio, time, boto3, psycopg2
+from dataclasses import dataclass
+
+# PostgreSQL synchronous replication config (postgresql.conf on primary)
+# synchronous_standby_names = 'FIRST 1 (eu_replica)'
+# → writes only commit after eu_replica acknowledges write to WAL
+# Cost: +RTT to EU (~80ms) on every write. Accept this for RPO=0.
+
+@dataclass
+class FailoverConfig:
+    primary_dsn: str       = "postgresql://...@us-east-1-db:5432/payments"
+    standby_dsn: str       = "postgresql://...@eu-west-1-db:5432/payments"
+    primary_health_url: str = "https://us-east-1-api.payments.com/healthz"
+    route53_zone_id: str   = "Z1234567890"
+    payments_record: str   = "api.payments.com"
+    primary_ip: str        = "203.0.113.10"
+    standby_ip: str        = "198.51.100.20"
+    lock_table: str        = "failover_lock"     # in standby DB
+    failover_token_ttl: int = 300                 # 5 min; primary must renew or yield
+
+class FailoverManager:
+    def __init__(self, cfg: FailoverConfig):
+        self.cfg = cfg
+        self.r53 = boto3.client("route53")
+        self._consecutive_failures = 0
+        self._required_failures = 3   # 3 × 10s = 30s before failover
+
+    async def health_check_loop(self):
+        import httpx
+        while True:
+            await asyncio.sleep(10)
+            try:
+                async with httpx.AsyncClient(timeout=5) as client:
+                    r = await client.get(self.cfg.primary_health_url)
+                    if r.status_code == 200:
+                        self._consecutive_failures = 0
+                        await self._renew_primary_lock()  # heartbeat
+                        continue
+            except Exception:
+                pass
+
+            self._consecutive_failures += 1
+            print(f"Primary health check failed ({self._consecutive_failures}/{self._required_failures})")
+
+            if self._consecutive_failures >= self._required_failures:
+                await self.execute_failover()
+                break  # stop loop after failover; manual runbook to fail back
+
+    async def _renew_primary_lock(self):
+        """Primary continuously renews its lock — standby watches for expiry."""
+        conn = psycopg2.connect(self.cfg.standby_dsn)
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO failover_lock (lock_key, holder, expires_at)
+                   VALUES ('primary', 'us-east-1', NOW() + INTERVAL '5 minutes')
+                   ON CONFLICT (lock_key) DO UPDATE SET expires_at = EXCLUDED.expires_at""",
+            )
+            conn.commit()
+        conn.close()
+
+    async def execute_failover(self):
+        print("Executing failover: us-east-1 → eu-west-1")
+        # Step 1: Verify the standby lock has expired (primary is truly gone)
+        conn = psycopg2.connect(self.cfg.standby_dsn)
+        with conn.cursor() as cur:
+            cur.execute("SELECT expires_at FROM failover_lock WHERE lock_key = 'primary'")
+            row = cur.fetchone()
+            if row and row[0].timestamp() > time.time():
+                print("Lock still valid — primary may still be alive. Aborting failover.")
+                conn.close()
+                return  # fencing: don't failover if lock is unexpired
+
+            # Step 2: Claim the lock for eu-west-1 (becomes new primary)
+            cur.execute(
+                """INSERT INTO failover_lock (lock_key, holder, expires_at)
+                   VALUES ('primary', 'eu-west-1', NOW() + INTERVAL '5 minutes')
+                   ON CONFLICT (lock_key) DO UPDATE SET holder='eu-west-1', expires_at=NOW()+INTERVAL '5 minutes'"""
+            )
+            conn.commit()
+        conn.close()
+
+        # Step 3: Promote standby to primary in PostgreSQL
+        import subprocess
+        subprocess.run(["pg_ctl", "promote", "-D", "/var/lib/postgresql/data"], check=True)
+        print("PostgreSQL standby promoted to primary")
+
+        # Step 4: Update Route 53 DNS to point to eu-west-1
+        self.r53.change_resource_record_sets(
+            HostedZoneId=self.cfg.route53_zone_id,
+            ChangeBatch={
+                "Changes": [{
+                    "Action": "UPSERT",
+                    "ResourceRecordSet": {
+                        "Name": self.cfg.payments_record,
+                        "Type": "A",
+                        "TTL": 30,   # short TTL set proactively for faster failover
+                        "ResourceRecords": [{"Value": self.cfg.standby_ip}]
+                    }
+                }]
+            }
+        )
+        print(f"Route 53 updated: {self.cfg.payments_record} → {self.cfg.standby_ip}")
+        # DNS propagates in ~30s (TTL was pre-set to 30s during steady state)
+        # Total RTO: 30s (health check detection) + 30s (DNS TTL) = ~60s
+</code></pre>
+          </div>
+          <h4>Result</h4>
+          <p>Synchronous replication guarantees RPO=0 — no committed transaction is lost even if us-east-1 disappears instantaneously. Automated failover detects failure in 30s (3×10s checks) and updates DNS. With TTL pre-lowered to 30s in steady state, total RTO is ~60s. The fencing token prevents split-brain: even if us-east-1 recovers mid-failover, it can't reclaim the lock until eu-west-1 releases it. Write latency penalty: +15ms (London RTT), acceptable for a payments system prioritizing correctness.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="tradeoffs">
+      <div class="section-label">Decision Framework</div>
+      <h2 class="section-title">Trade-offs</h2>
+      <table class="data-table">
+        <thead><tr><th>Approach</th><th>Latency</th><th>Consistency</th><th>Operational Cost</th><th>Best For</th></tr></thead>
+        <tbody>
+          <tr><td>Single region</td><td>High for remote users</td><td>Strong (simple)</td><td>Low</td><td>Early-stage, single-country</td></tr>
+          <tr><td>CDN + single origin</td><td>Low for static/cacheable</td><td>Eventual (CDN)</td><td>Low</td><td>Content-heavy, low write ratio</td></tr>
+          <tr><td>Multi-region read replicas</td><td>Low reads, high writes</td><td>Eventual reads</td><td>Medium</td><td>Read-heavy global apps</td></tr>
+          <tr><td>Partitioned active-active</td><td>Low (local writes)</td><td>Strong per region</td><td>High</td><td>Multi-tenant SaaS with residency needs</td></tr>
+          <tr><td>True multi-master (LWW)</td><td>Low everywhere</td><td>Eventual + conflicts</td><td>Very high</td><td>Social features, CRDTs (counters, sets)</td></tr>
+          <tr><td>CockroachDB / Spanner</td><td>Low reads, medium writes</td><td>ACID global</td><td>High (cost + ops)</td><td>Financial data, GDPR, global ACID needed</td></tr>
+          <tr><td>Async replication</td><td>Low</td><td>Eventual (RPO &gt; 0)</td><td>Low</td><td>Analytics, reporting, non-critical reads</td></tr>
+          <tr><td>Sync replication</td><td>Adds RTT to writes</td><td>Strong (RPO = 0)</td><td>Medium</td><td>Payments, medical records, financial ledgers</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="antipatterns">
+      <div class="section-label">What to Avoid</div>
+      <h2 class="section-title">Anti-patterns</h2>
+      <div class="antipattern-list">
+        <div class="ap-item"><h4>Transparent Read-from-Replica</h4><p>Routing reads silently to replicas without the application knowing means your code assumes strong consistency but gets eventual. One bad assumption ("read what I just wrote") causes hard-to-reproduce bugs. Make replica reads explicit in code or accept 100% strong reads.</p></div>
+        <div class="ap-item"><h4>LWW on Financial Data</h4><p>Last-write-wins is inappropriate for bank balances, inventory counts, or any data where both concurrent writes matter. A £500 debit and a £200 debit happening simultaneously in two regions — LWW silently drops one. Use optimistic locking or a single primary for financial records.</p></div>
+        <div class="ap-item"><h4>High DNS TTL During Failover</h4><p>Setting DNS TTL to 3600s (1 hour) to save query costs means users are stuck on a failed region for up to an hour after failover. Keep TTL at 30–60s for records behind health checks. The DNS query cost is negligible compared to an hour of outage.</p></div>
+        <div class="ap-item"><h4>GDPR Compliance by Policy Only</h4><p>Writing in the runbook "EU data stays in EU" without technical enforcement means one misconfigured replication job causes a GDPR breach. Enforce residency via IAM policies that block cross-region DB replication, not documentation alone.</p></div>
+        <div class="ap-item"><h4>Manual Failover in 2025</h4><p>If your DR runbook says "engineer SSHes into standby and runs pg_ctl promote," your RTO is determined by how fast an on-call engineer can wake up and not make mistakes at 3am. Automate the detection and promotion; keep human approval only for fail-back (restoring original primary).</p></div>
+        <div class="ap-item"><h4>Cross-Region Joins</h4><p>A query that joins a table in us-east-1 with a table in eu-west-1 has 200ms of irreducible latency in the query path. If your ORM makes cross-region joins transparent, you'll only discover them in production. Shard your schema so joined tables always live in the same region.</p></div>
+        <div class="ap-item"><h4>Caching User-Specific Content at CDN</h4><p>Accidentally serving User A's cached response to User B. Happens when you forget to add <code>Cache-Control: private</code> or when auth headers are stripped at the CDN. Always validate that authenticated endpoints return <code>private</code> cache headers; test with two different users.</p></div>
+        <div class="ap-item"><h4>Ignoring Replication Lag</h4><p>Async replication that's usually 200ms can spike to 30s during heavy write load or network issues. If your application doesn't monitor lag and alert, you'll discover it when a user sees data from 30 seconds ago and files a bug. Monitor lag as a first-class SLI.</p></div>
+      </div>
+    </section>
+
+    <section id="interview">
+      <div class="section-label">Interview Readiness</div>
+      <h2 class="section-title">Interview Tips</h2>
+      <div class="tip-list">
+        <div class="tip-item"><h4>Lead With Latency Goals</h4><p>When asked to design a global system, immediately ask: "Where are users located and what's the latency requirement?" The answer determines everything — whether you need multi-region at all, whether CDN alone solves it, or whether you need active-active with local writes.</p></div>
+        <div class="tip-item"><h4>Know the CAP Trade-off Cold</h4><p>Interviewers love this. For reads: eventual consistency is almost always fine (users tolerate 1-second stale data). For writes: explain that strong consistency requires a round-trip to quorum, and quote the latency cost (80ms cross-continent). Financial writes need strong consistency; social feeds don't.</p></div>
+        <div class="tip-item"><h4>Distinguish Active-Active From Multi-Master</h4><p>Most "active-active" in practice is partitioned active-active (each record has one home region — no conflicts possible). True multi-master (any region can write any record) requires conflict resolution and is rarely the right choice. Say "partitioned active-active" in interviews — it shows depth.</p></div>
+        <div class="tip-item"><h4>Address Data Sovereignty Proactively</h4><p>For any global design with user data, mention GDPR before the interviewer asks. Say: "EU personal data must stay in the EU — I'd use geo-partitioning or isolated regional deployments, enforced at both the DB and IAM layer." It signals operational maturity.</p></div>
+        <div class="tip-item"><h4>Quantify the Physics</h4><p>New York → London = ~70ms RTT. NY → Singapore = ~200ms. These numbers matter — if you claim "global active-active with strong consistency," an interviewer will ask about write latency. Sync replication to a quorum in another region adds one RTT to every write. Know these numbers and cite them.</p></div>
+        <div class="tip-item"><h4>Always Have a Failover Story</h4><p>Interviewers expect you to describe failure modes. For every region you add, explain: (1) how traffic is rerouted when it fails (Route 53 health check + failover routing), (2) what the RTO is (DNS TTL + detection time), and (3) what the RPO is (async = non-zero, sync = zero). RTO and RPO show you understand operations.</p></div>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="notes-sidebar">
+    <div class="notes-sticky">
+      <div class="notes-heading">Key Concepts</div>
+      <div class="note-item" data-section="anycast">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Anycast vs Unicast</div></div>
+        <div class="note-body">Unicast: one IP → one server. Anycast: same IP → multiple servers; BGP routes to nearest. Used by all major CDNs and DNS resolvers. Works at IP layer — no application changes needed.</div>
+      </div>
+      <div class="note-item" data-section="cdn">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Surrogate Keys / Cache Tags</div></div>
+        <div class="note-body">Tag cached objects with entity IDs (e.g., "product-42"). When product 42 changes, purge all tagged entries across every CDN PoP with one API call. Cloudflare, Fastly, and Varnish all support this pattern.</div>
+      </div>
+      <div class="note-item" data-section="geo-routing">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Route 53 Routing Policies</div></div>
+        <div class="note-body">Latency-based: lowest RTT (most common). Geolocation: by country (for residency). Weighted: for canary rollouts. Failover: primary + standby with health checks. Geoproximity: with bias adjustment.</div>
+      </div>
+      <div class="note-item" data-section="data-sovereignty">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">GDPR Key Numbers</div></div>
+        <div class="note-body">Fine: up to 4% of global annual revenue or €20M (whichever higher). Breach notification: 72 hours to notify the DPA. Right to erasure: 30 days to comply. Data portability: must provide machine-readable export.</div>
+      </div>
+      <div class="note-item" data-section="global-databases">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">TrueTime (Spanner)</div></div>
+        <div class="note-body">Google Spanner uses atomic clocks + GPS receivers to bound clock uncertainty to ±7ms. This gives external consistency: a transaction committed at time T is visible to any subsequent read anywhere in the world. No other public cloud DB has this.</div>
+      </div>
+      <div class="note-item" data-section="active-active">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">RTO vs RPO</div></div>
+        <div class="note-body">RTO = how long you can be offline. RPO = how much data you can lose. Sync replication → RPO=0 (no data loss) at cost of write latency. Async replication → lower latency but RPO = replication lag (often 1s, can spike to minutes).</div>
+      </div>
+      <div class="note-item" data-section="conflict-resolution">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Vector Clocks &amp; Causality</div></div>
+        <div class="note-body">A vector clock {A:3, B:1} tracks causal history. Two events are concurrent if neither vector dominates the other → conflict. Amazon Dynamo and Riak use vector clocks to detect conflicts and expose them to the application layer for resolution.</div>
+      </div>
+      <div class="note-item" data-section="perspectives">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Split-Brain &amp; Fencing</div></div>
+        <div class="note-body">Split-brain: two nodes both think they are primary → both accept writes → data diverges. Fencing token (a monotonically increasing lock version) prevents this: the old primary's writes are rejected by storage if a newer token exists.</div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+// Progress bar
+window.addEventListener('scroll', () => {
+  const docH = document.documentElement.scrollHeight - window.innerHeight;
+  document.getElementById('progress-bar').style.width = (window.scrollY / docH * 100) + '%';
+});
+
+// TOC active link highlighting
+const tocLinks = document.querySelectorAll('.toc-nav a[href^="#"]');
+const sections = [...tocLinks].map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(a => a.classList.remove('active'));
+      const active = [...tocLinks].find(a => a.getAttribute('href') === '#' + e.target.id);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+sections.forEach(s => obs.observe(s));
+
+// Notes sidebar: activate note when section scrolls into view
+const noteItems = document.querySelectorAll('.note-item[data-section]');
+const sectionObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    const note = document.querySelector(`.note-item[data-section="${e.target.id}"]`);
+    if (note) note.classList.toggle('active', e.isIntersecting);
+  });
+}, { rootMargin: '-10% 0px -60% 0px', threshold: 0 });
+document.querySelectorAll('section[id]').forEach(s => sectionObs.observe(s));
+
+// Notes expand/collapse on click
+noteItems.forEach(item => {
+  item.querySelector('.note-head').addEventListener('click', () => item.classList.toggle('open'));
+});
+</script>
+</body>
+</html>

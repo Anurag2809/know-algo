@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IoT & Edge Computing – Pattern 15 | KnowAlgo System Design</title>
+<meta name="description" content="MQTT, device management, edge computing, telemetry ingestion at scale, OTA updates, and IoT architecture patterns.">
+<link rel="canonical" href="https://knowalgo.netlify.app/system-design-iot.html">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2Z1EQCZBXH');</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<style>
+:root {
+  --primary: #166534; --primary-dark: #052e16; --primary-light: #dcfce7;
+  --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+  --bg: #f8fafc; --card-bg: #ffffff; --radius: 12px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: system-ui,-apple-system,sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(to right, #166534, #0891b2); z-index: 9999; transition: width .1s; }
+.site-header { background: #0f172a; padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 3px; z-index: 100; }
+.site-header a.logo { color: #f1f5f9; font-weight: 800; font-size: 1.1rem; text-decoration: none; }
+.site-header nav a { color: #94a3b8; text-decoration: none; font-size: .88rem; margin-left: 1.5rem; }
+.site-header nav a:hover { color: #f1f5f9; }
+.hero { background: linear-gradient(135deg, #0f172a 0%, #052e16 50%, #0c4a6e 100%); color: #fff; padding: 3.5rem 2rem 3rem; }
+.hero-badge { display: inline-flex; align-items: center; gap: .5rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 20px; padding: .3rem .9rem; font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #86efac; margin-bottom: 1.2rem; }
+.hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.15; margin-bottom: .8rem; }
+.hero h1 span { color: #4ade80; }
+.hero p { font-size: 1.08rem; color: #86efac; max-width: 680px; margin-bottom: 1.5rem; }
+.hero-tags { display: flex; flex-wrap: wrap; gap: .5rem; }
+.hero-tag { background: rgba(255,255,255,.12); border-radius: 20px; padding: .25rem .75rem; font-size: .78rem; color: #dcfce7; }
+.page-body { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; display: grid; grid-template-columns: 240px 1fr 220px; gap: 2rem; align-items: start; }
+.toc-sidebar { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.toc-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.toc-title { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); margin-bottom: .9rem; }
+.toc-nav a { display: block; font-size: .82rem; color: var(--text-muted); text-decoration: none; padding: .28rem .5rem; border-radius: 6px; border-left: 2px solid transparent; transition: all .2s; margin-bottom: 2px; }
+.toc-nav a:hover, .toc-nav a.active { color: var(--primary); border-left-color: var(--primary); background: var(--primary-light); }
+.toc-divider { height: 1px; background: var(--border); margin: .6rem 0; }
+.toc-nav-links { display: flex; gap: .5rem; margin-top: .8rem; }
+.toc-nav-links a { flex: 1; text-align: center; font-size: .72rem; font-weight: 600; color: var(--primary); background: var(--primary-light); border-radius: 6px; padding: .35rem .4rem; text-decoration: none; }
+.main-content section { margin-bottom: 3rem; }
+.section-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--primary); margin-bottom: .5rem; }
+.section-title { font-size: 1.6rem; font-weight: 800; color: var(--text); margin-bottom: 1rem; }
+.section-intro { font-size: 1rem; color: var(--text-muted); margin-bottom: 1.5rem; max-width: 760px; }
+.concept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.concept-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.concept-card h4 { font-size: .95rem; font-weight: 700; color: var(--text); margin-bottom: .4rem; }
+.concept-card p { font-size: .85rem; color: var(--text-muted); }
+.concept-card .cc-icon { font-size: 1.4rem; margin-bottom: .5rem; }
+.arch-diagram { background: #ffffff; border: 1px solid #cbd5e1; border-radius: var(--radius); padding: 1.25rem; margin: 1rem 0; font-family: monospace; font-size: .8rem; overflow-x: auto; line-height: 1.6; white-space: pre; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.arch-diagram .cm { color: #94a3b8; font-style: italic; }
+.arch-diagram .lb { color: #92400e; font-weight: 700; }
+.arch-diagram .sv { color: #166534; font-weight: 700; }
+.arch-diagram .db { color: #5b21b6; font-weight: 700; }
+.arch-diagram .er { color: #991b1b; font-weight: 700; }
+.arch-diagram .em { color: #065f46; font-weight: 700; }
+.arch-diagram .bl { color: #1e40af; font-weight: 700; }
+.arch-diagram .ok { color: #166534; }
+.arch-diagram .or { color: #9a3412; }
+.arch-diagram .rd { color: #991b1b; }
+.arch-diagram .cy { color: #0e7490; font-weight: 700; }
+.arch-diagram .pk { color: #be185d; font-weight: 700; }
+.code-block { position: relative; margin: 1rem 0; border-radius: var(--radius); overflow: hidden; }
+.code-block pre { margin: 0 !important; border-radius: var(--radius) !important; font-size: .82rem !important; }
+.copy-btn { position: absolute; top: .6rem; right: .6rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #94a3b8; font-size: .72rem; padding: .25rem .6rem; border-radius: 6px; cursor: pointer; }
+.copy-btn:hover { background: rgba(255,255,255,.2); color: #fff; }
+.data-table { width: 100%; border-collapse: collapse; font-size: .88rem; margin: 1rem 0; background: var(--card-bg); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.data-table th { background: var(--primary); color: #fff; padding: .7rem 1rem; text-align: left; font-size: .8rem; font-weight: 700; }
+.data-table td { padding: .65rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: #f0fdf4; }
+.eng-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+.eng-take { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.et-sre { border-left-color: #0369a1; } .et-backend { border-left-color: #7c3aed; } .et-security { border-left-color: #dc2626; }
+.et-data { border-left-color: #059669; } .et-platform { border-left-color: #d97706; } .et-ml { border-left-color: #db2777; }
+.et-frontend { border-left-color: #0891b2; } .et-mobile { border-left-color: #16a34a; } .et-architect { border-left-color: #475569; }
+.eng-role { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: .3rem; }
+.eng-take p { font-size: .85rem; color: var(--text); }
+.problem-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; box-shadow: var(--shadow-sm); }
+.problem-header { padding: 1.25rem 1.5rem; background: linear-gradient(135deg, #166534, #0e7490); border-bottom: none; }
+.problem-num { font-size: .78rem; font-weight: 700; color: #86efac; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem; }
+.problem-title { font-size: 1.15rem; font-weight: 700; color: #f1f5f9; margin-bottom: .5rem; }
+.ptags { display: flex; flex-wrap: wrap; gap: .4rem; }
+.ptag { background: rgba(255,255,255,.15); color: #dcfce7; font-size: .72rem; font-weight: 600; padding: .2rem .55rem; border-radius: 10px; }
+.problem-body { padding: 1.5rem; }
+.problem-body h4 { font-size: .9rem; font-weight: 700; color: var(--text); margin: 1rem 0 .4rem; }
+.problem-body p { font-size: .9rem; color: var(--text-muted); margin-bottom: .75rem; }
+.antipattern-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.ap-item { background: #fff5f5; border: 1px solid #fecaca; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.ap-item h4 { font-size: .9rem; font-weight: 700; color: #991b1b; margin-bottom: .3rem; }
+.ap-item p { font-size: .83rem; color: #7f1d1d; }
+.tip-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.tip-item { background: var(--primary-light); border: 1px solid #bbf7d0; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.tip-item h4 { font-size: .9rem; font-weight: 700; color: var(--primary-dark); margin-bottom: .3rem; }
+.tip-item p { font-size: .83rem; color: #052e16; }
+.notes-sidebar { align-self: start; }
+.notes-sticky { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.notes-heading { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: 10px; }
+.note-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: border-color .25s; }
+.note-item.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(22,101,52,.07); }
+.note-head { display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px; cursor: pointer; }
+.note-bullet { width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: .78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: transform .2s; }
+.note-item.open .note-bullet { transform: rotate(45deg); }
+.note-label { font-size: .78rem; font-weight: 600; color: #1e293b; flex: 1; line-height: 1.35; }
+.note-body { display: none; font-size: .76rem; color: #475569; line-height: 1.55; padding: 0 11px 11px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+.note-item.open .note-body, .note-item.active .note-body { display: block; }
+@media (max-width: 1150px) { .notes-sidebar { display: none !important; } .page-body { grid-template-columns: 240px 1fr !important; } }
+@media (max-width: 768px) { .page-body { grid-template-columns: 1fr !important; } .toc-sidebar { display: none; } }
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<header class="site-header">
+  <a href="index.html" class="logo">KnowAlgo</a>
+  <nav>
+    <a href="index.html">DSA</a>
+    <a href="system-design.html">System Design</a>
+    <a href="interview-prep.html">Interview Prep</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div style="max-width:1400px;margin:0 auto;padding:0 1.5rem">
+    <div class="hero-badge"><span>📡</span> Pattern 15 of 16 · System Design</div>
+    <h1>IoT &amp; <span>Edge Computing</span></h1>
+    <p>MQTT protocol, device management at scale, edge computing, telemetry ingestion pipelines, OTA firmware updates, and on-device ML inference.</p>
+    <div class="hero-tags">
+      <span class="hero-tag">MQTT</span><span class="hero-tag">Device Shadow</span>
+      <span class="hero-tag">Edge Computing</span><span class="hero-tag">OTA Updates</span>
+      <span class="hero-tag">Telemetry Ingestion</span><span class="hero-tag">Time-Series</span>
+      <span class="hero-tag">Device Registry</span><span class="hero-tag">Edge ML</span>
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+  <aside class="toc-sidebar">
+    <div class="toc-card">
+      <div class="toc-title">On this page</div>
+      <nav class="toc-nav">
+        <a href="#iot-overview">IoT Architecture</a>
+        <a href="#mqtt">MQTT Protocol</a>
+        <a href="#device-management">Device Management</a>
+        <a href="#telemetry">Telemetry Ingestion</a>
+        <a href="#edge-computing">Edge Computing</a>
+        <a href="#ota">OTA Updates</a>
+        <a href="#edge-ml">Edge ML Inference</a>
+        <div class="toc-divider"></div>
+        <a href="#perspectives">Engineer Perspectives</a>
+        <a href="#problems">Real Problems</a>
+        <a href="#tradeoffs">Trade-offs</a>
+        <a href="#antipatterns">Anti-patterns</a>
+        <a href="#interview">Interview Tips</a>
+      </nav>
+      <div class="toc-nav-links">
+        <a href="system-design-realtime.html">← Real-Time</a>
+        <a href="system-design-global.html">Global →</a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <section id="iot-overview">
+      <div class="section-label">Foundation</div>
+      <h2 class="section-title">IoT Architecture Overview</h2>
+      <p class="section-intro">IoT systems connect physical devices — sensors, cameras, industrial machines, vehicles — to cloud infrastructure. The challenge is scale (billions of devices), heterogeneity (different hardware, protocols, connectivity), and the unique constraints of resource-limited devices.</p>
+
+      <div class="arch-diagram"><span class="cm">IoT architecture: 4 layers</span>
+
+<span class="bl">Layer 1: Devices</span> (sensors, actuators, cameras, PLCs)
+  Constraints: limited CPU/RAM/battery, intermittent connectivity
+  Protocols: MQTT (primary), CoAP (constrained), HTTP (capable devices), AMQP
+  Security: hardware attestation, certificate-based auth (X.509)
+
+<span class="sv">Layer 2: Edge</span> (gateways, on-premise servers, CDN edge nodes)
+  Purpose: aggregate device data locally, reduce cloud bandwidth
+  Filter: only send anomalies or summaries to cloud (not raw 100Hz sensor data)
+  Local ML: run inference close to the device (< 10ms)
+  Offline mode: buffer data when cloud connection lost, sync when restored
+  Hardware: AWS Greengrass, Azure IoT Edge, NVIDIA Jetson, Raspberry Pi
+
+<span class="em">Layer 3: Connectivity & Ingestion</span>
+  IoT Gateway / Broker: AWS IoT Core, Azure IoT Hub, HiveMQ, EMQX
+  Scale: millions of concurrent device connections
+  Protocol translation: MQTT → internal Kafka topics
+  Device registry: track all devices, their state, last heartbeat
+
+<span class="lb">Layer 4: Cloud Processing & Storage</span>
+  Stream processing: Flink / Kinesis for real-time telemetry
+  Batch: Spark on S3 for historical analysis
+  Time-series DB: TimescaleDB, InfluxDB, Amazon Timestream
+  Command & Control: send commands back to devices
+  OTA: manage firmware update campaigns</div>
+
+      <div class="concept-grid">
+        <div class="concept-card"><div class="cc-icon">🌡️</div><h4>Sensor Data Characteristics</h4><p>High frequency (1Hz to 10kHz), time-stamped, often floating-point. Most raw data is noise — edge filtering and downsampling reduce cloud egress by 100×.</p></div>
+        <div class="concept-card"><div class="cc-icon">🔋</div><h4>Power Constraints</h4><p>Battery devices must sleep between transmissions. MQTT's persistent session lets devices disconnect and reconnect without losing subscriptions. LoRa and NB-IoT enable long-range, low-power connectivity.</p></div>
+        <div class="concept-card"><div class="cc-icon">🔒</div><h4>Device Security</h4><p>Devices can't rotate passwords manually. Use X.509 certificates provisioned at manufacturing. Certificate rotation must be automated via OTA. Compromised device certificates revoked in device registry.</p></div>
+        <div class="concept-card"><div class="cc-icon">📶</div><h4>Connectivity Reality</h4><p>IoT devices have intermittent connectivity: vehicles in tunnels, industrial networks with gaps. Design for offline operation: local buffer, store-and-forward, conflict resolution on reconnect.</p></div>
+      </div>
+    </section>
+
+    <section id="mqtt">
+      <div class="section-label">IoT Protocol</div>
+      <h2 class="section-title">MQTT Protocol</h2>
+      <p class="section-intro">MQTT (Message Queuing Telemetry Transport) is the dominant IoT protocol. It's a lightweight publish-subscribe protocol designed for unreliable networks and resource-constrained devices. A 250-byte MQTT packet vs a 2KB HTTP request makes a significant difference at scale.</p>
+
+      <div class="arch-diagram"><span class="cm">MQTT: broker-mediated pub/sub</span>
+
+<span class="bl">Device (Publisher)</span>        <span class="sv">MQTT Broker</span>              <span class="em">Backend (Subscriber)</span>
+  │                              │                              │
+  │── CONNECT (client_id,        │                              │
+  │   clean_session=False,       │                              │
+  │   keepalive=60s) ───────────►│                              │
+  │◄─ CONNACK ───────────────────│                              │
+  │                              │◄─ SUBSCRIBE ─────────────────│
+  │                              │  "devices/+/telemetry"       │
+  │── PUBLISH ──────────────────►│ topic: devices/abc/telemetry │
+  │  topic: devices/abc/telemetry│ {"temp": 72.3, "ts": ...}    │
+  │  payload: {"temp": 72.3}     │──► PUBLISH ─────────────────►│
+  │  QoS: 1 (at least once)      │                              │
+
+<span class="cm">Topic hierarchy: devices/{device_id}/telemetry</span>
+<span class="cm">                devices/{device_id}/commands  (cloud → device)</span>
+<span class="cm">                devices/{device_id}/status    (online/offline)</span>
+
+<span class="cm">QoS levels:</span>
+  QoS 0: at most once (fire and forget) — fastest, may lose messages
+  QoS 1: at least once — broker ACKs, may duplicate
+  QoS 2: exactly once — 4-way handshake, slowest, guaranteed once
+  <span class="cm">Use QoS 1 for telemetry (tolerate duplicate), QoS 2 for commands (must execute once)</span>
+
+<span class="cm">Last Will and Testament (LWT): broker publishes on behalf of device if it disconnects ungracefully</span>
+<span class="cm">Retained message: broker stores last message on a topic, new subscribers get it immediately</span></div>
+
+      <div class="code-block">
+        <button class="copy-btn">Copy</button>
+        <pre><code class="language-python">import paho.mqtt.client as mqtt
+import json, time, ssl
+
+# Device-side MQTT client (runs on embedded device)
+class IoTDevice:
+    def __init__(self, device_id: str, broker_host: str):
+        self.device_id = device_id
+        self.client = mqtt.Client(client_id=device_id, clean_session=False)
+
+        # Mutual TLS: device authenticates with certificate
+        self.client.tls_set(
+            ca_certs="/certs/root-ca.pem",
+            certfile=f"/certs/{device_id}.pem",
+            keyfile=f"/certs/{device_id}-key.pem",
+            tls_version=ssl.PROTOCOL_TLS,
+        )
+
+        # Last Will: published if device disconnects without DISCONNECT packet
+        self.client.will_set(
+            topic=f"devices/{device_id}/status",
+            payload=json.dumps({"status": "offline"}),
+            qos=1, retain=True
+        )
+
+        self.client.on_connect = self._on_connect
+        self.client.on_message = self._on_message
+        self.client.connect(broker_host, port=8883)  # 8883 = MQTT over TLS
+        self.client.loop_start()
+
+        # Announce online
+        self.client.publish(f"devices/{device_id}/status",
+                           json.dumps({"status": "online"}), qos=1, retain=True)
+
+    def _on_connect(self, client, userdata, flags, rc):
+        # Subscribe to command topic (cloud → device)
+        client.subscribe(f"devices/{self.device_id}/commands", qos=2)
+
+    def _on_message(self, client, userdata, msg):
+        command = json.loads(msg.payload)
+        if command["action"] == "set_sampling_rate":
+            self.sampling_interval = command["interval_ms"] / 1000.0
+        elif command["action"] == "reboot":
+            import os; os.system("reboot")
+
+    def publish_telemetry(self, sensor_data: dict):
+        payload = json.dumps({**sensor_data, "ts": int(time.time() * 1000)})
+        self.client.publish(
+            topic=f"devices/{self.device_id}/telemetry",
+            payload=payload,
+            qos=1           # at-least-once: tolerable for sensor data
+        )
+</code></pre>
+      </div>
+    </section>
+
+    <section id="device-management">
+      <div class="section-label">Fleet Management</div>
+      <h2 class="section-title">Device Management</h2>
+      <p class="section-intro">Managing 1M+ devices requires a device registry, shadow state (desired vs reported), and the ability to send commands and monitor health at scale without polling each device individually.</p>
+
+      <div class="arch-diagram"><span class="cm">Device Shadow: bridge between desired cloud state and actual device state</span>
+
+<span class="bl">Cloud App</span>                    <span class="sv">IoT Platform</span>           <span class="em">Device</span>
+  │                                │                          │
+  │── SET: desired temp=22°C ─────►│                          │
+  │                                │ Device Shadow:           │
+  │                                │ { desired: {temp: 22},   │
+  │                                │   reported: {temp: 25},  │
+  │                                │   delta: {temp: 22}      │
+  │                                │ }                        │
+  │                                │──► PUBLISH delta ────────►│
+  │                                │   "set temp to 22"        │
+  │                                │                          │ (device adjusts)
+  │                                │◄── PUBLISH reported ──────│
+  │                                │   {temp: 22}             │
+  │                                │ Shadow updated:           │
+  │                                │ desired == reported       │
+  │◄── GET: temp=22°C ─────────────│ delta = {}               │
+
+<span class="cm">Device offline: desired state queued in shadow</span>
+<span class="cm">Device reconnects: receives delta immediately (catch up on missed commands)</span>
+<span class="cm">Device Registry: stores device_id, certificate thumbprint, metadata, groups, last_seen</span></div>
+
+      <table class="data-table">
+        <thead><tr><th>Platform</th><th>Best For</th><th>Key Features</th></tr></thead>
+        <tbody>
+          <tr><td><strong>AWS IoT Core</strong></td><td>AWS ecosystem</td><td>Device Shadow, Rules Engine → Kinesis/Lambda/S3, Greengrass edge, Fleet Hub</td></tr>
+          <tr><td><strong>Azure IoT Hub</strong></td><td>Azure ecosystem</td><td>Device Twins (shadow), IoT Edge, Event Grid routing, Digital Twins</td></tr>
+          <tr><td><strong>Google Cloud IoT</strong></td><td>GCP + BigQuery analytics</td><td>Pub/Sub ingestion, Dataflow processing, BigQuery time-series analysis</td></tr>
+          <tr><td><strong>HiveMQ</strong></td><td>Enterprise MQTT at scale</td><td>Clustered MQTT broker, 1M+ connections, extension SDK, Kafka bridge</td></tr>
+          <tr><td><strong>EMQX</strong></td><td>Open-source, self-hosted</td><td>100M connections claimed, rule engine, multiple protocol support</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="telemetry">
+      <div class="section-label">Data Ingestion</div>
+      <h2 class="section-title">Telemetry Ingestion at Scale</h2>
+      <p class="section-intro">1M devices sending data every second = 1M messages/sec. The ingestion pipeline must be horizontally scalable, handle backpressure, and route data to the right storage (time-series for recent, cold storage for historical).</p>
+
+      <div class="arch-diagram"><span class="cm">Telemetry pipeline: device → processing → storage</span>
+
+<span class="bl">Devices</span> (1M devices × 1 msg/sec = 1M msg/sec)
+    │ MQTT (TLS)
+    ▼
+<span class="sv">IoT Broker Cluster</span> (HiveMQ / AWS IoT Core)
+    │ Bridge/Rules Engine → Kafka
+    ▼
+<span class="em">Kafka</span> (partitioned by device_id)
+    │ 100 partitions → parallel consumers
+    ├──────────────────────────────────────────────────────────────┐
+    │                             │                                │
+    ▼                             ▼                                ▼
+<span class="lb">Flink (stream processor)</span>  <span class="db">Timescale / InfluxDB</span>      <span class="pk">S3 / Iceberg</span>
+  Windowed aggregations     (recent: last 30 days)       (all history)
+  Anomaly detection         fast queries for dashboards   Parquet columnar
+  Alert generation          downsampled metrics           Spark batch analysis
+  Enrichment (device meta)
+
+<span class="cm">Downsampling: raw 1Hz → 1-minute averages in TSDB → 1-hour averages in S3</span>
+<span class="cm">Hot path: Kafka → Flink → Redis (real-time dashboard, alert state)</span>
+<span class="cm">Cold path: Kafka → S3 (Kafka Connect) → Spark (batch ML training)</span></div>
+
+      <div class="code-block">
+        <button class="copy-btn">Copy</button>
+        <pre><code class="language-python">from pyflink.datastream import StreamExecutionEnvironment
+from pyflink.datastream.connectors.kafka import FlinkKafkaConsumer
+from pyflink.common.typeinfo import Types
+import json, statistics
+
+env = StreamExecutionEnvironment.get_execution_environment()
+
+# Flink job: consume telemetry, compute 1-min windowed stats, detect anomalies
+def process_iot_telemetry():
+    kafka_consumer = FlinkKafkaConsumer(
+        topics="iot.telemetry",
+        deserialization_schema=SimpleStringSchema(),
+        properties={"bootstrap.servers": "kafka:9092", "group.id": "flink-iot"},
+    )
+
+    stream = (
+        env.add_source(kafka_consumer)
+        .map(lambda x: json.loads(x))            # parse JSON
+        .key_by(lambda msg: msg["device_id"])    # partition per device
+        .window(TumblingEventTimeWindows.of(Time.minutes(1)))
+        .process(DeviceWindowFunction())
+    )
+
+    # Write to TimescaleDB (1-min aggregates)
+    stream.add_sink(timescale_sink)
+
+    # Anomaly stream → alert topic
+    stream.filter(lambda r: r["anomaly"]).add_sink(alert_kafka_sink)
+
+    env.execute("IoT Telemetry Processing")
+
+class DeviceWindowFunction(ProcessWindowFunction):
+    def process(self, device_id, context, elements, out):
+        readings = [e["temperature"] for e in elements]
+        mean = statistics.mean(readings)
+        stddev = statistics.stdev(readings) if len(readings) > 1 else 0
+
+        # Z-score anomaly: value more than 3 std devs from mean
+        anomaly = any(abs(r - mean) > 3 * stddev for r in readings)
+
+        out.collect({
+            "device_id": device_id,
+            "window_start": context.window().start,
+            "mean_temp": round(mean, 2),
+            "min_temp": min(readings),
+            "max_temp": max(readings),
+            "sample_count": len(readings),
+            "anomaly": anomaly,
+        })
+</code></pre>
+      </div>
+    </section>
+
+    <section id="edge-computing">
+      <div class="section-label">Processing at the Edge</div>
+      <h2 class="section-title">Edge Computing</h2>
+      <p class="section-intro">Edge computing moves computation from the cloud to the edge — near the devices. This reduces latency, cuts bandwidth costs, and enables operation when cloud connectivity is unavailable.</p>
+
+      <div class="arch-diagram"><span class="cm">Cloud vs Edge processing decision</span>
+
+<span class="bl">Process at EDGE when:</span>
+  • Latency matters: safety system must respond in < 10ms (no time for round trip)
+  • Bandwidth is expensive: 100 cameras × 4K video = 400 Mbps, too much for cloud
+  • Privacy required: video processed on-premises, only metadata sent to cloud
+  • Intermittent connectivity: factory floor with periodic outages
+
+  Edge can do: local ML inference, data filtering, aggregation, buffering, local SCADA control
+
+<span class="sv">Process in CLOUD when:</span>
+  • Compute-intensive: training ML models, complex analytics across all devices
+  • Cross-device: correlation across 100K devices requires global view
+  • Long-term storage: S3 for years of historical data
+  • Cost: GPU in cloud cheaper than GPU in every factory
+
+<span class="cm">AWS Greengrass: runs Lambda functions and ML models at the edge</span>
+<span class="cm">Azure IoT Edge: Docker containers deployed to edge devices from Azure</span>
+<span class="cm">NVIDIA Jetson: GPU-accelerated edge nodes for computer vision inference</span>
+
+<span class="em">Edge deployment pattern (GitOps to edge):</span>
+  Cloud: build new ML model → push to model registry
+  OTA: download model to edge nodes via delta update
+  Edge: hot-swap model without service restart
+  Rollback: if edge validation fails → revert to previous version</div>
+    </section>
+
+    <section id="ota">
+      <div class="section-label">Fleet Updates</div>
+      <h2 class="section-title">OTA (Over-the-Air) Firmware Updates</h2>
+      <p class="section-intro">Updating firmware on 1M devices without breaking them is an engineering challenge. OTA updates must be atomic, verifiable, rollback-safe, and bandwidth-efficient.</p>
+
+      <div class="arch-diagram"><span class="cm">OTA update pipeline: staged rollout with validation</span>
+
+<span class="bl">Firmware Release</span>
+    │ Build + sign firmware image (SHA256 + private key)
+    │ Upload to S3 with signed URL
+    ▼
+<span class="sv">Update Campaign Manager</span>
+    │ Define rollout groups:
+    │   Stage 1: 100 canary devices (1%)
+    │   Stage 2: 10,000 devices (1%) — after 24h validation
+    │   Stage 3: 100,000 devices (10%)
+    │   Stage 4: 900,000 devices (90%)
+    │
+    ├── Notify Stage 1 devices via MQTT command
+    │   { "action": "ota", "version": "2.3.1",
+    │     "url": "s3://firmware/v2.3.1.bin",
+    │     "sha256": "abc...", "sig": "..." }
+    │
+    ├── Devices: download → verify hash → verify signature → apply → reboot
+    │            If failure → roll back to previous version
+    │
+    └── Monitor: device reports new version via telemetry
+        If >1% failure rate in Stage 1 → HALT campaign
+
+<span class="cm">Delta updates: only send changed bytes (bsdiff/xdelta)</span>
+<span class="cm">10MB firmware, 1M devices = 10TB bandwidth. Delta updates: often < 500KB → 95% savings</span>
+<span class="cm">A/B partition: device has 2 firmware partitions. Update writes to inactive partition.</span>
+<span class="cm">On success: mark new partition active. If boot fails 3 times: auto-rollback to old partition.</span></div>
+    </section>
+
+    <section id="edge-ml">
+      <div class="section-label">Inference at the Edge</div>
+      <h2 class="section-title">Edge ML Inference</h2>
+      <p class="section-intro">Running ML models directly on IoT devices or edge nodes eliminates cloud round-trips for time-sensitive decisions. Model quantization and hardware-specific compilation are key to fitting models on constrained devices.</p>
+
+      <div class="concept-grid">
+        <div class="concept-card"><div class="cc-icon">📱</div><h4>TFLite (TensorFlow Lite)</h4><p>Optimized for mobile and embedded devices. Supports quantization (INT8), hardware delegates (GPU, DSP, NPU). Used for: keyword spotting, image classification on MCUs and phones.</p></div>
+        <div class="concept-card"><div class="cc-icon">🎯</div><h4>ONNX Runtime</h4><p>Cross-platform inference engine. Export PyTorch/TF → ONNX → run on CPU, GPU, NPU. Works on: x86 servers, ARM edge devices, NVIDIA Jetson. No Python required at inference time.</p></div>
+        <div class="concept-card"><div class="cc-icon">⚡</div><h4>Quantization</h4><p>Convert FP32 weights → INT8 (4× smaller, 2-4× faster, 1-2% accuracy loss). Post-training quantization requires a calibration dataset. Used when model must fit in 4MB device flash.</p></div>
+        <div class="concept-card"><div class="cc-icon">🔧</div><h4>TensorRT</h4><p>NVIDIA's inference optimizer. Compiles ONNX model for specific GPU hardware → 2-5× speedup over PyTorch. Layer fusion, precision calibration, kernel auto-tuning. Used on Jetson AGX for real-time video AI.</p></div>
+      </div>
+    </section>
+
+    <section id="perspectives">
+      <div class="section-label">9 Viewpoints</div>
+      <h2 class="section-title">Engineer Perspectives</h2>
+      <div class="eng-grid">
+        <div class="eng-take et-backend"><div class="eng-role">Backend Engineer</div><p>IoT device IDs are global identifiers. Design APIs idempotent by device_id + sequence_number — devices retry on network failure, and you may receive duplicates days later when devices come back online.</p></div>
+        <div class="eng-take et-sre"><div class="eng-role">SRE</div><p>Monitor fleet health as a distribution: % of devices online, % reporting in last 5 minutes. A single metric ("total messages/sec") hides mass device failures if total volume stays the same with different devices reporting.</p></div>
+        <div class="eng-take et-security"><div class="eng-role">Security Engineer</div><p>Devices in the field can't be manually patched. Certificate expiry, firmware vulnerabilities, and supply chain attacks are critical concerns. Design for remote remediation from day one — OTA is a security control, not just a feature.</p></div>
+        <div class="eng-take et-data"><div class="eng-role">Data Engineer</div><p>IoT time-series data is write-heavy, read-rarely. Partition by device_id + day. Downsample aggressively: 1Hz raw data → 1-min aggregates for queries → 1-hour summaries for dashboards. Raw data costs 100× more to store than summaries.</p></div>
+        <div class="eng-take et-ml"><div class="eng-role">ML Engineer</div><p>Edge ML models must be validated on the same hardware they run on. INT8 quantization on ARM vs x86 can have different accuracy profiles. Test on representative device hardware, not just your laptop.</p></div>
+        <div class="eng-take et-platform"><div class="eng-role">Platform Engineer</div><p>OTA updates are deployments — apply the same rigor: staged rollout, canary devices, automatic halt on failure rate threshold. A bad firmware update bricking 1M devices is a major incident.</p></div>
+        <div class="eng-take et-frontend"><div class="eng-role">Frontend Engineer</div><p>IoT dashboards often display live data from thousands of devices. Virtual scrolling and WebSocket fan-out from a backend aggregator (not one WS per device) are essential — don't open 10K WebSocket connections from the browser.</p></div>
+        <div class="eng-take et-mobile"><div class="eng-role">Mobile Engineer</div><p>Phones are IoT devices too. Bluetooth Low Energy (BLE) connects phones to nearby sensors. Core Bluetooth (iOS) and BLE API (Android) enable proximity-based device management without needing the device to have a cloud connection.</p></div>
+        <div class="eng-take et-architect"><div class="eng-role">Architect</div><p>Design the edge-cloud split from day one. Retrofitting edge processing into a cloud-first architecture is painful. Decide upfront: what data stays at edge, what goes to cloud, and what actions are autonomous vs cloud-directed.</p></div>
+      </div>
+    </section>
+
+    <section id="problems">
+      <div class="section-label">Real Problems</div>
+      <h2 class="section-title">IoT Design Problems</h2>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 01 · Fleet Telemetry</div>
+          <div class="problem-title">Design a telemetry pipeline for 10M connected vehicles sending GPS + sensor data</div>
+          <div class="ptags"><span class="ptag">MQTT</span><span class="ptag">Kafka</span><span class="ptag">TimescaleDB</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Requirements</h4>
+          <p>10M vehicles, each sending 5 data points/second (GPS, speed, RPM, fuel, temp). 50M messages/sec total. Need real-time tracking dashboard, trip history queries, and anomaly alerts (engine failure, harsh braking).</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python"># Scale analysis:
+# 10M vehicles × 5 msg/sec × avg 100 bytes = 5GB/sec ingest
+# TimescaleDB: with compression, 10:1 ratio = 500MB/sec disk write
+# S3 (Parquet, compressed): 20:1 ratio = 250MB/sec
+
+# MQTT broker cluster: EMQX (claimed 100M connections, 1M msg/sec per node)
+# For 50M msg/sec: ~50 EMQX nodes + Kafka bridge
+# Kafka: 500 partitions, keyed by vehicle_id
+
+# Flink job: real-time anomaly detection
+from pyflink.datastream import StreamExecutionEnvironment
+from pyflink.datastream.window import TumblingEventTimeWindows
+from pyflink.common.time import Time
+
+def detect_harsh_braking(telemetry_stream):
+    return (
+        telemetry_stream
+        .key_by(lambda x: x["vehicle_id"])
+        .window(SlidingEventTimeWindows.of(Time.seconds(2), Time.milliseconds(200)))
+        .process(HarshBrakingDetector())  # speed drop > 20 km/h in 2 seconds
+    )
+
+class HarshBrakingDetector(ProcessWindowFunction):
+    def process(self, vehicle_id, ctx, elements, out):
+        speeds = sorted(elements, key=lambda x: x["ts"])
+        if len(speeds) >= 2:
+            speed_drop = speeds[0]["speed_kmh"] - speeds[-1]["speed_kmh"]
+            if speed_drop > 20:
+                out.collect({
+                    "vehicle_id": vehicle_id,
+                    "event": "harsh_braking",
+                    "speed_drop_kmh": speed_drop,
+                    "ts": speeds[-1]["ts"]
+                })
+
+# TimescaleDB schema (partitioned by time automatically)
+# CREATE TABLE vehicle_telemetry (
+#   ts          TIMESTAMPTZ NOT NULL,
+#   vehicle_id  UUID NOT NULL,
+#   lat         FLOAT8,
+#   lon         FLOAT8,
+#   speed_kmh   FLOAT4,
+#   rpm         INT,
+#   fuel_pct    FLOAT4,
+#   temp_c      FLOAT4
+# );
+# SELECT create_hypertable('vehicle_telemetry', 'ts', chunk_time_interval => INTERVAL '1 hour');
+# -- Automatic compression after 7 days:
+# ALTER TABLE vehicle_telemetry SET (
+#   timescaledb.compress, timescaledb.compress_segmentby = 'vehicle_id'
+# );
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 02 · Smart Factory</div>
+          <div class="problem-title">Design an edge computing system for a factory with 500 machines and intermittent connectivity</div>
+          <div class="ptags"><span class="ptag">Edge Computing</span><span class="ptag">Store-and-Forward</span><span class="ptag">Local ML</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Requirements</h4>
+          <p>500 CNC machines, each with 50 sensors at 100Hz. Factory WiFi drops for 30 min daily. Need: real-time anomaly detection (stop machine in < 100ms), predictive maintenance, production analytics.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python">"""
+Edge Node (per factory floor section: 50 machines):
+  Hardware: Intel NUC i7, 32GB RAM, 2TB NVMe
+  OS: Ubuntu 22.04 LTS, Docker
+  Software stack:
+    - EMQX (local MQTT broker for 50 machines)
+    - Flink (stream processing for anomaly detection)
+    - ONNX Runtime (ML inference: predictive maintenance model)
+    - TimescaleDB (local time-series: 7 days of raw data)
+    - Kafka (local buffer: 48h of data for store-and-forward)
+    - AWS Greengrass (sync with cloud when connected)
+"""
+
+class EdgeAnomalyDetector:
+    """Runs on edge node. Detects anomalies in < 10ms without cloud."""
+
+    def __init__(self, model_path: str):
+        import onnxruntime as ort
+        self.session = ort.InferenceSession(model_path,
+            providers=["CPUExecutionProvider"])  # or CUDAExecutionProvider if GPU
+        self.thresholds = self._load_thresholds()
+
+    def analyze(self, machine_id: str, sensor_window: list[dict]) -> dict:
+        # Build feature vector from 100 sensor readings (1 second window)
+        features = self._extract_features(sensor_window)
+        anomaly_score = self.session.run(None, {"features": features})[0][0]
+
+        if anomaly_score > self.thresholds[machine_id]["critical"]:
+            # IMMEDIATE ACTION: send stop command to machine PLC (< 10ms)
+            self.send_plc_command(machine_id, "EMERGENCY_STOP")
+            self.alert_cloud_async(machine_id, anomaly_score, sensor_window[-1])
+            return {"action": "stopped", "reason": "critical_anomaly", "score": anomaly_score}
+
+        elif anomaly_score > self.thresholds[machine_id]["warning"]:
+            # Predictive maintenance: schedule inspection
+            self.queue_maintenance_notification(machine_id, anomaly_score)
+
+        return {"action": "none", "score": anomaly_score}
+
+class StoreAndForwardBuffer:
+    """Buffers data locally when cloud unavailable. Syncs when connection restored."""
+
+    def __init__(self, kafka_bootstrap: str, cloud_kafka: str):
+        self.local = KafkaProducer(bootstrap_servers=kafka_bootstrap)
+        self.is_connected = True
+
+    def write(self, topic: str, data: bytes):
+        self.local.send(topic, data)  # always write locally first
+
+    async def sync_to_cloud(self):
+        # When cloud connection available: replay buffered messages
+        last_synced_offset = await self.get_cloud_offset()
+        async for batch in self.local_consumer.consume_from(last_synced_offset):
+            await self.cloud_producer.send_batch(batch)
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 03 · OTA System</div>
+          <div class="problem-title">Design an OTA update system for 5M IoT devices with staged rollout</div>
+          <div class="ptags"><span class="ptag">OTA</span><span class="ptag">Delta Updates</span><span class="ptag">Canary</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Requirements</h4>
+          <p>5M devices, firmware updates every 2 weeks. Update size: 8MB. Total bandwidth if all at once: 40TB. Need staged rollout with automatic rollback on failure. Devices have 16MB flash, A/B partition.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python">import boto3, hashlib, subprocess
+
+class OTAUpdateManager:
+    def __init__(self):
+        self.s3 = boto3.client("s3")
+        self.iot = boto3.client("iot")
+        self.dynamodb = boto3.resource("dynamodb").Table("ota_campaigns")
+
+    def create_campaign(self, new_version: str, firmware_path: str, prev_version: str = None):
+        # Generate delta if possible (saves 90% bandwidth)
+        if prev_version:
+            delta_path = f"/tmp/delta_{prev_version}_to_{new_version}.bin"
+            subprocess.run(["bsdiff", f"firmware_{prev_version}.bin",
+                           firmware_path, delta_path], check=True)
+            upload_path = delta_path
+            update_type = "delta"
+        else:
+            upload_path = firmware_path
+            update_type = "full"
+
+        # Sign and upload
+        sha256 = hashlib.sha256(open(upload_path, "rb").read()).hexdigest()
+        s3_key = f"firmware/{new_version}/{update_type}.bin"
+        self.s3.upload_file(upload_path, "iot-firmware", s3_key)
+
+        # Staged rollout: groups defined by device attributes
+        stages = [
+            {"name": "canary", "target_pct": 0.01, "wait_hours": 24, "max_failure_pct": 0.5},
+            {"name": "early", "target_pct": 0.05, "wait_hours": 48, "max_failure_pct": 0.3},
+            {"name": "majority", "target_pct": 0.50, "wait_hours": 72, "max_failure_pct": 0.1},
+            {"name": "all", "target_pct": 1.00, "wait_hours": 0, "max_failure_pct": 0.05},
+        ]
+
+        campaign_id = f"campaign_{new_version}_{int(time.time())}"
+        self.dynamodb.put_item(Item={
+            "campaign_id": campaign_id, "version": new_version,
+            "s3_key": s3_key, "sha256": sha256, "stages": stages,
+            "current_stage": 0, "status": "active",
+        })
+        return campaign_id
+
+    def check_campaign_health(self, campaign_id: str) -> dict:
+        campaign = self.dynamodb.get_item(Key={"campaign_id": campaign_id})["Item"]
+        stage = campaign["stages"][campaign["current_stage"]]
+
+        # Count successes/failures from device telemetry
+        metrics = self.query_device_metrics(campaign_id, hours=24)
+        failure_pct = metrics["failures"] / metrics["total"] * 100
+
+        if failure_pct > stage["max_failure_pct"]:
+            # HALT and rollback
+            self.halt_campaign(campaign_id)
+            self.send_rollback_command(campaign_id)
+            return {"action": "halted", "failure_pct": failure_pct}
+
+        return {"action": "healthy", "failure_pct": failure_pct}
+</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tradeoffs">
+      <div class="section-label">Decision Framework</div>
+      <h2 class="section-title">IoT Trade-offs</h2>
+      <table class="data-table">
+        <thead><tr><th>Decision</th><th>Option A</th><th>Option B</th><th>Guidance</th></tr></thead>
+        <tbody>
+          <tr><td><strong>MQTT vs HTTP</strong></td><td>MQTT (pub/sub)</td><td>HTTP REST</td><td>MQTT for resource-constrained devices, high-frequency data, bidirectional commands. HTTP for capable devices (phones, gateways) with infrequent, large payloads.</td></tr>
+          <tr><td><strong>Edge vs Cloud processing</strong></td><td>Edge (local)</td><td>Cloud (central)</td><td>Edge for: latency < 100ms, bandwidth-expensive data, offline requirements. Cloud for: cross-device analytics, ML training, long-term storage. Most systems need both.</td></tr>
+          <tr><td><strong>Full vs Delta OTA</strong></td><td>Full firmware image</td><td>Delta (diff only)</td><td>Delta when: updates are incremental, bandwidth is expensive (cellular), and devices have dual-partition flash. Full when: devices can't apply patches (resource limits) or firmware fundamentally changed.</td></tr>
+          <tr><td><strong>QoS level</strong></td><td>QoS 0 (at most once)</td><td>QoS 1 (at least once)</td><td>QoS 0 for high-frequency telemetry where missing one reading is tolerable. QoS 1 for commands, alerts, and any data where loss is unacceptable. QoS 2 only for billing/legal-critical messages.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="antipatterns">
+      <div class="section-label">What Not to Do</div>
+      <h2 class="section-title">IoT Anti-patterns</h2>
+      <div class="antipattern-list">
+        <div class="ap-item"><h4>Polling Instead of MQTT</h4><p>Having 1M devices HTTP poll the server every second = 1M req/sec for status checks. MQTT pub/sub delivers to devices instantly when state changes, with zero polling overhead.</p></div>
+        <div class="ap-item"><h4>Sending Raw High-Frequency Data</h4><p>Streaming 100Hz sensor data to the cloud without edge filtering. 100Hz × 100 bytes × 1M devices = 10GB/sec. Edge downsampling (send 1-min averages + anomalies) reduces this to manageable volume.</p></div>
+        <div class="ap-item"><h4>Hardcoded Credentials on Devices</h4><p>Shared API keys or passwords embedded in firmware. One extracted key compromises all devices. Use per-device X.509 certificates provisioned at manufacturing with hardware-based key storage.</p></div>
+        <div class="ap-item"><h4>Big Bang Firmware Rollouts</h4><p>Pushing firmware to all 1M devices simultaneously. A bad update bricks the entire fleet. Staged rollout with canary devices and automatic halt on failure rate threshold is mandatory.</p></div>
+        <div class="ap-item"><h4>Storing Raw IoT Data Forever</h4><p>1 year of 1Hz data from 1M devices = 30 trillion rows. Implement tiered storage: hot (TSDB, 30 days), warm (S3 Parquet, 1 year), cold (S3 Glacier, 7 years) with automatic downsampling at each tier.</p></div>
+        <div class="ap-item"><h4>No Offline Mode</h4><p>Assuming devices always have cloud connectivity. Industrial networks, vehicle tunnels, and cellular dead zones make this a guarantee of failure. Design store-and-forward from the start.</p></div>
+        <div class="ap-item"><h4>Single MQTT Topic for All Devices</h4><p>All devices publish to "iot/telemetry" — the broker must fanout to all subscribers for every message. Use hierarchical topics (devices/{id}/telemetry) so subscribers can filter by device or group.</p></div>
+        <div class="ap-item"><h4>Cloud-Dependent Safety Logic</h4><p>Machine stops only when cloud sends a stop command after detecting anomaly. Round-trip latency of 100ms+ is unacceptable for safety-critical responses. Safety logic must run at the edge, autonomously.</p></div>
+      </div>
+    </section>
+
+    <section id="interview">
+      <div class="section-label">Interview Prep</div>
+      <h2 class="section-title">Interview Tips</h2>
+      <div class="tip-list">
+        <div class="tip-item"><h4>Explain MQTT vs HTTP</h4><p>MQTT is designed for IoT: pub/sub, persistent sessions, QoS levels, Last Will and Testament, tiny overhead (2-byte fixed header). HTTP is designed for web. Know why MQTT wins on constrained networks and devices.</p></div>
+        <div class="tip-item"><h4>Address Scale Math</h4><p>When given "10M devices," calculate: messages/sec, bandwidth, storage growth/day. Then show how the architecture handles it (Kafka partitioning, downsampling, tiered storage). The math shows you're thinking about real constraints.</p></div>
+        <div class="tip-item"><h4>Edge vs Cloud Isn't Binary</h4><p>The best answer is usually "both, for different things." Edge for latency-sensitive and bandwidth-expensive. Cloud for global analytics and long-term storage. Describe the data flow between the two layers.</p></div>
+        <div class="tip-item"><h4>Mention Device Shadow</h4><p>Device shadow (desired vs reported state) is the standard pattern for cloud-to-device configuration. It handles offline devices elegantly. Interviewers at IoT-heavy companies specifically look for this pattern.</p></div>
+        <div class="tip-item"><h4>OTA is a Security System</h4><p>Don't describe OTA purely as a feature — it's a critical security mechanism. Firmware signing, certificate rotation, and vulnerability patching all depend on OTA. Frame it as security infrastructure.</p></div>
+        <div class="tip-item"><h4>Store-and-Forward for Resilience</h4><p>Always mention offline resilience when designing IoT systems. "What happens when connectivity drops?" is a common follow-up. Local buffering + cloud sync on reconnect is the standard pattern.</p></div>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="notes-sidebar">
+    <div class="notes-sticky">
+      <div class="notes-heading">Clarifications</div>
+      <div class="note-item" data-section="mqtt">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is publish-subscribe (pub/sub)?</div></div>
+        <div class="note-body">In pub/sub, publishers send messages to named channels (topics) without knowing who will receive them. Subscribers listen on topics they care about. A broker in the middle routes messages. This decouples producers from consumers: devices publish telemetry without knowing which services consume it, and new consumers can subscribe without changing device code.</div>
+      </div>
+      <div class="note-item" data-section="device-management">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is an X.509 certificate?</div></div>
+        <div class="note-body">An X.509 certificate is a digital identity document for a device or server. It contains: the device's public key, who issued it (Certificate Authority), and what it identifies (device ID). The private key stays on the device (never transmitted). When the device connects to the IoT broker, it proves it holds the private key matching the certificate — this authenticates the device without passwords.</div>
+      </div>
+      <div class="note-item" data-section="telemetry">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is a time-series database?</div></div>
+        <div class="note-body">A time-series database (TSDB) is optimized for data that arrives as (timestamp, value) pairs. It excels at: ingesting millions of data points per second, querying "show me temperature over the last 24 hours," computing aggregations (min, max, avg) over time ranges. TimescaleDB, InfluxDB, and Amazon Timestream are examples. Regular databases are too slow for IoT-scale time-series queries.</div>
+      </div>
+      <div class="note-item" data-section="edge-computing">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is a PLC?</div></div>
+        <div class="note-body">A PLC (Programmable Logic Controller) is an industrial computer that controls physical machinery. It reads sensors (temperature, pressure, position) and controls actuators (motors, valves, conveyors) in real time. PLCs operate on deterministic timescales (microseconds) — they cannot tolerate the variable latency of cloud communication. Edge nodes talk to PLCs via industrial protocols (OPC-UA, Modbus) and relay data to the cloud.</div>
+      </div>
+      <div class="note-item" data-section="ota">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is A/B partitioning for firmware?</div></div>
+        <div class="note-body">Devices with A/B (dual-bank) flash storage have two firmware slots. The device boots from the active slot. During OTA, the new firmware is written to the inactive slot while the device keeps running. On success, the device reboots into the new slot (marking it active). If the new firmware fails to boot 3 times, the bootloader reverts to the old slot. This makes OTA updates atomic and recoverable.</div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<footer style="background:#0f172a;color:#64748b;text-align:center;padding:2rem;font-size:.85rem;margin-top:3rem;">
+  <p>KnowAlgo · <a href="system-design.html" style="color:#4ade80;text-decoration:none;">System Design Home</a> · <a href="index.html" style="color:#4ade80;text-decoration:none;">DSA Home</a></p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+window.addEventListener('scroll', () => { document.getElementById('progress-bar').style.width = (window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100) + '%'; });
+document.querySelectorAll('section[id]').forEach(s => new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { document.querySelectorAll('.toc-nav a').forEach(l=>l.classList.remove('active')); const a=document.querySelector(`.toc-nav a[href="#${e.target.id}"]`); if(a)a.classList.add('active'); }}); }, {rootMargin:'-10% 0px -80% 0px'}).observe(s));
+document.querySelectorAll('.copy-btn').forEach(btn => { btn.addEventListener('click', () => { navigator.clipboard.writeText(btn.nextElementSibling.querySelector('code').textContent).then(() => { btn.textContent='Copied!'; setTimeout(()=>btn.textContent='Copy',2000); }); }); });
+const noteItems = document.querySelectorAll('.note-item[data-section]');
+if (noteItems.length) {
+  const noteObs = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { const id=e.target.id; noteItems.forEach(n=>{ const m=n.dataset.section===id; n.classList.toggle('active',m); if(m)n.classList.add('open'); else n.classList.remove('open'); }); }}); }, {rootMargin:'-10% 0px -55% 0px'});
+  document.querySelectorAll('[id]').forEach(el=>noteObs.observe(el));
+  noteItems.forEach(n=>n.querySelector('.note-head').addEventListener('click',()=>n.classList.toggle('open')));
+}
+</script>
+</body>
+</html>

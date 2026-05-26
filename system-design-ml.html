@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML/AI Systems Design – Pattern 13 | KnowAlgo System Design</title>
+<meta name="description" content="Training pipelines, feature stores, model serving, MLOps, RAG, vector databases, and A/B testing for ML models in production.">
+<link rel="canonical" href="https://knowalgo.netlify.app/system-design-ml.html">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2Z1EQCZBXH');</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<style>
+:root {
+  --primary: #7e22ce; --primary-dark: #581c87; --primary-light: #f3e8ff;
+  --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+  --bg: #f8fafc; --card-bg: #ffffff; --radius: 12px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: system-ui,-apple-system,sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(to right, #7e22ce, #be123c); z-index: 9999; transition: width .1s; }
+.site-header { background: #0f172a; padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 3px; z-index: 100; }
+.site-header a.logo { color: #f1f5f9; font-weight: 800; font-size: 1.1rem; text-decoration: none; }
+.site-header nav a { color: #94a3b8; text-decoration: none; font-size: .88rem; margin-left: 1.5rem; }
+.site-header nav a:hover { color: #f1f5f9; }
+.hero { background: linear-gradient(135deg, #0f172a 0%, #2e1065 50%, #1e1b4b 100%); color: #fff; padding: 3.5rem 2rem 3rem; }
+.hero-badge { display: inline-flex; align-items: center; gap: .5rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 20px; padding: .3rem .9rem; font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #d8b4fe; margin-bottom: 1.2rem; }
+.hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.15; margin-bottom: .8rem; }
+.hero h1 span { color: #c084fc; }
+.hero p { font-size: 1.08rem; color: #d8b4fe; max-width: 680px; margin-bottom: 1.5rem; }
+.hero-tags { display: flex; flex-wrap: wrap; gap: .5rem; }
+.hero-tag { background: rgba(255,255,255,.12); border-radius: 20px; padding: .25rem .75rem; font-size: .78rem; color: #f3e8ff; }
+.page-body { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; display: grid; grid-template-columns: 240px 1fr 220px; gap: 2rem; align-items: start; }
+.toc-sidebar { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.toc-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.toc-title { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); margin-bottom: .9rem; }
+.toc-nav a { display: block; font-size: .82rem; color: var(--text-muted); text-decoration: none; padding: .28rem .5rem; border-radius: 6px; border-left: 2px solid transparent; transition: all .2s; margin-bottom: 2px; }
+.toc-nav a:hover, .toc-nav a.active { color: var(--primary); border-left-color: var(--primary); background: var(--primary-light); }
+.toc-divider { height: 1px; background: var(--border); margin: .6rem 0; }
+.toc-nav-links { display: flex; gap: .5rem; margin-top: .8rem; }
+.toc-nav-links a { flex: 1; text-align: center; font-size: .72rem; font-weight: 600; color: var(--primary); background: var(--primary-light); border-radius: 6px; padding: .35rem .4rem; text-decoration: none; }
+.main-content section { margin-bottom: 3rem; }
+.section-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--primary); margin-bottom: .5rem; }
+.section-title { font-size: 1.6rem; font-weight: 800; color: var(--text); margin-bottom: 1rem; }
+.section-intro { font-size: 1rem; color: var(--text-muted); margin-bottom: 1.5rem; max-width: 760px; }
+.concept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.concept-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.concept-card h4 { font-size: .95rem; font-weight: 700; color: var(--text); margin-bottom: .4rem; }
+.concept-card p { font-size: .85rem; color: var(--text-muted); }
+.concept-card .cc-icon { font-size: 1.4rem; margin-bottom: .5rem; }
+.arch-diagram { background: #ffffff; border: 1px solid #cbd5e1; border-radius: var(--radius); padding: 1.25rem; margin: 1rem 0; font-family: monospace; font-size: .8rem; overflow-x: auto; line-height: 1.6; white-space: pre; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.arch-diagram .cm { color: #94a3b8; font-style: italic; }
+.arch-diagram .lb { color: #92400e; font-weight: 700; }
+.arch-diagram .sv { color: #166534; font-weight: 700; }
+.arch-diagram .db { color: #5b21b6; font-weight: 700; }
+.arch-diagram .er { color: #991b1b; font-weight: 700; }
+.arch-diagram .em { color: #065f46; font-weight: 700; }
+.arch-diagram .bl { color: #1e40af; font-weight: 700; }
+.arch-diagram .ok { color: #166534; }
+.arch-diagram .or { color: #9a3412; }
+.arch-diagram .rd { color: #991b1b; }
+.arch-diagram .cy { color: #0e7490; font-weight: 700; }
+.arch-diagram .pk { color: #be185d; font-weight: 700; }
+.arch-diagram .vi { color: #5b21b6; font-weight: 700; }
+.code-block { position: relative; margin: 1rem 0; border-radius: var(--radius); overflow: hidden; }
+.code-block pre { margin: 0 !important; border-radius: var(--radius) !important; font-size: .82rem !important; }
+.copy-btn { position: absolute; top: .6rem; right: .6rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #94a3b8; font-size: .72rem; padding: .25rem .6rem; border-radius: 6px; cursor: pointer; }
+.copy-btn:hover { background: rgba(255,255,255,.2); color: #fff; }
+.data-table { width: 100%; border-collapse: collapse; font-size: .88rem; margin: 1rem 0; background: var(--card-bg); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.data-table th { background: var(--primary); color: #fff; padding: .7rem 1rem; text-align: left; font-size: .8rem; font-weight: 700; }
+.data-table td { padding: .65rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: #faf5ff; }
+.eng-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+.eng-take { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.et-sre { border-left-color: #0369a1; } .et-backend { border-left-color: #7c3aed; } .et-security { border-left-color: #dc2626; }
+.et-data { border-left-color: #059669; } .et-platform { border-left-color: #d97706; } .et-ml { border-left-color: #db2777; }
+.et-frontend { border-left-color: #0891b2; } .et-mobile { border-left-color: #16a34a; } .et-architect { border-left-color: #475569; }
+.eng-role { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: .3rem; }
+.eng-take p { font-size: .85rem; color: var(--text); }
+.problem-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; box-shadow: var(--shadow-sm); }
+.problem-header { padding: 1.25rem 1.5rem; background: linear-gradient(135deg, #7e22ce, #be123c); border-bottom: none; }
+.problem-num { font-size: .78rem; font-weight: 700; color: #d8b4fe; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem; }
+.problem-title { font-size: 1.15rem; font-weight: 700; color: #f1f5f9; margin-bottom: .5rem; }
+.ptags { display: flex; flex-wrap: wrap; gap: .4rem; }
+.ptag { background: rgba(255,255,255,.15); color: #f3e8ff; font-size: .72rem; font-weight: 600; padding: .2rem .55rem; border-radius: 10px; }
+.problem-body { padding: 1.5rem; }
+.problem-body h4 { font-size: .9rem; font-weight: 700; color: var(--text); margin: 1rem 0 .4rem; }
+.problem-body p { font-size: .9rem; color: var(--text-muted); margin-bottom: .75rem; }
+.antipattern-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.ap-item { background: #fff5f5; border: 1px solid #fecaca; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.ap-item h4 { font-size: .9rem; font-weight: 700; color: #991b1b; margin-bottom: .3rem; }
+.ap-item p { font-size: .83rem; color: #7f1d1d; }
+.tip-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.tip-item { background: var(--primary-light); border: 1px solid #d8b4fe; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.tip-item h4 { font-size: .9rem; font-weight: 700; color: var(--primary-dark); margin-bottom: .3rem; }
+.tip-item p { font-size: .83rem; color: #581c87; }
+.notes-sidebar { align-self: start; }
+.notes-sticky { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.notes-heading { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: 10px; }
+.note-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: border-color .25s; }
+.note-item.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(126,34,206,.07); }
+.note-head { display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px; cursor: pointer; }
+.note-bullet { width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: .78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: transform .2s; }
+.note-item.open .note-bullet { transform: rotate(45deg); }
+.note-label { font-size: .78rem; font-weight: 600; color: #1e293b; flex: 1; line-height: 1.35; }
+.note-body { display: none; font-size: .76rem; color: #475569; line-height: 1.55; padding: 0 11px 11px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+.note-item.open .note-body, .note-item.active .note-body { display: block; }
+@media (max-width: 1150px) { .notes-sidebar { display: none !important; } .page-body { grid-template-columns: 240px 1fr !important; } }
+@media (max-width: 768px) { .page-body { grid-template-columns: 1fr !important; } .toc-sidebar { display: none; } }
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<header class="site-header">
+  <a href="index.html" class="logo">KnowAlgo</a>
+  <nav>
+    <a href="index.html">DSA</a>
+    <a href="system-design.html">System Design</a>
+    <a href="interview-prep.html">Interview Prep</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div style="max-width:1400px;margin:0 auto;padding:0 1.5rem">
+    <div class="hero-badge"><span>🤖</span> Pattern 13 of 16 · System Design</div>
+    <h1>ML/AI <span>Systems Design</span></h1>
+    <p>Training pipelines, feature stores, model serving, MLOps, RAG, vector databases, and A/B testing — engineering the infrastructure that puts machine learning into production reliably.</p>
+    <div class="hero-tags">
+      <span class="hero-tag">Feature Stores</span><span class="hero-tag">Model Serving</span>
+      <span class="hero-tag">MLflow / MLOps</span><span class="hero-tag">RAG</span>
+      <span class="hero-tag">Vector DBs</span><span class="hero-tag">A/B Testing</span>
+      <span class="hero-tag">Data Drift</span><span class="hero-tag">Online Inference</span>
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+  <aside class="toc-sidebar">
+    <div class="toc-card">
+      <div class="toc-title">On this page</div>
+      <nav class="toc-nav">
+        <a href="#ml-system-overview">ML System Overview</a>
+        <a href="#feature-store">Feature Stores</a>
+        <a href="#training-pipeline">Training Pipelines</a>
+        <a href="#model-serving">Model Serving</a>
+        <a href="#mlops">MLOps & Model Registry</a>
+        <a href="#rag">RAG & Vector Databases</a>
+        <a href="#ab-testing">A/B Testing ML Models</a>
+        <div class="toc-divider"></div>
+        <a href="#perspectives">Engineer Perspectives</a>
+        <a href="#problems">Real Problems</a>
+        <a href="#tradeoffs">Trade-offs</a>
+        <a href="#antipatterns">Anti-patterns</a>
+        <a href="#interview">Interview Tips</a>
+      </nav>
+      <div class="toc-nav-links">
+        <a href="system-design-platform.html">← Platform</a>
+        <a href="system-design-realtime.html">Real-Time →</a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <section id="ml-system-overview">
+      <div class="section-label">Foundation</div>
+      <h2 class="section-title">The ML System Landscape</h2>
+      <p class="section-intro">An ML system is not just a model — it's the data pipelines that feed it, the infrastructure that trains it, the store that serves its features, the registry that versions it, and the monitoring that detects when it degrades. Most ML projects fail not because of bad models, but because of broken infrastructure around the model.</p>
+
+      <div class="arch-diagram"><span class="cm">End-to-end ML system: data → features → training → serving → monitoring</span>
+
+<span class="bl">Data Sources</span>                                    <span class="cm">Training Path</span>
+  Events (Kafka)  ──────────────────────────────►  <span class="lb">Feature Engineering</span>
+  DB (Postgres)   ──────────────────────────────►  (compute features from raw data)
+  Logs (S3)       ──────────────────────────────►         │
+                                                          ▼
+                                                   <span class="sv">Feature Store</span>
+                                                   (Feast, Tecton)
+                                                   ├─ Offline store (S3/BigQuery)
+                                                   │   for training data
+                                                   └─ Online store (Redis)
+                                                       for real-time serving
+                                                          │
+                                     ┌────────────────────┤
+                                     │                    │
+                             <span class="em">Training Pipeline</span>      <span class="em">Prediction API</span>
+                             (Spark / PyTorch)      (FastAPI / TorchServe)
+                                     │                    │
+                                     ▼                    ▲
+                              <span class="db">Model Registry</span>  ──────────┘
+                              (MLflow, W&B)
+                              versioned artifacts
+                              + metrics + lineage
+
+<span class="cm">Production Path</span>
+  User Request → <span class="pk">Online Feature Fetch</span> (Redis, < 5ms) →
+    <span class="em">Model Inference</span> (GPU or CPU, < 100ms) →
+      <span class="bl">Prediction Response</span> → <span class="sv">Log to monitoring</span>
+
+<span class="cm">Monitoring: data drift (input distribution changed?), model drift (accuracy degraded?)</span></div>
+    </section>
+
+    <section id="feature-store">
+      <div class="section-label">Feature Engineering</div>
+      <h2 class="section-title">Feature Stores</h2>
+      <p class="section-intro">A feature store is the central repository for ML features. It solves two critical problems: (1) training-serving skew — the features used during training differ from features at inference time; (2) feature reuse — multiple models can share the same features without recomputing them.</p>
+
+      <div class="arch-diagram"><span class="cm">Feature Store: offline (training) + online (serving) stores</span>
+
+<span class="bl">Feature Engineering</span> (runs on schedule — hourly/daily)
+    │
+    │ Compute: user_30d_purchase_count, item_avg_rating, etc.
+    │
+    ├──────────────────────────────────────────────────────────┐
+    │                                                          │
+    ▼                                                          ▼
+<span class="lb">Offline Store</span> (historical features)              <span class="sv">Online Store</span> (latest features)
+  S3 / BigQuery / Redshift                          Redis / DynamoDB / Bigtable
+  Columnar format (Parquet)                         Key-value: user_id → feature_vector
+  Used for: model training                          Used for: real-time inference
+  Can query "what was this user's state at T?"      Low latency (< 5ms)
+
+<span class="cm">Point-in-time correct joins (offline): critical for training correctness</span>
+<span class="cm">When training, use the features as they existed AT prediction time, not today's values</span>
+<span class="cm">Without point-in-time joins: future leakage → model looks great offline, fails in prod</span>
+
+<span class="em">Real-time serving flow:</span>
+  Request: "score user 123 for item 456"
+  1. Fetch user features from Redis (online store): O(1), ~2ms
+  2. Fetch item features from Redis: ~2ms
+  3. Concatenate → feature vector → model inference: ~20ms
+  4. Return prediction
+
+<span class="cm">Tools: Feast (open-source), Tecton (managed), Databricks Feature Store, Vertex AI Feature Store</span></div>
+
+      <div class="code-block">
+        <button class="copy-btn">Copy</button>
+        <pre><code class="language-python">from feast import FeatureStore
+import pandas as pd
+
+store = FeatureStore(repo_path=".")
+
+# Training: fetch historical features with point-in-time correctness
+entity_df = pd.DataFrame({
+    "user_id": ["u1", "u2", "u3"],
+    "event_timestamp": pd.to_datetime([
+        "2026-01-01 10:00:00",   # use features as they existed at this time
+        "2026-01-05 14:00:00",
+        "2026-01-10 09:00:00",
+    ])
+})
+
+training_df = store.get_historical_features(
+    entity_df=entity_df,
+    features=[
+        "user_features:purchase_count_30d",
+        "user_features:avg_session_duration",
+        "user_features:days_since_last_visit",
+    ]
+).to_df()
+
+# Serving: fetch latest features for real-time inference
+online_features = store.get_online_features(
+    features=[
+        "user_features:purchase_count_30d",
+        "user_features:avg_session_duration",
+    ],
+    entity_rows=[{"user_id": "u123"}]
+).to_dict()
+# Returns in ~2ms from Redis
+
+# Materialize: push batch features to online store
+store.materialize_incremental(end_date=datetime.utcnow())
+</code></pre>
+      </div>
+    </section>
+
+    <section id="training-pipeline">
+      <div class="section-label">Model Development</div>
+      <h2 class="section-title">Training Pipelines</h2>
+      <p class="section-intro">A training pipeline is a reproducible, automated workflow that takes data → features → model artifact. It must be versioned, logged, and triggerable on schedule or on data change.</p>
+
+      <div class="arch-diagram"><span class="cm">Training pipeline stages</span>
+
+<span class="bl">Data Validation</span>
+    Ensure training data quality before spending GPU hours
+    • Schema validation (expected columns present?)
+    • Distribution checks (feature drift from last run?)
+    • Label quality (class imbalance beyond threshold?)
+    Tools: Great Expectations, TFX, Evidently
+    │
+    ▼
+<span class="sv">Feature Preparation</span>
+    Fetch from feature store (offline)
+    Point-in-time correct joins
+    Train/val/test split (time-based, not random — avoid leakage)
+    │
+    ▼
+<span class="em">Model Training</span>
+    Single GPU: PyTorch / XGBoost / sklearn
+    Multi-GPU: PyTorch DDP (DistributedDataParallel)
+    Multi-node: Ray Train / Horovod
+    Hyperparameter tuning: Optuna, Ray Tune
+    │
+    ▼
+<span class="lb">Evaluation</span>
+    Held-out test set metrics (AUC, F1, RMSE)
+    Fairness metrics (bias across demographic groups)
+    Comparison to production model (champion vs challenger)
+    │
+    ▼
+<span class="db">Model Registration</span>
+    Log to MLflow: artifact + metrics + parameters + git commit
+    Tag: "challenger" (not yet in production)
+    If metrics better than champion → promote to "production" tag
+
+<span class="cm">Orchestration: Airflow, Prefect, Metaflow, Kubeflow Pipelines, Argo Workflows</span>
+<span class="cm">Compute: AWS SageMaker Training Jobs, Google Vertex AI, Azure ML</span></div>
+    </section>
+
+    <section id="model-serving">
+      <div class="section-label">Inference</div>
+      <h2 class="section-title">Model Serving</h2>
+      <p class="section-intro">Getting predictions from a model at production scale is an engineering challenge distinct from training. Latency, throughput, cost, and reliability all require deliberate design.</p>
+
+      <div class="arch-diagram"><span class="cm">Online inference vs batch inference</span>
+
+<span class="bl">Online (real-time) Inference</span>
+  Request → Model Server → Prediction (< 100ms p99)
+  • User-facing: recommendation, fraud detection, search ranking
+  • Serving: TorchServe, TF Serving, Triton, BentoML, vLLM (LLMs)
+  • GPU vs CPU: GPU for deep learning, CPU for tree models (XGBoost)
+  • Batching: group 32 requests into one forward pass (GPU efficiency)
+  • Model caching: keep model in GPU VRAM — loading takes seconds
+
+<span class="sv">Batch Inference</span>
+  Precompute predictions for all users daily / hourly
+  Store in DB → app reads from DB (not model server)
+  • Cheaper: no GPU idle time between requests
+  • Works for: daily recommendation lists, email targeting, risk scores
+  • Spark / Databricks for large-scale batch scoring
+  • Cannot handle new items (no record until next batch run)
+
+<span class="em">Hybrid: Streaming Inference</span>
+  Kafka consumer → model → write result to DB
+  Latency: seconds to minutes (not milliseconds)
+  Good for: fraud scoring after transaction, content moderation
+
+<span class="cm">Triton Inference Server: NVIDIA's multi-framework server</span>
+<span class="cm">Supports: PyTorch, TF, ONNX, TensorRT, XGBoost, LightGBM, Python</span>
+<span class="cm">Features: dynamic batching, concurrent model execution, model ensembles</span>
+<span class="cm">vLLM: optimized LLM serving with PagedAttention, continuous batching</span></div>
+
+      <div class="concept-grid">
+        <div class="concept-card"><h4>Model Optimization</h4><p>Quantization (FP32 → INT8): 4× speedup, slight accuracy loss. TensorRT: compiles model to GPU-optimized kernels. ONNX: model format that runs on any runtime. Pruning: remove weights near zero.</p></div>
+        <div class="concept-card"><h4>Latency vs Throughput</h4><p>Online inference: optimize for p99 latency (SLO: 100ms). Batch scoring: optimize for throughput (records/hour). The same model needs different serving configs for each use case.</p></div>
+        <div class="concept-card"><h4>Model Caching</h4><p>Loading a PyTorch model from disk takes 2-10 seconds. Keep models warm in GPU memory. Use Kubernetes HPA on GPU pods to scale with traffic. Cold start is a real problem in serverless ML.</p></div>
+      </div>
+    </section>
+
+    <section id="mlops">
+      <div class="section-label">Lifecycle Management</div>
+      <h2 class="section-title">MLOps &amp; Model Registry</h2>
+      <p class="section-intro">MLOps applies DevOps principles to ML: version control for models, automated retraining pipelines, production monitoring, and rollback capabilities. Without MLOps, ML teams spend most of their time firefighting instead of building.</p>
+
+      <div class="arch-diagram"><span class="cm">Model lifecycle: experiment → staging → production → monitor → retrain</span>
+
+<span class="cm">MLflow tracking: experiment runs logged automatically</span>
+<span class="bl">Experiment</span>    <span class="sv">Model Registry</span>                <span class="em">Production</span>
+  run_001       └─ model: "recommendation-v2"    Serving: TorchServe
+  AUC=0.87           version: 3                  Tag: @production
+  params: {          stage: Production            ↑
+    lr: 0.01,        artifact: s3://models/v3    mlflow models serve
+    depth: 6       version: 2                    -m "models:/recommendation-v2/Production"
+  }                  stage: Archived
+  run_002       version: 1
+  AUC=0.89 ←win     stage: Archived
+  (register this)
+
+<span class="cm">Promotion workflow:</span>
+  1. Training run logs metrics to MLflow
+  2. If AUC > production model → register as version N, stage=Staging
+  3. CI runs validation tests on staging model (batch, A/B shadow)
+  4. If tests pass → promote to Production stage
+  5. Old version → Archived
+  6. Model server polls registry, hot-swaps model on promotion
+
+<span class="cm">Monitoring alerts trigger retraining:</span>
+  Data drift detected → trigger training pipeline → evaluate → deploy if better</div>
+
+      <div class="code-block">
+        <button class="copy-btn">Copy</button>
+        <pre><code class="language-python">import mlflow
+import mlflow.sklearn
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import roc_auc_score
+
+mlflow.set_tracking_uri("http://mlflow-server:5000")
+mlflow.set_experiment("fraud-detection")
+
+with mlflow.start_run(run_name="gbm_v3"):
+    # Log parameters
+    params = {"n_estimators": 200, "max_depth": 5, "learning_rate": 0.05}
+    mlflow.log_params(params)
+
+    model = GradientBoostingClassifier(**params)
+    model.fit(X_train, y_train)
+
+    # Log metrics
+    auc = roc_auc_score(y_val, model.predict_proba(X_val)[:, 1])
+    mlflow.log_metric("val_auc", auc)
+
+    # Log model artifact
+    mlflow.sklearn.log_model(model, "fraud_model",
+        input_example=X_val[:5],
+        registered_model_name="fraud-detection")
+
+# Check if new model beats production
+client = mlflow.tracking.MlflowClient()
+prod_model = client.get_latest_versions("fraud-detection", stages=["Production"])
+prod_auc = client.get_run(prod_model[0].run_id).data.metrics["val_auc"]
+
+if auc > prod_auc + 0.005:  # significant improvement threshold
+    # Promote to production
+    client.transition_model_version_stage(
+        name="fraud-detection",
+        version=client.get_latest_versions("fraud-detection", stages=["None"])[0].version,
+        stage="Production",
+        archive_existing_versions=True
+    )
+    print(f"Promoted new model: AUC {auc:.4f} vs {prod_auc:.4f}")
+</code></pre>
+      </div>
+    </section>
+
+    <section id="rag">
+      <div class="section-label">LLM Applications</div>
+      <h2 class="section-title">RAG &amp; Vector Databases</h2>
+      <p class="section-intro">RAG (Retrieval-Augmented Generation) enhances LLMs with external knowledge. Instead of fine-tuning the model (expensive), you retrieve relevant documents at query time and include them in the prompt context. Vector databases enable semantic search over document embeddings.</p>
+
+      <div class="arch-diagram"><span class="cm">RAG pipeline: index time + query time</span>
+
+<span class="cm">Index time (run once, or incrementally as docs change):</span>
+<span class="bl">Documents</span> (PDFs, wiki, Notion, Confluence)
+    │
+    ▼
+<span class="sv">Chunking</span> (split into 512-token chunks with overlap)
+    │
+    ▼
+<span class="em">Embedding Model</span> (text → 1536-dim vector)
+    (OpenAI ada-002, sentence-transformers, E5-large)
+    │
+    ▼
+<span class="lb">Vector Database</span> (store vectors with metadata)
+    Pinecone / Weaviate / Chroma / pgvector (Postgres extension)
+    Index type: HNSW (hierarchical navigable small world) for ANN search
+
+<span class="cm">Query time (every user request):</span>
+<span class="bl">User Question</span>: "How do I reset my 2FA?"
+    │
+    ▼
+<span class="sv">Embed question</span> → 1536-dim vector
+    │
+    ▼
+<span class="em">ANN search</span>: top-5 most similar chunks from vector DB (~10ms)
+    Result: [docs about 2FA reset, account recovery, auth settings]
+    │
+    ▼
+<span class="lb">Prompt construction</span>:
+    "Answer using this context:\n[chunks]\n\nQuestion: How do I reset 2FA?"
+    │
+    ▼
+<span class="db">LLM inference</span> (GPT-4, Claude, Llama) → grounded answer
+    │
+    ▼
+<span class="ok">Hallucinations reduced</span>: model answers from retrieved facts, not training memory</div>
+
+      <div class="code-block">
+        <button class="copy-btn">Copy</button>
+        <pre><code class="language-python">from openai import OpenAI
+import chromadb
+from chromadb.utils import embedding_functions
+
+client = OpenAI()
+chroma = chromadb.Client()
+oai_ef = embedding_functions.OpenAIEmbeddingFunction(
+    api_key="...", model_name="text-embedding-3-small"
+)
+collection = chroma.get_or_create_collection("docs", embedding_function=oai_ef)
+
+# Index documents (run once)
+def index_documents(docs: list[dict]):
+    collection.add(
+        documents=[d["content"] for d in docs],
+        metadatas=[{"source": d["source"]} for d in docs],
+        ids=[d["id"] for d in docs],
+    )
+
+# RAG query pipeline
+def rag_query(question: str, n_results: int = 5) -> str:
+    # 1. Retrieve relevant chunks
+    results = collection.query(query_texts=[question], n_results=n_results)
+    context = "\n\n".join(results["documents"][0])
+
+    # 2. Build grounded prompt
+    prompt = f"""Answer the question using ONLY the context below.
+If the answer is not in the context, say "I don't know."
+
+Context:
+{context}
+
+Question: {question}"""
+
+    # 3. Generate answer
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0,  # deterministic for factual QA
+    )
+    return response.choices[0].message.content
+
+# Reranking (optional, improves precision):
+# After ANN retrieval, use a cross-encoder (Cohere Rerank, BGE-Reranker)
+# to re-score the top-20 chunks by relevance to the question
+# Return only top-5 reranked chunks for the LLM
+</code></pre>
+      </div>
+
+      <table class="data-table">
+        <thead><tr><th>Vector DB</th><th>Best For</th><th>Key Feature</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Pinecone</strong></td><td>Fully managed, production RAG</td><td>Serverless, namespace isolation, metadata filtering</td></tr>
+          <tr><td><strong>Weaviate</strong></td><td>Self-hosted + hybrid search</td><td>BM25 + vector hybrid search, GraphQL API</td></tr>
+          <tr><td><strong>Chroma</strong></td><td>Dev/local, Python-first</td><td>In-memory or SQLite backend, zero setup</td></tr>
+          <tr><td><strong>pgvector</strong></td><td>Already using Postgres</td><td>No new DB, ivfflat or HNSW index, SQL joins</td></tr>
+          <tr><td><strong>Qdrant</strong></td><td>High throughput, filtering</td><td>Rust implementation, on-disk indexing, payload filters</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="ab-testing">
+      <div class="section-label">Model Validation</div>
+      <h2 class="section-title">A/B Testing ML Models</h2>
+      <p class="section-intro">Offline metrics (AUC, RMSE) often don't translate to business metrics (revenue, engagement). A/B testing in production is the only way to measure true model impact on user behavior.</p>
+
+      <div class="arch-diagram"><span class="cm">Model A/B test (champion vs challenger)</span>
+
+<span class="bl">Traffic Splitter</span>
+    │
+    ├─ 90% ──► <span class="sv">Model A</span> (champion, production)
+    └─ 10% ──► <span class="em">Model B</span> (challenger, new version)
+
+<span class="cm">Critical: assignment must be deterministic per user</span>
+  hash(user_id + experiment_id) % 100 < 10 → Group B
+  Same user always gets same model (no flickering)
+
+<span class="lb">Metrics logged per prediction:</span>
+  { user_id, model_version, prediction, timestamp }
+  Later joined with: { user_id, purchased, revenue, timestamp }
+
+<span class="cm">Statistical significance:</span>
+  After N days: compute p-value for revenue difference (A vs B)
+  p < 0.05 + minimum detectable effect met → promote B to champion
+  If inconclusive after max duration → abandon experiment
+
+<span class="cm">Guardrail metrics (must not regress even if primary metric improves):</span>
+  Latency p99, error rate, customer support contacts
+  A/B test is invalid if guardrail metrics degrade significantly</div>
+    </section>
+
+    <section id="perspectives">
+      <div class="section-label">9 Viewpoints</div>
+      <h2 class="section-title">Engineer Perspectives</h2>
+      <div class="eng-grid">
+        <div class="eng-take et-ml"><div class="eng-role">ML Engineer</div><p>Training-serving skew is the #1 silent killer. Recompute features in your serving code using the exact same logic as training. Even a rounding difference causes invisible accuracy degradation.</p></div>
+        <div class="eng-take et-data"><div class="eng-role">Data Engineer</div><p>Point-in-time correct joins are non-negotiable for classification models. Training on "current" features instead of "features at prediction time" leaks future information. The model looks great offline and fails in production.</p></div>
+        <div class="eng-take et-backend"><div class="eng-role">Backend Engineer</div><p>Treat model predictions like any other service call: set timeouts, add circuit breakers, have a fallback (heuristic or cached prediction). Model servers have latency spikes too.</p></div>
+        <div class="eng-take et-sre"><div class="eng-role">SRE</div><p>Monitor input distributions, not just model accuracy. Data drift alerts are often the first signal of an upstream data problem. Accuracy degrades silently; input distribution changes are detectable immediately.</p></div>
+        <div class="eng-take et-platform"><div class="eng-role">Platform Engineer</div><p>GPU pods are expensive. Use preemptible/spot instances for training (save 70%). Set up Cluster Autoscaler to spin up GPU nodes only when training jobs run. Idle GPU instances are pure waste.</p></div>
+        <div class="eng-take et-security"><div class="eng-role">Security Engineer</div><p>ML models can leak training data (membership inference attacks). Differential privacy during training limits this. Feature stores with PII need column-level access control — not all engineers should see all features.</p></div>
+        <div class="eng-take et-architect"><div class="eng-role">Architect</div><p>Separate the ML system from the application system with a well-defined API. The application calls "get recommendation" and doesn't know if it's a model, a heuristic, or a cache. This lets you swap backends without touching app code.</p></div>
+        <div class="eng-take et-frontend"><div class="eng-role">Frontend Engineer</div><p>Predicted results should degrade gracefully. If the recommendation service times out, show popular items. If the search model fails, fall back to keyword search. Users don't see model versions; they see broken experiences.</p></div>
+        <div class="eng-take et-mobile"><div class="eng-role">Mobile Engineer</div><p>On-device ML (TFLite, Core ML) eliminates latency and works offline. Tradeoff: model size limited to ~50MB, update requires app release. Use for: face detection, text autocorrect, wake word detection. Use cloud inference for complex models.</p></div>
+      </div>
+    </section>
+
+    <section id="problems">
+      <div class="section-label">Real Problems</div>
+      <h2 class="section-title">ML Systems Design Problems</h2>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 01 · Recommendation System</div>
+          <div class="problem-title">Design a real-time product recommendation system at 100K req/s</div>
+          <div class="ptags"><span class="ptag">Feature Store</span><span class="ptag">Two-Stage Retrieval</span><span class="ptag">Online Serving</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Requirements</h4>
+          <p>Return 20 personalized product recommendations in under 100ms p99. 100K requests/second. 10M users, 1M items. Personalized by user history, trending items, and user context.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python">import asyncio
+from feast import FeatureStore
+import faiss, numpy as np
+
+# Two-stage architecture: Recall → Ranking
+# Stage 1 (Recall): retrieve candidate set fast (1000 items in < 10ms)
+# Stage 2 (Ranking): score candidates with a more complex model (< 50ms)
+
+class RecommendationService:
+    def __init__(self):
+        self.feature_store = FeatureStore(repo_path=".")
+        self.faiss_index = faiss.read_index("item_embeddings.faiss")  # pre-built
+        self.item_ids = np.load("item_ids.npy")
+        self.ranking_model = load_model("ranking_model.onnx")
+
+    async def get_recommendations(self, user_id: str, n: int = 20) -> list[str]:
+        # Parallel: fetch user features + trending items
+        user_features, trending = await asyncio.gather(
+            self._get_user_features(user_id),
+            self._get_trending_items(n=200),
+        )
+
+        # Stage 1: ANN search in item embedding space (< 10ms)
+        user_embedding = user_features["embedding"]  # 64-dim vector
+        _, candidate_indices = self.faiss_index.search(
+            user_embedding.reshape(1, -1), k=500  # top-500 nearest items
+        )
+        candidates = self.item_ids[candidate_indices[0]].tolist()
+
+        # Merge candidates: ANN results + trending + diverse categories
+        all_candidates = list(set(candidates + trending))[:1000]
+
+        # Stage 2: Ranking model scores each candidate (< 50ms for 1000 items)
+        item_features = self.feature_store.get_online_features(
+            features=["item_features:avg_rating", "item_features:purchase_rate_7d"],
+            entity_rows=[{"item_id": iid} for iid in all_candidates]
+        ).to_dict()
+
+        scores = self.ranking_model.run(None, {
+            "user_features": np.tile(user_embedding, (len(all_candidates), 1)),
+            "item_features": np.array([
+                [item_features["avg_rating"][i], item_features["purchase_rate_7d"][i]]
+                for i in range(len(all_candidates))
+            ]),
+        })[0]
+
+        # Top-N by score
+        top_indices = np.argsort(scores)[-n:][::-1]
+        return [all_candidates[i] for i in top_indices]
+
+    async def _get_user_features(self, user_id: str) -> dict:
+        return self.feature_store.get_online_features(
+            features=["user_features:embedding", "user_features:age_bucket"],
+            entity_rows=[{"user_id": user_id}]
+        ).to_dict()
+</code></pre>
+          </div>
+          <h4>Scaling to 100K req/s</h4>
+          <p>FAISS ANN search is CPU-bound and thread-safe. Deploy 50+ pods with HPA on CPU utilization. Ranking model on GPU pods (batching 32 requests per forward pass). Feature store reads from Redis cluster.</p>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 02 · RAG Chatbot</div>
+          <div class="problem-title">Build an enterprise knowledge chatbot using RAG over 100K internal documents</div>
+          <div class="ptags"><span class="ptag">RAG</span><span class="ptag">Vector DB</span><span class="ptag">Chunking</span><span class="ptag">Reranking</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Requirements</h4>
+          <p>100K documents (PDF, Confluence, Notion). Answer questions accurately with citations. Latency under 5 seconds. Access control: users only see documents they're authorized for.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python">from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.embeddings import OpenAIEmbeddings
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams, PointStruct
+import cohere
+
+# Index pipeline
+def index_documents(docs: list[dict], user_permissions: dict):
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=512,
+        chunk_overlap=64,    # overlap prevents losing context at boundaries
+        separators=["\n\n", "\n", ". ", " "],
+    )
+    embedder = OpenAIEmbeddings(model="text-embedding-3-small")
+    qdrant = QdrantClient("http://qdrant:6333")
+
+    points = []
+    for doc in docs:
+        chunks = splitter.split_text(doc["content"])
+        embeddings = embedder.embed_documents(chunks)
+
+        for i, (chunk, emb) in enumerate(zip(chunks, embeddings)):
+            points.append(PointStruct(
+                id=f"{doc['id']}_{i}",
+                vector=emb,
+                payload={
+                    "text": chunk,
+                    "source": doc["source"],
+                    "doc_id": doc["id"],
+                    "allowed_groups": doc["access_groups"],  # ACL embedded in vector
+                },
+            ))
+
+    qdrant.upsert(collection_name="enterprise_docs", points=points)
+
+# Query pipeline with access control
+co = cohere.Client("...")
+
+def query(question: str, user_groups: list[str]) -> dict:
+    embedder = OpenAIEmbeddings(model="text-embedding-3-small")
+    q_emb = embedder.embed_query(question)
+
+    # Access-controlled search: only return docs user can see
+    results = qdrant.search(
+        collection_name="enterprise_docs",
+        query_vector=q_emb,
+        query_filter={"must": [{"key": "allowed_groups", "match": {"any": user_groups}}]},
+        limit=20,  # over-fetch for reranking
+    )
+
+    # Rerank: cross-encoder scores relevance more precisely than cosine similarity
+    docs = [r.payload["text"] for r in results]
+    reranked = co.rerank(query=question, documents=docs, top_n=5, model="rerank-english-v3.0")
+    top_chunks = [docs[r.index] for r in reranked.results]
+    sources = [results[r.index].payload["source"] for r in reranked.results]
+
+    context = "\n\n".join(top_chunks)
+    answer = chat_with_context(question, context)
+    return {"answer": answer, "sources": list(set(sources))}
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 03 · Model Monitoring</div>
+          <div class="problem-title">Design a data drift detection and automated retraining system</div>
+          <div class="ptags"><span class="ptag">Data Drift</span><span class="ptag">Evidently</span><span class="ptag">Automated Retraining</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Scenario</h4>
+          <p>Fraud detection model trained on Q1 data. In Q3, fraud patterns changed — model accuracy dropped from 94% to 78% without anyone noticing for 3 weeks. Build a system to detect drift and trigger retraining automatically.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python">from evidently.report import Report
+from evidently.metric_preset import DataDriftPreset, ClassificationPreset
+import pandas as pd, mlflow, subprocess
+
+class ModelMonitor:
+    def __init__(self, model_name: str, drift_threshold: float = 0.1):
+        self.model_name = model_name
+        self.threshold = drift_threshold
+
+    def check_drift(self, reference_data: pd.DataFrame, current_data: pd.DataFrame) -> dict:
+        report = Report(metrics=[
+            DataDriftPreset(),          # feature distribution drift (KS test, PSI)
+            ClassificationPreset(),     # model performance metrics
+        ])
+        report.run(reference_data=reference_data, current_data=current_data)
+        result = report.as_dict()
+
+        drift_detected = result["metrics"][0]["result"]["dataset_drift"]
+        drift_share = result["metrics"][0]["result"]["drift_share"]
+        current_accuracy = result["metrics"][1]["result"]["current"]["accuracy"]
+
+        return {
+            "drift_detected": drift_detected,
+            "drift_share": drift_share,           # fraction of features drifted
+            "current_accuracy": current_accuracy,
+        }
+
+    def should_retrain(self, monitoring_result: dict) -> bool:
+        # Retrain if: significant drift OR accuracy dropped below threshold
+        return (
+            monitoring_result["drift_share"] > self.threshold
+            or monitoring_result.get("current_accuracy", 1.0) < 0.90
+        )
+
+    def trigger_retraining(self):
+        # Kick off training pipeline (Airflow DAG trigger)
+        subprocess.run([
+            "airflow", "dags", "trigger",
+            f"train_{self.model_name}",
+            "--conf", '{"trigger_reason": "drift_detected"}'
+        ])
+
+# Scheduled monitoring (run daily via Airflow)
+def daily_monitor():
+    monitor = ModelMonitor("fraud-detection", drift_threshold=0.15)
+
+    # Load reference data (training data from last model)
+    reference = pd.read_parquet("s3://ml-data/reference/fraud_train.parquet")
+
+    # Load current production data (last 7 days of predictions + actuals)
+    current = pd.read_parquet(f"s3://ml-data/production/last_7d.parquet")
+
+    result = monitor.check_drift(reference, current)
+
+    # Log monitoring metrics
+    mlflow.log_metrics({
+        "drift_share": result["drift_share"],
+        "current_accuracy": result["current_accuracy"],
+    })
+
+    if monitor.should_retrain(result):
+        monitor.trigger_retraining()
+        alert("Model drift detected — retraining triggered", severity="warning")
+</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tradeoffs">
+      <div class="section-label">Decision Framework</div>
+      <h2 class="section-title">ML Systems Trade-offs</h2>
+      <table class="data-table">
+        <thead><tr><th>Decision</th><th>Option A</th><th>Option B</th><th>Guidance</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Online vs batch inference</strong></td><td>Online (real-time)</td><td>Batch (precomputed)</td><td>Batch is 10× cheaper. Use online only when predictions must be personalized to current session context. Most recommendations can be precomputed daily.</td></tr>
+          <tr><td><strong>Fine-tuning vs RAG</strong></td><td>Fine-tune the LLM</td><td>RAG + base model</td><td>RAG is almost always the right choice for enterprise knowledge. Fine-tuning is expensive, knowledge goes stale, and you can't cite sources. RAG adds fresh data without retraining.</td></tr>
+          <tr><td><strong>GPU vs CPU serving</strong></td><td>GPU inference</td><td>CPU inference</td><td>GPU for deep learning (PyTorch, TF). CPU for tree models (XGBoost, LightGBM) — they don't benefit from GPU and are faster on CPU per core. Quantized small LLMs can run on CPU.</td></tr>
+          <tr><td><strong>Feature store needed?</strong></td><td>Feature store (Feast/Tecton)</td><td>Compute on the fly</td><td>Feature store when: multiple models share features, or you need point-in-time correctness for training. For a single model with simple features, compute in the serving code.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="antipatterns">
+      <div class="section-label">What Not to Do</div>
+      <h2 class="section-title">ML Systems Anti-patterns</h2>
+      <div class="antipattern-list">
+        <div class="ap-item"><h4>Training-Serving Skew</h4><p>Feature computation differs between training and serving code. The model sees different inputs at inference time, silently degrading accuracy. Use a shared feature computation library or feature store.</p></div>
+        <div class="ap-item"><h4>Future Data Leakage</h4><p>Training with features computed after the label timestamp. The model learns from information that wouldn't exist at prediction time. Always use point-in-time correct feature retrieval.</p></div>
+        <div class="ap-item"><h4>No Model Versioning</h4><p>Deploying new models by overwriting the old artifact. When something breaks, there's no rollback. MLflow/W&B model registry gives every version a unique artifact with metrics and lineage.</p></div>
+        <div class="ap-item"><h4>Evaluating Only on Accuracy</h4><p>AUC = 0.92 does not mean the model is ready for production. Also evaluate: fairness across demographic groups, latency at p99, and business metrics (revenue, engagement) via A/B test.</p></div>
+        <div class="ap-item"><h4>RAG Without Chunking Strategy</h4><p>Splitting documents into fixed 200-token chunks ignores semantic boundaries. A sentence split mid-paragraph loses context. Use recursive character splitting with overlap, and tune chunk size per document type.</p></div>
+        <div class="ap-item"><h4>No Data Drift Monitoring</h4><p>Deploying a model and forgetting it. Models degrade as the world changes. Set up weekly distribution checks between training data and production data. Alert before accuracy visibly degrades.</p></div>
+        <div class="ap-item"><h4>Random Train/Val/Test Split for Time-Series</h4><p>A random split for fraud detection or recommendations mixes future data into training. Always split by time: train on past, validate on recent past, test on the most recent period.</p></div>
+        <div class="ap-item"><h4>Embedding Everything in a Vector DB</h4><p>Vector search is approximate and may miss exact keyword matches. Hybrid search (BM25 + vectors) outperforms pure semantic search for most enterprise use cases. Don't throw away keyword search.</p></div>
+      </div>
+    </section>
+
+    <section id="interview">
+      <div class="section-label">Interview Prep</div>
+      <h2 class="section-title">Interview Tips</h2>
+      <div class="tip-list">
+        <div class="tip-item"><h4>Explain the Two-Stage Architecture</h4><p>Recall (fast ANN, returns 1000 candidates) → Ranking (expensive model, scores 1000 → returns top 20). This pattern underlies YouTube, Netflix, LinkedIn recommendations. Name it explicitly.</p></div>
+        <div class="tip-item"><h4>Always Mention Training-Serving Skew</h4><p>When designing any ML system, proactively mention this risk and how you'd prevent it (feature store, shared library). It shows production experience that distinguishes senior candidates.</p></div>
+        <div class="tip-item"><h4>Offline vs Online Metrics</h4><p>Offline metrics (AUC) validate model quality. Online metrics (revenue, CTR) validate business impact. Always A/B test before declaring a model "better." Interviewers want to see this distinction.</p></div>
+        <div class="tip-item"><h4>RAG vs Fine-tuning</h4><p>Know when each applies. RAG: dynamic knowledge, citations needed, no retraining budget. Fine-tuning: specific writing style, domain vocabulary, low latency inference with smaller model. This trade-off comes up often.</p></div>
+        <div class="tip-item"><h4>Mention Data Drift Monitoring</h4><p>Most candidates design the training and serving pipeline but skip monitoring. Adding "we'd run weekly drift checks comparing production input distributions to training data" shows operational maturity.</p></div>
+        <div class="tip-item"><h4>Cold Start Problem</h4><p>New users have no history — what do you recommend? New items have no ratings. Address this explicitly: popularity-based fallback, content-based matching, onboarding quiz. Ignoring cold start signals incomplete design.</p></div>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="notes-sidebar">
+    <div class="notes-sticky">
+      <div class="notes-heading">Clarifications</div>
+      <div class="note-item" data-section="feature-store">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is an embedding vector?</div></div>
+        <div class="note-body">An embedding is a dense list of numbers (e.g., 1536 floats) that represents the semantic meaning of text, an image, or a user's behavior. Similar things have similar vectors. OpenAI's text-embedding-3-small converts "help me log in" and "I forgot my password" to nearby vectors — so a search for one finds the other. They're the engine behind semantic search and recommendations.</div>
+      </div>
+      <div class="note-item" data-section="training-pipeline">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is data leakage?</div></div>
+        <div class="note-body">Leakage happens when information that wouldn't be available at prediction time sneaks into your training data. Example: predicting fraud using "was account suspended within 7 days of transaction?" — that's future information. The model learns a perfect signal that doesn't exist in production. Result: perfect offline accuracy, terrible production accuracy.</div>
+      </div>
+      <div class="note-item" data-section="model-serving">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is ONNX?</div></div>
+        <div class="note-body">ONNX (Open Neural Network Exchange) is an open format for ML models. You can export a PyTorch model to ONNX and run it with any ONNX runtime (ONNX Runtime, TensorRT, CoreML). Benefit: train in PyTorch (flexible), serve with ONNX Runtime (fast, no Python overhead). It's a portability layer for ML models.</div>
+      </div>
+      <div class="note-item" data-section="rag">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is ANN search?</div></div>
+        <div class="note-body">Approximate Nearest Neighbor (ANN) search finds the K vectors in a database most similar to a query vector — but approximately, not exactly. Exact search is O(N·D) — too slow for millions of vectors. ANN algorithms (HNSW, IVF) build a graph or index structure that reduces search to O(log N). FAISS (Facebook AI Similarity Search) is the most popular ANN library. Accuracy vs speed is tunable.</div>
+      </div>
+      <div class="note-item" data-section="ab-testing">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is statistical significance in A/B tests?</div></div>
+        <div class="note-body">If model B shows higher revenue than model A, is that real or random luck? A p-value measures the probability of observing this difference if there were no real effect. p < 0.05 means there's less than 5% chance the result is random. You also need a minimum detectable effect (MDE) — if you're measuring a 0.1% revenue lift, you need millions of samples to be confident. Run A/B tests long enough to reach statistical significance.</div>
+      </div>
+      <div class="note-item" data-section="mlops">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is hyperparameter tuning?</div></div>
+        <div class="note-body">Hyperparameters are settings you choose before training (learning rate, tree depth, regularization strength) — the model doesn't learn them from data. Tuning finds the best combination. Optuna uses Bayesian optimization (tries promising combinations based on previous results). Ray Tune distributes the search across many machines. Grid search (try all combinations) is only feasible for small search spaces.</div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<footer style="background:#0f172a;color:#64748b;text-align:center;padding:2rem;font-size:.85rem;margin-top:3rem;">
+  <p>KnowAlgo · <a href="system-design.html" style="color:#c084fc;text-decoration:none;">System Design Home</a> · <a href="index.html" style="color:#c084fc;text-decoration:none;">DSA Home</a></p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+window.addEventListener('scroll', () => { document.getElementById('progress-bar').style.width = (window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100) + '%'; });
+document.querySelectorAll('section[id]').forEach(s => new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { document.querySelectorAll('.toc-nav a').forEach(l=>l.classList.remove('active')); const a=document.querySelector(`.toc-nav a[href="#${e.target.id}"]`); if(a)a.classList.add('active'); }}); }, {rootMargin:'-10% 0px -80% 0px'}).observe(s));
+document.querySelectorAll('.copy-btn').forEach(btn => { btn.addEventListener('click', () => { navigator.clipboard.writeText(btn.nextElementSibling.querySelector('code').textContent).then(() => { btn.textContent='Copied!'; setTimeout(()=>btn.textContent='Copy',2000); }); }); });
+const noteItems = document.querySelectorAll('.note-item[data-section]');
+if (noteItems.length) {
+  const noteObs = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { const id=e.target.id; noteItems.forEach(n=>{ const m=n.dataset.section===id; n.classList.toggle('active',m); if(m)n.classList.add('open'); else n.classList.remove('open'); }); }}); }, {rootMargin:'-10% 0px -55% 0px'});
+  document.querySelectorAll('[id]').forEach(el=>noteObs.observe(el));
+  noteItems.forEach(n=>n.querySelector('.note-head').addEventListener('click',()=>n.classList.toggle('open')));
+}
+</script>
+</body>
+</html>

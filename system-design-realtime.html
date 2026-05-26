@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Real-Time & Event-Driven Systems – Pattern 14 | KnowAlgo System Design</title>
+<meta name="description" content="Event sourcing, CQRS, WebSockets, Server-Sent Events, real-time dashboards, gaming architecture, and live data systems design.">
+<link rel="canonical" href="https://knowalgo.netlify.app/system-design-realtime.html">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2Z1EQCZBXH');</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<style>
+:root {
+  --primary: #be123c; --primary-dark: #881337; --primary-light: #fff1f2;
+  --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+  --bg: #f8fafc; --card-bg: #ffffff; --radius: 12px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: system-ui,-apple-system,sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(to right, #be123c, #d97706); z-index: 9999; transition: width .1s; }
+.site-header { background: #0f172a; padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 3px; z-index: 100; }
+.site-header a.logo { color: #f1f5f9; font-weight: 800; font-size: 1.1rem; text-decoration: none; }
+.site-header nav a { color: #94a3b8; text-decoration: none; font-size: .88rem; margin-left: 1.5rem; }
+.site-header nav a:hover { color: #f1f5f9; }
+.hero { background: linear-gradient(135deg, #0f172a 0%, #4c0519 50%, #1c1917 100%); color: #fff; padding: 3.5rem 2rem 3rem; }
+.hero-badge { display: inline-flex; align-items: center; gap: .5rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 20px; padding: .3rem .9rem; font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #fda4af; margin-bottom: 1.2rem; }
+.hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.15; margin-bottom: .8rem; }
+.hero h1 span { color: #fb7185; }
+.hero p { font-size: 1.08rem; color: #fda4af; max-width: 680px; margin-bottom: 1.5rem; }
+.hero-tags { display: flex; flex-wrap: wrap; gap: .5rem; }
+.hero-tag { background: rgba(255,255,255,.12); border-radius: 20px; padding: .25rem .75rem; font-size: .78rem; color: #fff1f2; }
+.page-body { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; display: grid; grid-template-columns: 240px 1fr 220px; gap: 2rem; align-items: start; }
+.toc-sidebar { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.toc-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.toc-title { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); margin-bottom: .9rem; }
+.toc-nav a { display: block; font-size: .82rem; color: var(--text-muted); text-decoration: none; padding: .28rem .5rem; border-radius: 6px; border-left: 2px solid transparent; transition: all .2s; margin-bottom: 2px; }
+.toc-nav a:hover, .toc-nav a.active { color: var(--primary); border-left-color: var(--primary); background: var(--primary-light); }
+.toc-divider { height: 1px; background: var(--border); margin: .6rem 0; }
+.toc-nav-links { display: flex; gap: .5rem; margin-top: .8rem; }
+.toc-nav-links a { flex: 1; text-align: center; font-size: .72rem; font-weight: 600; color: var(--primary); background: var(--primary-light); border-radius: 6px; padding: .35rem .4rem; text-decoration: none; }
+.main-content section { margin-bottom: 3rem; }
+.section-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--primary); margin-bottom: .5rem; }
+.section-title { font-size: 1.6rem; font-weight: 800; color: var(--text); margin-bottom: 1rem; }
+.section-intro { font-size: 1rem; color: var(--text-muted); margin-bottom: 1.5rem; max-width: 760px; }
+.concept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.concept-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.concept-card h4 { font-size: .95rem; font-weight: 700; color: var(--text); margin-bottom: .4rem; }
+.concept-card p { font-size: .85rem; color: var(--text-muted); }
+.concept-card .cc-icon { font-size: 1.4rem; margin-bottom: .5rem; }
+.arch-diagram { background: #ffffff; border: 1px solid #cbd5e1; border-radius: var(--radius); padding: 1.25rem; margin: 1rem 0; font-family: monospace; font-size: .8rem; overflow-x: auto; line-height: 1.6; white-space: pre; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.arch-diagram .cm { color: #94a3b8; font-style: italic; }
+.arch-diagram .lb { color: #92400e; font-weight: 700; }
+.arch-diagram .sv { color: #166534; font-weight: 700; }
+.arch-diagram .db { color: #5b21b6; font-weight: 700; }
+.arch-diagram .er { color: #991b1b; font-weight: 700; }
+.arch-diagram .em { color: #065f46; font-weight: 700; }
+.arch-diagram .bl { color: #1e40af; font-weight: 700; }
+.arch-diagram .ok { color: #166534; }
+.arch-diagram .or { color: #9a3412; }
+.arch-diagram .rd { color: #991b1b; }
+.arch-diagram .cy { color: #0e7490; font-weight: 700; }
+.arch-diagram .pk { color: #be185d; font-weight: 700; }
+.code-block { position: relative; margin: 1rem 0; border-radius: var(--radius); overflow: hidden; }
+.code-block pre { margin: 0 !important; border-radius: var(--radius) !important; font-size: .82rem !important; }
+.copy-btn { position: absolute; top: .6rem; right: .6rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #94a3b8; font-size: .72rem; padding: .25rem .6rem; border-radius: 6px; cursor: pointer; }
+.copy-btn:hover { background: rgba(255,255,255,.2); color: #fff; }
+.data-table { width: 100%; border-collapse: collapse; font-size: .88rem; margin: 1rem 0; background: var(--card-bg); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.data-table th { background: var(--primary); color: #fff; padding: .7rem 1rem; text-align: left; font-size: .8rem; font-weight: 700; }
+.data-table td { padding: .65rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: #fff1f2; }
+.eng-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+.eng-take { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.et-sre { border-left-color: #0369a1; } .et-backend { border-left-color: #7c3aed; } .et-security { border-left-color: #dc2626; }
+.et-data { border-left-color: #059669; } .et-platform { border-left-color: #d97706; } .et-ml { border-left-color: #db2777; }
+.et-frontend { border-left-color: #0891b2; } .et-mobile { border-left-color: #16a34a; } .et-architect { border-left-color: #475569; }
+.eng-role { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: .3rem; }
+.eng-take p { font-size: .85rem; color: var(--text); }
+.problem-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; box-shadow: var(--shadow-sm); }
+.problem-header { padding: 1.25rem 1.5rem; background: linear-gradient(135deg, #be123c, #92400e); border-bottom: none; }
+.problem-num { font-size: .78rem; font-weight: 700; color: #fda4af; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem; }
+.problem-title { font-size: 1.15rem; font-weight: 700; color: #f1f5f9; margin-bottom: .5rem; }
+.ptags { display: flex; flex-wrap: wrap; gap: .4rem; }
+.ptag { background: rgba(255,255,255,.15); color: #fff1f2; font-size: .72rem; font-weight: 600; padding: .2rem .55rem; border-radius: 10px; }
+.problem-body { padding: 1.5rem; }
+.problem-body h4 { font-size: .9rem; font-weight: 700; color: var(--text); margin: 1rem 0 .4rem; }
+.problem-body p { font-size: .9rem; color: var(--text-muted); margin-bottom: .75rem; }
+.antipattern-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.ap-item { background: #fff5f5; border: 1px solid #fecaca; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.ap-item h4 { font-size: .9rem; font-weight: 700; color: #991b1b; margin-bottom: .3rem; }
+.ap-item p { font-size: .83rem; color: #7f1d1d; }
+.tip-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.tip-item { background: var(--primary-light); border: 1px solid #fecdd3; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.tip-item h4 { font-size: .9rem; font-weight: 700; color: var(--primary-dark); margin-bottom: .3rem; }
+.tip-item p { font-size: .83rem; color: #881337; }
+.notes-sidebar { align-self: start; }
+.notes-sticky { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.notes-heading { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: 10px; }
+.note-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: border-color .25s; }
+.note-item.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(190,18,60,.07); }
+.note-head { display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px; cursor: pointer; }
+.note-bullet { width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: .78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: transform .2s; }
+.note-item.open .note-bullet { transform: rotate(45deg); }
+.note-label { font-size: .78rem; font-weight: 600; color: #1e293b; flex: 1; line-height: 1.35; }
+.note-body { display: none; font-size: .76rem; color: #475569; line-height: 1.55; padding: 0 11px 11px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+.note-item.open .note-body, .note-item.active .note-body { display: block; }
+@media (max-width: 1150px) { .notes-sidebar { display: none !important; } .page-body { grid-template-columns: 240px 1fr !important; } }
+@media (max-width: 768px) { .page-body { grid-template-columns: 1fr !important; } .toc-sidebar { display: none; } }
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<header class="site-header">
+  <a href="index.html" class="logo">KnowAlgo</a>
+  <nav>
+    <a href="index.html">DSA</a>
+    <a href="system-design.html">System Design</a>
+    <a href="interview-prep.html">Interview Prep</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div style="max-width:1400px;margin:0 auto;padding:0 1.5rem">
+    <div class="hero-badge"><span>⚡</span> Pattern 14 of 16 · System Design</div>
+    <h1>Real-Time &amp; <span>Event-Driven Systems</span></h1>
+    <p>Event sourcing, CQRS, WebSockets, Server-Sent Events, live dashboards, multiplayer gaming, collaborative editing — how to build systems where data changes propagate instantly.</p>
+    <div class="hero-tags">
+      <span class="hero-tag">Event Sourcing</span><span class="hero-tag">CQRS</span>
+      <span class="hero-tag">WebSockets</span><span class="hero-tag">SSE</span>
+      <span class="hero-tag">Fan-out</span><span class="hero-tag">Presence</span>
+      <span class="hero-tag">Conflict-Free</span><span class="hero-tag">CRDTs</span>
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+  <aside class="toc-sidebar">
+    <div class="toc-card">
+      <div class="toc-title">On this page</div>
+      <nav class="toc-nav">
+        <a href="#event-driven">Event-Driven Architecture</a>
+        <a href="#event-sourcing">Event Sourcing</a>
+        <a href="#cqrs">CQRS</a>
+        <a href="#websockets">WebSockets & SSE</a>
+        <a href="#fan-out">Fan-out Patterns</a>
+        <a href="#realtime-collab">Collaborative Editing</a>
+        <a href="#gaming">Gaming Architecture</a>
+        <div class="toc-divider"></div>
+        <a href="#perspectives">Engineer Perspectives</a>
+        <a href="#problems">Real Problems</a>
+        <a href="#tradeoffs">Trade-offs</a>
+        <a href="#antipatterns">Anti-patterns</a>
+        <a href="#interview">Interview Tips</a>
+      </nav>
+      <div class="toc-nav-links">
+        <a href="system-design-ml.html">← ML Systems</a>
+        <a href="system-design-iot.html">IoT & Edge →</a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <section id="event-driven">
+      <div class="section-label">Foundation</div>
+      <h2 class="section-title">Event-Driven Architecture</h2>
+      <p class="section-intro">In event-driven systems, components communicate by emitting and reacting to events rather than calling each other directly. This decouples producers from consumers, allows multiple consumers to react independently, and creates a natural audit log of everything that happens.</p>
+
+      <div class="arch-diagram"><span class="cm">Request-response vs event-driven</span>
+
+<span class="cm">Request-Response (tight coupling):</span>
+<span class="bl">Order Service</span> ──► <span class="sv">Payment Service</span>  (direct call — waits for response)
+                 ──► <span class="em">Inventory Service</span> (blocks, sequential)
+                 ──► <span class="lb">Notification Service</span> (blocks more)
+<span class="cm">If any service is slow: Order Service waits. Coupling: Order knows about all 3 services.</span>
+
+<span class="cm">Event-Driven (loose coupling):</span>
+<span class="bl">Order Service</span> ──► <span class="sv">Kafka: "order.placed"</span>
+                       │
+            ┌──────────┼──────────────────┐
+            ▼          ▼                  ▼
+    <span class="em">Payment Svc</span>  <span class="lb">Inventory Svc</span>  <span class="pk">Notification Svc</span>
+    (processes      (reserves          (sends email,
+     independently)  stock)             SMS)
+
+<span class="cm">Order Service doesn't know who consumes the event. New consumers add with zero code change.</span>
+<span class="cm">Events are durable (Kafka retains for 7 days) — consumers can replay if they fail.</span></div>
+
+      <div class="concept-grid">
+        <div class="concept-card"><div class="cc-icon">📤</div><h4>Event vs Message vs Command</h4><p>Event: "something happened" (past tense, fact). Message: data sent to a specific recipient. Command: "do this" (imperative, synchronous intent). Events are the foundation of event-driven systems — they're facts, not instructions.</p></div>
+        <div class="concept-card"><div class="cc-icon">⏱️</div><h4>Eventual Consistency</h4><p>In event-driven systems, state updates propagate asynchronously. After "order.placed" fires, inventory may not be updated for 50ms. The system eventually reaches consistency — design UX to tolerate this.</p></div>
+        <div class="concept-card"><div class="cc-icon">🔄</div><h4>Idempotency</h4><p>Events may be delivered more than once (Kafka "at least once"). Consumers must handle duplicate events safely. Use idempotency keys (event_id) and check-before-apply patterns.</p></div>
+      </div>
+    </section>
+
+    <section id="event-sourcing">
+      <div class="section-label">State as Events</div>
+      <h2 class="section-title">Event Sourcing</h2>
+      <p class="section-intro">Instead of storing current state, event sourcing stores the history of events that led to the current state. Current state is derived by replaying events. This gives you a complete audit log, the ability to time-travel to any past state, and the ability to add new projections from historical events.</p>
+
+      <div class="arch-diagram"><span class="cm">Traditional vs Event Sourced state</span>
+
+<span class="cm">Traditional (mutable state):</span>
+  orders table: { id: 123, status: "shipped", total: $150 }
+  → History is gone. Can't answer "when was it paid? who approved it?"
+
+<span class="cm">Event Sourced (immutable event log):</span>
+  event_store:
+    { event_id: 1, type: "OrderPlaced",    order_id: 123, total: $150, ts: 10:00 }
+    { event_id: 2, type: "PaymentReceived",order_id: 123, amount: $150, ts: 10:01 }
+    { event_id: 3, type: "ItemShipped",    order_id: 123, tracking: "UPS-99", ts: 10:05 }
+    { event_id: 4, type: "OrderDelivered", order_id: 123, ts: 11:30 }
+
+  Current state = replay events 1-4:
+    → status: "delivered", total: $150, paid: true, tracking: "UPS-99"
+
+  State at 10:02 = replay events 1-2:
+    → status: "paid", total: $150
+
+<span class="cm">Benefits:</span>
+  ✅ Complete audit trail (regulatory: financial, healthcare)
+  ✅ Time-travel debugging ("what was the state at 10:03?")
+  ✅ New read models: add a "monthly revenue" projection by replaying all PaymentReceived events
+  ✅ Event replay for new microservice: replay all events to build its initial state
+
+<span class="cm">Costs:</span>
+  ⚠️ Complexity: reading state requires replaying events (mitigated by snapshots)
+  ⚠️ Schema evolution: old events must still be deserializable
+  ⚠️ Not every system needs this — use where audit trail is core, not everywhere</div>
+
+      <div class="code-block">
+        <button class="copy-btn">Copy</button>
+        <pre><code class="language-python">from dataclasses import dataclass, field
+from datetime import datetime
+import json
+
+# Events are immutable facts
+@dataclass
+class OrderEvent:
+    event_id: str
+    order_id: str
+    event_type: str
+    data: dict
+    timestamp: datetime = field(default_factory=datetime.utcnow)
+
+# Aggregate: rebuilds state from events
+class Order:
+    def __init__(self, order_id: str):
+        self.order_id = order_id
+        self.status = None
+        self.total = 0
+        self.items = []
+        self._version = 0
+        self._pending_events = []
+
+    # Command handlers emit events
+    def place(self, items: list, total: float):
+        if self.status is not None:
+            raise ValueError("Order already placed")
+        self._apply(OrderEvent("e1", self.order_id, "OrderPlaced",
+                               {"items": items, "total": total}))
+
+    def receive_payment(self, amount: float):
+        if self.status != "placed":
+            raise ValueError("Invalid state transition")
+        self._apply(OrderEvent("e2", self.order_id, "PaymentReceived",
+                               {"amount": amount}))
+
+    # Event application is the source of truth for state changes
+    def _apply(self, event: OrderEvent):
+        if event.event_type == "OrderPlaced":
+            self.status = "placed"
+            self.items = event.data["items"]
+            self.total = event.data["total"]
+        elif event.event_type == "PaymentReceived":
+            self.status = "paid"
+        self._version += 1
+        self._pending_events.append(event)
+
+    @classmethod
+    def from_events(cls, order_id: str, events: list[OrderEvent]) -> "Order":
+        order = cls(order_id)
+        for event in events:
+            order._apply(event)
+        order._pending_events.clear()  # historical events, not new
+        return order
+
+# Snapshot pattern: store state every 100 events to speed up replay
+class OrderRepository:
+    def save(self, order: Order):
+        for event in order._pending_events:
+            self.event_store.append(event)
+        if order._version % 100 == 0:
+            self.snapshot_store.save(order.order_id, order._version, order.__dict__)
+
+    def load(self, order_id: str) -> Order:
+        snapshot = self.snapshot_store.get_latest(order_id)
+        if snapshot:
+            order = Order(order_id)
+            order.__dict__.update(snapshot["state"])
+            events = self.event_store.get_since(order_id, snapshot["version"])
+        else:
+            events = self.event_store.get_all(order_id)
+            order = Order.from_events(order_id, events)
+        return order
+</code></pre>
+      </div>
+    </section>
+
+    <section id="cqrs">
+      <div class="section-label">Read/Write Separation</div>
+      <h2 class="section-title">CQRS (Command Query Responsibility Segregation)</h2>
+      <p class="section-intro">CQRS separates write operations (commands that change state) from read operations (queries that return data). This lets you optimize the write model for consistency and the read model for query performance — using different data stores if needed.</p>
+
+      <div class="arch-diagram"><span class="cm">CQRS with event sourcing (common pairing)</span>
+
+<span class="bl">Commands</span> (writes)                         <span class="sv">Queries</span> (reads)
+   │                                             │
+   ▼                                             ▼
+<span class="em">Write Model</span>                              <span class="em">Read Models</span> (projections)
+  Event Store (append-only)                ┌── Order Summary Table (Postgres)
+  Consistency guaranteed                   │   { id, status, total, user_id }
+  Strong validation                        ├── User Activity Feed (Redis)
+  Complex domain logic                     │   { user_id: [event1, event2...] }
+                                           └── Analytics Cube (Redshift)
+  Events published to Kafka ──────────────►    { day, revenue, order_count }
+
+<span class="cm">Projection processors: consume events, update read models</span>
+<span class="cm">Read models are eventual consistent (lag: 10ms - 1s depending on consumer)</span>
+<span class="cm">Read model can be rebuilt: replay all events from Kafka to recreate any projection</span>
+<span class="cm">Scaling: write model (1 node, strong consistency) vs read models (scale-out horizontally)</span></div>
+    </section>
+
+    <section id="websockets">
+      <div class="section-label">Real-Time Protocols</div>
+      <h2 class="section-title">WebSockets &amp; Server-Sent Events</h2>
+      <p class="section-intro">HTTP is request-response: the client asks, the server answers. For real-time updates where the server needs to push to clients, we need persistent connections.</p>
+
+      <div class="arch-diagram"><span class="cm">WebSocket vs SSE vs Long Polling</span>
+
+<span class="bl">WebSocket</span> (full-duplex, bidirectional)
+  Client ←────────────────────────── Server
+         ────────────────────────────►
+  Single TCP connection, both sides can send anytime
+  Protocol: ws:// or wss:// (TLS)
+  Best for: chat, gaming, collaborative editing, live trading
+
+<span class="sv">Server-Sent Events (SSE)</span> (server → client only)
+  Client ◄────────────────────────── Server
+  HTTP/1.1 persistent connection, server streams events
+  Client uses EventSource API, automatic reconnection
+  Best for: notifications, live feeds, dashboards (no client → server needed)
+  Simpler than WebSocket, works through HTTP/2 multiplexing
+
+<span class="em">Long Polling</span> (simulates push with HTTP)
+  Client: GET /events (holds connection open)
+  Server: waits until there's data to send, then responds
+  Client: immediately sends next GET /events
+  Highest latency (new connection per event), works everywhere
+  Best for: fallback when WebSocket/SSE unavailable
+
+<span class="cm">Decision:</span>
+<span class="ok">Bidirectional?</span> → WebSocket
+<span class="ok">Server pushes only?</span> → SSE (simpler, HTTP/2 friendly)
+<span class="ok">Need to work everywhere, low volume?</span> → Long Polling</div>
+
+      <div class="code-block">
+        <button class="copy-btn">Copy</button>
+        <pre><code class="language-python">from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import StreamingResponse
+import asyncio, json, redis.asyncio as aioredis
+
+app = FastAPI()
+
+# WebSocket: bidirectional chat
+class ConnectionManager:
+    def __init__(self):
+        self.rooms: dict[str, set[WebSocket]] = {}
+
+    async def connect(self, ws: WebSocket, room_id: str):
+        await ws.accept()
+        self.rooms.setdefault(room_id, set()).add(ws)
+
+    async def disconnect(self, ws: WebSocket, room_id: str):
+        self.rooms.get(room_id, set()).discard(ws)
+
+    async def broadcast(self, room_id: str, message: str, sender: WebSocket):
+        for ws in list(self.rooms.get(room_id, set())):
+            if ws != sender:
+                try:
+                    await ws.send_text(message)
+                except Exception:
+                    await self.disconnect(ws, room_id)
+
+manager = ConnectionManager()
+
+@app.websocket("/ws/{room_id}")
+async def websocket_endpoint(ws: WebSocket, room_id: str, user_id: str):
+    await manager.connect(ws, room_id)
+    try:
+        while True:
+            data = await ws.receive_text()
+            msg = json.dumps({"user": user_id, "text": data})
+            await manager.broadcast(room_id, msg, sender=ws)
+    except WebSocketDisconnect:
+        await manager.disconnect(ws, room_id)
+
+# SSE: server pushes notifications to client
+@app.get("/events/notifications")
+async def notifications_stream(user_id: str):
+    redis = aioredis.Redis()
+
+    async def event_generator():
+        pubsub = redis.pubsub()
+        await pubsub.subscribe(f"notifications:{user_id}")
+        try:
+            async for msg in pubsub.listen():
+                if msg["type"] == "message":
+                    yield f"data: {msg['data'].decode()}\n\n"
+        finally:
+            await pubsub.unsubscribe(f"notifications:{user_id}")
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache",
+                                     "X-Accel-Buffering": "no"})
+</code></pre>
+      </div>
+    </section>
+
+    <section id="fan-out">
+      <div class="section-label">Delivery at Scale</div>
+      <h2 class="section-title">Fan-out Patterns</h2>
+      <p class="section-intro">When one event (a tweet, a post, a stock price update) must be delivered to many subscribers, fan-out is the challenge. At scale, naive approaches fail — delivering to 1M followers cannot happen in a single database transaction.</p>
+
+      <div class="arch-diagram"><span class="cm">Fan-out on write vs fan-out on read</span>
+
+<span class="bl">Fan-out on Write</span> (Twitter model for non-celebrities)
+  User A posts tweet ──► Kafka "tweet.created"
+                              │
+                      Fan-out Worker
+                              │ (background, async)
+                              │ for each of A's followers:
+                              │   append tweet_id to follower's timeline cache
+                              ▼
+                    [Redis timeline cache per user]
+                    user_B_timeline: [tweet_99, tweet_55, tweet_23...]
+                    user_C_timeline: [tweet_99, tweet_67...]
+
+  Reading B's timeline: O(1) Redis read
+  Downside: celebrity with 50M followers → 50M writes per tweet (expensive)
+
+<span class="sv">Fan-out on Read</span> (Twitter model for celebrities)
+  Celebrity (50M followers) → don't pre-populate timelines
+  When user B loads feed:
+    1. Load B's following list
+    2. Query latest tweets from each (cache with Redis)
+    3. Merge and rank
+  Expensive at read time, but avoids 50M writes
+
+<span class="em">Hybrid</span> (Twitter's actual approach)
+  Non-celebrity (< 100K followers) → fan-out on write
+  Celebrity (> 100K followers) → injected at read time
+  Timeline = pre-computed (non-celebs) + injected (celebs) at read time
+
+<span class="cm">Notification fan-out:</span>
+  Event → Kafka → Fan-out service → per-user notification queue (SQS/Redis)
+  → delivery channels: WebSocket push (online users) / APNs (iOS) / FCM (Android)</div>
+    </section>
+
+    <section id="realtime-collab">
+      <div class="section-label">Collaborative Systems</div>
+      <h2 class="section-title">Collaborative Editing &amp; CRDTs</h2>
+      <p class="section-intro">When multiple users edit the same document simultaneously (Google Docs, Figma), their changes must be merged without conflicts. Two approaches: Operational Transformation (OT) — used by Google Docs — and CRDTs (Conflict-free Replicated Data Types).</p>
+
+      <div class="arch-diagram"><span class="cm">Operational Transformation (OT): transform concurrent operations</span>
+
+<span class="cm">Initial doc: "hello"</span>
+User A (offline): insert "world " at position 0 → "world hello"
+User B (offline): delete "h" at position 0 → "ello"
+
+<span class="cm">Naive merge: apply A then B → delete at position 0 of "world hello" → "orld hello" (WRONG)</span>
+<span class="cm">OT: transform B's operation against A's operation:</span>
+  B intended to delete position 0 of "hello"
+  A inserted 6 chars at position 0
+  Transform B: delete at position 0+6=6 of "world hello" → "world ello" (CORRECT)
+
+<span class="cm">CRDT (Conflict-free Replicated Data Type): no coordination needed</span>
+  Assign unique ID to each character position
+  Characters are ordered by their IDs, not absolute positions
+  Insertions always commute (any order of merge → same result)
+
+  <span class="sv">Yjs and Automerge</span>: production CRDT libraries for text, JSON, rich text
+  Used by: Figma (multiplayer canvas), Linear, Notion
+
+<span class="cm">Real-time sync infrastructure:</span>
+  WebSocket server → receives operations → broadcasts to room participants
+  Operations stored in Kafka/Redis → new participants replay to get current state
+  Server stores authoritative state (snapshot) + recent delta log</div>
+    </section>
+
+    <section id="gaming">
+      <div class="section-label">Low-Latency Systems</div>
+      <h2 class="section-title">Multiplayer Gaming Architecture</h2>
+      <p class="section-intro">Multiplayer games require sub-50ms latency, authoritative game state, anti-cheat, and match servers close to players. The architecture is fundamentally different from web services — UDP is preferred over TCP for real-time game state.</p>
+
+      <div class="arch-diagram"><span class="cm">Online multiplayer game server architecture</span>
+
+<span class="bl">Game Client</span>                <span class="sv">Match Server</span>           <span class="em">Game Services</span>
+  │                              (stateful, UDP)            │
+  │── UDP: player_input ────────►│                          │
+  │◄─ UDP: world_state ──────────│                          │
+  │   (30 updates/sec)           │◄─ Matchmaking ───────────│
+  │                              │   (queue players)        │
+  │                              │◄─ Leaderboard ───────────│
+  │                              │◄─ Anti-cheat ────────────│
+  │                              │   (validate moves)       │
+
+<span class="cm">Why UDP over TCP for game state?</span>
+  TCP guarantees delivery (retransmits lost packets) → head-of-line blocking
+  If packet 5 is lost, TCP waits before delivering 6, 7, 8
+  Game state is time-sensitive: old state is useless — new state supersedes it
+  UDP: send and forget, application handles "last known state" logic
+
+<span class="cm">Techniques:</span>
+  <span class="lb">Client prediction</span>: apply input locally immediately, reconcile with server state
+  <span class="lb">Lag compensation</span>: server rewinds time to validate shots at player's reported time
+  <span class="lb">Delta compression</span>: only send what changed since last ack (not full world state)
+  <span class="lb">Interpolation</span>: smooth rendering between received state snapshots
+
+<span class="cm">Infrastructure:</span>
+  Match servers: bare-metal or C3 instances near players (AWS GameLift, Agones/K8s)
+  Anycast routing: player connects to nearest server by IP geography
+  DDoS protection: UDP flood protection (AWS Shield Advanced)</div>
+    </section>
+
+    <section id="perspectives">
+      <div class="section-label">9 Viewpoints</div>
+      <h2 class="section-title">Engineer Perspectives</h2>
+      <div class="eng-grid">
+        <div class="eng-take et-backend"><div class="eng-role">Backend Engineer</div><p>WebSocket connections are long-lived stateful resources. A pod restart drops all active connections. Design clients to reconnect automatically with exponential backoff + state resync.</p></div>
+        <div class="eng-take et-architect"><div class="eng-role">Architect</div><p>Event sourcing adds significant complexity. Only adopt it where audit history and time-travel are core requirements (financial transactions, medical records). For a simple CRUD app, it's overengineering.</p></div>
+        <div class="eng-take et-sre"><div class="eng-role">SRE</div><p>Real-time systems are latency-sensitive. Monitor p99.9, not just p99. A single slow message broker partition can cascade. Set consumer lag alerts — lag growing means consumers can't keep up with producers.</p></div>
+        <div class="eng-take et-data"><div class="eng-role">Data Engineer</div><p>Event logs are gold for analytics. Store raw events in S3 (Iceberg) in addition to processing them. Events you don't store now can't be replayed for future analytics use cases.</p></div>
+        <div class="eng-take et-frontend"><div class="eng-role">Frontend Engineer</div><p>EventSource (SSE) auto-reconnects but loses messages during the gap. Implement a "last-event-id" header so the server can replay missed events. Same principle for WebSocket reconnection.</p></div>
+        <div class="eng-take et-platform"><div class="eng-role">Platform Engineer</div><p>WebSocket servers need sticky sessions in the load balancer — a client must reconnect to the same pod (or a shared pub/sub like Redis) or it loses its room subscription. AWS ALB supports sticky sessions for WebSocket.</p></div>
+        <div class="eng-take et-security"><div class="eng-role">Security Engineer</div><p>WebSocket connections bypass many HTTP-layer security controls (WAF, rate limiting per request). Add authentication at upgrade handshake (check JWT before upgrading HTTP → WS). Rate-limit messages per connection.</p></div>
+        <div class="eng-take et-mobile"><div class="eng-role">Mobile Engineer</div><p>Mobile apps can't hold persistent WebSocket connections indefinitely — OS kills background apps. Use push notifications (APNs/FCM) to wake the app, then establish a short-lived connection to sync state.</p></div>
+        <div class="eng-take et-ml"><div class="eng-role">ML Engineer</div><p>Real-time event streams are valuable training data. Use Kafka Connect to mirror production events to your data lake (S3/Iceberg) for offline training, while Flink processes the same stream for online features.</p></div>
+      </div>
+    </section>
+
+    <section id="problems">
+      <div class="section-label">Real Problems</div>
+      <h2 class="section-title">Real-Time Design Problems</h2>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 01 · Live Chat</div>
+          <div class="problem-title">Design a chat system like Slack with 10M concurrent WebSocket connections</div>
+          <div class="ptags"><span class="ptag">WebSocket</span><span class="ptag">Redis Pub/Sub</span><span class="ptag">Fan-out</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Requirements</h4>
+          <p>10M concurrent users, message delivery < 200ms, message history, presence indicators (online/offline), read receipts. Messages delivered exactly once.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python">import asyncio, json
+import redis.asyncio as aioredis
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+
+# Architecture: each server handles ~50K connections
+# Total: 200 WebSocket servers for 10M connections
+# Redis pub/sub for cross-server message routing
+
+class ChatServer:
+    def __init__(self):
+        self.redis = aioredis.Redis.from_url("redis://redis-cluster")
+        self.local_connections: dict[str, set[WebSocket]] = {}  # channel_id → {ws}
+        self.user_ws: dict[str, WebSocket] = {}  # user_id → ws
+
+    async def connect(self, ws: WebSocket, user_id: str):
+        await ws.accept()
+        self.user_ws[user_id] = ws
+
+        # Register presence: user is online
+        await self.redis.setex(f"presence:{user_id}", 30, "online")  # 30s TTL, heartbeat refreshes
+
+        # Subscribe to user's channels
+        channels = await self.get_user_channels(user_id)
+        for ch in channels:
+            self.local_connections.setdefault(ch, set()).add(ws)
+
+    async def handle_message(self, user_id: str, raw: str):
+        msg = json.loads(raw)
+        channel_id = msg["channel_id"]
+
+        # Persist to DB (append-only messages table)
+        msg_id = await self.db.insert_message(
+            channel_id=channel_id, user_id=user_id, text=msg["text"]
+        )
+        event = json.dumps({
+            "type": "message", "id": msg_id,
+            "channel": channel_id, "user": user_id,
+            "text": msg["text"], "ts": msg["ts"]
+        })
+
+        # Publish to Redis channel → all servers subscribed to this channel get it
+        await self.redis.publish(f"channel:{channel_id}", event)
+
+    async def redis_subscriber(self, channel_id: str):
+        pubsub = self.redis.pubsub()
+        await pubsub.subscribe(f"channel:{channel_id}")
+        async for message in pubsub.listen():
+            if message["type"] == "message":
+                # Deliver to all local WebSocket connections in this channel
+                event = message["data"].decode()
+                for ws in list(self.local_connections.get(channel_id, set())):
+                    try:
+                        await ws.send_text(event)
+                    except Exception:
+                        self.local_connections[channel_id].discard(ws)
+
+# Scaling: 200 WebSocket pods (50K connections each) + Redis cluster
+# Sticky load balancing: client stays on same pod (ALB cookie-based)
+# Message deduplication: msg_id in DB, client deduplicates on msg_id
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 02 · Live Dashboard</div>
+          <div class="problem-title">Design a real-time analytics dashboard for 1M concurrent viewers</div>
+          <div class="ptags"><span class="ptag">SSE</span><span class="ptag">Flink</span><span class="ptag">Time-Series DB</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Scenario</h4>
+          <p>E-commerce live dashboard: real-time order count, revenue, active users — updated every 5 seconds. 1M viewers watching the same dashboard (Black Friday sale).</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python">from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+import asyncio, json, redis.asyncio as aioredis
+
+# Key insight: 1M viewers all see the SAME data
+# Don't compute per-viewer — compute once, broadcast to all
+
+# Flink job: compute global metrics every 5 seconds
+# Published to Redis key: "dashboard:current"
+
+# FastAPI: SSE endpoint (trivially scales)
+@app.get("/dashboard/stream")
+async def dashboard_stream():
+    redis = aioredis.Redis.from_url("redis://redis")
+
+    async def generate():
+        pubsub = redis.pubsub()
+        await pubsub.subscribe("dashboard:updates")
+        try:
+            async for msg in pubsub.listen():
+                if msg["type"] == "message":
+                    yield f"data: {msg['data'].decode()}\n\n"
+        finally:
+            await pubsub.unsubscribe("dashboard:updates")
+
+    return StreamingResponse(generate(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache"})
+
+# Flink aggregation (publishes every 5 seconds)
+# (pseudocode — Flink runs as a separate job)
+# stream
+#   .timeWindow(5 seconds)
+#   .aggregate(
+#     count = COUNT(order_id),
+#     revenue = SUM(amount),
+#     active_users = COUNT(DISTINCT user_id)
+#   )
+#   .map(result → redis.publish("dashboard:updates", json(result)))
+
+# Scaling SSE to 1M connections:
+# SSE is HTTP — use standard web servers (nginx, Caddy) with HTTP/2 multiplexing
+# Each SSE connection is lightweight (no message broker needed for read-only)
+# Nginx upstream: 100 FastAPI pods, each handling 10K SSE connections
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 03 · Event Sourcing</div>
+          <div class="problem-title">Design an event-sourced ledger for a fintech payment system</div>
+          <div class="ptags"><span class="ptag">Event Sourcing</span><span class="ptag">CQRS</span><span class="ptag">Idempotency</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Requirements</h4>
+          <p>Financial transactions must be immutable, auditable, and replayable. Support: view balance (current), view statement (historical), regulatory replay of any period.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python">from decimal import Decimal
+from datetime import datetime
+import uuid
+
+# Event types (immutable facts)
+EVENTS = ["MoneyDeposited", "MoneyWithdrawn", "TransferInitiated",
+          "TransferCompleted", "TransferFailed"]
+
+class LedgerService:
+    def __init__(self, event_store, idempotency_store):
+        self.event_store = event_store        # append-only (Postgres partitioned table)
+        self.idempotency = idempotency_store  # Redis: idempotency_key → event_id
+
+    def deposit(self, account_id: str, amount: Decimal, idempotency_key: str) -> str:
+        # Idempotency: same key → same event (safe to retry)
+        if existing := self.idempotency.get(idempotency_key):
+            return existing
+
+        event_id = str(uuid.uuid4())
+        self.event_store.append({
+            "event_id": event_id,
+            "account_id": account_id,
+            "event_type": "MoneyDeposited",
+            "amount": str(amount),
+            "currency": "USD",
+            "timestamp": datetime.utcnow().isoformat(),
+            "idempotency_key": idempotency_key,
+        })
+        self.idempotency.set(idempotency_key, event_id, ex=86400)  # 24h TTL
+
+        # Publish to read model updater
+        self.kafka.publish("ledger.events", {"event_id": event_id, "account_id": account_id})
+        return event_id
+
+    def get_balance(self, account_id: str) -> Decimal:
+        # Read model: balance maintained in Redis by projection consumer
+        # O(1) read — don't replay events for every balance check!
+        return Decimal(self.redis.get(f"balance:{account_id}") or "0")
+
+    def get_statement(self, account_id: str, from_ts: datetime, to_ts: datetime) -> list:
+        # Read from event store — exact historical replay
+        return self.event_store.query(
+            "SELECT * FROM ledger_events WHERE account_id = %s AND timestamp BETWEEN %s AND %s",
+            (account_id, from_ts, to_ts)
+        )
+
+# Projection consumer: maintains balance in Redis
+# Kafka consumer group: "balance-projection"
+# On MoneyDeposited: INCRBYFLOAT balance:{account_id} amount
+# On MoneyWithdrawn: DECRFLOAT balance:{account_id} amount
+# On TransferCompleted: atomic: DECR source, INCR destination
+</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tradeoffs">
+      <div class="section-label">Decision Framework</div>
+      <h2 class="section-title">Real-Time Trade-offs</h2>
+      <table class="data-table">
+        <thead><tr><th>Decision</th><th>Option A</th><th>Option B</th><th>Guidance</th></tr></thead>
+        <tbody>
+          <tr><td><strong>WebSocket vs SSE</strong></td><td>WebSocket (bidirectional)</td><td>SSE (server → client)</td><td>Default to SSE if the client doesn't send data after connection — simpler, HTTP/2-native, auto-reconnect. WebSocket when you need bidirectional messaging (chat, gaming, collab editing).</td></tr>
+          <tr><td><strong>Event sourcing</strong></td><td>Event Sourced</td><td>Mutable state</td><td>Event sourcing when audit trail is a core requirement (fintech, healthcare, compliance). For most apps, it adds complexity without benefit. Don't adopt for "maybe we'll need it."</td></tr>
+          <tr><td><strong>Fan-out</strong></td><td>Write-time (push)</td><td>Read-time (pull)</td><td>Write-time for low-fanout (< 10K followers). Read-time or hybrid for high-fanout. The break-even point depends on read/write ratio and fanout count.</td></tr>
+          <tr><td><strong>Collab sync</strong></td><td>OT (Google Docs)</td><td>CRDTs (Yjs, Automerge)</td><td>CRDTs are easier to implement correctly today — use Yjs for rich text. OT requires a central authority server and complex transformation logic. New products should default to CRDTs.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="antipatterns">
+      <div class="section-label">What Not to Do</div>
+      <h2 class="section-title">Real-Time Anti-patterns</h2>
+      <div class="antipattern-list">
+        <div class="ap-item"><h4>Polling Instead of Push</h4><p>Polling /api/messages every second when you have 1M users = 1M req/sec unnecessary load. WebSocket or SSE push reduces this to near-zero (connections are idle between events).</p></div>
+        <div class="ap-item"><h4>No Reconnection Logic</h4><p>WebSocket disconnects happen (pod restart, network blip). Clients must reconnect with exponential backoff + replay missed messages using a cursor/sequence number.</p></div>
+        <div class="ap-item"><h4>Event Sourcing Everywhere</h4><p>Applying event sourcing to user profiles, product catalog, and settings. The complexity of replaying events and evolving schemas is justified only where audit trails are truly necessary.</p></div>
+        <div class="ap-item"><h4>Storing Mutable State in Events</h4><p>Events must be immutable. Never update an event record — if you need to correct, emit a compensating event ("OrderCancelled" doesn't modify "OrderPlaced"). The log is append-only.</p></div>
+        <div class="ap-item"><h4>Recomputing Projections Synchronously</h4><p>Replaying all events to get the current balance on every request is O(N) per read. Use snapshots (store state every 100 events) and maintain a precomputed read model for frequent queries.</p></div>
+        <div class="ap-item"><h4>No Backpressure for WebSockets</h4><p>Flooding a slow client with messages faster than it can consume. Implement per-connection send queues with max depth. If queue overflows, close the connection — the client reconnects and re-syncs.</p></div>
+        <div class="ap-item"><h4>WebSocket Without Auth</h4><p>Upgrading any HTTP connection to WebSocket without validating the JWT first. Validate credentials during the HTTP upgrade handshake before the WS connection is established.</p></div>
+        <div class="ap-item"><h4>Same Server for Game State and API</h4><p>Game state servers need UDP, stateful connections, and are latency-sensitive. API servers need HTTP, are stateless, and optimize for throughput. Run them on separate infrastructure with different scaling policies.</p></div>
+      </div>
+    </section>
+
+    <section id="interview">
+      <div class="section-label">Interview Prep</div>
+      <h2 class="section-title">Interview Tips</h2>
+      <div class="tip-list">
+        <div class="tip-item"><h4>WebSocket vs SSE Decision</h4><p>Interviewers often ask "how would you push updates to clients?" Know the tradeoffs: SSE for one-way (simpler), WebSocket for bidirectional. Don't default to WebSocket for everything.</p></div>
+        <div class="tip-item"><h4>Fan-out Math</h4><p>If asked "design Twitter," calculate: 300M users, avg 200 followers = fan-out at write is fine. But Katy Perry (150M followers) × 1 tweet = 150M writes. That's the celebrity problem — hybrid approach.</p></div>
+        <div class="tip-item"><h4>Event Sourcing is a Trade-off</h4><p>Don't present event sourcing as always superior. Present it as a specific tool for specific needs (audit, regulatory). Say "I'd use it for the payment ledger but not the user profile service."</p></div>
+        <div class="tip-item"><h4>Idempotency in Event Systems</h4><p>Kafka delivers events "at least once." Consumers must be idempotent — processing the same event twice has the same result as processing it once. Show you know this and have a pattern (check event_id before applying).</p></div>
+        <div class="tip-item"><h4>Mention Sticky Sessions for WS</h4><p>WebSocket pods are stateful (hold open connections). Load balancers must use sticky routing — a reconnecting client must reach the same pod or be re-subscribed. This is a common scaling pitfall.</p></div>
+        <div class="tip-item"><h4>CQRS without Event Sourcing</h4><p>CQRS and event sourcing are often paired but independent. You can have CQRS (separate read/write models) with a traditional relational database. Interviewers appreciate knowing the distinction.</p></div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="notes-sidebar">
+    <div class="notes-sticky">
+      <div class="notes-heading">Clarifications</div>
+      <div class="note-item" data-section="event-driven">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is eventual consistency?</div></div>
+        <div class="note-body">Eventual consistency means that if no new updates are made, all replicas will eventually agree on the same value — but there's a window where they disagree. Example: you post a tweet, and for 100ms your follower's feed doesn't show it, then it appears. This is fine for social feeds but not for bank balances (which need strong consistency).</div>
+      </div>
+      <div class="note-item" data-section="websockets">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is TCP vs UDP?</div></div>
+        <div class="note-body">TCP (Transmission Control Protocol) guarantees reliable, ordered delivery — lost packets are retransmitted. Good for web, email, databases. UDP (User Datagram Protocol) is "fire and forget" — packets may be lost, arrive out of order, and there's no retransmission. Games use UDP because an old game state (lost packet) is worse than a new one (next packet). Speed over reliability.</div>
+      </div>
+      <div class="note-item" data-section="event-sourcing">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is an idempotency key?</div></div>
+        <div class="note-body">An idempotency key is a unique ID the client generates and sends with a request. If the server processes the request (or has already processed it), it stores the result under that key. If the client retries (after a network failure), the server returns the same result without processing twice. Stripe uses this for payments — retrying "charge $100" with the same key doesn't double-charge.</div>
+      </div>
+      <div class="note-item" data-section="cqrs">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is a projection in event sourcing?</div></div>
+        <div class="note-body">A projection is a read model built by consuming and transforming events. Example: consume all "PaymentReceived" events → maintain a "total_revenue_per_day" table. Projections are always derived — you can delete and rebuild them by replaying the event log. This means you can add new reporting requirements without touching the write model.</div>
+      </div>
+      <div class="note-item" data-section="fan-out">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is APNs and FCM?</div></div>
+        <div class="note-body">APNs (Apple Push Notification service) is Apple's system for delivering push notifications to iOS/macOS devices. FCM (Firebase Cloud Messaging) is Google's system for Android. When an app is backgrounded, you can't send WebSocket messages — instead you push a notification via these services, which the OS delivers to the device, waking the app if needed.</div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<footer style="background:#0f172a;color:#64748b;text-align:center;padding:2rem;font-size:.85rem;margin-top:3rem;">
+  <p>KnowAlgo · <a href="system-design.html" style="color:#fb7185;text-decoration:none;">System Design Home</a> · <a href="index.html" style="color:#fb7185;text-decoration:none;">DSA Home</a></p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+window.addEventListener('scroll', () => { document.getElementById('progress-bar').style.width = (window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100) + '%'; });
+document.querySelectorAll('section[id]').forEach(s => new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { document.querySelectorAll('.toc-nav a').forEach(l=>l.classList.remove('active')); const a=document.querySelector(`.toc-nav a[href="#${e.target.id}"]`); if(a)a.classList.add('active'); }}); }, {rootMargin:'-10% 0px -80% 0px'}).observe(s));
+document.querySelectorAll('.copy-btn').forEach(btn => { btn.addEventListener('click', () => { navigator.clipboard.writeText(btn.nextElementSibling.querySelector('code').textContent).then(() => { btn.textContent='Copied!'; setTimeout(()=>btn.textContent='Copy',2000); }); }); });
+const noteItems = document.querySelectorAll('.note-item[data-section]');
+if (noteItems.length) {
+  const noteObs = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { const id=e.target.id; noteItems.forEach(n=>{ const m=n.dataset.section===id; n.classList.toggle('active',m); if(m)n.classList.add('open'); else n.classList.remove('open'); }); }}); }, {rootMargin:'-10% 0px -55% 0px'});
+  document.querySelectorAll('[id]').forEach(el=>noteObs.observe(el));
+  noteItems.forEach(n=>n.querySelector('.note-head').addEventListener('click',()=>n.classList.toggle('open')));
+}
+</script>
+</body>
+</html>

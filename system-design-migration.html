@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Migration & System Evolution – Pattern 11 | KnowAlgo System Design</title>
+<meta name="description" content="Strangler fig, blue-green deployments, database migrations, feature flags, and zero-downtime system evolution strategies.">
+<link rel="canonical" href="https://knowalgo.netlify.app/system-design-migration.html">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2Z1EQCZBXH');</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<style>
+:root {
+  --primary: #92400e;
+  --primary-dark: #451a03;
+  --primary-light: #fef3c7;
+  --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+  --bg: #f8fafc; --card-bg: #ffffff; --radius: 12px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: system-ui,-apple-system,sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(to right, #92400e, #7c3aed); z-index: 9999; transition: width .1s; }
+.site-header { background: #0f172a; padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 3px; z-index: 100; }
+.site-header a.logo { color: #f1f5f9; font-weight: 800; font-size: 1.1rem; text-decoration: none; }
+.site-header nav a { color: #94a3b8; text-decoration: none; font-size: .88rem; margin-left: 1.5rem; }
+.site-header nav a:hover { color: #f1f5f9; }
+.hero { background: linear-gradient(135deg, #0f172a 0%, #1c0a00 45%, #2e1065 100%); color: #fff; padding: 3.5rem 2rem 3rem; }
+.hero-badge { display: inline-flex; align-items: center; gap: .5rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 20px; padding: .3rem .9rem; font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #fde68a; margin-bottom: 1.2rem; }
+.hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.15; margin-bottom: .8rem; }
+.hero h1 span { color: #fbbf24; }
+.hero p { font-size: 1.08rem; color: #fde68a; max-width: 680px; margin-bottom: 1.5rem; }
+.hero-tags { display: flex; flex-wrap: wrap; gap: .5rem; }
+.hero-tag { background: rgba(255,255,255,.12); border-radius: 20px; padding: .25rem .75rem; font-size: .78rem; color: #fef3c7; }
+.page-body { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; display: grid; grid-template-columns: 240px 1fr 220px; gap: 2rem; align-items: start; }
+.toc-sidebar { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.toc-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.toc-title { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); margin-bottom: .9rem; }
+.toc-nav a { display: block; font-size: .82rem; color: var(--text-muted); text-decoration: none; padding: .28rem .5rem; border-radius: 6px; border-left: 2px solid transparent; transition: all .2s; margin-bottom: 2px; }
+.toc-nav a:hover, .toc-nav a.active { color: var(--primary); border-left-color: var(--primary); background: var(--primary-light); }
+.toc-divider { height: 1px; background: var(--border); margin: .6rem 0; }
+.toc-nav-links { display: flex; gap: .5rem; margin-top: .8rem; }
+.toc-nav-links a { flex: 1; text-align: center; font-size: .72rem; font-weight: 600; color: var(--primary); background: var(--primary-light); border-radius: 6px; padding: .35rem .4rem; text-decoration: none; }
+.main-content section { margin-bottom: 3rem; }
+.section-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--primary); margin-bottom: .5rem; }
+.section-title { font-size: 1.6rem; font-weight: 800; color: var(--text); margin-bottom: 1rem; line-height: 1.2; }
+.section-intro { font-size: 1rem; color: var(--text-muted); margin-bottom: 1.5rem; max-width: 760px; }
+.concept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.concept-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.concept-card h4 { font-size: .95rem; font-weight: 700; color: var(--text); margin-bottom: .4rem; }
+.concept-card p { font-size: .85rem; color: var(--text-muted); }
+.concept-card .cc-icon { font-size: 1.4rem; margin-bottom: .5rem; }
+.arch-diagram { background: #ffffff; border: 1px solid #cbd5e1; border-radius: var(--radius); padding: 1.25rem; margin: 1rem 0; font-family: monospace; font-size: .8rem; overflow-x: auto; line-height: 1.6; white-space: pre; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.arch-diagram .cm { color: #94a3b8; font-style: italic; }
+.arch-diagram .lb { color: #92400e; font-weight: 700; }
+.arch-diagram .sv { color: #166534; font-weight: 700; }
+.arch-diagram .db { color: #5b21b6; font-weight: 700; }
+.arch-diagram .ca { color: #9a3412; font-weight: 700; }
+.arch-diagram .er { color: #991b1b; font-weight: 700; }
+.arch-diagram .em { color: #065f46; font-weight: 700; }
+.arch-diagram .bl { color: #1e40af; font-weight: 700; }
+.arch-diagram .pk { color: #be185d; font-weight: 700; }
+.arch-diagram .ok { color: #166534; }
+.arch-diagram .or { color: #9a3412; }
+.arch-diagram .rd { color: #991b1b; }
+.code-block { position: relative; margin: 1rem 0; border-radius: var(--radius); overflow: hidden; }
+.code-block pre { margin: 0 !important; border-radius: var(--radius) !important; font-size: .82rem !important; }
+.copy-btn { position: absolute; top: .6rem; right: .6rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #94a3b8; font-size: .72rem; padding: .25rem .6rem; border-radius: 6px; cursor: pointer; }
+.copy-btn:hover { background: rgba(255,255,255,.2); color: #fff; }
+.data-table { width: 100%; border-collapse: collapse; font-size: .88rem; margin: 1rem 0; background: var(--card-bg); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.data-table th { background: var(--primary); color: #fff; padding: .7rem 1rem; text-align: left; font-size: .8rem; font-weight: 700; }
+.data-table td { padding: .65rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: #fafaf9; }
+.eng-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+.eng-take { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.et-sre { border-left-color: #0369a1; } .et-backend { border-left-color: #7c3aed; } .et-security { border-left-color: #dc2626; }
+.et-data { border-left-color: #059669; } .et-platform { border-left-color: #d97706; } .et-ml { border-left-color: #db2777; }
+.et-frontend { border-left-color: #0891b2; } .et-mobile { border-left-color: #16a34a; } .et-architect { border-left-color: #475569; }
+.eng-role { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: .3rem; }
+.eng-take p { font-size: .85rem; color: var(--text); }
+.problem-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; box-shadow: var(--shadow-sm); }
+.problem-header { padding: 1.25rem 1.5rem; background: linear-gradient(135deg, #92400e, #5b21b6); border-bottom: none; }
+.problem-num { font-size: .78rem; font-weight: 700; color: #fde68a; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem; }
+.problem-title { font-size: 1.15rem; font-weight: 700; color: #f1f5f9; margin-bottom: .5rem; }
+.ptags { display: flex; flex-wrap: wrap; gap: .4rem; }
+.ptag { background: rgba(255,255,255,.15); color: #fef3c7; font-size: .72rem; font-weight: 600; padding: .2rem .55rem; border-radius: 10px; }
+.problem-body { padding: 1.5rem; }
+.problem-body h4 { font-size: .9rem; font-weight: 700; color: var(--text); margin: 1rem 0 .4rem; }
+.problem-body p { font-size: .9rem; color: var(--text-muted); margin-bottom: .75rem; }
+.antipattern-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.ap-item { background: #fff5f5; border: 1px solid #fecaca; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.ap-item h4 { font-size: .9rem; font-weight: 700; color: #991b1b; margin-bottom: .3rem; }
+.ap-item p { font-size: .83rem; color: #7f1d1d; }
+.tip-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.tip-item { background: var(--primary-light); border: 1px solid #fde68a; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.tip-item h4 { font-size: .9rem; font-weight: 700; color: var(--primary-dark); margin-bottom: .3rem; }
+.tip-item p { font-size: .83rem; color: #451a03; }
+.notes-sidebar { align-self: start; }
+.notes-sticky { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.notes-heading { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: 10px; }
+.note-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: border-color .25s; }
+.note-item.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(146,64,14,.07); }
+.note-head { display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px; cursor: pointer; }
+.note-bullet { width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: .78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: transform .2s; }
+.note-item.open .note-bullet { transform: rotate(45deg); }
+.note-label { font-size: .78rem; font-weight: 600; color: #1e293b; flex: 1; line-height: 1.35; }
+.note-body { display: none; font-size: .76rem; color: #475569; line-height: 1.55; padding: 0 11px 11px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+.note-item.open .note-body, .note-item.active .note-body { display: block; }
+@media (max-width: 1150px) { .notes-sidebar { display: none !important; } .page-body { grid-template-columns: 240px 1fr !important; } }
+@media (max-width: 768px) { .page-body { grid-template-columns: 1fr !important; } .toc-sidebar { display: none; } }
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<header class="site-header">
+  <a href="index.html" class="logo">KnowAlgo</a>
+  <nav>
+    <a href="index.html">DSA</a>
+    <a href="system-design.html">System Design</a>
+    <a href="interview-prep.html">Interview Prep</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div style="max-width:1400px;margin:0 auto;padding:0 1.5rem">
+    <div class="hero-badge"><span>🔄</span> Pattern 11 of 16 · System Design</div>
+    <h1>Migration &amp; <span>System Evolution</span></h1>
+    <p>Strangler fig, blue-green deployments, database migrations, feature flags, and zero-downtime strategies for evolving large systems without burning them down.</p>
+    <div class="hero-tags">
+      <span class="hero-tag">Strangler Fig</span>
+      <span class="hero-tag">Blue-Green Deploy</span>
+      <span class="hero-tag">Canary Releases</span>
+      <span class="hero-tag">Database Migration</span>
+      <span class="hero-tag">Feature Flags</span>
+      <span class="hero-tag">Backward Compatibility</span>
+      <span class="hero-tag">Expand/Contract</span>
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+  <aside class="toc-sidebar">
+    <div class="toc-card">
+      <div class="toc-title">On this page</div>
+      <nav class="toc-nav">
+        <a href="#why-hard">Why Migration is Hard</a>
+        <a href="#strangler">Strangler Fig</a>
+        <a href="#deployments">Deployment Strategies</a>
+        <a href="#feature-flags">Feature Flags</a>
+        <a href="#db-migration">Database Migration</a>
+        <a href="#backward-compat">Backward Compatibility</a>
+        <a href="#monolith-breakup">Monolith Breakup</a>
+        <div class="toc-divider"></div>
+        <a href="#perspectives">Engineer Perspectives</a>
+        <a href="#problems">Real Problems</a>
+        <a href="#tradeoffs">Trade-offs</a>
+        <a href="#antipatterns">Anti-patterns</a>
+        <a href="#interview">Interview Tips</a>
+      </nav>
+      <div class="toc-nav-links">
+        <a href="system-design-observability.html">← Observability</a>
+        <a href="system-design-platform.html">Platform →</a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <section id="why-hard">
+      <div class="section-label">Foundation</div>
+      <h2 class="section-title">Why Migration is Hard</h2>
+      <p class="section-intro">Migrating a live system is like rebuilding a plane while flying it. You cannot take production offline, you have years of implicit behavior in the old system, and data must remain consistent throughout. The goal is incremental, reversible steps.</p>
+
+      <div class="concept-grid">
+        <div class="concept-card"><div class="cc-icon">✈️</div><h4>No Big Bang Rewrites</h4><p>Full rewrites fail 90% of the time. The new system has to replicate years of undocumented edge cases. Incremental migration preserves working behavior while replacing internals.</p></div>
+        <div class="concept-card"><div class="cc-icon">🔁</div><h4>Data is the Hard Part</h4><p>Code can be rewritten quickly. Data — its schema, its relationships, its history — must migrate safely with zero loss and zero corruption. This is the bottleneck in every migration.</p></div>
+        <div class="concept-card"><div class="cc-icon">↩️</div><h4>Always Have Rollback</h4><p>Every migration step must be reversible. If step 3 goes wrong, you need to roll back to step 2 without losing data written after step 2. Design every step with rollback in mind.</p></div>
+        <div class="concept-card"><div class="cc-icon">🐢</div><h4>Incremental over Atomic</h4><p>Atomic migrations ("switch everything at once") maximize risk. Incremental migrations move one slice at a time — one service, one table, one endpoint — and validate before moving on.</p></div>
+      </div>
+    </section>
+
+    <section id="strangler">
+      <div class="section-label">Core Pattern</div>
+      <h2 class="section-title">Strangler Fig Pattern</h2>
+      <p class="section-intro">Named after the strangler fig vine, which grows around a tree until it replaces it. A proxy sits in front of the legacy system. New functionality is built in the new system. Traffic is gradually routed from legacy to new until the legacy dies off.</p>
+
+      <div class="arch-diagram"><span class="cm">Strangler Fig: proxy intercepts and routes</span>
+
+<span class="cm">Phase 1: Legacy handles everything</span>
+                     ┌─────────────────┐
+Users ──────────────►│  Legacy Monolith │
+                     │  (all features)  │
+                     └─────────────────┘
+
+<span class="cm">Phase 2: Proxy added. New service handles /payments only</span>
+                     ┌──────────────────────┐
+Users ──────────────►│  API Gateway / Proxy  │
+                     └──────────┬───────────┘
+             /payments │                    │ /everything-else
+                        ▼                    ▼
+              ┌──────────────────┐  ┌─────────────────┐
+              │  Payment Service │  │  Legacy Monolith │
+              │  (new, Go)       │  │  (shrinking)     │
+              └──────────────────┘  └─────────────────┘
+
+<span class="cm">Phase 3: More routes migrated. Legacy handles only edge cases</span>
+                     ┌──────────────────────┐
+Users ──────────────►│  API Gateway / Proxy  │
+                     └──────────────────────┘
+              /payments ▼   /orders ▼   /users ▼     /legacy-admin ▼
+              ┌────────┐  ┌────────┐  ┌────────┐    ┌─────────────┐
+              │Pay Svc │  │Ord Svc │  │Usr Svc │    │   Legacy    │
+              └────────┘  └────────┘  └────────┘    │  (tiny now) │
+                                                     └─────────────┘
+<span class="cm">Phase 4: Legacy decommissioned. Migration complete.</span></div>
+
+      <div class="concept-grid">
+        <div class="concept-card"><h4>Facade / Proxy Layer</h4><p>The proxy is the key — it lets you reroute traffic without changing clients. Can be an API gateway (Kong, Nginx), a BFF, or a dedicated routing service. Routing rules change with feature flags.</p></div>
+        <div class="concept-card"><h4>Anti-Corruption Layer (ACL)</h4><p>When new service calls old service, the ACL translates between old and new data models. Prevents the old model's concepts from leaking into the new design. Delete the ACL when the old service is gone.</p></div>
+        <div class="concept-card"><h4>Branch by Abstraction</h4><p>Create an interface in the monolith. Old code → old implementation. New code → new implementation behind the same interface. Toggle which implementation is active via feature flag.</p></div>
+      </div>
+    </section>
+
+    <section id="deployments">
+      <div class="section-label">Release Strategies</div>
+      <h2 class="section-title">Deployment Strategies</h2>
+      <p class="section-intro">Different strategies balance speed of rollout vs. blast radius. The right choice depends on how confident you are in the change and how easily you can roll back.</p>
+
+      <div class="arch-diagram"><span class="cm">Deployment strategy comparison</span>
+
+<span class="bl">Blue-Green</span>
+  Blue (v1, live)   Green (v2, idle)
+  ┌────────────┐    ┌────────────┐
+  │ App v1 ×3  │    │ App v2 ×3  │
+  └────────────┘    └────────────┘
+  Load Balancer ──► Blue (100% traffic)
+  After smoke test: Load Balancer ──► Green (100%)
+  Rollback: Load Balancer ──► Blue (instant, 0 downtime)
+  <span class="cm">Cost: 2× infrastructure during switchover</span>
+
+<span class="sv">Canary</span>
+  Load Balancer → 95% → App v1 (stable)
+                → 5%  → App v2 (canary)
+  Watch metrics. If OK → 10% → 25% → 50% → 100%
+  If bad → 0% canary (instant rollback)
+  <span class="cm">Best for: validating changes on real traffic before full rollout</span>
+
+<span class="em">Rolling</span>
+  Take v1 instances offline one-by-one, replace with v2
+  [v1][v1][v1] → [v2][v1][v1] → [v2][v2][v1] → [v2][v2][v2]
+  Both versions run simultaneously during rollout
+  <span class="cm">Requires backward compatibility between v1 and v2 during overlap</span>
+
+<span class="lb">Shadow / Dark Launch</span>
+  Live traffic goes to v1 (returns response to user)
+  Same traffic mirrored to v2 (response discarded)
+  v2 processes real load but doesn't affect users
+  <span class="cm">Validates performance and correctness with zero user risk</span></div>
+
+      <table class="data-table">
+        <thead><tr><th>Strategy</th><th>Rollback Speed</th><th>Cost</th><th>Best For</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Blue-Green</strong></td><td>Instant (LB switch)</td><td>2× infra</td><td>High-stakes releases, databases with schema changes already applied</td></tr>
+          <tr><td><strong>Canary</strong></td><td>Fast (reduce %)</td><td>Minimal</td><td>Validating risky changes on real traffic, user-facing features</td></tr>
+          <tr><td><strong>Rolling</strong></td><td>Slow (re-roll)</td><td>None</td><td>Stateless services, backward-compatible changes</td></tr>
+          <tr><td><strong>Shadow</strong></td><td>N/A (not live)</td><td>2× compute</td><td>Testing new algorithms, validating ML models, perf testing</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="feature-flags">
+      <div class="section-label">Controlled Rollouts</div>
+      <h2 class="section-title">Feature Flags</h2>
+      <p class="section-intro">Feature flags decouple deployment from release. Code is deployed to production but behind a flag — disabled by default. The flag is enabled for specific users/groups/percentages without a new deployment.</p>
+
+      <div class="arch-diagram"><span class="cm">Feature flag types and use cases</span>
+
+<span class="bl">Release flags</span>: ship code before it's ready to release
+  if flag("new_checkout_flow").enabled_for(user):
+      return new_checkout()
+  return old_checkout()
+
+<span class="sv">Experiment flags</span>: A/B testing
+  variant = flag("pricing_display").variant_for(user)
+  if variant == "B":
+      show_yearly_price_first()  <span class="cm"># test if conversion improves</span>
+
+<span class="em">Ops flags</span>: kill switch for performance/emergencies
+  if flag("use_redis_cache").enabled():
+      return cache.get(key) or fetch_and_cache(key)
+  return db.fetch(key)  <span class="cm"># if Redis dies, disable flag instantly</span>
+
+<span class="lb">Permission flags</span>: beta features for specific users/tenants
+  if flag("advanced_analytics").enabled_for(tenant_id):
+      return analytics_v2()
+
+<span class="cm">Flag services: LaunchDarkly, Unleash (open-source), GrowthBook, Flagsmith</span>
+<span class="cm">Key: flags must be evaluated fast (< 1ms). Client-side SDK caches flag state locally.</span>
+<span class="cm">Flag cleanup: set a cleanup date when creating. Flags that aren't deleted accumulate as tech debt.</span></div>
+
+      <div class="code-block">
+        <button class="copy-btn">Copy</button>
+        <pre><code class="language-python">from launchdarkly_client import LDClient, Context
+
+ld = LDClient("sdk-key-...")
+
+def checkout(user_id: str, cart: Cart):
+    # Build evaluation context (replaces deprecated "user" model)
+    ctx = Context.builder(user_id).name("user").build()
+
+    # Evaluate flag — returns True/False (or variant for multivariate flags)
+    use_new_flow = ld.variation("new_checkout_flow", ctx, default=False)
+
+    if use_new_flow:
+        return new_checkout_v2(cart)
+    return legacy_checkout(cart)
+
+# Percentage rollout: start at 1% → 5% → 25% → 50% → 100%
+# No deployment needed at each step. Instant rollback: set to 0%.
+
+# Gradual rollout with user bucketing (sticky — same user always gets same variant)
+# LaunchDarkly hashes user_id + flag_key → deterministic bucket assignment
+# User 123 always sees new_flow=True once they're in the 25% bucket
+
+# Cleanup: once at 100% for 2 weeks with no issues, remove the flag and old code path
+</code></pre>
+      </div>
+    </section>
+
+    <section id="db-migration">
+      <div class="section-label">Schema Evolution</div>
+      <h2 class="section-title">Database Migration</h2>
+      <p class="section-intro">The expand/contract pattern (also called parallel change) is the safest way to change a database schema on a live system. It separates schema changes from code changes into multiple deployable steps.</p>
+
+      <div class="arch-diagram"><span class="cm">Expand/Contract: renaming a column (users.full_name → first_name + last_name)</span>
+
+<span class="bl">Step 1: EXPAND — add new columns (non-breaking)</span>
+  ALTER TABLE users ADD COLUMN first_name VARCHAR(100);
+  ALTER TABLE users ADD COLUMN last_name  VARCHAR(100);
+  <span class="cm">Deploy: app writes to BOTH old full_name AND new first_name/last_name</span>
+  <span class="cm">Reads still come from full_name</span>
+
+<span class="sv">Step 2: BACKFILL — populate new columns for existing rows</span>
+  UPDATE users
+  SET first_name = SPLIT_PART(full_name, ' ', 1),
+      last_name  = TRIM(SUBSTRING(full_name FROM POSITION(' ' IN full_name)))
+  WHERE first_name IS NULL;
+  <span class="cm">Run in batches (1000 rows at a time) to avoid lock escalation</span>
+
+<span class="em">Step 3: MIGRATE READS — app reads from new columns</span>
+  <span class="cm">Deploy: reads switch to first_name + last_name</span>
+  <span class="cm">Writes still go to BOTH columns (backward compatibility)</span>
+  <span class="cm">Monitor for a week: if rollback needed, reads still work on full_name</span>
+
+<span class="lb">Step 4: CONTRACT — remove old column</span>
+  <span class="cm">Deploy: app no longer writes to full_name</span>
+  ALTER TABLE users DROP COLUMN full_name;
+  <span class="cm">Only safe to do after all read traffic has moved away</span>
+
+<span class="cm">Each step is independently deployable and reversible. Never combine steps into one deployment.</span></div>
+
+      <table class="data-table">
+        <thead><tr><th>Migration Type</th><th>Safe?</th><th>Technique</th></tr></thead>
+        <tbody>
+          <tr><td>Add nullable column</td><td>✅ Safe</td><td>Deploy anytime — existing rows get NULL, no lock</td></tr>
+          <tr><td>Add NOT NULL column</td><td>⚠️ Risky</td><td>Add nullable first, backfill, add NOT NULL constraint after</td></tr>
+          <tr><td>Add index on large table</td><td>⚠️ Risky</td><td>Use CREATE INDEX CONCURRENTLY (Postgres) — no table lock</td></tr>
+          <tr><td>Rename column</td><td>❌ Breaking</td><td>Expand/contract: add new, backfill, migrate reads, drop old</td></tr>
+          <tr><td>Change column type</td><td>❌ Breaking</td><td>Add new column with new type, dual-write, migrate, drop old</td></tr>
+          <tr><td>Delete column</td><td>❌ Breaking</td><td>Remove from app first (deploy), then ALTER TABLE DROP</td></tr>
+          <tr><td>Split table</td><td>❌ Breaking</td><td>Create new tables, dual-write with triggers, migrate reads, drop old</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="backward-compat">
+      <div class="section-label">API Evolution</div>
+      <h2 class="section-title">Backward Compatibility</h2>
+      <p class="section-intro">During a rolling or canary deployment, old and new versions of a service run simultaneously and must interoperate. API changes must be backward-compatible, or you create a deployment window where the system is broken.</p>
+
+      <div class="arch-diagram"><span class="cm">Rules for backward-compatible API changes</span>
+
+<span class="ok">SAFE (additive) changes:</span>
+  ✅ Add new optional request field    (old clients don't send it → default used)
+  ✅ Add new response field            (old clients ignore unknown fields)
+  ✅ Add new API endpoint              (old clients never call it)
+  ✅ Add new enum value                (if old clients handle unknown values gracefully)
+
+<span class="er">BREAKING changes (require versioning or expand/contract):</span>
+  ❌ Remove or rename field            (old clients break)
+  ❌ Change field type                 (int → string)
+  ❌ Make optional field required      (old clients not sending it fail)
+  ❌ Change behavior of existing call  (old clients get unexpected results)
+
+<span class="cm">Postel's Law (Robustness Principle):</span>
+  "Be conservative in what you send, liberal in what you accept."
+  → Accept unknown fields silently (don't error)
+  → Never send fields that old consumers can't handle
+
+<span class="lb">Versioning strategies when breaking change is unavoidable:</span>
+  URI versioning:    /v1/orders vs /v2/orders        <span class="cm">← most common</span>
+  Header versioning: Accept: application/vnd.acme.v2+json
+  Query param:       GET /orders?api_version=2024-01-01
+  Run both versions simultaneously until all consumers migrate</div>
+    </section>
+
+    <section id="monolith-breakup">
+      <div class="section-label">Architecture Evolution</div>
+      <h2 class="section-title">Breaking Up a Monolith</h2>
+      <p class="section-intro">Microservices decomposition is often more about organizational structure than technical need. Don't split prematurely — a well-structured monolith beats a poorly-designed microservices architecture every time.</p>
+
+      <div class="arch-diagram"><span class="cm">When to split: signals that a monolith is ready</span>
+
+<span class="er">Signs a monolith needs splitting:</span>
+  • Deploy friction: one team's change blocks another team's deploy
+  • Scale mismatch: one component needs 10× more resources than the rest
+  • Technology constraint: one part needs GPU, another needs fast GC
+  • Team autonomy: 8+ engineers blocked on the same codebase
+  • Fault isolation: one bug crashes the entire system
+
+<span class="ok">How to split safely:</span>
+  1. Identify a bounded context (clear domain ownership)
+  2. Extract to a library / internal module first (no network calls)
+  3. Apply strangler fig: route new traffic to extracted service
+  4. Migrate the database last (data is hardest)
+  5. Decommission monolith code once 100% traffic migrated
+
+<span class="cm">Martin Fowler: "Don't start with microservices. Start with a modular monolith."</span>
+<span class="cm">Sam Newman: split on team ownership boundaries, not technical layers</span></div>
+    </section>
+
+    <section id="perspectives">
+      <div class="section-label">9 Viewpoints</div>
+      <h2 class="section-title">Engineer Perspectives</h2>
+      <div class="eng-grid">
+        <div class="eng-take et-architect"><div class="eng-role">Architect</div><p>The strangler fig requires a proxy layer from day one. If you can't intercept traffic, you can't redirect it. Negotiate the proxy into the initial architecture before the migration begins.</p></div>
+        <div class="eng-take et-backend"><div class="eng-role">Backend Engineer</div><p>Dual-write is more complex than it looks. Write order matters: write to new system first (if it fails, don't write to old). Validate data consistency between both systems daily during the migration window.</p></div>
+        <div class="eng-take et-sre"><div class="eng-role">SRE</div><p>Feature flag rollbacks are your fastest safety net. During a migration, keep the flag at 5% for a day, watch error rates, then advance. Each increment is a checkpoint.</p></div>
+        <div class="eng-take et-data"><div class="eng-role">Data Engineer</div><p>Database migrations are the riskiest step. Always run the migration on a production replica first. Time the backfill on real data volume — 1M rows might take 10 minutes; 1B rows might take 3 days.</p></div>
+        <div class="eng-take et-platform"><div class="eng-role">Platform Engineer</div><p>Canary deployments need infrastructure support: weighted load balancing in the service mesh or load balancer, automated rollback triggers tied to SLO alerts, and separate log streams per version.</p></div>
+        <div class="eng-take et-security"><div class="eng-role">Security Engineer</div><p>Feature flags that gate security controls (auth, encryption) need tighter review. A flag accidentally left off could disable auth for 5% of traffic. Require security flags to default to the secure state.</p></div>
+        <div class="eng-take et-frontend"><div class="eng-role">Frontend Engineer</div><p>Frontend feature flags can be evaluated client-side (fast) but the flag state must be treated as untrusted for anything security-sensitive. Always enforce access control server-side.</p></div>
+        <div class="eng-take et-mobile"><div class="eng-role">Mobile Engineer</div><p>Mobile clients can't be forced to update. Old app versions can persist for months. API changes must be backward compatible for at least 2 major versions back. Don't remove fields — mark deprecated and add new ones.</p></div>
+        <div class="eng-take et-ml"><div class="eng-role">ML Engineer</div><p>Shadow deployment is perfect for model migrations. Run the new model on all traffic, log its predictions, compare against ground truth, then flip the switch when confident in its quality.</p></div>
+      </div>
+    </section>
+
+    <section id="problems">
+      <div class="section-label">Real Problems</div>
+      <h2 class="section-title">Migration Design Problems</h2>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 01 · DB Migration</div>
+          <div class="problem-title">Rename a column in a 500M-row table with zero downtime</div>
+          <div class="ptags"><span class="ptag">Expand/Contract</span><span class="ptag">Postgres</span><span class="ptag">Zero-Downtime</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Scenario</h4>
+          <p>Table <code>orders</code> has column <code>total_amount</code>. We want to rename it to <code>amount_cents</code> (also converting from dollars to cents). 500M rows, 10K requests/sec. Cannot have downtime.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python">import psycopg2, time
+
+# Step 1: EXPAND - Add new column (takes seconds, no table lock)
+# Run this SQL directly, no app deploy needed
+"""
+ALTER TABLE orders ADD COLUMN amount_cents BIGINT;
+CREATE INDEX CONCURRENTLY idx_orders_amount_cents ON orders(amount_cents);
+"""
+
+# Step 2: Deploy app v2 - dual-write to BOTH columns
+class OrderRepository:
+    def create_order(self, amount_dollars: float) -> dict:
+        amount_cents_val = int(amount_dollars * 100)
+        self.db.execute("""
+            INSERT INTO orders (total_amount, amount_cents)
+            VALUES (%s, %s)
+            RETURNING id
+        """, (amount_dollars, amount_cents_val))
+
+    def update_order(self, order_id: int, amount_dollars: float):
+        amount_cents_val = int(amount_dollars * 100)
+        self.db.execute("""
+            UPDATE orders
+            SET total_amount = %s, amount_cents = %s
+            WHERE id = %s
+        """, (amount_dollars, amount_cents_val, order_id))
+
+# Step 3: BACKFILL old rows in batches (don't lock the table)
+def backfill_amount_cents(conn, batch_size=10_000):
+    last_id = 0
+    while True:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE orders
+                SET amount_cents = (total_amount * 100)::BIGINT
+                WHERE id > %s
+                  AND amount_cents IS NULL
+                ORDER BY id
+                LIMIT %s
+                RETURNING id
+            """, (last_id, batch_size))
+            rows = cur.fetchall()
+            conn.commit()
+
+            if not rows:
+                break
+            last_id = rows[-1][0]
+            time.sleep(0.05)  # throttle to avoid overwhelming DB
+
+# Step 4: Deploy app v3 - READS switch to amount_cents, still write both
+# Step 5: Monitor for 1 week. Confirm no reads touch total_amount.
+# Step 6: Deploy app v4 - stop writing to total_amount
+# Step 7: DROP COLUMN (safe now — no reads or writes)
+"""
+ALTER TABLE orders DROP COLUMN total_amount;
+"""
+</code></pre>
+          </div>
+          <h4>Key Invariants</h4>
+          <p>Each step is deployed independently. Rollback at any step is possible: step 3 → drop amount_cents, redeploy app v1. The backfill runs on the production replica first to measure duration.</p>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 02 · Strangler Fig</div>
+          <div class="problem-title">Extract the payment service from a PHP monolith using strangler fig</div>
+          <div class="ptags"><span class="ptag">Strangler Fig</span><span class="ptag">API Gateway</span><span class="ptag">Canary</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Scenario</h4>
+          <p>Monolith handles 50 endpoints. Payment processing is the most business-critical. Extract it to a Go service with no downtime and ability to rollback per-user.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python"># Kong API gateway route config (declarative)
+# Routes /v1/payments/* to new service for 5% of traffic, rest to monolith
+
+services:
+  - name: payment-service-new
+    url: http://payment-svc:8080
+
+  - name: monolith
+    url: http://monolith:3000
+
+routes:
+  - name: payments-canary
+    paths: ["/v1/payments"]
+    plugins:
+      - name: canary
+        config:
+          percentage: 5          # 5% to new service
+          upstream_fallback: monolith
+
+# Python: application-level routing with feature flag (more control)
+import httpx
+from launchdarkly_client import LDClient, Context
+
+ld = LDClient("sdk-key")
+PAYMENT_SVC = "http://payment-svc:8080"
+MONOLITH = "http://monolith:3000"
+
+async def route_payment(user_id: str, payload: dict):
+    ctx = Context.builder(user_id).build()
+    use_new_svc = ld.variation("payment_service_v2", ctx, default=False)
+
+    target = PAYMENT_SVC if use_new_svc else MONOLITH
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(f"{target}/v1/payments/charge", json=payload)
+        return resp.json()
+
+# Rollout plan:
+# Week 1: 1% canary, watch error rates
+# Week 2: 10% if error rate matches monolith
+# Week 3: 50%
+# Week 4: 100%
+# Week 5: remove monolith payment code
+</code></pre>
+          </div>
+          <h4>Anti-Corruption Layer</h4>
+          <p>The new payment service uses different data models (snake_case, cents instead of dollars). The ACL in the gateway translates between formats so neither service knows about the other's conventions.</p>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 03 · Feature Flags</div>
+          <div class="problem-title">Design a safe migration of a pricing algorithm using shadow mode + flags</div>
+          <div class="ptags"><span class="ptag">Feature Flags</span><span class="ptag">Shadow Mode</span><span class="ptag">A/B Test</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Scenario</h4>
+          <p>New ML-based pricing algorithm replaces rule-based system. Shadow mode: run both, compare outputs, don't show new prices to users yet. Validate for 2 weeks, then canary.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python">import asyncio, logging
+from dataclasses import dataclass
+
+log = logging.getLogger("pricing")
+
+@dataclass
+class PriceResult:
+    price: float
+    algorithm: str
+    latency_ms: float
+
+async def get_price(user_id: str, item_id: str) -> PriceResult:
+    use_ml = feature_flags.variation("ml_pricing", user_id, default=False)
+
+    if use_ml:
+        # Production: use ML model
+        return await ml_pricing.calculate(user_id, item_id)
+
+    # Default: rule-based (still live)
+    rule_price = await rule_based_pricing.calculate(user_id, item_id)
+
+    # Shadow mode: also run ML in background, log discrepancy
+    if feature_flags.variation("ml_pricing_shadow", user_id, default=False):
+        asyncio.create_task(
+            _shadow_compare(user_id, item_id, rule_price)
+        )
+
+    return rule_price
+
+async def _shadow_compare(user_id: str, item_id: str, rule_result: PriceResult):
+    try:
+        ml_result = await ml_pricing.calculate(user_id, item_id)
+        discrepancy_pct = abs(ml_result.price - rule_result.price) / rule_result.price * 100
+
+        log.info("shadow_comparison",
+            user_id=user_id,
+            item_id=item_id,
+            rule_price=rule_result.price,
+            ml_price=ml_result.price,
+            discrepancy_pct=round(discrepancy_pct, 2),
+            ml_latency_ms=ml_result.latency_ms,
+        )
+        # After 2 weeks: analyze logs.
+        # If avg discrepancy < 5% and p99 latency < rule-based: promote to canary
+    except Exception as e:
+        log.warning("shadow_ml_failed", error=str(e))
+</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tradeoffs">
+      <div class="section-label">Decision Framework</div>
+      <h2 class="section-title">Migration Trade-offs</h2>
+      <table class="data-table">
+        <thead><tr><th>Decision</th><th>Option A</th><th>Option B</th><th>Guidance</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Rewrite vs. Refactor</strong></td><td>Big bang rewrite</td><td>Incremental strangler</td><td>Strangler almost always wins. Rewrites take 3× longer and miss edge cases. Only rewrite if the data model is fundamentally broken.</td></tr>
+          <tr><td><strong>DB migration timing</strong></td><td>One atomic migration</td><td>Expand/contract steps</td><td>Expand/contract. Atomic migrations on large tables lock the table — downtime. Expand/contract is zero-downtime at any scale.</td></tr>
+          <tr><td><strong>Feature flag storage</strong></td><td>Database-backed</td><td>Dedicated flag service</td><td>Dedicated service (LaunchDarkly, Unleash). DB-backed flags add a DB query to every request and can't be changed without a deploy.</td></tr>
+          <tr><td><strong>When to split monolith</strong></td><td>Split early (greenfield)</td><td>Modular monolith first</td><td>Modular monolith until you have clear team ownership boundaries and deployment conflicts. Premature splitting creates distributed systems complexity without the benefits.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="antipatterns">
+      <div class="section-label">What Not to Do</div>
+      <h2 class="section-title">Migration Anti-patterns</h2>
+      <div class="antipattern-list">
+        <div class="ap-item"><h4>The Big Bang Migration</h4><p>Switching everything at once on a Friday night. No incremental validation, no rollback. The most common cause of catastrophic production incidents. Always migrate incrementally.</p></div>
+        <div class="ap-item"><h4>Forgetting the ACL</h4><p>Letting the legacy data model bleed into the new service. Now you have two systems with the same bad design. The Anti-Corruption Layer is the investment that lets you build the right model independently.</p></div>
+        <div class="ap-item"><h4>ALTER TABLE on a Hot Table</h4><p>Running a blocking ALTER TABLE on a table receiving 10K writes/sec. Takes a table lock, queues all writes, cascades to downtime. Use CONCURRENTLY, expand/contract, or pg_repack.</p></div>
+        <div class="ap-item"><h4>Flag Accumulation</h4><p>Creating feature flags without a cleanup date. After 2 years, the codebase has 200 flags, nobody knows which are active, and removing them is feared. Set a TTL when creating every flag.</p></div>
+        <div class="ap-item"><h4>Dual-Write Without Validation</h4><p>Writing to old and new systems but never checking they're consistent. Data diverges silently. Add a reconciliation job that compares both systems daily and alerts on discrepancies.</p></div>
+        <div class="ap-item"><h4>Decommissioning Too Early</h4><p>Deleting the old system while some clients still depend on it. Always wait for 100% traffic to be confirmed on the new system, plus a buffer period, before decommissioning.</p></div>
+        <div class="ap-item"><h4>No Rollback Plan</h4><p>Designing migrations assuming they'll succeed. Every migration step needs a documented, tested rollback procedure. Practice the rollback on staging before production.</p></div>
+        <div class="ap-item"><h4>Microservices Too Early</h4><p>Splitting a 2-person team's monolith into 12 microservices. Distributed systems overhead (network failures, distributed transactions, operational complexity) far exceeds any benefit at small scale.</p></div>
+      </div>
+    </section>
+
+    <section id="interview">
+      <div class="section-label">Interview Prep</div>
+      <h2 class="section-title">Interview Tips</h2>
+      <div class="tip-list">
+        <div class="tip-item"><h4>Propose Incremental Steps</h4><p>Never say "we'll migrate everything at once." Break it into phases with validation checkpoints. This shows maturity and risk awareness that interviewers are specifically looking for.</p></div>
+        <div class="tip-item"><h4>Mention the Expand/Contract Pattern</h4><p>When database schema changes come up, describe expand/contract by name. Knowing this pattern demonstrates real production experience — it's not in most textbooks.</p></div>
+        <div class="tip-item"><h4>Feature Flags Separate Deploy from Release</h4><p>This is the key insight. Code goes to production but is invisible until the flag is turned on. Rollback doesn't require a re-deploy — just flip the flag. Interviewers love this.</p></div>
+        <div class="tip-item"><h4>Know When NOT to Use Microservices</h4><p>Saying "actually a modular monolith would serve this team better" at the right moment impresses senior interviewers. It shows you optimize for outcomes, not architecture trends.</p></div>
+        <div class="tip-item"><h4>Ask About the Team Size</h4><p>The right migration strategy depends on team structure. 5 engineers on one codebase? Modular monolith. 50 engineers with deployment conflicts? Time to split. Team topology drives architecture.</p></div>
+        <div class="tip-item"><h4>Data Migration is the Hard Part</h4><p>When asked about system migration, always address data first. Code migration is fast and reversible. Data migration is slow, risky, and harder to undo. The questioner wants to see that you know this.</p></div>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="notes-sidebar">
+    <div class="notes-sticky">
+      <div class="notes-heading">Clarifications</div>
+      <div class="note-item" data-section="strangler">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is a bounded context?</div></div>
+        <div class="note-body">From Domain-Driven Design (DDD): a bounded context is a well-defined area of the codebase where a specific model applies. "Order" means one thing in the order service and something slightly different in the billing service. Bounded contexts define natural seams where you can split services without coupling them together.</div>
+      </div>
+      <div class="note-item" data-section="deployments">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is a load balancer?</div></div>
+        <div class="note-body">A load balancer distributes incoming requests across multiple server instances. For blue-green deploys, the load balancer is the switch — it points 100% of traffic to Blue, then you flip it to point to Green. AWS ALB, Nginx, HAProxy, and Envoy are common load balancers.</div>
+      </div>
+      <div class="note-item" data-section="feature-flags">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is LaunchDarkly?</div></div>
+        <div class="note-body">LaunchDarkly is a feature flag management SaaS. You define flags in their dashboard, their SDK evaluates them in your app in under 1ms (cached locally). You can target flags to specific users, percentages, or attributes — without redeploying code. Unleash is the popular open-source alternative.</div>
+      </div>
+      <div class="note-item" data-section="db-migration">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is a table lock and why is it dangerous?</div></div>
+        <div class="note-body">Many ALTER TABLE operations acquire an exclusive lock on the entire table, blocking all reads and writes until the operation completes. On a table with millions of rows and active traffic, this can take minutes — causing a full outage. Postgres's CREATE INDEX CONCURRENTLY and tools like gh-ost (for MySQL) avoid this by building the new structure in the background.</div>
+      </div>
+      <div class="note-item" data-section="backward-compat">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is Postel's Law?</div></div>
+        <div class="note-body">Jon Postel wrote in RFC 793 (TCP spec): "Be conservative in what you do, be liberal in what you accept from others." For APIs: accept unknown fields gracefully (don't error), but only send fields that consumers are known to handle. This makes APIs more resilient to change over time.</div>
+      </div>
+      <div class="note-item" data-section="monolith-breakup">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is Conway's Law?</div></div>
+        <div class="note-body">Melvin Conway observed in 1967: "Organizations which design systems are constrained to produce designs which are copies of the communication structures of those organizations." In practice: your microservices boundaries will mirror your team structure. This is why "team topology" matters — design teams and services together, not independently.</div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<footer style="background:#0f172a;color:#64748b;text-align:center;padding:2rem;font-size:.85rem;margin-top:3rem;">
+  <p>KnowAlgo · <a href="system-design.html" style="color:#fbbf24;text-decoration:none;">System Design Home</a> · <a href="index.html" style="color:#fbbf24;text-decoration:none;">DSA Home</a></p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+window.addEventListener('scroll', () => {
+  const el = document.getElementById('progress-bar');
+  el.style.width = (window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100) + '%';
+});
+const tocLinks = document.querySelectorAll('.toc-nav a');
+new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(l => l.classList.remove('active'));
+      const a = document.querySelector(`.toc-nav a[href="#${e.target.id}"]`);
+      if (a) a.classList.add('active');
+    }
+  });
+}, { rootMargin: '-10% 0px -80% 0px' }).observe
+? document.querySelectorAll('section[id]').forEach(s =>
+    new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { tocLinks.forEach(l=>l.classList.remove('active')); const a=document.querySelector(`.toc-nav a[href="#${e.target.id}"]`); if(a)a.classList.add('active'); }});
+    }, {rootMargin:'-10% 0px -80% 0px'}).observe(s)) : null;
+document.querySelectorAll('.copy-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    navigator.clipboard.writeText(btn.nextElementSibling.querySelector('code').textContent).then(() => { btn.textContent='Copied!'; setTimeout(()=>btn.textContent='Copy',2000); });
+  });
+});
+const noteItems = document.querySelectorAll('.note-item[data-section]');
+if (noteItems.length) {
+  const noteObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { const id=e.target.id; noteItems.forEach(n=>{ const m=n.dataset.section===id; n.classList.toggle('active',m); if(m)n.classList.add('open'); else n.classList.remove('open'); }); }
+    });
+  }, {rootMargin:'-10% 0px -55% 0px'});
+  document.querySelectorAll('[id]').forEach(el=>noteObs.observe(el));
+  noteItems.forEach(n=>n.querySelector('.note-head').addEventListener('click',()=>n.classList.toggle('open')));
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Security & Access Control – Pattern 09 | KnowAlgo System Design</title>
+<meta name="description" content="Master system design security: Zero Trust, OAuth 2.0, JWT, mTLS, secrets management, RBAC, ABAC, API security, and WAF patterns.">
+<link rel="canonical" href="https://knowalgo.netlify.app/system-design-security.html">
+<meta property="og:title" content="Security & Access Control – System Design Pattern 09">
+<meta property="og:description" content="Zero Trust, OAuth 2.0/OIDC, JWT, mTLS, secrets, RBAC/ABAC, API security — deep-dive with real code.">
+<meta property="og:url" content="https://knowalgo.netlify.app/system-design-security.html">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2Z1EQCZBXH');</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<style>
+:root {
+  --primary: #0369a1;
+  --primary-dark: #0c4a6e;
+  --primary-light: #e0f2fe;
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --bg: #f8fafc;
+  --code-bg: #0f172a;
+  --card-bg: #ffffff;
+  --toc-width: 240px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.1);
+  --radius: 12px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: system-ui,-apple-system,sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; }
+
+/* Progress bar */
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(to right, #0369a1, #4338ca); z-index: 9999; transition: width .1s; }
+
+/* Header */
+.site-header { background: #0f172a; padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 3px; z-index: 100; }
+.site-header a.logo { color: #f1f5f9; font-weight: 800; font-size: 1.1rem; text-decoration: none; }
+.site-header nav a { color: #94a3b8; text-decoration: none; font-size: .88rem; margin-left: 1.5rem; transition: color .2s; }
+.site-header nav a:hover { color: #f1f5f9; }
+
+/* Hero */
+.hero { background: linear-gradient(135deg, #0f172a 0%, #0c2a4a 45%, #1e1b4b 100%); color: #fff; padding: 3.5rem 2rem 3rem; }
+.hero-badge { display: inline-flex; align-items: center; gap: .5rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 20px; padding: .3rem .9rem; font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #bae6fd; margin-bottom: 1.2rem; }
+.hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.15; margin-bottom: .8rem; }
+.hero h1 span { color: #7dd3fc; }
+.hero p { font-size: 1.08rem; color: #bae6fd; max-width: 680px; margin-bottom: 1.5rem; }
+.hero-tags { display: flex; flex-wrap: wrap; gap: .5rem; }
+.hero-tag { background: rgba(255,255,255,.12); border-radius: 20px; padding: .25rem .75rem; font-size: .78rem; color: #e0f2fe; }
+
+/* Layout */
+.page-body { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; display: grid; grid-template-columns: 240px 1fr 220px; gap: 2rem; align-items: start; }
+
+/* TOC */
+.toc-sidebar { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.toc-sidebar::-webkit-scrollbar { width: 4px; } .toc-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.toc-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.toc-title { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); margin-bottom: .9rem; }
+.toc-nav a { display: block; font-size: .82rem; color: var(--text-muted); text-decoration: none; padding: .28rem .5rem; border-radius: 6px; border-left: 2px solid transparent; transition: all .2s; margin-bottom: 2px; }
+.toc-nav a:hover, .toc-nav a.active { color: var(--primary); border-left-color: var(--primary); background: var(--primary-light); }
+.toc-divider { height: 1px; background: var(--border); margin: .6rem 0; }
+.toc-nav-links { display: flex; gap: .5rem; margin-top: .8rem; }
+.toc-nav-links a { flex: 1; text-align: center; font-size: .72rem; font-weight: 600; color: var(--primary); background: var(--primary-light); border-radius: 6px; padding: .35rem .4rem; text-decoration: none; }
+
+/* Main content */
+.main-content section { margin-bottom: 3rem; }
+.section-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--primary); margin-bottom: .5rem; }
+.section-title { font-size: 1.6rem; font-weight: 800; color: var(--text); margin-bottom: 1rem; line-height: 1.2; }
+.section-intro { font-size: 1rem; color: var(--text-muted); margin-bottom: 1.5rem; max-width: 760px; }
+
+/* Cards */
+.concept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.concept-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.concept-card h4 { font-size: .95rem; font-weight: 700; color: var(--text); margin-bottom: .4rem; }
+.concept-card p { font-size: .85rem; color: var(--text-muted); }
+.concept-card .cc-icon { font-size: 1.4rem; margin-bottom: .5rem; }
+
+/* Arch diagrams */
+.arch-diagram { background: #ffffff; border: 1px solid #cbd5e1; border-radius: var(--radius); padding: 1.25rem; margin: 1rem 0; font-family: monospace; font-size: .8rem; overflow-x: auto; line-height: 1.6; white-space: pre; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.arch-diagram .c  { color: #0f172a; }
+.arch-diagram .lb { color: #92400e; font-weight: 700; }
+.arch-diagram .sv { color: #166534; font-weight: 700; }
+.arch-diagram .db { color: #5b21b6; font-weight: 700; }
+.arch-diagram .ca { color: #9a3412; font-weight: 700; }
+.arch-diagram .er { color: #991b1b; font-weight: 700; }
+.arch-diagram .cm { color: #94a3b8; font-style: italic; }
+.arch-diagram .em { color: #065f46; font-weight: 700; }
+.arch-diagram .bl { color: #1e40af; font-weight: 700; }
+.arch-diagram .pk { color: #be185d; font-weight: 700; }
+.arch-diagram .cy { color: #0e7490; font-weight: 700; }
+.arch-diagram .in { color: #3730a3; font-weight: 700; }
+.arch-diagram .hl { color: #92400e; font-weight: 700; }
+.arch-diagram .ok { color: #166534; }
+.arch-diagram .or { color: #9a3412; }
+.arch-diagram .vi { color: #5b21b6; }
+.arch-diagram .rd { color: #991b1b; }
+.arch-diagram .dim { color: #94a3b8; }
+.arch-diagram .ts { color: #be185d; }
+
+/* Code blocks */
+.code-block { position: relative; margin: 1rem 0; border-radius: var(--radius); overflow: hidden; }
+.code-block pre { margin: 0 !important; border-radius: var(--radius) !important; font-size: .82rem !important; }
+.copy-btn { position: absolute; top: .6rem; right: .6rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #94a3b8; font-size: .72rem; padding: .25rem .6rem; border-radius: 6px; cursor: pointer; transition: all .2s; }
+.copy-btn:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+/* Tables */
+.data-table { width: 100%; border-collapse: collapse; font-size: .88rem; margin: 1rem 0; background: var(--card-bg); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.data-table th { background: var(--primary); color: #fff; padding: .7rem 1rem; text-align: left; font-size: .8rem; font-weight: 700; }
+.data-table td { padding: .65rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: #f8fafc; }
+
+/* Engineer perspectives */
+.eng-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+.eng-take { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.et-sre { border-left-color: #0369a1; } .et-backend { border-left-color: #7c3aed; } .et-security { border-left-color: #dc2626; }
+.et-data { border-left-color: #059669; } .et-platform { border-left-color: #d97706; } .et-ml { border-left-color: #db2777; }
+.et-frontend { border-left-color: #0891b2; } .et-mobile { border-left-color: #16a34a; } .et-architect { border-left-color: #475569; }
+.eng-role { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: .3rem; }
+.eng-take p { font-size: .85rem; color: var(--text); }
+
+/* Problems */
+.problem-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; box-shadow: var(--shadow-sm); }
+.problem-header { padding: 1.25rem 1.5rem; background: linear-gradient(135deg, #0369a1, #1e1b4b); border-bottom: none; }
+.problem-num { font-size: .78rem; font-weight: 700; color: #bae6fd; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem; }
+.problem-title { font-size: 1.15rem; font-weight: 700; color: #f1f5f9; margin-bottom: .5rem; }
+.ptags { display: flex; flex-wrap: wrap; gap: .4rem; }
+.ptag { background: rgba(255,255,255,.15); color: #e0f2fe; font-size: .72rem; font-weight: 600; padding: .2rem .55rem; border-radius: 10px; }
+.problem-body { padding: 1.5rem; }
+.problem-body h4 { font-size: .9rem; font-weight: 700; color: var(--text); margin: 1rem 0 .4rem; }
+.problem-body p { font-size: .9rem; color: var(--text-muted); margin-bottom: .75rem; }
+
+/* Anti-patterns */
+.antipattern-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.ap-item { background: #fff5f5; border: 1px solid #fecaca; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.ap-item h4 { font-size: .9rem; font-weight: 700; color: #991b1b; margin-bottom: .3rem; }
+.ap-item p { font-size: .83rem; color: #7f1d1d; }
+
+/* Interview tips */
+.tip-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.tip-item { background: var(--primary-light); border: 1px solid #bae6fd; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.tip-item h4 { font-size: .9rem; font-weight: 700; color: var(--primary-dark); margin-bottom: .3rem; }
+.tip-item p { font-size: .83rem; color: #0c4a6e; }
+
+/* Notes sidebar */
+.notes-sidebar { align-self: start; }
+.notes-sticky { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.notes-heading { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: 10px; }
+.note-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: border-color .25s, box-shadow .25s; }
+.note-item.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(3,105,161,.08); }
+.note-head { display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px; cursor: pointer; }
+.note-bullet { width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: .78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: transform .2s; }
+.note-item.open .note-bullet { transform: rotate(45deg); }
+.note-label { font-size: .78rem; font-weight: 600; color: #1e293b; flex: 1; line-height: 1.35; }
+.note-body { display: none; font-size: .76rem; color: #475569; line-height: 1.55; padding: 0 11px 11px 11px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+.note-item.open .note-body, .note-item.active .note-body { display: block; }
+
+@media (max-width: 1150px) {
+  .notes-sidebar { display: none !important; }
+  .page-body { grid-template-columns: 240px 1fr !important; }
+}
+@media (max-width: 768px) {
+  .page-body { grid-template-columns: 1fr !important; }
+  .toc-sidebar { display: none; }
+}
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+
+<header class="site-header">
+  <a href="index.html" class="logo">KnowAlgo</a>
+  <nav>
+    <a href="index.html">DSA</a>
+    <a href="system-design.html">System Design</a>
+    <a href="interview-prep.html">Interview Prep</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div style="max-width:1400px;margin:0 auto;padding:0 1.5rem">
+    <div class="hero-badge">
+      <span>🔐</span> Pattern 09 of 16 · System Design
+    </div>
+    <h1>Security &amp; <span>Access Control</span></h1>
+    <p>Zero Trust, OAuth 2.0/OIDC, JWT, mTLS, secrets management, RBAC/ABAC — how production systems authenticate, authorize, and protect data end-to-end.</p>
+    <div class="hero-tags">
+      <span class="hero-tag">Zero Trust</span>
+      <span class="hero-tag">OAuth 2.0 / OIDC</span>
+      <span class="hero-tag">JWT</span>
+      <span class="hero-tag">mTLS</span>
+      <span class="hero-tag">RBAC / ABAC</span>
+      <span class="hero-tag">Secrets Management</span>
+      <span class="hero-tag">WAF</span>
+      <span class="hero-tag">Encryption</span>
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+  <!-- TOC -->
+  <aside class="toc-sidebar">
+    <div class="toc-card">
+      <div class="toc-title">On this page</div>
+      <nav class="toc-nav">
+        <a href="#zero-trust">Zero Trust</a>
+        <a href="#authn-authz">AuthN vs AuthZ</a>
+        <a href="#oauth-oidc">OAuth 2.0 / OIDC</a>
+        <a href="#jwt">JWT Tokens</a>
+        <a href="#secrets">Secrets Management</a>
+        <a href="#encryption">Encryption</a>
+        <a href="#rbac-abac">RBAC / ABAC</a>
+        <a href="#api-security">API Security</a>
+        <div class="toc-divider"></div>
+        <a href="#perspectives">Engineer Perspectives</a>
+        <a href="#problems">Real Problems</a>
+        <a href="#tradeoffs">Trade-offs</a>
+        <a href="#antipatterns">Anti-patterns</a>
+        <a href="#interview">Interview Tips</a>
+      </nav>
+      <div class="toc-nav-links">
+        <a href="system-design-pipelines.html">← Pipelines</a>
+        <a href="system-design-observability.html">Observability →</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-content">
+
+    <!-- Zero Trust -->
+    <section id="zero-trust">
+      <div class="section-label">Foundation</div>
+      <h2 class="section-title">Zero Trust Architecture</h2>
+      <p class="section-intro">Old security assumed a hard perimeter — anything inside the network was trusted. Zero Trust flips that: <strong>never trust, always verify</strong>. Every request must be authenticated and authorized regardless of where it originates.</p>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <div class="cc-icon">🏰</div>
+          <h4>Castle-and-Moat (Old)</h4>
+          <p>Perimeter firewall protects the "inside." Once you're in, you're trusted. A single breach compromises everything.</p>
+        </div>
+        <div class="concept-card">
+          <div class="cc-icon">🔍</div>
+          <h4>Zero Trust (New)</h4>
+          <p>Every request verified every time. No implicit trust for internal traffic. Micro-segmentation limits blast radius.</p>
+        </div>
+        <div class="concept-card">
+          <div class="cc-icon">🔑</div>
+          <h4>Identity is the Perimeter</h4>
+          <p>Users, devices, services all have cryptographic identities. Access decisions are based on identity + context, not network location.</p>
+        </div>
+        <div class="concept-card">
+          <div class="cc-icon">📦</div>
+          <h4>Least Privilege</h4>
+          <p>Grant the minimum access required. Time-bound credentials. No standing elevated permissions. JIT (just-in-time) access.</p>
+        </div>
+      </div>
+
+      <div class="arch-diagram"><span class="cm">Zero Trust Request Flow</span>
+
+<span class="bl">User / Service</span>                    <span class="sv">Policy Engine</span>                <span class="em">Resource</span>
+      │                                         │                              │
+      │──── Request (with identity token) ─────►│                              │
+      │                                         │ Verify: Who are you?          │
+      │                                         │ Check: Device posture?        │
+      │                                         │ Evaluate: RBAC/ABAC policy?   │
+      │                                         │ Log: audit trail              │
+      │◄─── ALLOW / DENY decision ──────────────│                              │
+      │                                         │                              │
+      │──── (if ALLOW) Request + short-lived token ──────────────────────────►│
+      │                                         │                              │
+      │◄───────────────────────────── Response ──────────────────────────────│
+
+<span class="cm">Principles: verify explicitly · least privilege · assume breach</span></div>
+
+      <p>Google's BeyondCorp was the pioneering real-world Zero Trust implementation — employees access corporate apps over the internet with no VPN, just strong device and user verification.</p>
+    </section>
+
+    <!-- AuthN vs AuthZ -->
+    <section id="authn-authz">
+      <div class="section-label">Core Concepts</div>
+      <h2 class="section-title">Authentication vs. Authorization</h2>
+      <p class="section-intro">These terms are often confused. Authentication (AuthN) asks <em>"who are you?"</em> — it verifies identity. Authorization (AuthZ) asks <em>"what are you allowed to do?"</em> — it enforces access policy. They are separate concerns.</p>
+
+      <table class="data-table">
+        <thead><tr><th>Dimension</th><th>Authentication (AuthN)</th><th>Authorization (AuthZ)</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Question</strong></td><td>Who are you?</td><td>What can you do?</td></tr>
+          <tr><td><strong>Mechanism</strong></td><td>Password, MFA, certificate, biometric</td><td>RBAC, ABAC, ACL, policy engine</td></tr>
+          <tr><td><strong>Happens</strong></td><td>At login / token issuance</td><td>On every resource access</td></tr>
+          <tr><td><strong>Token role</strong></td><td>Proves identity (who signed this?)</td><td>Carries claims (what roles/scopes?)</td></tr>
+          <tr><td><strong>Failure result</strong></td><td>401 Unauthorized</td><td>403 Forbidden</td></tr>
+          <tr><td><strong>Standards</strong></td><td>OIDC, SAML, WebAuthn</td><td>OAuth 2.0, OPA, Cedar</td></tr>
+        </tbody>
+      </table>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <h4>MFA (Multi-Factor Auth)</h4>
+          <p>Something you know (password) + something you have (TOTP app) + something you are (biometric). Each factor independently verified.</p>
+        </div>
+        <div class="concept-card">
+          <h4>SSO (Single Sign-On)</h4>
+          <p>One login gives access to multiple apps. Implemented via SAML (enterprise) or OIDC (modern web/mobile). IdP (Identity Provider) issues tokens.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Service-to-Service AuthN</h4>
+          <p>Services authenticate with mTLS certificates or short-lived tokens (Workload Identity). No passwords — cryptographic proofs only.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- OAuth 2.0 / OIDC -->
+    <section id="oauth-oidc">
+      <div class="section-label">Identity Protocols</div>
+      <h2 class="section-title">OAuth 2.0 &amp; OpenID Connect (OIDC)</h2>
+      <p class="section-intro">OAuth 2.0 is a delegation framework — it lets users grant apps access to their data without sharing passwords. OIDC is built on top of OAuth 2.0 and adds authentication (who the user is), not just authorization (what they can access).</p>
+
+      <div class="arch-diagram"><span class="cm">OAuth 2.0 Authorization Code Flow (most secure, for web/mobile apps)</span>
+
+<span class="bl">User</span>          <span class="sv">Your App</span>           <span class="lb">Auth Server</span>           <span class="em">Resource API</span>
+  │                 │                      │                       │
+  │──Click Login───►│                      │                       │
+  │                 │──Redirect to /auth──►│                       │
+  │                 │  (client_id, scope,  │                       │
+  │                 │   redirect_uri,      │                       │
+  │                 │   code_challenge)    │                       │
+  │◄────────────────│  Login UI ───────────│                       │
+  │──Username/Pwd──►│──────────────────────►                       │
+  │                 │◄─ auth code ─────────│                       │
+  │                 │                      │                       │
+  │                 │──POST /token ────────►│                       │
+  │                 │  (code + code_verifier)                       │
+  │                 │◄─ access_token ───────│                       │
+  │                 │   + refresh_token     │                       │
+  │                 │   + id_token (OIDC)   │                       │
+  │                 │                      │                       │
+  │                 │──Bearer access_token────────────────────────►│
+  │                 │◄──────────────────────────────── user data ──│
+
+<span class="cm">PKCE (code_challenge/code_verifier) prevents authorization code interception attacks</span>
+<span class="cm">id_token (JWT) = OIDC layer: contains user identity claims (sub, email, name)</span>
+<span class="cm">access_token = OAuth layer: used to call APIs on user's behalf</span></div>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <h4>Scopes</h4>
+          <p>Fine-grained permissions the app requests: <code>openid profile email read:documents</code>. Users see and consent to these. APIs check the scope on the access token.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Client Credentials Flow</h4>
+          <p>For machine-to-machine (no user). Service authenticates directly to auth server with client_id + client_secret → gets access_token. Used for backend services and daemons.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Token Refresh</h4>
+          <p>Access tokens are short-lived (15 min). Refresh tokens (days/weeks) let apps get new access tokens without re-login. Refresh tokens must be stored securely — rotation invalidates old ones.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Token Introspection</h4>
+          <p>APIs can call the auth server's <code>/introspect</code> endpoint to validate opaque tokens. Slower than JWT validation but tokens can be instantly revoked.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- JWT -->
+    <section id="jwt">
+      <div class="section-label">Token Format</div>
+      <h2 class="section-title">JSON Web Tokens (JWT)</h2>
+      <p class="section-intro">A JWT is a self-contained token — it carries claims (user ID, roles, expiry) and a cryptographic signature. APIs can validate it locally without calling the auth server, making JWTs fast for distributed systems.</p>
+
+      <div class="arch-diagram"><span class="cm">JWT Structure: three base64url-encoded parts separated by dots</span>
+
+<span class="lb">Header</span>          <span class="sv">Payload (Claims)</span>         <span class="em">Signature</span>
+eyJhbGciOiJ   .   eyJzdWIiOiJ1c2VyX   .   SflKxwRJSMeKKF2Q
+
+<span class="cm">Header (decoded):</span>                <span class="cm">Payload (decoded):</span>
+{                                  {
+  "alg": "RS256",                    "sub": "user_123",       <span class="cm">← subject (user ID)</span>
+  "typ": "JWT"                       "iat": 1716700000,       <span class="cm">← issued at</span>
+}                                    "exp": 1716700900,       <span class="cm">← expiry (15 min)</span>
+                                     "iss": "auth.acme.com",  <span class="cm">← issuer</span>
+<span class="cm">Signature = RSA-SHA256(</span>            "aud": "api.acme.com",   <span class="cm">← audience</span>
+  base64(header) + "." +             "roles": ["admin"],      <span class="cm">← custom claim</span>
+  base64(payload),                   "email": "u@acme.com"
+  private_key                      }
+<span class="cm">)</span>
+
+<span class="cm">Validation: decode header → get alg → fetch public key → verify signature → check exp/iss/aud</span>
+<span class="cm">RS256 = asymmetric: auth server signs with private key, APIs verify with public key (JWKS endpoint)</span>
+<span class="cm">HS256 = symmetric: same secret everywhere — avoid in distributed systems</span></div>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <h4>JWT Cannot Be Revoked</h4>
+          <p>Once issued, a JWT is valid until expiry. You can't "delete" it from the server. Mitigation: short TTL (15 min) + token blocklist for logout or compromise events.</p>
+        </div>
+        <div class="concept-card">
+          <h4>JWKS Endpoint</h4>
+          <p>Auth server publishes public keys at <code>/.well-known/jwks.json</code>. APIs cache and rotate these keys. Allows key rotation without redeploying services.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Claims vs. Database Queries</h4>
+          <p>Encode stable, slow-changing attributes in JWT claims (roles, tenant ID). Don't encode fast-changing data — stale tokens would carry wrong values.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Secrets Management -->
+    <section id="secrets">
+      <div class="section-label">Credentials & Keys</div>
+      <h2 class="section-title">Secrets Management</h2>
+      <p class="section-intro">Secrets (API keys, DB passwords, TLS certs, OAuth client secrets) must never be in code, env files committed to git, or plaintext config. A secrets manager provides a central, audited, access-controlled vault.</p>
+
+      <table class="data-table">
+        <thead><tr><th>Tool</th><th>Best For</th><th>Key Feature</th></tr></thead>
+        <tbody>
+          <tr><td><strong>HashiCorp Vault</strong></td><td>Multi-cloud, self-hosted</td><td>Dynamic secrets — generates DB credentials on-demand, auto-expires them</td></tr>
+          <tr><td><strong>AWS Secrets Manager</strong></td><td>AWS-native</td><td>Automatic rotation for RDS, Redshift, DocumentDB credentials</td></tr>
+          <tr><td><strong>AWS Parameter Store</strong></td><td>Config + lightweight secrets</td><td>Free tier, hierarchical paths, KMS encryption</td></tr>
+          <tr><td><strong>GCP Secret Manager</strong></td><td>GCP-native</td><td>Versioning, IAM-gated access, audit logs</td></tr>
+          <tr><td><strong>Azure Key Vault</strong></td><td>Azure-native</td><td>HSM-backed keys, certificate lifecycle management</td></tr>
+          <tr><td><strong>Kubernetes Secrets</strong></td><td>K8s workloads</td><td>Base64-encoded (not encrypted by default!) — use external-secrets-operator to pull from real vaults</td></tr>
+        </tbody>
+      </table>
+
+      <div class="arch-diagram"><span class="cm">Dynamic Secrets with Vault (no long-lived DB passwords)</span>
+
+<span class="bl">App Pod</span>                    <span class="lb">Vault</span>                     <span class="em">Postgres</span>
+    │                           │                              │
+    │── POST /v1/auth/k8s ─────►│ Verify Kubernetes SA token  │
+    │◄─ Vault token (TTL=1h) ───│                              │
+    │                           │                              │
+    │── GET /v1/database/creds  │                              │
+    │         /my-db-role ─────►│──CREATE USER vault_abc ─────►│
+    │◄─ { user: vault_abc,      │  WITH PASSWORD 'x9k...'      │
+    │     password: 'x9k...',   │  VALID UNTIL NOW()+15min     │
+    │     lease_id, ttl: 15min}─│                              │
+    │                           │                              │
+    │── Connect with temp creds ───────────────────────────────►│
+    │                           │                              │
+    │── Renew lease before TTL ─►│                              │
+    │                           │                              │
+    │── Revoke / lease expires ─►│──REVOKE vault_abc ──────────►│
+
+<span class="cm">Result: no permanent DB password exists anywhere. Breach of app pod = creds expire in 15 min.</span></div>
+    </section>
+
+    <!-- Encryption -->
+    <section id="encryption">
+      <div class="section-label">Data Protection</div>
+      <h2 class="section-title">Encryption: TLS, mTLS, At-Rest</h2>
+      <p class="section-intro">Encryption protects data in two states: <em>in transit</em> (TLS/mTLS) and <em>at rest</em> (disk encryption, field-level encryption). These are complementary — you need both.</p>
+
+      <div class="arch-diagram"><span class="cm">TLS vs mTLS</span>
+
+<span class="cm">TLS (one-way): Server proves its identity to client</span>
+<span class="bl">Browser</span>                          <span class="sv">api.example.com</span>
+    │──── Client Hello ───────────────►│
+    │◄─── Server Certificate ──────────│  <span class="cm">(signed by trusted CA)</span>
+    │──── Verify cert + Encrypted ─────►│
+    │◄─── Encrypted Response ───────────│
+
+<span class="cm">mTLS (mutual): Both sides prove identity — used for service-to-service</span>
+<span class="lb">Order Service</span>                     <span class="em">Payment Service</span>
+    │──── Client Hello ───────────────►│
+    │◄─── Server Cert (payment) ────────│
+    │──── Client Cert (order) ─────────►│  <span class="cm">(both sides have certs from internal CA)</span>
+    │◄─── Encrypted Channel ────────────│
+    │  Now both sides know who they     │
+    │  are talking to cryptographically │
+
+<span class="cm">In a service mesh (Istio/Linkerd), mTLS is handled by sidecar proxies — app code sees plaintext</span></div>
+
+      <table class="data-table">
+        <thead><tr><th>Encryption Type</th><th>Protects Against</th><th>Common Implementation</th></tr></thead>
+        <tbody>
+          <tr><td><strong>TLS 1.3</strong></td><td>Network eavesdropping, MITM</td><td>Let's Encrypt, ACM (AWS), cert-manager (K8s)</td></tr>
+          <tr><td><strong>mTLS</strong></td><td>Impersonation between services</td><td>Istio, Linkerd, Consul Connect</td></tr>
+          <tr><td><strong>Encryption at rest</strong></td><td>Physical disk theft, storage breach</td><td>AWS KMS + S3 SSE, RDS encryption, LUKS</td></tr>
+          <tr><td><strong>Field-level encryption</strong></td><td>DB admin accessing sensitive columns</td><td>Encrypt PII/PAN before writing, decrypt in app layer</td></tr>
+          <tr><td><strong>Envelope encryption</strong></td><td>Key management at scale</td><td>KMS encrypts a Data Encryption Key (DEK); DEK encrypts data</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- RBAC / ABAC -->
+    <section id="rbac-abac">
+      <div class="section-label">Access Control Models</div>
+      <h2 class="section-title">RBAC vs. ABAC</h2>
+      <p class="section-intro">RBAC assigns permissions to roles, then roles to users. Simple and auditable. ABAC grants access based on attributes of the user, resource, and environment — more flexible but harder to reason about.</p>
+
+      <div class="arch-diagram"><span class="cm">RBAC: Role-Based Access Control</span>
+
+<span class="bl">User</span>           <span class="lb">Roles</span>                  <span class="sv">Permissions</span>
+Alice ──────► [engineer]  ─────────► read:metrics, deploy:staging
+Bob   ──────► [engineer]  ─────────► read:metrics, deploy:staging
+Bob   ──────► [team-lead] ─────────► deploy:production, manage:users
+Carol ──────► [viewer]    ─────────► read:metrics
+
+<span class="cm">Simple, predictable. "What can an engineer do?" — easy to answer. Common in AWS IAM, K8s RBAC.</span>
+
+<span class="cm">ABAC: Attribute-Based Access Control</span>
+
+<span class="bl">Request</span>                   <span class="lb">Policy</span>                   <span class="sv">Decision</span>
+{                           ALLOW IF:                    │
+  user.dept = "finance",      user.dept == resource.owner  │
+  resource.class = "finance", AND resource.class != "secret"
+  resource.owner = "finance", AND env.time BETWEEN 9am-6pm
+  env.time = "14:00",         AND user.clearance >= resource.sensitivity
+  action = "read"           }                            │
+}                                                        ▼
+                                                      <span class="em">ALLOW</span>
+
+<span class="cm">Handles "contractors can only access projects they're assigned to during business hours"</span>
+<span class="cm">OPA (Open Policy Agent) and AWS Cedar are popular ABAC policy engines</span></div>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <h4>When to Use RBAC</h4>
+          <p>Small to medium permission sets. Clear role taxonomy. Teams or products with stable access patterns. K8s, AWS IAM, database access.</p>
+        </div>
+        <div class="concept-card">
+          <h4>When to Use ABAC</h4>
+          <p>Multi-tenant SaaS (users can only see their tenant's data). Fine-grained data ownership. Context-sensitive access (time, location, device). Large organizations with many dynamic rules.</p>
+        </div>
+        <div class="concept-card">
+          <h4>OPA (Open Policy Agent)</h4>
+          <p>Policy-as-code engine. Write Rego policies that evaluate JSON inputs. Used as a sidecar in K8s admission control, API gateways, and microservices. Decisions are auditable and testable.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- API Security -->
+    <section id="api-security">
+      <div class="section-label">Defense in Depth</div>
+      <h2 class="section-title">API Security</h2>
+      <p class="section-intro">APIs are the most-attacked surface in modern systems. A defense-in-depth strategy layers multiple controls — no single mechanism is sufficient.</p>
+
+      <div class="arch-diagram"><span class="cm">API Security Layers</span>
+
+<span class="bl">Internet</span>
+    │
+    ▼
+<span class="er">WAF</span> (Web Application Firewall)
+    │ Blocks: SQLi, XSS, OWASP Top 10
+    │ Tools: AWS WAF, Cloudflare WAF, ModSecurity
+    │
+    ▼
+<span class="lb">DDoS Protection</span> (Cloudflare Magic Transit, AWS Shield)
+    │ Absorbs volumetric attacks before they hit origin
+    │
+    ▼
+<span class="ca">API Gateway</span>
+    │ Rate limiting (per IP, per API key, per user)
+    │ Auth token validation (JWT, API keys)
+    │ TLS termination
+    │ Request/response transformation
+    │ Tools: Kong, AWS API Gateway, Apigee, Nginx
+    │
+    ▼
+<span class="sv">Service Mesh</span> (optional, for internal traffic)
+    │ mTLS between services
+    │ Authorization policies (deny by default)
+    │ Traffic observability
+    │
+    ▼
+<span class="em">Application</span>
+    │ Input validation (reject malformed inputs)
+    │ Parameter binding (no raw SQL)
+    │ Output encoding (prevent XSS)
+    │ Business logic authorization (can this user do this action?)
+
+<span class="cm">Attack types: injection · BOLA (broken object-level auth) · BFLA (broken function-level auth)</span>
+<span class="cm">BOLA = "I can access /orders/12345 even though that's not my order" (IDOR)</span></div>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <h4>API Keys vs. Bearer Tokens</h4>
+          <p>API keys: simple, for server-to-server. No user context. Must be rotated. Store hashed in DB. Bearer tokens (JWT): carry user identity and scopes. Short-lived. Validate signature on each request.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Input Validation</h4>
+          <p>Validate type, format, length, range at the boundary. Reject unexpected fields. Use allowlists, not denylists. Parameterized queries prevent SQL injection entirely — never concatenate user input into SQL.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Security Headers</h4>
+          <p><code>Strict-Transport-Security</code> (force HTTPS), <code>Content-Security-Policy</code> (prevent XSS), <code>X-Frame-Options</code> (prevent clickjacking), <code>X-Content-Type-Options: nosniff</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Engineer Perspectives -->
+    <section id="perspectives">
+      <div class="section-label">9 Viewpoints</div>
+      <h2 class="section-title">Engineer Perspectives</h2>
+      <div class="eng-grid">
+        <div class="eng-take et-security">
+          <div class="eng-role">Security Engineer</div>
+          <p>Threat model first. What's the crown jewel? Who are the adversaries? Build controls proportional to risk, not to compliance checkbox length.</p>
+        </div>
+        <div class="eng-take et-backend">
+          <div class="eng-role">Backend Engineer</div>
+          <p>Validate JWT claims in middleware before any handler runs. Never trust the payload without verifying the signature — base64 decoding is not validation.</p>
+        </div>
+        <div class="eng-take et-sre">
+          <div class="eng-role">SRE</div>
+          <p>Secret rotation must be zero-downtime. Test rotation runbooks quarterly. Cert expiry alerts at 30/14/7 days — certificate expiry is the #1 cause of preventable outages.</p>
+        </div>
+        <div class="eng-take et-platform">
+          <div class="eng-role">Platform Engineer</div>
+          <p>Integrate auth into the platform primitives. Inject Vault secrets via init containers. Sidecar proxies handle mTLS. Developers shouldn't need to think about certificates.</p>
+        </div>
+        <div class="eng-take et-architect">
+          <div class="eng-role">Architect</div>
+          <p>Centralized identity provider (Okta, Auth0, Cognito) beats rolling your own. The auth server is security-critical infrastructure — use a battle-tested implementation.</p>
+        </div>
+        <div class="eng-take et-data">
+          <div class="eng-role">Data Engineer</div>
+          <p>Column-level access in data warehouses (Redshift/BigQuery). PII masking for analytics. Audit logs must be immutable — write to append-only storage (S3 WORM).</p>
+        </div>
+        <div class="eng-take et-ml">
+          <div class="eng-role">ML Engineer</div>
+          <p>Training data access is often overly permissive. Apply RBAC to feature stores. Model APIs need auth too — an open prediction endpoint leaks your model.</p>
+        </div>
+        <div class="eng-take et-frontend">
+          <div class="eng-role">Frontend Engineer</div>
+          <p>Store tokens in memory (not localStorage) to prevent XSS theft. Implement PKCE for SPAs. Never store client secrets in browser code — they're not secret.</p>
+        </div>
+        <div class="eng-take et-mobile">
+          <div class="eng-role">Mobile Engineer</div>
+          <p>Use the OS keychain (iOS Keychain, Android Keystore) for token storage. Certificate pinning adds an extra layer against MITM on mobile networks.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Problems -->
+    <section id="problems">
+      <div class="section-label">Real Problems</div>
+      <h2 class="section-title">Security Design Problems</h2>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 01 · OAuth + JWT</div>
+          <div class="problem-title">Design an auth service with OAuth 2.0, OIDC, and JWT for a multi-tenant SaaS platform</div>
+          <div class="ptags">
+            <span class="ptag">JWT</span><span class="ptag">OAuth 2.0</span><span class="ptag">OIDC</span><span class="ptag">Multi-tenant</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Requirements</h4>
+          <p>Support Google/GitHub social login, enterprise SAML SSO, and service-to-service auth. JWTs must carry tenant ID and roles. Tokens expire in 15 min, refresh tokens in 7 days.</p>
+          <h4>Key Implementation</h4>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python">import jwt, time
+from cryptography.hazmat.primitives import serialization
+
+# Load RSA private key (kept in Vault, never in code)
+with open("private_key.pem", "rb") as f:
+    private_key = serialization.load_pem_private_key(f.read(), password=None)
+
+def issue_access_token(user_id: str, tenant_id: str, roles: list[str]) -> str:
+    now = int(time.time())
+    payload = {
+        "sub": user_id,
+        "iss": "auth.acme.com",
+        "aud": "api.acme.com",
+        "iat": now,
+        "exp": now + 900,          # 15 minutes
+        "tenant_id": tenant_id,    # custom claim for multi-tenancy
+        "roles": roles,
+    }
+    # RS256: sign with private key, APIs verify with public key from JWKS
+    return jwt.encode(payload, private_key, algorithm="RS256")
+
+def validate_token(token: str, public_key) -> dict:
+    try:
+        return jwt.decode(
+            token,
+            public_key,
+            algorithms=["RS256"],
+            audience="api.acme.com",
+            issuer="auth.acme.com",
+        )
+    except jwt.ExpiredSignatureError:
+        raise AuthError("Token expired")
+    except jwt.InvalidTokenError as e:
+        raise AuthError(f"Invalid token: {e}")
+
+# Middleware: FastAPI dependency
+from fastapi import Depends, HTTPException, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+bearer_scheme = HTTPBearer()
+
+def get_current_user(
+    creds: HTTPAuthorizationCredentials = Security(bearer_scheme),
+    public_key = Depends(get_jwks_public_key),
+):
+    claims = validate_token(creds.credentials, public_key)
+    return {
+        "user_id": claims["sub"],
+        "tenant_id": claims["tenant_id"],
+        "roles": claims["roles"],
+    }
+
+# Tenant isolation: every DB query scoped by tenant_id
+def get_documents(user = Depends(get_current_user), db = Depends(get_db)):
+    return db.query(Document).filter(
+        Document.tenant_id == user["tenant_id"]  # never skip this filter
+    ).all()
+</code></pre>
+          </div>
+          <h4>Multi-tenant Gotchas</h4>
+          <p>Always filter by <code>tenant_id</code> in every query — a missing filter is a data leak. Test with two tenants in every integration test. Use row-level security in Postgres for an extra safety net.</p>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 02 · Secrets & Rotation</div>
+          <div class="problem-title">Build a zero-downtime secrets rotation system for database credentials</div>
+          <div class="ptags">
+            <span class="ptag">Vault</span><span class="ptag">Dynamic Secrets</span><span class="ptag">Zero-Downtime</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Challenge</h4>
+          <p>Rotating a DB password while services are running causes connection failures if not coordinated. Dynamic secrets solve this — no rotation needed because each lease is short-lived.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python">import hvac, psycopg2, time, threading
+
+class VaultManagedDB:
+    """DB connection pool that auto-renews Vault leases before expiry."""
+
+    def __init__(self, vault_addr: str, role: str):
+        self.client = hvac.Client(url=vault_addr)
+        self.client.auth.kubernetes.login(role="app", jwt=self._k8s_token())
+        self.role = role
+        self._conn = None
+        self._lease_id = None
+        self._refresh_timer = None
+
+    def connect(self):
+        secret = self.client.secrets.database.generate_credentials(name=self.role)
+        creds = secret["data"]
+        lease_id = secret["lease_id"]
+        ttl = secret["lease_duration"]  # e.g., 900 seconds
+
+        self._conn = psycopg2.connect(
+            host="db.internal", dbname="app",
+            user=creds["username"], password=creds["password"]
+        )
+        self._lease_id = lease_id
+        # Renew at 80% of TTL to avoid gap
+        self._schedule_renewal(ttl * 0.8)
+
+    def _schedule_renewal(self, delay: float):
+        if self._refresh_timer:
+            self._refresh_timer.cancel()
+        self._refresh_timer = threading.Timer(delay, self._renew_lease)
+        self._refresh_timer.daemon = True
+        self._refresh_timer.start()
+
+    def _renew_lease(self):
+        try:
+            result = self.client.sys.renew_secret(self._lease_id)
+            new_ttl = result["lease_duration"]
+            self._schedule_renewal(new_ttl * 0.8)
+        except Exception:
+            # Lease renewal failed — get fresh credentials
+            self.connect()
+
+    def _k8s_token(self) -> str:
+        with open("/var/run/secrets/kubernetes.io/serviceaccount/token") as f:
+            return f.read()
+
+    def execute(self, query: str, params=None):
+        cur = self._conn.cursor()
+        cur.execute(query, params)
+        return cur.fetchall()
+</code></pre>
+          </div>
+          <h4>Key Insight</h4>
+          <p>Dynamic secrets mean there's never a long-lived password to rotate. If a pod is compromised, its credentials expire within 15 minutes automatically. No breach notification lag, no rotation coordination.</p>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 03 · RBAC + OPA</div>
+          <div class="problem-title">Design a fine-grained authorization system using OPA for a document management platform</div>
+          <div class="ptags">
+            <span class="ptag">OPA</span><span class="ptag">RBAC</span><span class="ptag">Policy-as-Code</span>
+          </div>
+        </div>
+        <div class="problem-body">
+          <h4>Requirements</h4>
+          <p>Users can view/edit/delete their own documents. Managers can view all documents in their department. Auditors can view but never edit. Policies change frequently without code deploys.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python"># OPA Rego policy (document_policy.rego) — deployed to OPA sidecar
+# ---------------------------------------------------------------
+# package authz.documents
+#
+# default allow = false
+#
+# allow {
+#   input.action == "read"
+#   doc_readable
+# }
+# allow {
+#   input.action in {"write", "delete"}
+#   doc_writable
+# }
+#
+# doc_readable {
+#   input.user.id == input.resource.owner_id  # own document
+# }
+# doc_readable {
+#   input.user.role == "auditor"               # auditors read all
+# }
+# doc_readable {
+#   input.user.role == "manager"
+#   input.user.department == input.resource.department
+# }
+# doc_writable {
+#   input.user.id == input.resource.owner_id
+#   input.user.role != "auditor"               # auditors can never write
+# }
+# ---------------------------------------------------------------
+
+import requests
+
+OPA_URL = "http://localhost:8181/v1/data/authz/documents/allow"
+
+def check_permission(user: dict, action: str, resource: dict) -> bool:
+    """Call OPA sidecar to evaluate policy."""
+    response = requests.post(OPA_URL, json={
+        "input": {
+            "user": user,
+            "action": action,
+            "resource": resource,
+        }
+    })
+    return response.json().get("result", False)
+
+# FastAPI endpoint with OPA authorization
+from fastapi import HTTPException
+
+def get_document(doc_id: str, user = Depends(get_current_user), db = Depends(get_db)):
+    doc = db.get(Document, doc_id)
+    if not doc:
+        raise HTTPException(404)
+
+    resource = {
+        "id": doc.id,
+        "owner_id": doc.owner_id,
+        "department": doc.department,
+    }
+    if not check_permission(user, "read", resource):
+        raise HTTPException(403, "Access denied")
+
+    return doc
+</code></pre>
+          </div>
+          <h4>Why OPA</h4>
+          <p>Policy changes are deployed to OPA as data, not code. The application doesn't need to be redeployed when access rules change. Policies are unit-testable with <code>opa test</code>. Bundle policies from Git for GitOps-style governance.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trade-offs -->
+    <section id="tradeoffs">
+      <div class="section-label">Decision Framework</div>
+      <h2 class="section-title">Security Trade-offs</h2>
+      <table class="data-table">
+        <thead><tr><th>Decision</th><th>Option A</th><th>Option B</th><th>Guidance</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Token format</strong></td><td>JWT (self-contained)</td><td>Opaque (reference)</td><td>JWT for microservices (no network call per request). Opaque when instant revocation is required.</td></tr>
+          <tr><td><strong>Token storage (browser)</strong></td><td>Memory (variable)</td><td>HttpOnly cookie</td><td>Memory: XSS-safe but lost on refresh. Cookie: persistent but needs CSRF protection. Avoid localStorage.</td></tr>
+          <tr><td><strong>Secret lifespan</strong></td><td>Long-lived (months)</td><td>Short-lived (minutes)</td><td>Short-lived always wins on security. Ops overhead is solved by dynamic secrets (Vault).</td></tr>
+          <tr><td><strong>AuthZ model</strong></td><td>RBAC (roles)</td><td>ABAC (attributes)</td><td>RBAC until policies get complex. Add ABAC for tenant isolation, data ownership, time-based access.</td></tr>
+          <tr><td><strong>Service auth</strong></td><td>API keys</td><td>mTLS / Workload Identity</td><td>mTLS for same cluster. Workload Identity (SPIFFE/SPIRE) for cross-cluster. API keys as last resort.</td></tr>
+          <tr><td><strong>Auth library</strong></td><td>Roll your own</td><td>Battle-tested IdP</td><td>Never roll your own auth. Use Okta, Auth0, Keycloak, or Cognito. Auth bugs are catastrophic.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Anti-patterns -->
+    <section id="antipatterns">
+      <div class="section-label">What Not to Do</div>
+      <h2 class="section-title">Security Anti-patterns</h2>
+      <div class="antipattern-list">
+        <div class="ap-item">
+          <h4>Secrets in Source Code</h4>
+          <p>Hardcoding API keys, DB passwords, or private keys. Git history is permanent. Use a secrets manager and environment injection.</p>
+        </div>
+        <div class="ap-item">
+          <h4>JWT Without Signature Verification</h4>
+          <p>Calling <code>jwt.decode(token, options={"verify_signature": False})</code>. The payload is just base64 — anyone can forge it. Always verify the signature.</p>
+        </div>
+        <div class="ap-item">
+          <h4>Long-Lived Tokens</h4>
+          <p>Access tokens valid for days or weeks. A stolen token is valid until expiry. Short TTL (15 min) + refresh token rotation limits exposure.</p>
+        </div>
+        <div class="ap-item">
+          <h4>Missing Tenant Isolation</h4>
+          <p>Forgetting <code>WHERE tenant_id = ?</code> in multi-tenant queries. One missing filter exposes all tenant data. Use Postgres RLS as a backstop.</p>
+        </div>
+        <div class="ap-item">
+          <h4>Rolling Your Own Crypto</h4>
+          <p>Implementing custom encryption or hashing. Use industry-standard libraries: bcrypt/Argon2 for passwords, AES-GCM for symmetric, RSA/ECDSA for asymmetric.</p>
+        </div>
+        <div class="ap-item">
+          <h4>Over-Permissive IAM</h4>
+          <p>Giving services <code>*</code> access to S3 or <code>AdministratorAccess</code> because it's easy. Apply least privilege. Use IAM Analyzer to detect excessive permissions.</p>
+        </div>
+        <div class="ap-item">
+          <h4>No Audit Logs</h4>
+          <p>Security events (login failures, privilege escalations, secret access) not logged. You can't detect or investigate breaches without audit trails. Logs must be tamper-proof.</p>
+        </div>
+        <div class="ap-item">
+          <h4>Security as Afterthought</h4>
+          <p>Adding auth and encryption after the architecture is set. Security constraints change data models, API contracts, and service boundaries. Design in from day one.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interview Tips -->
+    <section id="interview">
+      <div class="section-label">Interview Prep</div>
+      <h2 class="section-title">Interview Tips</h2>
+      <div class="tip-list">
+        <div class="tip-item">
+          <h4>Lead with Threat Modeling</h4>
+          <p>Start any security discussion with: "What are we protecting? From whom? What's the impact of a breach?" Interviewers want to see systematic thinking, not jumping to solutions.</p>
+        </div>
+        <div class="tip-item">
+          <h4>Know the 401 vs 403 Distinction</h4>
+          <p>401 = not authenticated (token missing or invalid). 403 = authenticated but not authorized. Getting this wrong suggests shallow understanding of auth flows.</p>
+        </div>
+        <div class="tip-item">
+          <h4>Mention Defense in Depth</h4>
+          <p>No single control is sufficient. WAF + API gateway auth + application-level AuthZ + audit logs. Show you understand layered security.</p>
+        </div>
+        <div class="tip-item">
+          <h4>Explain JWT Trade-offs Clearly</h4>
+          <p>JWTs can't be instantly revoked — this is a common follow-up. Explain: short TTL + token blocklist (Redis) for logout/revocation. Or switch to opaque tokens if instant revocation is required.</p>
+        </div>
+        <div class="tip-item">
+          <h4>Dynamic Secrets &gt; Rotation</h4>
+          <p>If asked about credential rotation, pivot to dynamic secrets as the superior solution. Rotating a static password is a band-aid. Dynamic secrets eliminate the rotation problem entirely.</p>
+        </div>
+        <div class="tip-item">
+          <h4>Least Privilege Everywhere</h4>
+          <p>Apply this principle to IAM roles, DB users, API scopes, network rules. The blast radius of any single compromised component is bounded by its minimum necessary permissions.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Notes Sidebar -->
+  <aside class="notes-sidebar">
+    <div class="notes-sticky">
+      <div class="notes-heading">Clarifications</div>
+
+      <div class="note-item" data-section="zero-trust">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is a VPN and why doesn't Zero Trust use one?</div></div>
+        <div class="note-body">A VPN (Virtual Private Network) creates an encrypted tunnel from your device to a corporate network, making you appear "inside." Once inside, old systems trusted you. Zero Trust eliminates this — your location doesn't matter. You must prove identity and authorization on every single request regardless of whether you're on the corporate network or a coffee shop WiFi.</div>
+      </div>
+
+      <div class="note-item" data-section="authn-authz">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is an Identity Provider (IdP)?</div></div>
+        <div class="note-body">An IdP is the system that verifies who you are and issues proof of your identity. Examples: Okta, Auth0, Azure AD, Keycloak, Google Identity. Think of it as the DMV — you prove your identity there, they give you a license (token), and other services trust that license without calling the DMV again.</div>
+      </div>
+
+      <div class="note-item" data-section="oauth-oidc">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">OAuth 2.0 vs OIDC: what's the difference?</div></div>
+        <div class="note-body">OAuth 2.0 answers "what can this app do on your behalf?" — it's a delegation protocol for authorization. OIDC (OpenID Connect) adds "and who are you?" on top of OAuth. When you click "Sign in with Google," Google uses OIDC: OAuth 2.0 for the token flow, plus an id_token that tells the app your name, email, and Google user ID.</div>
+      </div>
+
+      <div class="note-item" data-section="oauth-oidc">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is PKCE (Proof Key for Code Exchange)?</div></div>
+        <div class="note-body">PKCE is a security add-on for OAuth in mobile/SPA apps. Before redirecting to login, the app generates a random secret (code_verifier) and sends a hash of it (code_challenge). When exchanging the auth code for a token, the app proves it has the original secret. This prevents an attacker who intercepts the auth code from using it, because they don't have the verifier.</div>
+      </div>
+
+      <div class="note-item" data-section="jwt">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">Base64 is not encryption</div></div>
+        <div class="note-body">JWT payloads are base64url-encoded, which is just encoding — anyone can decode them instantly. The security comes from the signature: if you change any byte in the payload, the signature breaks. Never put secrets in JWT claims — they're readable by anyone who has the token.</div>
+      </div>
+
+      <div class="note-item" data-section="secrets">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is a Hardware Security Module (HSM)?</div></div>
+        <div class="note-body">An HSM is a physical device that stores cryptographic keys and performs crypto operations in tamper-resistant hardware. The private key never leaves the device — the HSM does the signing/decryption internally. AWS CloudHSM and Azure Dedicated HSM provide this as a service. Used for root CA keys, payment signing keys, and regulatory requirements.</div>
+      </div>
+
+      <div class="note-item" data-section="encryption">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is a Certificate Authority (CA)?</div></div>
+        <div class="note-body">A CA is a trusted third party that signs TLS certificates, vouching that "yes, this cert really belongs to api.example.com." Browsers and operating systems ship with a list of trusted root CAs. Let's Encrypt is a free, automated CA. For internal services, companies run a private CA (AWS Private CA, cert-manager with Vault) to issue mTLS certificates.</div>
+      </div>
+
+      <div class="note-item" data-section="rbac-abac">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is OPA (Open Policy Agent)?</div></div>
+        <div class="note-body">OPA is a general-purpose policy engine you embed in your system. You write access rules in a language called Rego, and OPA evaluates them against JSON input (user, action, resource). It runs as a sidecar container or library. The key benefit: policies are code you can test and version-control, and they change without redeploying your application.</div>
+      </div>
+
+      <div class="note-item" data-section="api-security">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is a WAF and what does it block?</div></div>
+        <div class="note-body">A WAF (Web Application Firewall) sits in front of your APIs and inspects HTTP traffic for attack patterns. It blocks: SQL injection (adding SQL to form fields), XSS (injecting JavaScript), path traversal (../../etc/passwd), and OWASP Top 10 attacks. It's not a replacement for input validation in your code — it's an additional layer.</div>
+      </div>
+
+    </div>
+  </aside>
+</div>
+
+<!-- Footer -->
+<footer style="background:#0f172a;color:#64748b;text-align:center;padding:2rem;font-size:.85rem;margin-top:3rem;">
+  <p>KnowAlgo · <a href="system-design.html" style="color:#7dd3fc;text-decoration:none;">System Design Home</a> ·
+  <a href="index.html" style="color:#7dd3fc;text-decoration:none;">DSA Home</a></p>
+</footer>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+<script>
+// Progress bar
+window.addEventListener('scroll', () => {
+  const el = document.getElementById('progress-bar');
+  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+  el.style.width = pct + '%';
+});
+
+// TOC active link
+const tocLinks = document.querySelectorAll('.toc-nav a');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector(`.toc-nav a[href="#${e.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { rootMargin: '-10% 0px -80% 0px' });
+document.querySelectorAll('section[id]').forEach(s => observer.observe(s));
+
+// Copy buttons
+document.querySelectorAll('.copy-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const code = btn.nextElementSibling.querySelector('code');
+    navigator.clipboard.writeText(code.textContent).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  });
+});
+
+// Notes sidebar
+const noteItems = document.querySelectorAll('.note-item[data-section]');
+if (noteItems.length) {
+  const noteObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        noteItems.forEach(n => {
+          const match = n.dataset.section === id;
+          n.classList.toggle('active', match);
+          if (match) n.classList.add('open');
+          else n.classList.remove('open');
+        });
+      }
+    });
+  }, { rootMargin: '-10% 0px -55% 0px' });
+  document.querySelectorAll('[id]').forEach(el => noteObs.observe(el));
+  noteItems.forEach(n =>
+    n.querySelector('.note-head').addEventListener('click', () => n.classList.toggle('open'))
+  );
+}
+</script>
+</body>
+</html>

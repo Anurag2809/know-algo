@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Observability & SRE – Pattern 10 | KnowAlgo System Design</title>
+<meta name="description" content="Master observability: logs, metrics, traces, OpenTelemetry, Prometheus, Grafana, Jaeger, SLO/SLI/SLA, error budgets, and alerting.">
+<link rel="canonical" href="https://knowalgo.netlify.app/system-design-observability.html">
+<meta property="og:title" content="Observability & SRE – System Design Pattern 10">
+<meta property="og:description" content="The three pillars of observability, OpenTelemetry, SRE golden signals, error budgets, and alerting best practices.">
+<meta property="og:url" content="https://knowalgo.netlify.app/system-design-observability.html">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2Z1EQCZBXH');</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<style>
+:root {
+  --primary: #0f766e;
+  --primary-dark: #064e3b;
+  --primary-light: #d1fae5;
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --bg: #f8fafc;
+  --code-bg: #0f172a;
+  --card-bg: #ffffff;
+  --toc-width: 240px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.1);
+  --radius: 12px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: system-ui,-apple-system,sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(to right, #0f766e, #0284c7); z-index: 9999; transition: width .1s; }
+.site-header { background: #0f172a; padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 3px; z-index: 100; }
+.site-header a.logo { color: #f1f5f9; font-weight: 800; font-size: 1.1rem; text-decoration: none; }
+.site-header nav a { color: #94a3b8; text-decoration: none; font-size: .88rem; margin-left: 1.5rem; transition: color .2s; }
+.site-header nav a:hover { color: #f1f5f9; }
+.hero { background: linear-gradient(135deg, #0f172a 0%, #052e16 45%, #0c4a6e 100%); color: #fff; padding: 3.5rem 2rem 3rem; }
+.hero-badge { display: inline-flex; align-items: center; gap: .5rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 20px; padding: .3rem .9rem; font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #6ee7b7; margin-bottom: 1.2rem; }
+.hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.15; margin-bottom: .8rem; }
+.hero h1 span { color: #34d399; }
+.hero p { font-size: 1.08rem; color: #a7f3d0; max-width: 680px; margin-bottom: 1.5rem; }
+.hero-tags { display: flex; flex-wrap: wrap; gap: .5rem; }
+.hero-tag { background: rgba(255,255,255,.12); border-radius: 20px; padding: .25rem .75rem; font-size: .78rem; color: #d1fae5; }
+.page-body { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; display: grid; grid-template-columns: 240px 1fr 220px; gap: 2rem; align-items: start; }
+.toc-sidebar { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.toc-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.toc-title { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); margin-bottom: .9rem; }
+.toc-nav a { display: block; font-size: .82rem; color: var(--text-muted); text-decoration: none; padding: .28rem .5rem; border-radius: 6px; border-left: 2px solid transparent; transition: all .2s; margin-bottom: 2px; }
+.toc-nav a:hover, .toc-nav a.active { color: var(--primary); border-left-color: var(--primary); background: var(--primary-light); }
+.toc-divider { height: 1px; background: var(--border); margin: .6rem 0; }
+.toc-nav-links { display: flex; gap: .5rem; margin-top: .8rem; }
+.toc-nav-links a { flex: 1; text-align: center; font-size: .72rem; font-weight: 600; color: var(--primary); background: var(--primary-light); border-radius: 6px; padding: .35rem .4rem; text-decoration: none; }
+.main-content section { margin-bottom: 3rem; }
+.section-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--primary); margin-bottom: .5rem; }
+.section-title { font-size: 1.6rem; font-weight: 800; color: var(--text); margin-bottom: 1rem; line-height: 1.2; }
+.section-intro { font-size: 1rem; color: var(--text-muted); margin-bottom: 1.5rem; max-width: 760px; }
+.concept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.concept-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.concept-card h4 { font-size: .95rem; font-weight: 700; color: var(--text); margin-bottom: .4rem; }
+.concept-card p { font-size: .85rem; color: var(--text-muted); }
+.concept-card .cc-icon { font-size: 1.4rem; margin-bottom: .5rem; }
+.arch-diagram { background: #ffffff; border: 1px solid #cbd5e1; border-radius: var(--radius); padding: 1.25rem; margin: 1rem 0; font-family: monospace; font-size: .8rem; overflow-x: auto; line-height: 1.6; white-space: pre; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.arch-diagram .c  { color: #0f172a; }
+.arch-diagram .lb { color: #92400e; font-weight: 700; }
+.arch-diagram .sv { color: #166534; font-weight: 700; }
+.arch-diagram .db { color: #5b21b6; font-weight: 700; }
+.arch-diagram .ca { color: #9a3412; font-weight: 700; }
+.arch-diagram .er { color: #991b1b; font-weight: 700; }
+.arch-diagram .cm { color: #94a3b8; font-style: italic; }
+.arch-diagram .em { color: #065f46; font-weight: 700; }
+.arch-diagram .bl { color: #1e40af; font-weight: 700; }
+.arch-diagram .pk { color: #be185d; font-weight: 700; }
+.arch-diagram .cy { color: #0e7490; font-weight: 700; }
+.arch-diagram .in { color: #3730a3; font-weight: 700; }
+.arch-diagram .hl { color: #92400e; font-weight: 700; }
+.arch-diagram .ok { color: #166534; }
+.arch-diagram .or { color: #9a3412; }
+.arch-diagram .vi { color: #5b21b6; }
+.arch-diagram .rd { color: #991b1b; }
+.arch-diagram .dim { color: #94a3b8; }
+.arch-diagram .ts { color: #be185d; }
+.code-block { position: relative; margin: 1rem 0; border-radius: var(--radius); overflow: hidden; }
+.code-block pre { margin: 0 !important; border-radius: var(--radius) !important; font-size: .82rem !important; }
+.copy-btn { position: absolute; top: .6rem; right: .6rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #94a3b8; font-size: .72rem; padding: .25rem .6rem; border-radius: 6px; cursor: pointer; transition: all .2s; }
+.copy-btn:hover { background: rgba(255,255,255,.2); color: #fff; }
+.data-table { width: 100%; border-collapse: collapse; font-size: .88rem; margin: 1rem 0; background: var(--card-bg); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.data-table th { background: var(--primary); color: #fff; padding: .7rem 1rem; text-align: left; font-size: .8rem; font-weight: 700; }
+.data-table td { padding: .65rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: #f8fafc; }
+.eng-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+.eng-take { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.et-sre { border-left-color: #0369a1; } .et-backend { border-left-color: #7c3aed; } .et-security { border-left-color: #dc2626; }
+.et-data { border-left-color: #059669; } .et-platform { border-left-color: #d97706; } .et-ml { border-left-color: #db2777; }
+.et-frontend { border-left-color: #0891b2; } .et-mobile { border-left-color: #16a34a; } .et-architect { border-left-color: #475569; }
+.eng-role { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: .3rem; }
+.eng-take p { font-size: .85rem; color: var(--text); }
+.problem-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; box-shadow: var(--shadow-sm); }
+.problem-header { padding: 1.25rem 1.5rem; background: linear-gradient(135deg, #0f766e, #0c4a6e); border-bottom: none; }
+.problem-num { font-size: .78rem; font-weight: 700; color: #6ee7b7; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem; }
+.problem-title { font-size: 1.15rem; font-weight: 700; color: #f1f5f9; margin-bottom: .5rem; }
+.ptags { display: flex; flex-wrap: wrap; gap: .4rem; }
+.ptag { background: rgba(255,255,255,.15); color: #d1fae5; font-size: .72rem; font-weight: 600; padding: .2rem .55rem; border-radius: 10px; }
+.problem-body { padding: 1.5rem; }
+.problem-body h4 { font-size: .9rem; font-weight: 700; color: var(--text); margin: 1rem 0 .4rem; }
+.problem-body p { font-size: .9rem; color: var(--text-muted); margin-bottom: .75rem; }
+.antipattern-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.ap-item { background: #fff5f5; border: 1px solid #fecaca; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.ap-item h4 { font-size: .9rem; font-weight: 700; color: #991b1b; margin-bottom: .3rem; }
+.ap-item p { font-size: .83rem; color: #7f1d1d; }
+.tip-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.tip-item { background: var(--primary-light); border: 1px solid #a7f3d0; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.tip-item h4 { font-size: .9rem; font-weight: 700; color: var(--primary-dark); margin-bottom: .3rem; }
+.tip-item p { font-size: .83rem; color: #064e3b; }
+.notes-sidebar { align-self: start; }
+.notes-sticky { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.notes-heading { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: 10px; }
+.note-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: border-color .25s, box-shadow .25s; }
+.note-item.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(15,118,110,.08); }
+.note-head { display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px; cursor: pointer; }
+.note-bullet { width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: .78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: transform .2s; }
+.note-item.open .note-bullet { transform: rotate(45deg); }
+.note-label { font-size: .78rem; font-weight: 600; color: #1e293b; flex: 1; line-height: 1.35; }
+.note-body { display: none; font-size: .76rem; color: #475569; line-height: 1.55; padding: 0 11px 11px 11px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+.note-item.open .note-body, .note-item.active .note-body { display: block; }
+@media (max-width: 1150px) { .notes-sidebar { display: none !important; } .page-body { grid-template-columns: 240px 1fr !important; } }
+@media (max-width: 768px) { .page-body { grid-template-columns: 1fr !important; } .toc-sidebar { display: none; } }
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<header class="site-header">
+  <a href="index.html" class="logo">KnowAlgo</a>
+  <nav>
+    <a href="index.html">DSA</a>
+    <a href="system-design.html">System Design</a>
+    <a href="interview-prep.html">Interview Prep</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div style="max-width:1400px;margin:0 auto;padding:0 1.5rem">
+    <div class="hero-badge"><span>📡</span> Pattern 10 of 16 · System Design</div>
+    <h1>Observability &amp; <span>SRE</span></h1>
+    <p>Logs, metrics, traces — the three pillars. OpenTelemetry, Prometheus, Grafana, Jaeger, SLO/SLI/SLA, error budgets, and alerting strategies that keep systems reliable.</p>
+    <div class="hero-tags">
+      <span class="hero-tag">Logs / Metrics / Traces</span>
+      <span class="hero-tag">OpenTelemetry</span>
+      <span class="hero-tag">Prometheus</span>
+      <span class="hero-tag">Grafana</span>
+      <span class="hero-tag">Jaeger</span>
+      <span class="hero-tag">SLO / SLI / SLA</span>
+      <span class="hero-tag">Error Budget</span>
+      <span class="hero-tag">Alerting</span>
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+  <aside class="toc-sidebar">
+    <div class="toc-card">
+      <div class="toc-title">On this page</div>
+      <nav class="toc-nav">
+        <a href="#pillars">Three Pillars</a>
+        <a href="#opentelemetry">OpenTelemetry</a>
+        <a href="#metrics">Metrics & Prometheus</a>
+        <a href="#tracing">Distributed Tracing</a>
+        <a href="#logging">Structured Logging</a>
+        <a href="#slo">SLO / SLI / SLA</a>
+        <a href="#alerting">Alerting & On-call</a>
+        <a href="#golden-signals">Golden Signals</a>
+        <div class="toc-divider"></div>
+        <a href="#perspectives">Engineer Perspectives</a>
+        <a href="#problems">Real Problems</a>
+        <a href="#tradeoffs">Trade-offs</a>
+        <a href="#antipatterns">Anti-patterns</a>
+        <a href="#interview">Interview Tips</a>
+      </nav>
+      <div class="toc-nav-links">
+        <a href="system-design-security.html">← Security</a>
+        <a href="system-design-migration.html">Migration →</a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <section id="pillars">
+      <div class="section-label">Foundation</div>
+      <h2 class="section-title">The Three Pillars of Observability</h2>
+      <p class="section-intro">Observability is the ability to understand what a system is doing from its external outputs, without modifying the system. The three pillars — logs, metrics, and traces — each answer different questions about system behavior.</p>
+
+      <div class="arch-diagram"><span class="cm">Three pillars: what question each answers</span>
+
+<span class="lb">LOGS</span>                 <span class="sv">METRICS</span>                  <span class="em">TRACES</span>
+"What happened?"        "How is it performing?"      "Why is this slow?"
+
+Timestamped events      Numeric time-series          Request flow across services
+Unstructured or JSON    Aggregatable, queryable      Spans with timing + context
+High volume, expensive  Low cardinality, cheap       Sampled (1% or adaptive)
+
+<span class="cm">Example:</span>
+2026-01-15T14:23:01Z    http_request_duration_p99    TraceID: abc123
+level=ERROR              = 450ms                      Order → Payment → DB
+msg="DB timeout"         error_rate = 0.5%            ├─ order-svc: 5ms
+user_id=123              active_connections = 847     ├─ payment-svc: 420ms ← slow!
+order_id=789                                          └─ postgres: 380ms ← root cause
+
+<span class="cm">Tools:</span>
+Elasticsearch/Loki      Prometheus/Datadog           Jaeger/Zipkin/Tempo
+CloudWatch Logs         InfluxDB/VictoriaMetrics      AWS X-Ray/GCP Cloud Trace</div>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <div class="cc-icon">📋</div>
+          <h4>Logs — Events</h4>
+          <p>Discrete timestamped records of things that happened. Use structured JSON (not free text) so logs are machine-parseable. Include trace_id to correlate with traces.</p>
+        </div>
+        <div class="concept-card">
+          <div class="cc-icon">📊</div>
+          <h4>Metrics — Numbers</h4>
+          <p>Aggregated numeric measurements over time. Four types: Counter (always increases), Gauge (up/down), Histogram (distribution), Summary (quantiles).</p>
+        </div>
+        <div class="concept-card">
+          <div class="cc-icon">🔍</div>
+          <h4>Traces — Flows</h4>
+          <p>A trace follows a single request across multiple services. Each service creates a span with start time, duration, and metadata. Parent-child relationships form a tree.</p>
+        </div>
+        <div class="concept-card">
+          <div class="cc-icon">🔗</div>
+          <h4>Correlation</h4>
+          <p>The real power: correlate all three. A metric alert fires → find the trace_id from that time window → look up the log lines from that trace. Tools: Grafana unified view.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="opentelemetry">
+      <div class="section-label">Instrumentation Standard</div>
+      <h2 class="section-title">OpenTelemetry (OTel)</h2>
+      <p class="section-intro">OpenTelemetry is the open-source standard for instrumentation. It provides vendor-neutral APIs and SDKs to generate traces, metrics, and logs. You instrument once, then export to any backend (Jaeger, Prometheus, Datadog, etc.).</p>
+
+      <div class="arch-diagram"><span class="cm">OpenTelemetry Architecture</span>
+
+<span class="bl">Your Application</span>
+    ├─ OTel SDK (Python/Go/Java/JS)
+    │   ├─ Auto-instrumentation (HTTP, DB, gRPC — no code changes)
+    │   └─ Manual spans for business logic
+    │
+    ▼
+<span class="sv">OTel Collector</span> (sidecar or daemonset)
+    ├─ Receivers: OTLP, Prometheus, Jaeger, Zipkin
+    ├─ Processors: batching, sampling, PII scrubbing, tail-sampling
+    └─ Exporters: (fan out to multiple backends)
+         ├─► <span class="em">Jaeger / Tempo</span>     (traces)
+         ├─► <span class="lb">Prometheus</span>          (metrics)
+         └─► <span class="ca">Elasticsearch / Loki</span> (logs)
+
+<span class="cm">OTel Collector is the key: centralize sampling/routing decisions, not in each app</span>
+<span class="cm">Tail-based sampling: decide to keep/drop a trace AFTER it completes (knows if it had errors)</span>
+<span class="cm">Head-based sampling: decide at trace start (doesn't know outcome yet)</span></div>
+
+      <div class="code-block">
+        <button class="copy-btn">Copy</button>
+        <pre><code class="language-python">from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+
+# Setup: run once at startup
+provider = TracerProvider()
+exporter = OTLPSpanExporter(endpoint="http://otel-collector:4317")
+provider.add_span_processor(BatchSpanProcessor(exporter))
+trace.set_tracer_provider(provider)
+
+# Auto-instrument FastAPI and SQLAlchemy — zero code changes to handlers
+FastAPIInstrumentor.instrument_app(app)
+SQLAlchemyInstrumentor().instrument(engine=engine)
+
+# Manual span for custom business logic
+tracer = trace.get_tracer("order-service")
+
+async def process_payment(order_id: str, amount: float):
+    with tracer.start_as_current_span("process_payment") as span:
+        span.set_attribute("order.id", order_id)
+        span.set_attribute("payment.amount", amount)
+
+        try:
+            result = await payment_gateway.charge(amount)
+            span.set_attribute("payment.status", result.status)
+            span.set_attribute("payment.transaction_id", result.txn_id)
+            return result
+        except PaymentError as e:
+            span.record_exception(e)
+            span.set_status(trace.StatusCode.ERROR, str(e))
+            raise
+</code></pre>
+      </div>
+    </section>
+
+    <section id="metrics">
+      <div class="section-label">Numeric Telemetry</div>
+      <h2 class="section-title">Metrics &amp; Prometheus</h2>
+      <p class="section-intro">Prometheus is the de-facto standard for metrics in cloud-native systems. It scrapes metrics from HTTP endpoints, stores them in a time-series database, and provides PromQL for querying. Grafana visualizes PromQL queries as dashboards.</p>
+
+      <div class="arch-diagram"><span class="cm">Prometheus Scrape Architecture</span>
+
+<span class="sv">Services</span>                            <span class="lb">Prometheus Server</span>              <span class="em">Grafana</span>
+  order-svc:8080/metrics ◄──── scrape every 15s ───────────────────────────────
+  payment-svc:8080/metrics ◄── scrape every 15s ── store TSDB ──► PromQL ─────►
+  postgres-exporter:9187/metrics ◄ scrape 15s ────────────────────────────────►
+
+<span class="cm">Prometheus pulls (scrapes) — apps expose metrics on /metrics endpoint</span>
+<span class="cm">Alternative: pushgateway for short-lived jobs that may not exist when Prometheus scrapes</span>
+
+<span class="cm">Metric types:</span>
+<span class="bl">Counter</span>:   http_requests_total{method="GET",status="200"}  <span class="cm">← always goes up</span>
+<span class="sv">Gauge</span>:     active_connections{service="db"}                <span class="cm">← can go up/down</span>
+<span class="lb">Histogram</span>: http_request_duration_seconds_bucket{le="0.1"} <span class="cm">← counts by bucket</span>
+<span class="em">Summary</span>:   http_request_duration_seconds{quantile="0.99"}  <span class="cm">← client-side quantile</span>
+
+<span class="cm">PromQL: rate(http_requests_total[5m]) → requests per second over 5-minute window</span>
+<span class="cm">histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) → p99 latency</span></div>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <h4>Cardinality Problem</h4>
+          <p>High-cardinality labels (like user_id or order_id) create millions of time series, crashing Prometheus. Labels should be low-cardinality: status code, endpoint, region — not individual IDs.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Alertmanager</h4>
+          <p>Routes Prometheus alerts to PagerDuty, Slack, email. Handles deduplication (same alert from 3 instances = 1 notification), grouping, and silencing during maintenance.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Long-Term Storage</h4>
+          <p>Prometheus keeps ~2 weeks locally. For longer retention: Thanos or Cortex (S3-backed, multi-region PromQL), or VictoriaMetrics (high-performance, compression). Grafana Mimir is CNCF-native.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="tracing">
+      <div class="section-label">Request Flow</div>
+      <h2 class="section-title">Distributed Tracing</h2>
+      <p class="section-intro">When a request touches 10 microservices, a single log line can't tell you where 400ms went. A trace reconstructs the full call graph: each service adds a span with start time, duration, and metadata.</p>
+
+      <div class="arch-diagram"><span class="cm">Trace: user clicks checkout → trace spans the entire flow</span>
+
+<span class="bl">TraceID: 7f3a8b2c...</span>
+│
+├─ <span class="sv">api-gateway</span>          [0ms → 2ms]   <span class="cm">routing, auth check</span>
+│
+├─ <span class="em">order-service</span>        [2ms → 8ms]   <span class="cm">validate cart, create order</span>
+│   │
+│   ├─ <span class="lb">postgres</span>           [3ms → 7ms]   <span class="cm">INSERT order</span>
+│   │
+│   └─ <span class="ca">inventory-service</span>  [5ms → 8ms]   <span class="cm">reserve items</span>
+│       └─ <span class="lb">redis</span>             [5ms → 6ms]   <span class="cm">decrement stock</span>
+│
+├─ <span class="er">payment-service</span>      [8ms → 430ms] <span class="cm">← 422ms spent here!</span>
+│   │
+│   ├─ <span class="lb">stripe-api</span>         [8ms → 420ms] <span class="cm">← root cause: external API slow</span>
+│   │   <span class="cm">http.status=200, latency=412ms</span>
+│   │
+│   └─ <span class="lb">postgres</span>           [420ms → 430ms] <span class="cm">INSERT payment record</span>
+│
+└─ <span class="sv">notification-service</span> [430ms → 432ms] <span class="cm">send confirmation email (async)</span>
+
+<span class="cm">Total trace: 432ms. Root cause: Stripe API. Order service itself: 6ms.</span>
+<span class="cm">Without tracing: you'd see "checkout is slow" but have no idea where.</span></div>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <h4>Context Propagation</h4>
+          <p>Trace context (trace_id, span_id) must be forwarded in HTTP headers (<code>traceparent</code> in W3C format) or gRPC metadata. Auto-instrumentation handles this, but custom async jobs need manual propagation.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Sampling Strategies</h4>
+          <p>At 1000 req/s, storing every trace is expensive. Head sampling: keep 1% randomly. Tail sampling (preferred): keep 100% of error traces, 1% of success traces. OTel Collector's tail-sampling processor handles this.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Tools</h4>
+          <p><strong>Jaeger</strong>: CNCF, self-hosted, Elasticsearch/Cassandra backend. <strong>Tempo</strong>: Grafana's trace backend, object-storage-based (S3), cheap. <strong>Zipkin</strong>: older but simpler. <strong>AWS X-Ray</strong>, <strong>GCP Cloud Trace</strong>: managed options.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="logging">
+      <div class="section-label">Event Records</div>
+      <h2 class="section-title">Structured Logging</h2>
+      <p class="section-intro">Unstructured logs ("Error connecting to database") are hard to query at scale. Structured logging emits JSON with consistent fields, enabling fast queries and aggregations.</p>
+
+      <div class="code-block">
+        <button class="copy-btn">Copy</button>
+        <pre><code class="language-python">import structlog, logging
+from opentelemetry import trace
+
+# Configure structlog with JSON output
+structlog.configure(
+    processors=[
+        structlog.contextvars.merge_contextvars,     # adds request context
+        structlog.processors.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.JSONRenderer(),          # structured JSON output
+    ],
+    logger_factory=structlog.PrintLoggerFactory(),
+)
+log = structlog.get_logger()
+
+# Middleware: inject trace context into all log lines
+async def logging_middleware(request: Request, call_next):
+    span = trace.get_current_span()
+    ctx = span.get_span_context()
+    structlog.contextvars.bind_contextvars(
+        trace_id=format(ctx.trace_id, '032x'),
+        span_id=format(ctx.span_id, '016x'),
+        user_id=request.state.user_id if hasattr(request.state, 'user_id') else None,
+        path=request.url.path,
+        method=request.method,
+    )
+    response = await call_next(request)
+    log.info("request_completed", status=response.status_code)
+    structlog.contextvars.clear_contextvars()
+    return response
+
+# Log output (each line is a JSON object):
+# {"event":"request_completed","level":"info","timestamp":"2026-01-15T14:23:01Z",
+#  "trace_id":"7f3a8b2c...","span_id":"a1b2...","user_id":"u123",
+#  "path":"/checkout","method":"POST","status":200}
+</code></pre>
+      </div>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <h4>Log Aggregation Stacks</h4>
+          <p><strong>ELK</strong>: Elasticsearch + Logstash + Kibana. Powerful but resource-intensive. <strong>Loki</strong>: Grafana's log store, index-free (just labels), much cheaper than Elasticsearch. <strong>CloudWatch Logs</strong>: AWS-native, simple but expensive at scale.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Log Levels</h4>
+          <p>ERROR: system failure requiring immediate attention. WARN: unexpected but recovered. INFO: normal significant events. DEBUG: detailed developer info (never in production). Use sampling for high-frequency INFO logs.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Log Volume Management</h4>
+          <p>Log what you need to debug incidents, not everything. Rate-limit noisy log lines. Sample INFO logs at 10%. Never log PII (passwords, SSNs, credit cards) — you'll get a compliance violation.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="slo">
+      <div class="section-label">Reliability Targets</div>
+      <h2 class="section-title">SLO / SLI / SLA &amp; Error Budgets</h2>
+      <p class="section-intro">SRE (Site Reliability Engineering) uses concrete reliability targets instead of vague promises. The framework: define what "reliability" means (SLI), set a target (SLO), and track your remaining budget for risk (error budget).</p>
+
+      <div class="arch-diagram"><span class="cm">SLI → SLO → SLA hierarchy</span>
+
+<span class="bl">SLI</span> (Service Level Indicator) = the metric you measure
+  Examples:
+    • Availability:    successful_requests / total_requests
+    • Latency:         % of requests under 200ms
+    • Throughput:      messages processed per second
+    • Error rate:      errors / total_requests
+
+<span class="sv">SLO</span> (Service Level Objective) = your internal target for the SLI
+  Examples:
+    • 99.9% of requests succeed over a rolling 30-day window
+    • 95% of requests complete in under 200ms
+    • p99 latency under 1 second
+
+<span class="em">SLA</span> (Service Level Agreement) = contractual commitment to customers
+  • SLA is always MORE lenient than SLO (buffer for you to act before breach)
+  • SLO: 99.9%, SLA: 99.5% → if you miss SLO, you still have time before SLA penalty
+
+<span class="lb">Error Budget</span> = 1 - SLO = allowable downtime
+  • 99.9% SLO over 30 days = 0.1% of 30 days = 43.2 minutes of allowed downtime
+  • If error budget is exhausted → freeze new feature deployments until budget refills
+  • Error budget is a contract between product team and SRE: spend budget on features vs. reliability
+
+<span class="cm">Burn rate: if budget burns 14x faster than normal, you'll exhaust it in 1hr → page immediately</span></div>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <h4>Choosing Good SLIs</h4>
+          <p>SLIs must reflect user experience, not internal signals. "Database connection pool healthy" is a poor SLI. "% of checkout requests completing in under 3 seconds" directly measures user impact.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Error Budget Policies</h4>
+          <p>When budget is exhausted: halt all risky deployments. When budget is healthy: prioritize new features. Budget tracking creates shared incentive — engineers care about reliability because it affects their velocity.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Uptime Math</h4>
+          <p>99% = 87.6 hr/yr down. 99.9% = 8.7 hr/yr. 99.95% = 4.4 hr/yr. 99.99% = 52 min/yr. 99.999% = 5.2 min/yr. Each nine requires significantly more investment.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="alerting">
+      <div class="section-label">On-Call Intelligence</div>
+      <h2 class="section-title">Alerting &amp; On-call</h2>
+      <p class="section-intro">Bad alerting is worse than no alerting — alert fatigue causes engineers to ignore pages, missing real incidents. Good alerts are actionable, symptom-based, and rare enough to demand attention.</p>
+
+      <div class="arch-diagram"><span class="cm">Alert tiers: who gets woken up and when</span>
+
+Severity  │ Response Time │ Channel         │ Example
+──────────┼───────────────┼─────────────────┼────────────────────────────────────
+<span class="er">P1/SEV-1</span>  │ 5 minutes     │ Page (wake up)  │ Error rate > 10% for 2 minutes
+<span class="or">P2/SEV-2</span>  │ 30 minutes    │ Page (business) │ Error budget burn rate > 5x
+<span class="lb">P3/SEV-3</span>  │ 1 business day│ Slack/ticket    │ p95 latency trending up
+<span class="cm">P4/SEV-4</span>  │ Next sprint   │ Ticket          │ Disk usage > 70%
+
+<span class="cm">Alert on symptoms, not causes:</span>
+<span class="er">GOOD</span>: "error_rate > 1% for 5 minutes"              <span class="cm">← user impact</span>
+<span class="rd">BAD</span>: "CPU > 80%"                                   <span class="cm">← maybe fine, maybe not</span>
+<span class="rd">BAD</span>: "deployment in progress"                      <span class="cm">← not actionable</span>
+
+<span class="cm">Multi-window burn rate alerting (Google SRE Book):</span>
+<span class="er">1h window</span>: burn_rate > 14x → exhaust budget in 2 hours  → PAGE immediately
+<span class="or">6h window</span>: burn_rate > 6x  → exhaust budget in 5 hours  → PAGE (ticket)
+<span class="lb">3d window</span>: burn_rate > 1x  → on track to exhaust budget  → Slack ticket</div>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <h4>Alert Fatigue</h4>
+          <p>Too many alerts = oncall ignores them. Target: < 5 pages/shift, each requiring real investigation. Track alert volume and actionability. Noisy alerts get a bug filed to fix or delete them.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Runbooks</h4>
+          <p>Every alert must have a linked runbook: what does this alert mean, how do I diagnose it, common fixes, escalation path. Oncall should be able to handle incidents without waking up the original author.</p>
+        </div>
+        <div class="concept-card">
+          <h4>PagerDuty / OpsGenie</h4>
+          <p>On-call rotation management. Escalation policies (if primary doesn't ack in 5 min, page secondary). Schedules. Incident management. Postmortem tracking. Alertmanager routes to these tools.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="golden-signals">
+      <div class="section-label">SRE Framework</div>
+      <h2 class="section-title">The Four Golden Signals</h2>
+      <p class="section-intro">Google's SRE book distilled the essential metrics for any service into four signals. If you can only monitor four things, monitor these.</p>
+
+      <table class="data-table">
+        <thead><tr><th>Signal</th><th>Definition</th><th>PromQL Example</th><th>Alert Threshold</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Latency</strong></td><td>How long requests take. Distinguish success vs. error latency — slow errors can mask fast successes in averages.</td><td><code>histogram_quantile(0.99, rate(duration_bucket[5m]))</code></td><td>p99 > SLO target for 5 min</td></tr>
+          <tr><td><strong>Traffic</strong></td><td>Demand on the system. Requests/sec, messages/sec. Sudden drops can indicate an issue just as much as spikes.</td><td><code>rate(http_requests_total[5m])</code></td><td>Drop > 50% from baseline</td></tr>
+          <tr><td><strong>Errors</strong></td><td>Rate of failed requests. Count both explicit (5xx) and implicit (wrong data, slow degraded).</td><td><code>rate(http_requests_total{code=~"5.."}[5m])</code></td><td>Error rate > 1% for 2 min</td></tr>
+          <tr><td><strong>Saturation</strong></td><td>How full is the service? CPU, memory, connections, queue depth. Predict problems before they happen.</td><td><code>db_connections_active / db_connections_max</code></td><td>> 80% saturation</td></tr>
+        </tbody>
+      </table>
+
+      <p style="color:var(--text-muted);font-size:.9rem;margin-top:.5rem">USE method (for resources): Utilization, Saturation, Errors. RED method (for services): Rate, Errors, Duration. Golden signals combine both perspectives.</p>
+    </section>
+
+    <section id="perspectives">
+      <div class="section-label">9 Viewpoints</div>
+      <h2 class="section-title">Engineer Perspectives</h2>
+      <div class="eng-grid">
+        <div class="eng-take et-sre">
+          <div class="eng-role">SRE</div>
+          <p>SLOs are a negotiation tool, not just a number. Negotiate SLO with product before launch. Tight SLO = less feature velocity. Loose SLO = angry customers.</p>
+        </div>
+        <div class="eng-take et-backend">
+          <div class="eng-role">Backend Engineer</div>
+          <p>Add trace context to every log line from day one. Retrofitting tracing into a running system is painful. Use structlog and OTel auto-instrumentation — it's a one-time setup cost.</p>
+        </div>
+        <div class="eng-take et-platform">
+          <div class="eng-role">Platform Engineer</div>
+          <p>Standardize the observability stack. One Prometheus, one Grafana, one OTel collector daemonset. Teams should only worry about what to measure, not how to ship it.</p>
+        </div>
+        <div class="eng-take et-data">
+          <div class="eng-role">Data Engineer</div>
+          <p>Pipelines need metrics too. Track: lag (how far behind are we?), throughput (records/sec), and data quality (null rate, schema violations). Treat pipeline observability like service observability.</p>
+        </div>
+        <div class="eng-take et-architect">
+          <div class="eng-role">Architect</div>
+          <p>Design observability into the architecture. Agree on trace context propagation format (W3C traceparent) before teams build. Retrofitting spans into async event systems is especially painful.</p>
+        </div>
+        <div class="eng-take et-ml">
+          <div class="eng-role">ML Engineer</div>
+          <p>Model serving needs latency percentiles (inference is often p99-sensitive), input data drift metrics, and prediction distribution monitoring. Use Prometheus + custom metrics.</p>
+        </div>
+        <div class="eng-take et-security">
+          <div class="eng-role">Security Engineer</div>
+          <p>Observability data can be sensitive. Logs may contain PII. Traces reveal system topology to attackers. RBAC on Grafana. Scrub PII before shipping logs to Elastic.</p>
+        </div>
+        <div class="eng-take et-frontend">
+          <div class="eng-role">Frontend Engineer</div>
+          <p>Real User Monitoring (RUM) tracks what actual users experience: Core Web Vitals, LCP, FID, CLS. Synthetic monitoring (Playwright tests on a schedule) catches issues before users do.</p>
+        </div>
+        <div class="eng-take et-mobile">
+          <div class="eng-role">Mobile Engineer</div>
+          <p>Mobile crash reporting (Firebase Crashlytics, Sentry) is your logs. Instrument app startup time, screen render times, and API call latency from the client perspective. Client sees different p99s than server.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="problems">
+      <div class="section-label">Real Problems</div>
+      <h2 class="section-title">Observability Design Problems</h2>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 01 · SLO Dashboard</div>
+          <div class="problem-title">Build a multi-window error budget burn rate alert for a 99.9% SLO</div>
+          <div class="ptags"><span class="ptag">SLO</span><span class="ptag">Prometheus</span><span class="ptag">Error Budget</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Requirements</h4>
+          <p>Service has a 99.9% success rate SLO (30-day rolling window). Need alerts at three burn rates: immediate page (P1), ticket (P2), and tracking (P3). Alert fatigue must be minimized.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python"># Prometheus alerting rules (alerts.yaml)
+# Error ratio = errors / total requests over a window
+# Burn rate = how fast we're consuming the error budget (1x = exactly on track)
+
+# error budget = 0.1% (1 - 0.999 SLO)
+# If we burn at 14x rate over 1h: 14 * 1h = consume 14h of budget in 1h
+#   → exhausts 30-day budget in 30*24/14 ≈ 51 hours → PAGE NOW
+
+groups:
+  - name: slo_alerts
+    rules:
+      # P1: Fast burn — 14x rate for 1h OR 14x rate for 5min
+      - alert: SLO_ErrorBudgetFastBurn
+        expr: |
+          (
+            rate(http_requests_total{status=~"5.."}[1h])
+            / rate(http_requests_total[1h])
+          ) > (14 * 0.001)
+          and
+          (
+            rate(http_requests_total{status=~"5.."}[5m])
+            / rate(http_requests_total[5m])
+          ) > (14 * 0.001)
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Error budget burning 14x faster than target"
+          runbook: "https://wiki/runbooks/api-error-budget"
+
+      # P2: Slow burn — 6x rate over 6h window
+      - alert: SLO_ErrorBudgetSlowBurn
+        expr: |
+          (
+            rate(http_requests_total{status=~"5.."}[6h])
+            / rate(http_requests_total[6h])
+          ) > (6 * 0.001)
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Error budget burning 6x faster than target"
+
+# Python: calculate current error budget remaining
+def error_budget_remaining(success_rate_30d: float, slo: float = 0.999) -> dict:
+    budget_total = 1 - slo           # 0.001 (0.1%)
+    budget_used = slo - success_rate_30d
+    budget_remaining = budget_total - budget_used
+    pct_remaining = budget_remaining / budget_total * 100
+
+    return {
+        "slo": f"{slo*100}%",
+        "actual": f"{success_rate_30d*100:.4f}%",
+        "budget_used_min": (budget_used * 30 * 24 * 60),
+        "budget_remaining_min": (budget_remaining * 30 * 24 * 60),
+        "pct_remaining": f"{pct_remaining:.1f}%",
+        "status": "OK" if pct_remaining > 50 else "WARNING" if pct_remaining > 0 else "EXHAUSTED"
+    }
+
+# Example: actual = 99.92% vs SLO 99.9%
+print(error_budget_remaining(0.9992))
+# {'budget_remaining_min': 28.8, 'pct_remaining': '20.0%', 'status': 'WARNING'}
+</code></pre>
+          </div>
+          <h4>Key Insight</h4>
+          <p>Multi-window alerting reduces false positives. A single bad second doesn't exhaust your budget. The 1h + 5m dual condition catches sustained fast burns without alerting on momentary spikes.</p>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 02 · Distributed Tracing</div>
+          <div class="problem-title">Trace a slow checkout request across 6 microservices with OTel + Jaeger</div>
+          <div class="ptags"><span class="ptag">OpenTelemetry</span><span class="ptag">Jaeger</span><span class="ptag">Distributed Tracing</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Challenge</h4>
+          <p>Checkout p99 is 2.3 seconds. Average is 150ms. The 99th percentile outliers are mysterious — they don't leave obvious error logs. We need to find which service is slow for these specific requests.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python">from opentelemetry import trace, context
+from opentelemetry.propagate import inject, extract
+import httpx
+
+tracer = trace.get_tracer("checkout-service")
+
+async def checkout(cart_id: str, user_id: str):
+    with tracer.start_as_current_span("checkout") as span:
+        span.set_attribute("cart.id", cart_id)
+        span.set_attribute("user.id", user_id)
+
+        # Each downstream call propagates trace context via HTTP headers
+        headers = {}
+        inject(headers)  # adds 'traceparent' header with current trace/span IDs
+
+        async with httpx.AsyncClient() as client:
+            # These calls are sequential — each span shows where time was spent
+            with tracer.start_as_current_span("validate_inventory"):
+                inventory = await client.post(
+                    "http://inventory-svc/validate",
+                    headers=headers,
+                    json={"cart_id": cart_id}
+                )
+
+            with tracer.start_as_current_span("calculate_pricing"):
+                pricing = await client.post(
+                    "http://pricing-svc/calculate",
+                    headers=headers,
+                    json={"cart_id": cart_id, "user_id": user_id}
+                )
+                span.set_attribute("pricing.total", pricing.json()["total"])
+
+            with tracer.start_as_current_span("process_payment"):
+                payment = await client.post(
+                    "http://payment-svc/charge",
+                    headers=headers,
+                    json={"amount": pricing.json()["total"]}
+                )
+
+            with tracer.start_as_current_span("create_order"):
+                order = await client.post(
+                    "http://order-svc/create",
+                    headers=headers,
+                    json={"cart_id": cart_id, "payment_id": payment.json()["id"]}
+                )
+
+        span.set_attribute("order.id", order.json()["id"])
+        return order.json()
+
+# In Jaeger: filter traces where duration > 1000ms
+# The waterfall view immediately shows which span is slow:
+# If payment-svc span = 2100ms → look at payment-svc's internal spans
+# If the payment-svc DB span = 2100ms → N+1 query or missing index
+</code></pre>
+          </div>
+          <h4>Tail Sampling Config</h4>
+          <p>Keep 100% of slow traces (duration > 1s), 100% of error traces, 0.1% of fast successful traces. This dramatically reduces storage while preserving all the interesting traces for debugging.</p>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 03 · Dashboards</div>
+          <div class="problem-title">Design a Grafana SLO dashboard for an API service with RED metrics</div>
+          <div class="ptags"><span class="ptag">Grafana</span><span class="ptag">PromQL</span><span class="ptag">RED Metrics</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Dashboard Layout</h4>
+          <p>Top row: SLO status (% remaining budget, days until exhaustion). Second row: RED metrics (rate, errors, duration) as time-series. Third row: per-endpoint breakdown. Fourth row: upstream dependencies.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python"># Key PromQL queries for each dashboard panel
+
+# 1. Request rate (RED: Rate)
+rate(http_requests_total{service="checkout"}[5m])
+
+# 2. Error rate % (RED: Errors)
+100 * rate(http_requests_total{service="checkout",status=~"5.."}[5m])
+    / rate(http_requests_total{service="checkout"}[5m])
+
+# 3. p99 latency (RED: Duration)
+histogram_quantile(0.99,
+  rate(http_request_duration_seconds_bucket{service="checkout"}[5m])
+)
+
+# 4. SLO compliance (30-day rolling)
+1 - (
+  rate(http_requests_total{service="checkout",status=~"5.."}[30d])
+  / rate(http_requests_total{service="checkout"}[30d])
+)
+
+# 5. Error budget remaining (%)
+100 * (
+  1 - (
+    rate(http_requests_total{service="checkout",status=~"5.."}[30d])
+    / rate(http_requests_total{service="checkout"}[30d])
+  ) - 0.999
+) / 0.001
+
+# 6. Burn rate (relative to 1x normal)
+(
+  rate(http_requests_total{service="checkout",status=~"5.."}[1h])
+  / rate(http_requests_total{service="checkout"}[1h])
+) / 0.001  # divide by error budget rate
+
+# Grafana variables for multi-service dashboard:
+# $service = label_values(http_requests_total, service)
+# $endpoint = label_values(http_requests_total{service="$service"}, endpoint)
+# Use variables in all queries: {service="$service",endpoint="$endpoint"}
+</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tradeoffs">
+      <div class="section-label">Decision Framework</div>
+      <h2 class="section-title">Observability Trade-offs</h2>
+      <table class="data-table">
+        <thead><tr><th>Decision</th><th>Option A</th><th>Option B</th><th>Guidance</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Log storage</strong></td><td>Elasticsearch (indexed)</td><td>Loki (label-only)</td><td>Loki is 10× cheaper; fast enough for most. Elasticsearch if you need full-text search on log content.</td></tr>
+          <tr><td><strong>Sampling</strong></td><td>Head-based (decide at start)</td><td>Tail-based (decide at end)</td><td>Tail-based preferred — keeps all error/slow traces. Requires OTel Collector with tail-sampling processor.</td></tr>
+          <tr><td><strong>Metrics cardinality</strong></td><td>High-cardinality labels</td><td>Low-cardinality labels</td><td>Never use user_id, request_id as labels. High cardinality kills Prometheus. Use histograms for distributions.</td></tr>
+          <tr><td><strong>Managed vs self-hosted</strong></td><td>Datadog / New Relic</td><td>Prometheus + Grafana + Jaeger</td><td>Managed: easier, expensive. Self-hosted: cheaper at scale, more operational burden. Hybrid: OTel → self-hosted + managed export.</td></tr>
+          <tr><td><strong>SLO window</strong></td><td>Calendar (monthly)</td><td>Rolling (30 days)</td><td>Rolling windows are more accurate — a bad day doesn't reset on the 1st. Use rolling in Prometheus rules.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="antipatterns">
+      <div class="section-label">What Not to Do</div>
+      <h2 class="section-title">Observability Anti-patterns</h2>
+      <div class="antipattern-list">
+        <div class="ap-item"><h4>Alert on Every Metric</h4><p>Alerts for CPU > 80%, disk > 70%, all at once. Creates alert fatigue. Only alert on user-facing symptoms — latency, errors, availability.</p></div>
+        <div class="ap-item"><h4>Missing Trace Context in Logs</h4><p>Log lines without trace_id are useless during an incident — you can't correlate what happened in service A with what happened in service B for the same request.</p></div>
+        <div class="ap-item"><h4>Storing All Traces</h4><p>At 1000 req/s, 100% trace storage is terabytes/day. Use sampling. Tail-based sampling keeps what matters (errors, slow requests) and drops the rest.</p></div>
+        <div class="ap-item"><h4>High-Cardinality Labels</h4><p>Adding user_id or order_id as Prometheus labels creates millions of time series. Prometheus will OOM. Use histograms for per-request data, not counters.</p></div>
+        <div class="ap-item"><h4>SLO Without Error Budget Policy</h4><p>Having an SLO number but no policy for when budget is exhausted. The policy is the point — it drives behavior: freeze deploys, fix reliability, update runbooks.</p></div>
+        <div class="ap-item"><h4>Unstructured Logs</h4><p>Free-text log messages that can't be parsed or queried. Impossible to aggregate at scale. Use JSON with consistent field names from the start.</p></div>
+        <div class="ap-item"><h4>No Dashboards Before Launch</h4><p>Instrumenting after an incident instead of before. You have no baseline to compare against. Build dashboards during development, not after the first outage.</p></div>
+        <div class="ap-item"><h4>Treating Average as Truth</h4><p>Monitoring p50 latency misses the tail. Users who hit p99 are real users having a bad experience. Always alert on p99, and check p99.9 for critical paths.</p></div>
+      </div>
+    </section>
+
+    <section id="interview">
+      <div class="section-label">Interview Prep</div>
+      <h2 class="section-title">Interview Tips</h2>
+      <div class="tip-list">
+        <div class="tip-item"><h4>Explain the Pillars and When to Use Each</h4><p>Logs for event details, metrics for trends/alerts, traces for latency attribution. The interviewer wants to know you understand when each tool is appropriate.</p></div>
+        <div class="tip-item"><h4>Know the SLI→SLO→SLA Chain</h4><p>Define the SLI (what you measure), set the SLO (your internal target), and the SLA is more lenient (buffer for the customer contract). Error budget = 1 - SLO.</p></div>
+        <div class="tip-item"><h4>Mention Error Budget Trade-offs</h4><p>Error budget policy is the sophisticated part. When budget is healthy, ship features. When exhausted, freeze risky changes and invest in reliability. This is the SRE model in practice.</p></div>
+        <div class="tip-item"><h4>Criticize Metric Averages</h4><p>If you mention "average latency," immediately correct yourself to p99 or p99.9. Interviewers notice this — averages hide the worst user experience and are rarely actionable.</p></div>
+        <div class="tip-item"><h4>Explain Cardinality</h4><p>High-cardinality labels (user_id, trace_id as Prometheus labels) is a common mistake. Show you know the difference between metric labels (low-cardinality) and trace/log fields (can be high-cardinality).</p></div>
+        <div class="tip-item"><h4>Mention the Golden Signals</h4><p>Latency, Traffic, Errors, Saturation — Google's SRE framework. Knowing these by name shows you've internalized SRE thinking beyond just "add Prometheus."</p></div>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="notes-sidebar">
+    <div class="notes-sticky">
+      <div class="notes-heading">Clarifications</div>
+
+      <div class="note-item" data-section="pillars">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is a time-series database?</div></div>
+        <div class="note-body">A time-series database (TSDB) stores data indexed by time: (timestamp, metric_name, labels, value). It's optimized for queries like "give me CPU usage over the last hour." Prometheus uses its own TSDB. InfluxDB, VictoriaMetrics, and TimescaleDB are other examples.</div>
+      </div>
+
+      <div class="note-item" data-section="opentelemetry">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is a sidecar container?</div></div>
+        <div class="note-body">In Kubernetes, a Pod can run multiple containers. A sidecar is a helper container that runs alongside your app container, sharing the same network and volumes. The OTel Collector sidecar receives telemetry from the app, processes it (batching, sampling), and ships it to backends — so the app doesn't need to know about the observability infrastructure.</div>
+      </div>
+
+      <div class="note-item" data-section="metrics">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is a histogram vs average?</div></div>
+        <div class="note-body">Averages hide the distribution. If 90% of requests take 10ms and 10% take 1000ms, the average is 109ms — misleading. A histogram buckets requests: "how many took 0-10ms? 10-100ms? 100ms-1s?" From histograms, you can compute percentiles: p99 = 1000ms reveals the problem. Always use histograms for latency.</div>
+      </div>
+
+      <div class="note-item" data-section="tracing">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is context propagation?</div></div>
+        <div class="note-body">When service A calls service B, the trace context (which trace this request belongs to) must be passed along in HTTP headers. The W3C standard header is `traceparent: 00-traceid-spanid-flags`. Without propagation, service B's spans become orphaned — not connected to the original trace. Auto-instrumentation handles this for HTTP and gRPC; you must handle it manually for Kafka messages and async jobs.</div>
+      </div>
+
+      <div class="note-item" data-section="slo">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What does "nine nines" mean?</div></div>
+        <div class="note-body">"Five nines" = 99.999% availability = 5.26 minutes of downtime per year. Each additional "nine" is 10x more reliable and 10x harder to achieve. Most internet services target 99.9% (three nines = 8.7 hours/year). Financial transaction systems might target 99.99% (four nines = 52 minutes/year). 100% uptime is impossible — maintenance, deployments, and unexpected failures always happen.</div>
+      </div>
+
+      <div class="note-item" data-section="alerting">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is PagerDuty?</div></div>
+        <div class="note-body">PagerDuty is an on-call management platform. It receives alerts from monitoring systems (Prometheus, Datadog) and pages the on-call engineer via phone call, SMS, or app push. It manages escalation (if you don't respond in 5 min, wake up your backup), on-call rotation schedules, and incident timelines. OpsGenie is a similar alternative.</div>
+      </div>
+
+      <div class="note-item" data-section="golden-signals">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is the USE vs RED method?</div></div>
+        <div class="note-body">USE (Brendan Gregg) focuses on infrastructure resources — Utilization (how busy?), Saturation (how much backlog?), Errors (failure count). Good for CPU, disk, network. RED (Tom Wilkie) focuses on services — Rate (requests/sec), Errors (failed requests), Duration (latency). Good for APIs and microservices. Golden Signals combines both approaches.</div>
+      </div>
+
+    </div>
+  </aside>
+</div>
+
+<footer style="background:#0f172a;color:#64748b;text-align:center;padding:2rem;font-size:.85rem;margin-top:3rem;">
+  <p>KnowAlgo · <a href="system-design.html" style="color:#34d399;text-decoration:none;">System Design Home</a> ·
+  <a href="index.html" style="color:#34d399;text-decoration:none;">DSA Home</a></p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+window.addEventListener('scroll', () => {
+  const el = document.getElementById('progress-bar');
+  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+  el.style.width = pct + '%';
+});
+const tocLinks = document.querySelectorAll('.toc-nav a');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector(`.toc-nav a[href="#${e.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { rootMargin: '-10% 0px -80% 0px' });
+document.querySelectorAll('section[id]').forEach(s => observer.observe(s));
+document.querySelectorAll('.copy-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const code = btn.nextElementSibling.querySelector('code');
+    navigator.clipboard.writeText(code.textContent).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  });
+});
+const noteItems = document.querySelectorAll('.note-item[data-section]');
+if (noteItems.length) {
+  const noteObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        noteItems.forEach(n => {
+          const match = n.dataset.section === id;
+          n.classList.toggle('active', match);
+          if (match) n.classList.add('open');
+          else n.classList.remove('open');
+        });
+      }
+    });
+  }, { rootMargin: '-10% 0px -55% 0px' });
+  document.querySelectorAll('[id]').forEach(el => noteObs.observe(el));
+  noteItems.forEach(n =>
+    n.querySelector('.note-head').addEventListener('click', () => n.classList.toggle('open'))
+  );
+}
+</script>
+</body>
+</html>

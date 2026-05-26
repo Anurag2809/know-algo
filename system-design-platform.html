@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Platform & Developer Infrastructure – Pattern 12 | KnowAlgo System Design</title>
+<meta name="description" content="CI/CD pipelines, service mesh, Kubernetes, GitOps, IDP, Backstage, Terraform — how platform engineering enables developer productivity.">
+<link rel="canonical" href="https://knowalgo.netlify.app/system-design-platform.html">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2Z1EQCZBXH');</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<style>
+:root {
+  --primary: #1e40af; --primary-dark: #1e3a8a; --primary-light: #dbeafe;
+  --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+  --bg: #f8fafc; --card-bg: #ffffff; --radius: 12px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: system-ui,-apple-system,sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(to right, #1e40af, #0891b2); z-index: 9999; transition: width .1s; }
+.site-header { background: #0f172a; padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 3px; z-index: 100; }
+.site-header a.logo { color: #f1f5f9; font-weight: 800; font-size: 1.1rem; text-decoration: none; }
+.site-header nav a { color: #94a3b8; text-decoration: none; font-size: .88rem; margin-left: 1.5rem; }
+.site-header nav a:hover { color: #f1f5f9; }
+.hero { background: linear-gradient(135deg, #0f172a 0%, #0c1a4a 45%, #0c4a6e 100%); color: #fff; padding: 3.5rem 2rem 3rem; }
+.hero-badge { display: inline-flex; align-items: center; gap: .5rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 20px; padding: .3rem .9rem; font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #bfdbfe; margin-bottom: 1.2rem; }
+.hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.15; margin-bottom: .8rem; }
+.hero h1 span { color: #93c5fd; }
+.hero p { font-size: 1.08rem; color: #bfdbfe; max-width: 680px; margin-bottom: 1.5rem; }
+.hero-tags { display: flex; flex-wrap: wrap; gap: .5rem; }
+.hero-tag { background: rgba(255,255,255,.12); border-radius: 20px; padding: .25rem .75rem; font-size: .78rem; color: #dbeafe; }
+.page-body { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; display: grid; grid-template-columns: 240px 1fr 220px; gap: 2rem; align-items: start; }
+.toc-sidebar { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.toc-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.toc-title { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); margin-bottom: .9rem; }
+.toc-nav a { display: block; font-size: .82rem; color: var(--text-muted); text-decoration: none; padding: .28rem .5rem; border-radius: 6px; border-left: 2px solid transparent; transition: all .2s; margin-bottom: 2px; }
+.toc-nav a:hover, .toc-nav a.active { color: var(--primary); border-left-color: var(--primary); background: var(--primary-light); }
+.toc-divider { height: 1px; background: var(--border); margin: .6rem 0; }
+.toc-nav-links { display: flex; gap: .5rem; margin-top: .8rem; }
+.toc-nav-links a { flex: 1; text-align: center; font-size: .72rem; font-weight: 600; color: var(--primary); background: var(--primary-light); border-radius: 6px; padding: .35rem .4rem; text-decoration: none; }
+.main-content section { margin-bottom: 3rem; }
+.section-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--primary); margin-bottom: .5rem; }
+.section-title { font-size: 1.6rem; font-weight: 800; color: var(--text); margin-bottom: 1rem; }
+.section-intro { font-size: 1rem; color: var(--text-muted); margin-bottom: 1.5rem; max-width: 760px; }
+.concept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.concept-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.concept-card h4 { font-size: .95rem; font-weight: 700; color: var(--text); margin-bottom: .4rem; }
+.concept-card p { font-size: .85rem; color: var(--text-muted); }
+.concept-card .cc-icon { font-size: 1.4rem; margin-bottom: .5rem; }
+.arch-diagram { background: #ffffff; border: 1px solid #cbd5e1; border-radius: var(--radius); padding: 1.25rem; margin: 1rem 0; font-family: monospace; font-size: .8rem; overflow-x: auto; line-height: 1.6; white-space: pre; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.arch-diagram .cm { color: #94a3b8; font-style: italic; }
+.arch-diagram .lb { color: #92400e; font-weight: 700; }
+.arch-diagram .sv { color: #166534; font-weight: 700; }
+.arch-diagram .db { color: #5b21b6; font-weight: 700; }
+.arch-diagram .er { color: #991b1b; font-weight: 700; }
+.arch-diagram .em { color: #065f46; font-weight: 700; }
+.arch-diagram .bl { color: #1e40af; font-weight: 700; }
+.arch-diagram .ok { color: #166534; }
+.arch-diagram .or { color: #9a3412; }
+.arch-diagram .rd { color: #991b1b; }
+.arch-diagram .cy { color: #0e7490; font-weight: 700; }
+.arch-diagram .pk { color: #be185d; font-weight: 700; }
+.code-block { position: relative; margin: 1rem 0; border-radius: var(--radius); overflow: hidden; }
+.code-block pre { margin: 0 !important; border-radius: var(--radius) !important; font-size: .82rem !important; }
+.copy-btn { position: absolute; top: .6rem; right: .6rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #94a3b8; font-size: .72rem; padding: .25rem .6rem; border-radius: 6px; cursor: pointer; }
+.copy-btn:hover { background: rgba(255,255,255,.2); color: #fff; }
+.data-table { width: 100%; border-collapse: collapse; font-size: .88rem; margin: 1rem 0; background: var(--card-bg); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.data-table th { background: var(--primary); color: #fff; padding: .7rem 1rem; text-align: left; font-size: .8rem; font-weight: 700; }
+.data-table td { padding: .65rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: #f8fafc; }
+.eng-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+.eng-take { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.et-sre { border-left-color: #0369a1; } .et-backend { border-left-color: #7c3aed; } .et-security { border-left-color: #dc2626; }
+.et-data { border-left-color: #059669; } .et-platform { border-left-color: #d97706; } .et-ml { border-left-color: #db2777; }
+.et-frontend { border-left-color: #0891b2; } .et-mobile { border-left-color: #16a34a; } .et-architect { border-left-color: #475569; }
+.eng-role { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: .3rem; }
+.eng-take p { font-size: .85rem; color: var(--text); }
+.problem-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; box-shadow: var(--shadow-sm); }
+.problem-header { padding: 1.25rem 1.5rem; background: linear-gradient(135deg, #1e40af, #0e7490); border-bottom: none; }
+.problem-num { font-size: .78rem; font-weight: 700; color: #bfdbfe; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem; }
+.problem-title { font-size: 1.15rem; font-weight: 700; color: #f1f5f9; margin-bottom: .5rem; }
+.ptags { display: flex; flex-wrap: wrap; gap: .4rem; }
+.ptag { background: rgba(255,255,255,.15); color: #dbeafe; font-size: .72rem; font-weight: 600; padding: .2rem .55rem; border-radius: 10px; }
+.problem-body { padding: 1.5rem; }
+.problem-body h4 { font-size: .9rem; font-weight: 700; color: var(--text); margin: 1rem 0 .4rem; }
+.problem-body p { font-size: .9rem; color: var(--text-muted); margin-bottom: .75rem; }
+.antipattern-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.ap-item { background: #fff5f5; border: 1px solid #fecaca; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.ap-item h4 { font-size: .9rem; font-weight: 700; color: #991b1b; margin-bottom: .3rem; }
+.ap-item p { font-size: .83rem; color: #7f1d1d; }
+.tip-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.tip-item { background: var(--primary-light); border: 1px solid #bfdbfe; border-radius: var(--radius); padding: 1rem 1.1rem; }
+.tip-item h4 { font-size: .9rem; font-weight: 700; color: var(--primary-dark); margin-bottom: .3rem; }
+.tip-item p { font-size: .83rem; color: #1e3a8a; }
+.notes-sidebar { align-self: start; }
+.notes-sticky { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.notes-heading { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: 10px; }
+.note-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: border-color .25s; }
+.note-item.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30,64,175,.07); }
+.note-head { display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px; cursor: pointer; }
+.note-bullet { width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: .78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: transform .2s; }
+.note-item.open .note-bullet { transform: rotate(45deg); }
+.note-label { font-size: .78rem; font-weight: 600; color: #1e293b; flex: 1; line-height: 1.35; }
+.note-body { display: none; font-size: .76rem; color: #475569; line-height: 1.55; padding: 0 11px 11px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+.note-item.open .note-body, .note-item.active .note-body { display: block; }
+@media (max-width: 1150px) { .notes-sidebar { display: none !important; } .page-body { grid-template-columns: 240px 1fr !important; } }
+@media (max-width: 768px) { .page-body { grid-template-columns: 1fr !important; } .toc-sidebar { display: none; } }
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<header class="site-header">
+  <a href="index.html" class="logo">KnowAlgo</a>
+  <nav>
+    <a href="index.html">DSA</a>
+    <a href="system-design.html">System Design</a>
+    <a href="interview-prep.html">Interview Prep</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div style="max-width:1400px;margin:0 auto;padding:0 1.5rem">
+    <div class="hero-badge"><span>🏗️</span> Pattern 12 of 16 · System Design</div>
+    <h1>Platform &amp; <span>Developer Infrastructure</span></h1>
+    <p>CI/CD pipelines, service mesh, Kubernetes, GitOps with ArgoCD, Internal Developer Platforms, Backstage, and Terraform — the infrastructure that lets teams ship safely and fast.</p>
+    <div class="hero-tags">
+      <span class="hero-tag">CI/CD</span><span class="hero-tag">Kubernetes</span><span class="hero-tag">Helm</span>
+      <span class="hero-tag">GitOps / ArgoCD</span><span class="hero-tag">Service Mesh</span>
+      <span class="hero-tag">IDP / Backstage</span><span class="hero-tag">Terraform</span>
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+  <aside class="toc-sidebar">
+    <div class="toc-card">
+      <div class="toc-title">On this page</div>
+      <nav class="toc-nav">
+        <a href="#platform-eng">Platform Engineering</a>
+        <a href="#cicd">CI/CD Pipelines</a>
+        <a href="#kubernetes">Kubernetes</a>
+        <a href="#gitops">GitOps & ArgoCD</a>
+        <a href="#service-mesh">Service Mesh</a>
+        <a href="#iac">Infrastructure as Code</a>
+        <a href="#idp">Internal Developer Platform</a>
+        <div class="toc-divider"></div>
+        <a href="#perspectives">Engineer Perspectives</a>
+        <a href="#problems">Real Problems</a>
+        <a href="#tradeoffs">Trade-offs</a>
+        <a href="#antipatterns">Anti-patterns</a>
+        <a href="#interview">Interview Tips</a>
+      </nav>
+      <div class="toc-nav-links">
+        <a href="system-design-migration.html">← Migration</a>
+        <a href="system-design-ml.html">ML Systems →</a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <section id="platform-eng">
+      <div class="section-label">Foundation</div>
+      <h2 class="section-title">Platform Engineering</h2>
+      <p class="section-intro">Platform engineering builds the "paved road" — opinionated, self-service infrastructure that makes the right things easy and the wrong things hard. Instead of every team solving the same infrastructure problems, the platform team solves them once and exposes them as simple APIs.</p>
+      <div class="concept-grid">
+        <div class="concept-card"><div class="cc-icon">🛣️</div><h4>Paved Road</h4><p>Curated path of tools, patterns, and templates that work well together. Teams can go off-road, but the paved road is the easiest and most supported path. Reduces cognitive load for product engineers.</p></div>
+        <div class="concept-card"><div class="cc-icon">🔧</div><h4>Internal Developer Platform (IDP)</h4><p>A self-service portal where developers provision services, databases, CI pipelines, and environments — without filing tickets or waiting for ops. Backstage is the most popular open-source IDP framework.</p></div>
+        <div class="concept-card"><div class="cc-icon">📏</div><h4>Golden Paths</h4><p>Pre-configured templates for "how we create a new service here." Includes: Dockerfile, Helm chart, CI pipeline, monitoring dashboards, and Terraform module. Spin up a new service in 10 minutes, not 10 days.</p></div>
+        <div class="concept-card"><div class="cc-icon">📊</div><h4>Developer Experience (DevEx)</h4><p>Measured by DORA metrics: deployment frequency, lead time for changes, change failure rate, time to restore. Platform teams optimize these metrics as their primary KPIs.</p></div>
+      </div>
+    </section>
+
+    <section id="cicd">
+      <div class="section-label">Continuous Delivery</div>
+      <h2 class="section-title">CI/CD Pipelines</h2>
+      <p class="section-intro">CI (Continuous Integration) validates every code change automatically. CD (Continuous Delivery/Deployment) takes validated code to production automatically or with one click. The goal is to make deployment a boring, frequent, low-risk event.</p>
+
+      <div class="arch-diagram"><span class="cm">CI/CD pipeline: code commit → production in under 15 minutes</span>
+
+<span class="bl">Developer</span>         <span class="sv">CI Pipeline</span>                      <span class="em">CD Pipeline</span>
+    │                    │                                    │
+    │── git push ───────►│                                    │
+    │                    │                                    │
+    │                    ├─ <span class="lb">Lint + Format check</span>          │
+    │                    │   (ruff, eslint, gofmt)             │
+    │                    │                                    │
+    │                    ├─ <span class="lb">Unit tests</span>                   │
+    │                    │   (pytest, jest) ~2min              │
+    │                    │                                    │
+    │                    ├─ <span class="sv">Security scan</span>                │
+    │                    │   (Trivy, Snyk, SAST)               │
+    │                    │                                    │
+    │                    ├─ <span class="sv">Build Docker image</span>           │
+    │                    │   (multi-stage, cached layers)      │
+    │                    │                                    │
+    │                    ├─ <span class="sv">Integration tests</span>            │
+    │                    │   (testcontainers, real DB) ~5min   │
+    │                    │                                    │
+    │                    ├─ <span class="em">Push image to registry</span>       │
+    │                    │   (ECR, GAR, GCR)                  │
+    │                    │                                    │
+    │                    └─ <span class="em">Trigger CD</span> ─────────────────►│
+    │                                                         │
+    │                                              ├─ <span class="em">Deploy to staging</span>
+    │                                              │   (ArgoCD, Helm upgrade)
+    │                                              │
+    │                                              ├─ <span class="em">E2E tests</span>
+    │                                              │   (Playwright, k6)
+    │                                              │
+    │                                              └─ <span class="em">Deploy to prod</span>
+    │                                                  (canary → 100%)
+
+<span class="cm">Tools: GitHub Actions, GitLab CI, Jenkins, CircleCI, Tekton (K8s-native)</span></div>
+
+      <div class="code-block">
+        <button class="copy-btn">Copy</button>
+        <pre><code class="language-python"># .github/workflows/ci.yml (GitHub Actions)
+# name: CI/CD Pipeline
+# on: [push, pull_request]
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+#     services:
+#       postgres:
+#         image: postgres:16
+#         env: { POSTGRES_PASSWORD: test }
+#         options: --health-cmd pg_isready
+#     steps:
+#       - uses: actions/checkout@v4
+#       - uses: actions/setup-python@v5
+#         with: { python-version: '3.12' }
+#       - run: pip install -r requirements.txt
+#       - run: ruff check .                        # lint
+#       - run: pytest --cov=app tests/ -x          # unit + integration
+#
+#   build:
+#     needs: test
+#     if: github.ref == 'refs/heads/main'          # only on main
+#     steps:
+#       - uses: aws-actions/configure-aws-credentials@v4
+#       - run: |
+#           docker build --cache-from $ECR/app:latest -t $ECR/app:$SHA .
+#           docker push $ECR/app:$SHA
+#           docker tag $ECR/app:$SHA $ECR/app:latest
+#           docker push $ECR/app:latest
+#
+#   deploy-staging:
+#     needs: build
+#     steps:
+#       - run: |
+#           # ArgoCD auto-syncs when image tag in Git is updated
+#           # Or trigger Helm upgrade directly:
+#           helm upgrade --install app ./charts/app \
+#             --set image.tag=$SHA \
+#             --namespace staging \
+#             --wait --timeout=5m
+
+# Testcontainers: real DB in unit tests (no mocking)
+import pytest
+from testcontainers.postgres import PostgresContainer
+
+@pytest.fixture(scope="session")
+def postgres():
+    with PostgresContainer("postgres:16") as pg:
+        yield pg.get_connection_url()
+
+def test_create_order(postgres):
+    db = Database(postgres)
+    order = db.create_order(user_id="u1", amount=1000)
+    assert order.id is not None
+    assert db.get_order(order.id).amount == 1000
+</code></pre>
+      </div>
+    </section>
+
+    <section id="kubernetes">
+      <div class="section-label">Container Orchestration</div>
+      <h2 class="section-title">Kubernetes Fundamentals</h2>
+      <p class="section-intro">Kubernetes (K8s) is a container orchestration platform. It schedules containers across a cluster of machines, handles restarts, scales replicas, routes traffic, and manages configuration — without manual server management.</p>
+
+      <div class="arch-diagram"><span class="cm">K8s core objects and how they relate</span>
+
+<span class="bl">Cluster</span>
+  ├─ <span class="sv">Node</span> (VM or physical machine)
+  │   └─ <span class="em">Pod</span> (smallest deployable unit — 1+ containers sharing network/storage)
+  │       ├─ app container
+  │       └─ sidecar containers (OTel collector, Envoy proxy)
+  │
+  ├─ <span class="lb">Deployment</span>: manages a set of identical Pods
+  │   "keep 3 replicas of order-service:v2 running"
+  │   Handles rolling updates, rollbacks
+  │
+  ├─ <span class="lb">Service</span>: stable network endpoint for a set of Pods
+  │   ClusterIP: internal only
+  │   NodePort: expose on each node's port
+  │   LoadBalancer: provision cloud LB (ALB, GLB)
+  │
+  ├─ <span class="sv">Ingress</span>: HTTP routing rules (path-based, host-based)
+  │   "api.example.com/orders → order-svc"
+  │   Implemented by Ingress controller (Nginx, Traefik, ALB controller)
+  │
+  ├─ <span class="db">ConfigMap</span>: non-secret config (env vars, config files)
+  │   <span class="db">Secret</span>: sensitive config (base64, or external via ESO)
+  │
+  └─ <span class="cy">HorizontalPodAutoscaler</span> (HPA)
+      "scale order-service to 2-20 replicas based on CPU/custom metric"
+
+<span class="cm">Helm: package manager for K8s. Chart = templated collection of K8s manifests.</span>
+<span class="cm">helm install order-svc ./charts/order --set image.tag=v2.3.1 --namespace prod</span></div>
+    </section>
+
+    <section id="gitops">
+      <div class="section-label">Declarative Deployments</div>
+      <h2 class="section-title">GitOps &amp; ArgoCD</h2>
+      <p class="section-intro">GitOps uses Git as the single source of truth for infrastructure and application state. The desired state is declared in Git; a controller continuously reconciles the actual cluster state to match Git. No more manual kubectl apply — Git is the deployment mechanism.</p>
+
+      <div class="arch-diagram"><span class="cm">GitOps workflow: Git is the only way to deploy</span>
+
+<span class="bl">Developer</span>         <span class="sv">GitHub</span>              <span class="lb">ArgoCD</span>            <span class="em">K8s Cluster</span>
+    │                   │                    │                   │
+    │── PR: update ─────►│                   │                   │
+    │   image.tag: v2    │                   │                   │
+    │                   │── merge to main ──►│                   │
+    │                   │                    │ detect diff       │
+    │                   │                    │ (Git vs cluster)  │
+    │                   │                    │── sync ──────────►│
+    │                   │                    │   kubectl apply   │
+    │                   │                    │   rolling update  │
+    │                   │                    │◄─ healthy ────────│
+    │                   │                    │                   │
+    │                   │                    │ continuous reconcile every 3min
+    │                   │                    │ if cluster drifts from Git → fix it
+
+<span class="cm">Benefits:</span>
+<span class="ok">• Full audit trail</span>: every deploy is a Git commit with author
+<span class="ok">• Rollback</span>: git revert → ArgoCD reverts the cluster
+<span class="ok">• Disaster recovery</span>: cluster dies → recreate from Git state
+<span class="ok">• PR reviews for prod changes</span>: infra change = code review
+
+<span class="cm">Flux is an alternative to ArgoCD. Both implement the GitOps operator pattern.</span>
+<span class="cm">Image Updater: ArgoCD plugin that auto-updates image tags in Git when new image pushed to registry</span></div>
+    </section>
+
+    <section id="service-mesh">
+      <div class="section-label">Service-to-Service</div>
+      <h2 class="section-title">Service Mesh</h2>
+      <p class="section-intro">A service mesh adds a transparent proxy (sidecar) to every service. The proxy handles mTLS, load balancing, retries, timeouts, circuit breaking, and traffic splitting — without application code changes. The mesh provides observability across all service-to-service calls.</p>
+
+      <div class="arch-diagram"><span class="cm">Service mesh: sidecar proxies handle cross-cutting concerns</span>
+
+<span class="bl">Order Service</span>                              <span class="em">Payment Service</span>
+  ┌─────────────────────┐                   ┌──────────────────────┐
+  │ App (Go)            │                   │ App (Python)         │
+  │                     │                   │                      │
+  │ Envoy Sidecar  ─────┼──── mTLS ─────────┼─── Envoy Sidecar    │
+  │  • retries (3x)     │                   │  • circuit breaker   │
+  │  • timeout (500ms)  │                   │  • rate limiting     │
+  │  • traces           │                   │  • traces            │
+  └─────────────────────┘                   └──────────────────────┘
+         │                                          │
+         └──────────── Control Plane ───────────────┘
+                        (Istio / Linkerd)
+                        • Push config to all sidecars
+                        • Collect telemetry
+                        • Enforce policies
+
+<span class="cm">App code makes plain HTTP/gRPC calls — sidecar transparently encrypts, retries, traces</span>
+<span class="cm">Traffic splitting: route 5% to v2, 95% to v1 at sidecar level (no code change)</span>
+<span class="cm">Istio: powerful but complex (CNI, CRDs). Linkerd: simpler, lower overhead, Rust proxies.</span></div>
+    </section>
+
+    <section id="iac">
+      <div class="section-label">Infrastructure as Code</div>
+      <h2 class="section-title">Terraform &amp; IaC</h2>
+      <p class="section-intro">Infrastructure as Code means provisioning cloud resources (VPCs, databases, K8s clusters) through code rather than clicking in a UI. Changes are version-controlled, reviewed, and applied automatically — the same discipline as application code.</p>
+
+      <div class="code-block">
+        <button class="copy-btn">Copy</button>
+        <pre><code class="language-python"># Terraform: provision an RDS Postgres + EKS cluster (simplified)
+# main.tf
+#
+# module "vpc" {
+#   source = "terraform-aws-modules/vpc/aws"
+#   cidr   = "10.0.0.0/16"
+#   azs    = ["us-east-1a", "us-east-1b", "us-east-1c"]
+#   private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+#   public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+#   enable_nat_gateway = true
+# }
+#
+# resource "aws_db_instance" "orders_db" {
+#   engine            = "postgres"
+#   engine_version    = "16.2"
+#   instance_class    = "db.t3.medium"
+#   allocated_storage = 100
+#   db_name           = "orders"
+#   username          = var.db_username
+#   password          = random_password.db_pass.result  # generated, stored in Secrets Manager
+#   multi_az          = true         # standby in another AZ
+#   storage_encrypted = true
+#   vpc_security_group_ids = [aws_security_group.rds.id]
+#   db_subnet_group_name   = aws_db_subnet_group.main.name
+#
+#   backup_retention_period = 7
+#   deletion_protection     = true   # prevent accidental destroy
+# }
+#
+# module "eks" {
+#   source  = "terraform-aws-modules/eks/aws"
+#   version = "~> 20.0"
+#   cluster_name = "prod-cluster"
+#   cluster_version = "1.30"
+#   vpc_id   = module.vpc.vpc_id
+#   subnet_ids = module.vpc.private_subnets
+#   eks_managed_node_groups = {
+#     general = {
+#       instance_types = ["m6i.large"]
+#       min_size = 2; max_size = 20; desired_size = 5
+#     }
+#   }
+# }
+
+# Workflow:
+# 1. terraform plan   → show what will change (review like a diff)
+# 2. terraform apply  → create/modify/destroy resources
+# 3. Commit terraform state to S3 backend (shared across team)
+# 4. Use Atlantis or Terraform Cloud to run plan/apply from PR comments
+</code></pre>
+      </div>
+
+      <div class="concept-grid">
+        <div class="concept-card"><h4>State Management</h4><p>Terraform tracks what it created in a state file. Store in S3 with DynamoDB locking (prevents two engineers running apply simultaneously). Never edit state manually.</p></div>
+        <div class="concept-card"><h4>Terraform vs Pulumi</h4><p>Terraform: HCL declarative language, massive ecosystem. Pulumi: write infrastructure in Python/TypeScript/Go — same language as your app code. Both are excellent; Pulumi is preferred when logic gets complex.</p></div>
+        <div class="concept-card"><h4>Modules</h4><p>Reusable Terraform packages. Company internal modules standardize how VPCs, EKS clusters, RDS instances are created. Teams use modules, not raw resources, to enforce security and tagging standards.</p></div>
+      </div>
+    </section>
+
+    <section id="idp">
+      <div class="section-label">Developer Self-Service</div>
+      <h2 class="section-title">Internal Developer Platform</h2>
+      <p class="section-intro">An IDP abstracts infrastructure complexity behind a self-service portal. Developers create services, provision databases, manage deployments, and access documentation — without needing deep infrastructure expertise or filing tickets.</p>
+
+      <div class="arch-diagram"><span class="cm">Backstage IDP: single pane of glass for all developer needs</span>
+
+<span class="bl">Developer Portal (Backstage)</span>
+  │
+  ├─ <span class="sv">Software Catalog</span>
+  │   List of all services, their owners, runbooks, SLOs, dependencies
+  │   "Who owns payment-service? Who's on-call? What does it depend on?"
+  │
+  ├─ <span class="lb">Scaffolder (Templates)</span>
+  │   Create new service from golden template:
+  │   1. Enter service name, team, language
+  │   2. Backstage: creates GitHub repo, Dockerfile, Helm chart,
+  │      CI pipeline, ArgoCD app, Grafana dashboard, PagerDuty schedule
+  │   3. Developer commits code immediately
+  │
+  ├─ <span class="em">TechDocs</span>
+  │   Documentation auto-generated from Markdown in each repo
+  │   Single search across all team docs
+  │
+  ├─ <span class="db">Plugins</span>
+  │   Kubernetes view: see pod status per service
+  │   Cost: see AWS spend per service
+  │   Incidents: see open PagerDuty incidents per service
+  │   Security: Snyk vulnerability report per repo
+  │
+  └─ <span class="cy">Self-service Actions</span>
+      Provision a dev database (Terraform call)
+      Create feature branch environment
+      Run load test against staging
+      Rotate service API keys
+
+<span class="cm">DORA metric impact: IDP can reduce "lead time for changes" from days to minutes</span></div>
+    </section>
+
+    <section id="perspectives">
+      <div class="section-label">9 Viewpoints</div>
+      <h2 class="section-title">Engineer Perspectives</h2>
+      <div class="eng-grid">
+        <div class="eng-take et-platform"><div class="eng-role">Platform Engineer</div><p>Treat platform features like product features. Measure adoption, not just existence. If engineers aren't using the golden path, find out why — maybe it's not actually golden.</p></div>
+        <div class="eng-take et-sre"><div class="eng-role">SRE</div><p>CI pipelines must run integration tests against real dependencies (testcontainers), not mocks. Mocked tests that pass while prod fails are worse than no tests — they create false confidence.</p></div>
+        <div class="eng-take et-backend"><div class="eng-role">Backend Engineer</div><p>Kubernetes resource limits are mandatory, not optional. A Pod without limits can starve neighbors on the same node. Set both requests (scheduling) and limits (enforcement) for CPU and memory.</p></div>
+        <div class="eng-take et-security"><div class="eng-role">Security Engineer</div><p>Shift security left: SAST in CI, container scanning before push, IaC security checks (Checkov, tfsec). Catching a CVE in CI costs minutes; catching it post-deploy costs hours of incident work.</p></div>
+        <div class="eng-take et-data"><div class="eng-role">Data Engineer</div><p>Data pipelines need CI/CD too. dbt models should have CI tests (schema checks, row counts). Deploy pipeline changes with the same rigor as application code — data bugs are often invisible until downstream.</p></div>
+        <div class="eng-take et-ml"><div class="eng-role">ML Engineer</div><p>ML training jobs run in Kubernetes with GPU node pools. Use KubeFlow Pipelines or Argo Workflows for training orchestration. Model serving deploys like a regular service — same CI/CD, same Helm chart pattern.</p></div>
+        <div class="eng-take et-frontend"><div class="eng-role">Frontend Engineer</div><p>Preview environments (one per PR, auto-deployed) are a killer platform feature. Reviewers can see the feature live without setting up locally. Netlify/Vercel do this natively; internal platforms replicate it with ArgoCD + Ingress rules.</p></div>
+        <div class="eng-take et-mobile"><div class="eng-role">Mobile Engineer</div><p>Mobile CI/CD differs: builds take 20+ minutes, and distribution goes to TestFlight/Play Store, not K8s. Fastlane automates signing and distribution. Platform teams often own mobile CI lanes to standardize codesigning.</p></div>
+        <div class="eng-take et-architect"><div class="eng-role">Architect</div><p>Platform maturity is a competitive advantage. Teams that deploy 10× per day beat teams that deploy once a week. The platform team's ROI is measured in every team's shipping velocity.</p></div>
+      </div>
+    </section>
+
+    <section id="problems">
+      <div class="section-label">Real Problems</div>
+      <h2 class="section-title">Platform Design Problems</h2>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 01 · GitOps</div>
+          <div class="problem-title">Design a zero-downtime deployment pipeline with ArgoCD and automated rollback</div>
+          <div class="ptags"><span class="ptag">ArgoCD</span><span class="ptag">Kubernetes</span><span class="ptag">GitOps</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Requirements</h4>
+          <p>Every merge to main deploys to staging automatically, then to production with canary. If error rate exceeds 1% during rollout, auto-rollback to previous version.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python"># ArgoCD Application manifest + Argo Rollouts for canary
+# argocd-app.yaml
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: order-service
+#   namespace: argocd
+# spec:
+#   source:
+#     repoURL: https://github.com/acme/k8s-config
+#     path: apps/order-service
+#     targetRevision: HEAD
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: production
+#   syncPolicy:
+#     automated:
+#       prune: true       # delete resources removed from Git
+#       selfHeal: true    # revert manual kubectl changes
+
+# Argo Rollouts: canary strategy with auto-rollback
+# rollout.yaml
+# apiVersion: argoproj.io/v1alpha1
+# kind: Rollout
+# spec:
+#   strategy:
+#     canary:
+#       steps:
+#         - setWeight: 5          # 5% canary
+#         - pause: {duration: 5m}
+#         - setWeight: 25
+#         - pause: {duration: 10m}
+#         - setWeight: 50
+#         - pause: {duration: 10m}
+#         - setWeight: 100
+#       analysis:                 # auto-rollback on metric failure
+#         templates:
+#           - templateName: success-rate
+#         args:
+#           - name: service-name
+#             value: order-service
+
+# Analysis template: watch error rate during canary
+# analysistemplate.yaml
+# spec:
+#   metrics:
+#     - name: success-rate
+#       interval: 1m
+#       failureLimit: 3          # 3 consecutive failures → rollback
+#       provider:
+#         prometheus:
+#           address: http://prometheus:9090
+#           query: |
+#             sum(rate(http_requests_total{service="{{args.service-name}}",
+#                        status!~"5.."}[5m]))
+#             / sum(rate(http_requests_total{service="{{args.service-name}}"}[5m]))
+#       successCondition: result[0] >= 0.99  # 99%+ success rate required
+
+# Auto-rollback flow:
+# canary at 5% → error rate 2% (> 1% threshold) →
+# AnalysisRun fails → Argo Rollouts aborts rollout →
+# traffic weight returns to 0% canary → Slack alert sent
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 02 · CI Pipeline</div>
+          <div class="problem-title">Build a fast (sub-10-minute) CI pipeline with layer caching and parallel jobs</div>
+          <div class="ptags"><span class="ptag">Docker</span><span class="ptag">GitHub Actions</span><span class="ptag">Testcontainers</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Requirements</h4>
+          <p>Pipeline must complete in under 10 minutes. Tests include unit tests (fast), integration tests (DB, 2min), and E2E tests (5min). Run in parallel where possible.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python"># GitHub Actions parallel pipeline
+# jobs run simultaneously (needs: [] by default)
+#
+# jobs:
+#   lint:          # ~30s
+#   unit-test:     # ~90s — run in parallel with lint
+#   security-scan: # ~60s — parallel
+#   build-image:   # ~2min, depends on lint + unit-test
+#   integration:   # ~3min, depends on build-image
+#   e2e:           # ~5min, depends on build-image
+#
+# Total wall time: max(lint+unit(90s), security(60s)) + build(120s) + max(integration(180s), e2e(300s))
+# ≈ 90s + 120s + 300s = ~510s = 8.5 minutes
+
+# Docker multi-stage build (fast with layer caching)
+# Dockerfile:
+# FROM python:3.12-slim AS deps
+# WORKDIR /app
+# COPY requirements.txt .
+# RUN pip install --no-cache-dir -r requirements.txt   # cached if requirements.txt unchanged
+#
+# FROM deps AS test
+# COPY . .
+# RUN pytest tests/unit/ --tb=short
+#
+# FROM deps AS final
+# COPY src/ .
+# RUN useradd -r appuser && chown -R appuser /app
+# USER appuser
+# CMD ["uvicorn", "main:app", "--host", "0.0.0.0"]
+
+# Integration test with Testcontainers (real Postgres, no mocks)
+import pytest
+from testcontainers.postgres import PostgresContainer
+from testcontainers.redis import RedisContainer
+
+@pytest.fixture(scope="session")
+def services():
+    with PostgresContainer("postgres:16") as pg, \
+         RedisContainer("redis:7") as redis:
+        yield {
+            "db_url": pg.get_connection_url(),
+            "redis_url": redis.get_connection_url(),
+        }
+
+def test_order_with_inventory_check(services):
+    # Tests against real Postgres and Redis — not mocks
+    app = create_app(db_url=services["db_url"], redis_url=services["redis_url"])
+    response = app.test_client().post("/orders", json={"item_id": "x", "qty": 2})
+    assert response.status_code == 201
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-card">
+        <div class="problem-header">
+          <div class="problem-num">Problem 03 · IaC</div>
+          <div class="problem-title">Design a multi-environment Terraform setup for dev/staging/production</div>
+          <div class="ptags"><span class="ptag">Terraform</span><span class="ptag">Workspaces</span><span class="ptag">Atlantis</span></div>
+        </div>
+        <div class="problem-body">
+          <h4>Structure</h4>
+          <p>Use Terraform workspaces or separate state files per environment. Dev is minimal cost, staging mirrors production, production has HA and backups.</p>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <pre><code class="language-python"># Recommended: separate directories per environment
+# (not workspaces — state isolation is cleaner)
+#
+# terraform/
+#   modules/
+#     rds/          main.tf, variables.tf, outputs.tf
+#     eks/          main.tf, variables.tf, outputs.tf
+#   environments/
+#     dev/
+#       main.tf     (uses modules, dev-sized instances)
+#       terraform.tfvars
+#         db_instance_class = "db.t3.micro"
+#         eks_node_count    = 2
+#         multi_az          = false
+#     staging/
+#       terraform.tfvars
+#         db_instance_class = "db.t3.medium"
+#         eks_node_count    = 3
+#         multi_az          = true
+#     production/
+#       terraform.tfvars
+#         db_instance_class = "db.r6g.xlarge"
+#         eks_node_count    = 10
+#         multi_az          = true
+#         deletion_protection = true
+
+# Atlantis: run Terraform from GitHub PRs
+# .atlantis.yaml
+# version: 3
+# projects:
+#   - dir: terraform/environments/production
+#     workspace: default
+#     autoplan:
+#       when_modified: ["*.tf", "../modules/**/*.tf"]
+#     apply_requirements: [approved]  # require 2 PR approvals before apply
+
+# Workflow:
+# 1. PR changes production/main.tf
+# 2. Atlantis comments: "terraform plan" output on the PR
+# 3. Two engineers approve the plan
+# 4. Comment "atlantis apply" → Atlantis runs terraform apply
+# 5. Audit trail: every infra change is a PR with a plan and approvals
+</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tradeoffs">
+      <div class="section-label">Decision Framework</div>
+      <h2 class="section-title">Platform Trade-offs</h2>
+      <table class="data-table">
+        <thead><tr><th>Decision</th><th>Option A</th><th>Option B</th><th>Guidance</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Kubernetes vs managed PaaS</strong></td><td>K8s (EKS, GKE)</td><td>Managed PaaS (Fly.io, Railway, Heroku)</td><td>Managed PaaS for small teams or simple apps. K8s when you need control over scheduling, custom resource types, or > 50 services.</td></tr>
+          <tr><td><strong>Helm vs raw manifests</strong></td><td>Helm charts</td><td>Plain YAML + Kustomize</td><td>Helm for reusable packages. Kustomize for environment-specific overlays on your own manifests. Often combined: Helm + Kustomize overlays.</td></tr>
+          <tr><td><strong>Service mesh</strong></td><td>Istio (full-featured)</td><td>Linkerd (simple)</td><td>Linkerd for most teams — lower overhead, simpler ops. Istio when you need advanced traffic management, WASM plugins, or Istio-specific features.</td></tr>
+          <tr><td><strong>CI provider</strong></td><td>GitHub Actions</td><td>Self-hosted (Tekton, Jenkins)</td><td>GitHub Actions for most teams (managed, fast). Self-hosted for air-gapped environments, custom hardware (GPU runners), or cost at scale (Actions minutes are expensive).</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="antipatterns">
+      <div class="section-label">What Not to Do</div>
+      <h2 class="section-title">Platform Anti-patterns</h2>
+      <div class="antipattern-list">
+        <div class="ap-item"><h4>Snowflake Servers</h4><p>Servers configured by hand, not reproducible. When they fail, recovery is a mystery. IaC enforces reproducibility — every server is defined in code and can be rebuilt identically.</p></div>
+        <div class="ap-item"><h4>No Resource Limits</h4><p>Kubernetes Pods without CPU/memory limits. A runaway pod consumes all node resources and starves neighbors. Always set requests (for scheduling) and limits (for enforcement).</p></div>
+        <div class="ap-item"><h4>kubectl apply in CI</h4><p>Directly applying manifests from CI without GitOps. No audit trail. No reconciliation loop to fix drift. Upgrade to ArgoCD/Flux — Git becomes the source of truth.</p></div>
+        <div class="ap-item"><h4>Mocking Everything in Tests</h4><p>Unit tests that mock the database, the cache, and every external call. They test nothing real. Use Testcontainers to run real dependencies. Mocks should be exceptions, not the default.</p></div>
+        <div class="ap-item"><h4>Long-Lived Feature Branches</h4><p>Branches that diverge from main for weeks. Merge conflicts become a project themselves. Trunk-based development with feature flags eliminates this — everyone commits to main, flags hide incomplete features.</p></div>
+        <div class="ap-item"><h4>Platform Without Users</h4><p>Building elaborate internal tools that engineers don't use because they're slower than the old way. Measure adoption. If no one uses the golden path, the platform team has a product problem, not a technical one.</p></div>
+        <div class="ap-item"><h4>Secrets in ConfigMaps</h4><p>Kubernetes ConfigMaps are not encrypted. Putting passwords or API keys there exposes them to anyone with cluster read access. Use Secrets + External Secrets Operator pulling from Vault/AWS Secrets Manager.</p></div>
+        <div class="ap-item"><h4>One Giant Pipeline</h4><p>A 45-minute sequential CI pipeline that runs everything. Fast feedback is the point of CI. Parallelize: lint + unit tests in 2 minutes, integration tests next, E2E only on main branch.</p></div>
+      </div>
+    </section>
+
+    <section id="interview">
+      <div class="section-label">Interview Prep</div>
+      <h2 class="section-title">Interview Tips</h2>
+      <div class="tip-list">
+        <div class="tip-item"><h4>Know the DORA Metrics</h4><p>Deployment frequency, lead time for changes, change failure rate, time to restore. These are the industry-standard measure of DevOps maturity. Citing them shows you understand the business value of CI/CD.</p></div>
+        <div class="tip-item"><h4>Explain GitOps vs Push-Based</h4><p>Push-based (CI runs kubectl apply) vs pull-based (ArgoCD watches Git and applies). Pull-based is more secure (cluster doesn't need external credentials) and self-healing. Know the trade-off.</p></div>
+        <div class="tip-item"><h4>Mention Testcontainers</h4><p>Integration tests with real databases instead of mocks. This is a maturity signal. Most candidates know about unit testing with mocks; fewer know about real-dependency integration testing in CI.</p></div>
+        <div class="tip-item"><h4>Service Mesh is a Layer, Not a Requirement</h4><p>Don't recommend a service mesh for a 3-service system. It adds significant operational complexity. Recommend it when: mTLS between all services is required, or traffic management (canary, retries) is needed at the network level.</p></div>
+        <div class="tip-item"><h4>IDP = Product Thinking for Platform</h4><p>The best platform teams think of engineers as users. NPS surveys for internal tools, adoption metrics for golden paths. This is the differentiator between a good platform team and a great one.</p></div>
+        <div class="tip-item"><h4>Trunk-Based Development</h4><p>Most high-performing teams use trunk-based development (all changes to main, short-lived branches). Pair it with feature flags. This eliminates merge conflicts and enables continuous delivery.</p></div>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="notes-sidebar">
+    <div class="notes-sticky">
+      <div class="notes-heading">Clarifications</div>
+      <div class="note-item" data-section="cicd">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is CI vs CD?</div></div>
+        <div class="note-body">CI (Continuous Integration): automatically build and test every code commit. Goal: catch bugs before they reach production. CD has two meanings — Continuous Delivery: every commit is releasable (but human triggers deploy). Continuous Deployment: every passing commit automatically deploys to production. Most companies do Continuous Delivery, not full Continuous Deployment.</div>
+      </div>
+      <div class="note-item" data-section="kubernetes">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is a container and how does K8s use them?</div></div>
+        <div class="note-body">A container (Docker) packages an app and all its dependencies into an isolated unit that runs the same everywhere. Kubernetes manages containers across many machines: it decides which machine runs each container, restarts them when they fail, and balances load. Think of K8s as the operating system for a cluster of machines.</div>
+      </div>
+      <div class="note-item" data-section="gitops">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is a Git merge vs Git rebase?</div></div>
+        <div class="note-body">Merge: combines two branches by creating a new "merge commit" that has both as parents — preserves history. Rebase: moves your branch's commits onto the tip of another branch — creates a linear history. GitOps doesn't care about this distinction — it watches the resulting state of the main branch, not how commits were integrated.</div>
+      </div>
+      <div class="note-item" data-section="service-mesh">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is Envoy proxy?</div></div>
+        <div class="note-body">Envoy is a high-performance network proxy written in C++, originally built at Lyft. It handles HTTP/1.1, HTTP/2, gRPC, and TCP. In a service mesh, Envoy is the sidecar proxy — it runs alongside each app container and transparently intercepts all network traffic. Istio's data plane uses Envoy. It's also used standalone as an API gateway and in AWS App Mesh.</div>
+      </div>
+      <div class="note-item" data-section="iac">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What is idempotence in IaC?</div></div>
+        <div class="note-body">An operation is idempotent if running it multiple times produces the same result as running it once. Terraform is idempotent: running `terraform apply` on an already-provisioned infrastructure changes nothing (or only what changed in the config). This is essential for automation — you can safely re-run the pipeline without fear of double-creating resources.</div>
+      </div>
+      <div class="note-item" data-section="idp">
+        <div class="note-head"><div class="note-bullet">+</div><div class="note-label">What are DORA metrics?</div></div>
+        <div class="note-body">DORA (DevOps Research and Assessment) identified four metrics that predict software delivery performance: Deployment Frequency (how often?), Lead Time for Changes (commit → production, how long?), Change Failure Rate (what % of deploys cause incidents?), Time to Restore (when an incident happens, how fast to recover?). Elite performers deploy multiple times per day with sub-1-hour lead time.</div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<footer style="background:#0f172a;color:#64748b;text-align:center;padding:2rem;font-size:.85rem;margin-top:3rem;">
+  <p>KnowAlgo · <a href="system-design.html" style="color:#93c5fd;text-decoration:none;">System Design Home</a> · <a href="index.html" style="color:#93c5fd;text-decoration:none;">DSA Home</a></p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+window.addEventListener('scroll', () => { document.getElementById('progress-bar').style.width = (window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100) + '%'; });
+const tocLinks = document.querySelectorAll('.toc-nav a');
+document.querySelectorAll('section[id]').forEach(s => new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { tocLinks.forEach(l=>l.classList.remove('active')); const a=document.querySelector(`.toc-nav a[href="#${e.target.id}"]`); if(a)a.classList.add('active'); }}); }, {rootMargin:'-10% 0px -80% 0px'}).observe(s));
+document.querySelectorAll('.copy-btn').forEach(btn => { btn.addEventListener('click', () => { navigator.clipboard.writeText(btn.nextElementSibling.querySelector('code').textContent).then(() => { btn.textContent='Copied!'; setTimeout(()=>btn.textContent='Copy',2000); }); }); });
+const noteItems = document.querySelectorAll('.note-item[data-section]');
+if (noteItems.length) {
+  const noteObs = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { const id=e.target.id; noteItems.forEach(n=>{ const m=n.dataset.section===id; n.classList.toggle('active',m); if(m)n.classList.add('open'); else n.classList.remove('open'); }); }}); }, {rootMargin:'-10% 0px -55% 0px'});
+  document.querySelectorAll('[id]').forEach(el=>noteObs.observe(el));
+  noteItems.forEach(n=>n.querySelector('.note-head').addEventListener('click',()=>n.classList.toggle('open')));
+}
+</script>
+</body>
+</html>
