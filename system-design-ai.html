@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Architecture Guide – KnowAlgo</title>
-  <meta name="description" content="Design any system step-by-step. The AI guides you through each architectural decision — one choice at a time — and builds the diagram as you go.">
+  <meta name="description" content="Design any system step-by-step. The AI maps all 7 architectural decisions upfront — navigate through them and watch an interactive Excalidraw diagram grow with each choice.">
   <link rel="canonical" href="https://knowalgo.netlify.app/system-design-ai.html">
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2Z1EQCZBXH');</script>
@@ -18,12 +18,7 @@
       --bg: #f8fafc;
       --card: #ffffff;
       --radius: 12px;
-      --arch-bg: #0f172a;
-      --arch-text: #e2e8f0;
-      --arch-green: #4ade80;
-      --arch-blue: #60a5fa;
-      --arch-yellow: #fbbf24;
-      --arch-muted: #64748b;
+      --arch-bg: #0a0f1e;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
@@ -40,7 +35,7 @@
     .nav-badge { background: linear-gradient(to right, #7c3aed, #2563eb); color: #fff; font-size: .72rem; font-weight: 700; padding: .2rem .6rem; border-radius: 99px; }
 
     /* ═══════════════════════════════════════
-       IDLE PHASE — hero + input
+       IDLE PHASE
     ═══════════════════════════════════════ */
     #phase-idle { min-height: calc(100vh - 56px); display: flex; align-items: center; justify-content: center; padding: 2rem 1.5rem; }
     .idle-inner { max-width: 680px; width: 100%; text-align: center; }
@@ -48,7 +43,6 @@
     .idle-inner h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; line-height: 1.15; margin-bottom: 1rem; letter-spacing: -.5px; }
     .idle-inner h1 span { color: var(--primary); }
     .idle-inner p { font-size: 1.05rem; color: var(--text-muted); max-width: 520px; margin: 0 auto 2rem; }
-
     .design-form { display: flex; flex-direction: column; gap: .75rem; margin-bottom: 1.5rem; }
     .design-input-wrap { display: flex; background: var(--card); border: 2px solid var(--border); border-radius: 14px; overflow: hidden; transition: border-color .2s; }
     .design-input-wrap:focus-within { border-color: var(--primary); }
@@ -56,94 +50,118 @@
     .design-input::placeholder { color: #94a3b8; }
     .design-submit { background: var(--primary); border: none; color: #fff; font-size: .95rem; font-weight: 700; padding: .9rem 1.4rem; cursor: pointer; white-space: nowrap; transition: background .15s; }
     .design-submit:hover { background: var(--primary-dark); }
-    .design-submit:disabled { opacity: .6; cursor: not-allowed; }
-
     .examples { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; }
     .example-chip { background: var(--card); border: 1px solid var(--border); border-radius: 99px; padding: .35rem .85rem; font-size: .82rem; color: var(--text-muted); cursor: pointer; transition: border-color .15s, color .15s; }
     .example-chip:hover { border-color: var(--primary); color: var(--primary); }
-
     .idle-hint { margin-top: 2rem; font-size: .8rem; color: #94a3b8; }
     .idle-hint strong { color: var(--text-muted); }
 
     /* ═══════════════════════════════════════
-       ACTIVE PHASE — two-column journey
+       ACTIVE PHASE
     ═══════════════════════════════════════ */
     #phase-active { display: none; }
-    .journey-layout { display: grid; grid-template-columns: 1fr 420px; min-height: calc(100vh - 56px); }
+    .journey-layout { display: grid; grid-template-columns: 1fr 440px; min-height: calc(100vh - 56px); }
 
     /* ── Left: Architecture panel ── */
-    .arch-panel { background: var(--arch-bg); color: var(--arch-text); padding: 1.75rem; display: flex; flex-direction: column; gap: 1.25rem; overflow-y: auto; }
-    .arch-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
-    .arch-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #4ade80; }
-    .arch-system-name { font-size: .9rem; font-weight: 600; color: #f1f5f9; }
-    .restart-btn { background: transparent; border: 1px solid #334155; color: #64748b; font-size: .75rem; padding: .3rem .7rem; border-radius: 7px; cursor: pointer; transition: all .15s; }
+    .arch-panel { background: var(--arch-bg); display: flex; flex-direction: column; overflow: hidden; }
+    .arch-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; padding: 1.25rem 1.5rem; flex-shrink: 0; }
+    .arch-label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #4ade80; }
+    .arch-system-name { font-size: .88rem; font-weight: 600; color: #f1f5f9; margin-top: .12rem; }
+    .restart-btn { background: transparent; border: 1px solid #334155; color: #64748b; font-size: .75rem; padding: .3rem .7rem; border-radius: 7px; cursor: pointer; transition: all .15s; flex-shrink: 0; }
     .restart-btn:hover { border-color: #ef4444; color: #ef4444; }
 
-    .arch-diagram-box { background: #0a0f1e; border: 1px solid #1e293b; border-radius: 10px; padding: 1.25rem; font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; font-size: .78rem; line-height: 1.7; color: #94a3b8; white-space: pre; overflow-x: auto; min-height: 180px; transition: opacity .3s; }
-    .arch-diagram-box .d-green { color: #4ade80; font-weight: 700; }
-    .arch-diagram-box .d-blue { color: #60a5fa; font-weight: 700; }
-    .arch-diagram-box .d-yellow { color: #fbbf24; font-weight: 700; }
-    .arch-diagram-box .d-red { color: #f87171; font-weight: 700; }
-    .arch-diagram-box .d-purple { color: #c084fc; font-weight: 700; }
-    .arch-diagram-box .d-dim { color: #374151; }
+    /* Loading animation (left panel) */
+    .arch-loading { display: none; padding: 1.5rem; flex-direction: column; gap: .6rem; flex-shrink: 0; }
+    .arch-loading.visible { display: flex; }
+    .arch-loading-bar { height: 2px; background: #1e293b; border-radius: 2px; overflow: hidden; margin-bottom: .5rem; }
+    .arch-loading-bar-fill { height: 100%; background: linear-gradient(to right, #3b82f6, #8b5cf6); border-radius: 2px; animation: loadbar 22s linear forwards; }
+    @keyframes loadbar { 0%{width:0%} 85%{width:87%} 100%{width:91%} }
+    .arch-loading-step { font-size: .74rem; color: #334155; display: flex; align-items: center; gap: .5rem; transition: color .3s; }
+    .arch-loading-step::before { content: '○'; font-size: .58rem; color: #334155; }
+    .arch-loading-step.active { color: #94a3b8; }
+    .arch-loading-step.active::before { content: '◉'; color: #60a5fa; }
+    .arch-loading-step.done { color: #4ade80; }
+    .arch-loading-step.done::before { content: '●'; color: #4ade80; }
 
-    .arch-diagram-box.updating { opacity: .5; }
+    /* SVG diagram canvas */
+    .excalidraw-wrapper { flex: 1; display: none; min-height: 0; overflow: auto; background: #f8fafc; border-radius: 8px; }
+    .excalidraw-wrapper.visible { display: block; }
+    #diagram-root { width: 100%; padding: 16px; box-sizing: border-box; }
+    .excalidraw-wrapper.fading { opacity: .4; transition: opacity .2s; }
 
-    .decisions-trail { display: flex; flex-direction: column; gap: .5rem; }
-    .trail-heading { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #475569; margin-bottom: .2rem; }
-    .trail-item { display: flex; align-items: flex-start; gap: .6rem; font-size: .8rem; color: #94a3b8; }
-    .trail-num { width: 18px; height: 18px; border-radius: 50%; background: #1e293b; color: #4ade80; font-size: .65rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
-    .trail-text { flex: 1; line-height: 1.4; }
+    /* Color legend */
+    .diagram-legend { display: none; flex-wrap: wrap; gap: .3rem .7rem; padding: .6rem 1.2rem; background: rgba(255,255,255,.03); border-top: 1px solid #1e293b; flex-shrink: 0; }
+    .diagram-legend.visible { display: flex; }
+    .leg-item { display: flex; align-items: center; gap: .3rem; font-size: .65rem; color: #475569; }
+    .leg-dot { width: 9px; height: 9px; border-radius: 2px; border: 1.5px solid; flex-shrink: 0; }
+    .leg-dot.dashed { border-style: dashed; }
+
+    /* Decisions trail */
+    .decisions-trail { padding: .75rem 1.25rem; border-top: 1px solid #1e293b; display: none; flex-shrink: 0; }
+    .decisions-trail.visible { display: block; }
+    .trail-heading { font-size: .63rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #334155; margin-bottom: .4rem; }
+    .trail-items { display: flex; flex-wrap: wrap; gap: .35rem; }
+    .trail-chip { font-size: .72rem; padding: .2rem .55rem; border-radius: 99px; display: flex; align-items: center; gap: .3rem; cursor: pointer; transition: opacity .15s, transform .1s; }
+    .trail-chip:hover { opacity: .75; transform: translateY(-1px); }
+    .trail-chip.match { background: rgba(74,222,128,.1); color: #4ade80; border: 1px solid rgba(74,222,128,.2); }
+    .trail-chip.alt   { background: rgba(251,191,36,.08); color: #fbbf24; border: 1px solid rgba(251,191,36,.2); }
+    .trail-num { font-size: .6rem; font-weight: 700; }
+    .trail-hint { font-size: .63rem; color: #334155; padding: .35rem 0 0; font-style: italic; }
+    .step-nav { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+    .back-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); font-size: .75rem; padding: .25rem .65rem; border-radius: 7px; cursor: pointer; transition: all .15s; }
+    .back-btn:hover { border-color: var(--primary); color: var(--primary); }
 
     /* ── Right: Decision panel ── */
     .decision-panel { background: var(--bg); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
 
-    /* Loading state */
-    .loading-state { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 3rem; text-align: center; }
+    .loading-state { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 3rem 2rem; text-align: center; }
     .loading-state.visible { display: flex; }
     .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-state p { color: var(--text-muted); font-size: .9rem; }
+    .loading-main-text { color: var(--text); font-size: .95rem; font-weight: 600; }
+    .loading-sub-text { color: var(--text-muted); font-size: .82rem; line-height: 1.6; }
     .loading-dots::after { content: ''; animation: dots 1.5s infinite; }
     @keyframes dots { 0%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
 
-    /* Decision content */
-    .decision-content { flex: 1; padding: 1.75rem; display: flex; flex-direction: column; gap: 1.25rem; }
-    .decision-content.hidden { display: none; }
+    .decision-content { flex: 1; padding: 1.75rem; display: none; flex-direction: column; gap: 1.25rem; }
+    .decision-content.visible { display: flex; }
 
-    .step-badge { display: inline-flex; align-items: center; gap: .4rem; font-size: .72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; }
+    .step-badge { display: flex; align-items: center; gap: .6rem; font-size: .72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; }
     .step-dots { display: flex; gap: 4px; }
     .step-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: background .3s; }
     .step-dot.done { background: #4ade80; }
     .step-dot.active { background: var(--primary); }
 
-    .acknowledgement-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: .75rem 1rem; font-size: .85rem; color: #166534; display: none; }
+    .acknowledgement-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: .75rem 1rem; font-size: .85rem; color: #166534; display: none; line-height: 1.5; }
     .acknowledgement-box.visible { display: block; }
 
-    .decision-question { font-size: 1.2rem; font-weight: 800; line-height: 1.3; color: var(--text); }
-    .decision-context { font-size: .88rem; color: var(--text-muted); }
+    .decision-question { font-size: 1.12rem; font-weight: 800; line-height: 1.3; color: var(--text); }
+    .decision-context { font-size: .87rem; color: var(--text-muted); margin-top: .4rem; }
 
-    /* Option cards */
-    .options-grid { display: flex; flex-direction: column; gap: .65rem; }
-    .option-card { background: var(--card); border: 2px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; cursor: pointer; transition: border-color .15s, transform .1s, box-shadow .15s; position: relative; overflow: hidden; }
-    .option-card:hover { border-color: var(--primary); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,.12); }
+    /* Option cards — 4 per step */
+    .options-grid { display: flex; flex-direction: column; gap: .55rem; }
+    .option-card { background: var(--card); border: 2px solid var(--border); border-radius: var(--radius); padding: .85rem 1rem; cursor: pointer; transition: border-color .15s, transform .1s, box-shadow .15s; position: relative; overflow: hidden; }
+    .option-card:hover { border-color: var(--primary); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,.1); }
+    .option-card.recommended-option { border-color: rgba(37,99,235,.3); }
     .option-card.selected { border-color: #16a34a; background: #f0fdf4; transform: none; }
-    .option-card.selected::after { content: '✓ Selected'; position: absolute; top: .6rem; right: .75rem; font-size: .7rem; font-weight: 700; color: #16a34a; background: #dcfce7; padding: .15rem .45rem; border-radius: 99px; }
-    .option-card.dimmed { opacity: .4; pointer-events: none; }
-    .option-id { font-size: .68rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .25rem; }
-    .option-label { font-size: .97rem; font-weight: 700; color: var(--text); margin-bottom: .3rem; }
-    .option-desc { font-size: .82rem; color: var(--text-muted); margin-bottom: .4rem; }
-    .option-tradeoff { font-size: .77rem; color: #92400e; background: #fef3c7; border-radius: 5px; padding: .2rem .5rem; display: inline-block; }
-    .option-pattern { font-size: .72rem; color: var(--primary); font-weight: 600; margin-top: .4rem; display: flex; align-items: center; gap: .3rem; text-decoration: none; }
+    .option-card.selected::after { content: '✓ Chosen'; position: absolute; top: .55rem; right: .7rem; font-size: .67rem; font-weight: 700; color: #16a34a; background: #dcfce7; padding: .1rem .4rem; border-radius: 99px; }
+    .option-card.dimmed { opacity: .32; pointer-events: none; }
+    .option-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .2rem; }
+    .option-id { font-size: .67rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: .08em; }
+    .recommended-badge { font-size: .64rem; font-weight: 700; background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; padding: .1rem .42rem; border-radius: 99px; }
+    .option-label { font-size: .92rem; font-weight: 700; color: var(--text); margin-bottom: .25rem; }
+    .option-desc { font-size: .79rem; color: var(--text-muted); margin-bottom: .35rem; line-height: 1.5; }
+    .option-tradeoff { font-size: .73rem; color: #92400e; background: #fef3c7; border-radius: 5px; padding: .16rem .45rem; display: inline-block; }
+    .option-pattern { font-size: .69rem; color: var(--primary); font-weight: 600; margin-top: .35rem; display: flex; align-items: center; gap: .3rem; text-decoration: none; }
     .option-pattern:hover { text-decoration: underline; }
 
     /* Role insights */
-    .role-section-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); }
-    .role-insights { display: flex; flex-direction: column; gap: .5rem; }
-    .role-insight { display: flex; align-items: flex-start; gap: .6rem; font-size: .82rem; }
+    .role-section-label { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); }
+    .role-insights { display: flex; flex-direction: column; gap: .45rem; }
+    .role-insight { display: flex; align-items: flex-start; gap: .55rem; font-size: .81rem; }
     .role-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
-    .role-name { font-weight: 700; color: var(--text); min-width: 60px; }
-    .role-text { color: var(--text-muted); flex: 1; }
+    .role-name { font-weight: 700; color: var(--text); min-width: 62px; }
+    .role-text { color: var(--text-muted); flex: 1; line-height: 1.5; }
     .role-dot.sre { background: #16a34a; }
     .role-dot.backend { background: #7c3aed; }
     .role-dot.security { background: #dc2626; }
@@ -155,28 +173,34 @@
     .role-dot.architect { background: #475569; }
 
     /* ── Complete state ── */
-    .complete-panel { padding: 1.75rem; display: none; flex-direction: column; gap: 1.5rem; }
+    .complete-panel { padding: 1.75rem; display: none; flex-direction: column; gap: 1.4rem; }
     .complete-panel.visible { display: flex; }
     .complete-badge { display: inline-flex; align-items: center; gap: .5rem; background: #dcfce7; border: 1px solid #86efac; color: #166534; padding: .35rem .9rem; border-radius: 99px; font-size: .8rem; font-weight: 700; }
-    .complete-heading { font-size: 1.3rem; font-weight: 800; color: var(--text); }
-    .complete-summary { font-size: .9rem; color: var(--text-muted); line-height: 1.7; }
-    .insights-list { display: flex; flex-direction: column; gap: .5rem; }
-    .insight-item { display: flex; align-items: flex-start; gap: .6rem; font-size: .85rem; color: var(--text); }
+    .complete-heading { font-size: 1.2rem; font-weight: 800; color: var(--text); }
+    .complete-summary { font-size: .87rem; color: var(--text-muted); line-height: 1.75; }
+    .complete-excal-note { font-size: .8rem; color: #059669; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 9px; padding: .6rem .9rem; line-height: 1.5; }
+    .path-score { font-size: .82rem; color: var(--text-muted); background: var(--card); border: 1px solid var(--border); border-radius: 9px; padding: .6rem .9rem; }
+    .path-score strong { color: var(--text); }
+    .insights-list { display: flex; flex-direction: column; gap: .45rem; }
+    .insight-item { display: flex; align-items: flex-start; gap: .55rem; font-size: .84rem; }
     .insight-bullet { color: var(--primary); font-weight: 800; flex-shrink: 0; }
-    .pattern-links { display: flex; flex-direction: column; gap: .4rem; }
-    .pattern-link { display: flex; align-items: center; gap: .5rem; font-size: .82rem; color: var(--primary); text-decoration: none; }
+    .patterns-label { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); margin-bottom: .45rem; }
+    .pattern-links { display: flex; flex-direction: column; gap: .32rem; }
+    .pattern-link { display: flex; align-items: center; gap: .5rem; font-size: .79rem; color: var(--primary); text-decoration: none; }
     .pattern-link:hover { text-decoration: underline; }
-    .pattern-link-num { font-size: .7rem; font-weight: 700; background: var(--primary); color: #fff; padding: .1rem .4rem; border-radius: 5px; }
+    .pattern-link-num { font-size: .67rem; font-weight: 700; background: var(--primary); color: #fff; padding: .1rem .38rem; border-radius: 5px; min-width: 22px; text-align: center; }
+    .pattern-chosen-tag { font-size: .63rem; background: #dcfce7; color: #16a34a; padding: .08rem .32rem; border-radius: 99px; }
     .complete-actions { display: flex; gap: .75rem; flex-wrap: wrap; }
-    .btn-copy { background: var(--card); border: 1px solid var(--border); color: var(--text); font-size: .88rem; font-weight: 600; padding: .6rem 1rem; border-radius: 9px; cursor: pointer; transition: all .15s; }
-    .btn-copy:hover { border-color: var(--primary); color: var(--primary); }
-    .btn-restart { background: var(--primary); color: #fff; border: none; font-size: .88rem; font-weight: 700; padding: .6rem 1.1rem; border-radius: 9px; cursor: pointer; transition: background .15s; }
-    .btn-restart:hover { background: var(--primary-dark); }
+    .btn-secondary { background: var(--card); border: 1px solid var(--border); color: var(--text); font-size: .87rem; font-weight: 600; padding: .6rem 1rem; border-radius: 9px; cursor: pointer; transition: all .15s; }
+    .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-primary { background: var(--primary); color: #fff; border: none; font-size: .87rem; font-weight: 700; padding: .6rem 1.1rem; border-radius: 9px; cursor: pointer; transition: background .15s; }
+    .btn-primary:hover { background: var(--primary-dark); }
 
     /* ── Responsive ── */
-    @media (max-width: 900px) {
+    @media (max-width: 960px) {
       .journey-layout { grid-template-columns: 1fr; }
-      .arch-panel { min-height: 260px; }
+      .arch-panel { max-height: 50vh; }
+      #excalidraw-root { min-height: 280px; }
       .decision-panel { border-left: none; border-top: 1px solid var(--border); }
     }
     @media (max-width: 480px) {
@@ -199,34 +223,29 @@
 <!-- ═══════════════════ IDLE ═══════════════════ -->
 <div id="phase-idle">
   <div class="idle-inner">
-    <div class="idle-badge">✦ AI-Guided · Decision by Decision</div>
-    <h1>Design any system,<br><span>one decision at a time</span></h1>
-    <p>Describe a system. The AI breaks it into the critical architectural decisions, guides you through each one, and builds the diagram as you go — referencing the 16 patterns and 9 engineering perspectives.</p>
+    <div class="idle-badge">✦ Excalidraw Diagrams · All 7 Decisions Upfront</div>
+    <h1>Design any system,<br><span>watch the architecture grow</span></h1>
+    <p>Describe a system. The AI plans all 7 architectural decisions at once — 4 options each, 9 engineering perspectives. You navigate step by step while an Excalidraw diagram builds in real time. Edit, annotate, and export when you're done.</p>
 
     <form class="design-form" id="design-form">
       <div class="design-input-wrap">
-        <input
-          class="design-input"
-          id="design-input"
-          type="text"
+        <input class="design-input" id="design-input" type="text"
           placeholder="Design a ride-sharing app at Uber scale…"
-          autocomplete="off"
-          maxlength="200"
-        >
-        <button class="design-submit" type="submit" id="start-btn">Start Designing →</button>
+          autocomplete="off" maxlength="300">
+        <button class="design-submit" type="submit">Generate Plan →</button>
       </div>
     </form>
 
     <div class="examples">
       <span class="example-chip" data-q="Design a URL shortener like bit.ly">URL Shortener</span>
-      <span class="example-chip" data-q="Design Twitter's news feed">Twitter Feed</span>
+      <span class="example-chip" data-q="Design Twitter's news feed at 100M DAU">Twitter Feed</span>
       <span class="example-chip" data-q="Design a payment processing system like Stripe">Payment System</span>
       <span class="example-chip" data-q="Design Netflix video streaming at global scale">Netflix Streaming</span>
       <span class="example-chip" data-q="Design a real-time collaborative document editor like Google Docs">Collaborative Editor</span>
-      <span class="example-chip" data-q="Design an e-commerce platform like Amazon">E-Commerce Platform</span>
+      <span class="example-chip" data-q="Design a safety-critical IoT sensor monitoring system for train wheel health — split-second decisions, no data loss">Train Health IoT</span>
     </div>
 
-    <p class="idle-hint">Powered by <strong>Llama 3.3 70B via Groq</strong> · Uses the KnowAlgo 16-pattern vocabulary</p>
+    <p class="idle-hint">Powered by <strong>Llama 3.3 70B via Groq</strong> · Interactive Excalidraw diagrams · 16 patterns · 9 engineering roles</p>
   </div>
 </div>
 
@@ -235,70 +254,98 @@
   <div class="journey-layout">
 
     <!-- Left: Architecture panel -->
-    <div class="arch-panel">
+    <div class="arch-panel" id="arch-panel">
       <div class="arch-top">
         <div>
-          <div class="arch-label">Architecture</div>
+          <div class="arch-label">Architecture — Excalidraw</div>
           <div class="arch-system-name" id="arch-system-name">–</div>
         </div>
         <button class="restart-btn" id="restart-btn">✕ Start Over</button>
       </div>
 
-      <div class="arch-diagram-box" id="arch-diagram-box">[Users] → ???</div>
+      <div class="arch-loading" id="arch-loading">
+        <div class="arch-loading-bar"><div class="arch-loading-bar-fill"></div></div>
+        <div class="arch-loading-step" id="ls-1">Analyzing system requirements</div>
+        <div class="arch-loading-step" id="ls-2">Loading Excalidraw renderer</div>
+        <div class="arch-loading-step" id="ls-3">Planning 7 architectural decisions</div>
+        <div class="arch-loading-step" id="ls-4">Selecting 4 options per step</div>
+        <div class="arch-loading-step" id="ls-5">Building diagram graph per step</div>
+        <div class="arch-loading-step" id="ls-6">Finalizing complete architecture</div>
+      </div>
 
-      <div class="decisions-trail" id="decisions-trail" style="display:none">
-        <div class="trail-heading">Decisions made</div>
-        <div id="trail-list"></div>
+      <div class="excalidraw-wrapper" id="excalidraw-wrapper">
+        <div id="diagram-root"></div>
+      </div>
+
+      <div class="diagram-legend" id="diagram-legend">
+        <span class="leg-item"><span class="leg-dot" style="background:#dbeafe;border-color:#1e40af"></span>Client</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#cffafe;border-color:#0e7490"></span>Gateway</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#ede9fe;border-color:#5b21b6"></span>Service</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#fef3c7;border-color:#92400e"></span>Cache</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#d1fae5;border-color:#065f46"></span>Database</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#fce7f3;border-color:#9d174d"></span>Queue</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#f3e8ff;border-color:#6d28d9"></span>ML</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#f3f4f6;border-color:#374151"></span>Monitor</span>
+        <span class="leg-item"><span class="leg-dot dashed" style="background:#ffedd5;border-color:#c2410c"></span>Decision</span>
+      </div>
+
+      <div class="decisions-trail" id="decisions-trail">
+        <div class="trail-heading">Decisions made — click any to go back</div>
+        <div class="trail-items" id="trail-list"></div>
+        <div class="trail-hint" id="trail-hint"></div>
       </div>
     </div>
 
     <!-- Right: Decision panel -->
-    <div class="decision-panel" id="decision-panel">
+    <div class="decision-panel">
 
-      <!-- Loading -->
       <div class="loading-state" id="loading-state">
         <div class="spinner"></div>
-        <p>Thinking through the architecture<span class="loading-dots"></span></p>
+        <div class="loading-main-text">Generating complete architecture plan<span class="loading-dots"></span></div>
+        <div class="loading-sub-text">The AI plans all 7 steps at once. Excalidraw loads in parallel.<br>Usually ready in 15–25 seconds.</div>
       </div>
 
-      <!-- Decision content -->
       <div class="decision-content" id="decision-content">
-        <div class="step-badge">
-          Decision <span id="step-num">1</span> of <span id="total-steps">7</span>
-          <div class="step-dots" id="step-dots"></div>
+        <div class="step-nav">
+          <button class="back-btn" id="back-btn" style="display:none">← Back</button>
+          <div class="step-badge">
+            Decision <span id="step-num">1</span> of <span id="total-steps">7</span>
+            <div class="step-dots" id="step-dots"></div>
+          </div>
         </div>
 
         <div class="acknowledgement-box" id="acknowledgement-box"></div>
 
         <div>
           <div class="decision-question" id="decision-question">–</div>
-          <div class="decision-context" id="decision-context" style="margin-top:.5rem"></div>
+          <div class="decision-context" id="decision-context"></div>
         </div>
 
         <div class="options-grid" id="options-grid"></div>
 
         <div>
-          <div class="role-section-label" style="margin-bottom:.6rem">Engineering perspectives</div>
+          <div class="role-section-label" style="margin-bottom:.55rem">Engineering perspectives</div>
           <div class="role-insights" id="role-insights"></div>
         </div>
       </div>
 
-      <!-- Complete -->
       <div class="complete-panel" id="complete-panel">
         <div class="complete-badge">✓ Architecture Complete</div>
         <div class="complete-heading" id="complete-heading">Your system is designed.</div>
         <div class="complete-summary" id="complete-summary"></div>
+        <div class="complete-excal-note">The diagram is now fully editable — drag components, add annotations, and use the toolbar to export as PNG or SVG for your notes.</div>
+        <div class="path-score" id="path-score"></div>
         <div>
-          <div class="role-section-label" style="margin-bottom:.6rem">Key architectural insights</div>
+          <div class="role-section-label" style="margin-bottom:.55rem">Key architectural insights</div>
           <div class="insights-list" id="insights-list"></div>
         </div>
         <div>
-          <div class="role-section-label" style="margin-bottom:.6rem">Go deeper — patterns you used</div>
+          <div class="patterns-label">Patterns referenced — go deeper</div>
           <div class="pattern-links" id="pattern-links"></div>
         </div>
         <div class="complete-actions">
-          <button class="btn-copy" id="copy-btn">Copy Architecture</button>
-          <button class="btn-restart" id="restart-btn-2">Design Another →</button>
+          <button class="btn-secondary" id="revise-btn">← Revise a Decision</button>
+          <button class="btn-primary" id="restart-btn-2">Design Another →</button>
         </div>
       </div>
 
@@ -309,38 +356,41 @@
 <script>
 // ── Pattern URL map ──
 const PATTERN_URLS = {
-  '01': 'system-design-traffic.html',
-  '02': 'system-design-caching.html',
-  '03': 'system-design-storage.html',
-  '04': 'system-design-apis.html',
-  '05': 'system-design-async.html',
-  '06': 'system-design-reliability.html',
-  '07': 'system-design-consistency.html',
-  '08': 'system-design-pipelines.html',
-  '09': 'system-design-security.html',
-  '10': 'system-design-observability.html',
-  '11': 'system-design-migration.html',
-  '12': 'system-design-platform.html',
-  '13': 'system-design-ml.html',
-  '14': 'system-design-realtime.html',
-  '15': 'system-design-iot.html',
-  '16': 'system-design-global.html',
+  '01':'system-design-traffic.html','02':'system-design-caching.html',
+  '03':'system-design-storage.html','04':'system-design-apis.html',
+  '05':'system-design-async.html','06':'system-design-reliability.html',
+  '07':'system-design-consistency.html','08':'system-design-pipelines.html',
+  '09':'system-design-security.html','10':'system-design-observability.html',
+  '11':'system-design-migration.html','12':'system-design-platform.html',
+  '13':'system-design-ml.html','14':'system-design-realtime.html',
+  '15':'system-design-iot.html','16':'system-design-global.html',
+};
+
+// ── Excalidraw node colors (light theme) ──
+const NODE_COLORS = {
+  client:     { stroke: '#1e40af', fill: '#dbeafe' },
+  gateway:    { stroke: '#0e7490', fill: '#cffafe' },
+  service:    { stroke: '#5b21b6', fill: '#ede9fe' },
+  cache:      { stroke: '#92400e', fill: '#fef3c7' },
+  database:   { stroke: '#065f46', fill: '#d1fae5' },
+  queue:      { stroke: '#9d174d', fill: '#fce7f3' },
+  ml:         { stroke: '#6d28d9', fill: '#f3e8ff' },
+  monitoring: { stroke: '#374151', fill: '#f3f4f6' },
+  unknown:    { stroke: '#c2410c', fill: '#ffedd5' },
 };
 
 // ── State ──
 const state = {
-  phase: 'idle',    // idle | loading | deciding | complete
-  systemName: '',
-  messages: [],     // full LLM conversation history
-  currentStep: null,
-  usedPatterns: [], // [{patternId, patternName}]
-  finalDiagram: '',
+  plan: null,
+  currentStep: 0,
+  choices: [],
+  systemDescription: '',
+  chosenPatterns: [],
+  allPatterns: [],
 };
 
 // ── DOM refs ──
 const $ = id => document.getElementById(id);
-const phaseIdle   = $('phase-idle');
-const phaseActive = $('phase-active');
 
 // ── Example chips ──
 document.querySelectorAll('.example-chip').forEach(chip => {
@@ -349,267 +399,471 @@ document.querySelectorAll('.example-chip').forEach(chip => {
     $('design-input').focus();
   });
 });
-
-// ── Start form ──
 $('design-form').addEventListener('submit', e => {
   e.preventDefault();
   const q = $('design-input').value.trim();
-  if (!q) return;
-  startJourney(q);
+  if (q) startJourney(q);
 });
 
-function startJourney(question) {
-  state.systemName = question;
-  state.messages = [{ role: 'user', content: `Design this system: ${question}` }];
-  state.usedPatterns = [];
-  state.currentStep = null;
-  state.finalDiagram = '';
+// ─────────────────────────────────────────────
+// SVG DIAGRAM RENDERER
+// ─────────────────────────────────────────────
 
-  $('arch-system-name').textContent = question;
-  $('arch-diagram-box').textContent = '[Users] → ???';
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src;
+    s.crossOrigin = 'anonymous';
+    s.onload = resolve;
+    s.onerror = () => reject(new Error(`Failed to load: ${src}`));
+    document.body.appendChild(s);
+  });
+}
+
+function escapeXml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function buildSVGDiagram(graph) {
+  if (!graph?.nodes?.length) return '';
+
+  const NW = 160, NH = 60, GAP_X = 210, GAP_Y = 120, PAD = 28;
+
+  // Group nodes by tier
+  const tierMap = {};
+  graph.nodes.forEach(n => {
+    const t = n.tier != null ? Number(n.tier) : 0;
+    (tierMap[t] = tierMap[t] || []).push(n);
+  });
+
+  // Calculate positions centred per tier
+  const pos = {};
+  const nodeTier = {};
+  Object.keys(tierMap).map(Number).sort((a,b)=>a-b).forEach(tier => {
+    const nodes = tierMap[tier];
+    const startX = -((nodes.length - 1) * GAP_X) / 2;
+    nodes.forEach((n, i) => {
+      pos[n.id] = { x: startX + i * GAP_X, y: tier * GAP_Y };
+      nodeTier[n.id] = tier;
+    });
+  });
+
+  // Compute bounding box and shift so min = 0 + PAD
+  const allX = Object.values(pos).map(p => p.x);
+  const allY = Object.values(pos).map(p => p.y);
+  const minX = Math.min(...allX), minY = Math.min(...allY);
+  const maxX = Math.max(...allX) + NW,  maxY = Math.max(...allY) + NH;
+  Object.values(pos).forEach(p => { p.x += -minX + PAD; p.y += -minY + PAD; });
+  const W = maxX - minX + PAD * 2, H = maxY - minY + PAD * 2;
+
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;max-height:380px;display:block">`;
+  svg += `<defs><marker id="ah" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 Z" fill="#94a3b8"/></marker></defs>`;
+
+  // Arrows (drawn first, behind boxes)
+  (graph.edges || []).forEach(e => {
+    const fp = pos[e.from], tp = pos[e.to];
+    if (!fp || !tp) return;
+    const ft = nodeTier[e.from] ?? 0, tt = nodeTier[e.to] ?? 0;
+    let x1, y1, x2, y2;
+    if (ft === tt) {
+      if (fp.x <= tp.x) { x1=fp.x+NW; y1=fp.y+NH/2; x2=tp.x-2;   y2=tp.y+NH/2; }
+      else               { x1=fp.x-2;  y1=fp.y+NH/2; x2=tp.x+NW;  y2=tp.y+NH/2; }
+    } else if (ft < tt)  { x1=fp.x+NW/2; y1=fp.y+NH+2; x2=tp.x+NW/2; y2=tp.y-2; }
+    else                 { x1=fp.x+NW/2; y1=fp.y-2;    x2=tp.x+NW/2; y2=tp.y+NH+2; }
+
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>`;
+    if (e.label) {
+      const mx=(x1+x2)/2, my=(y1+y2)/2;
+      svg += `<rect x="${mx-22}" y="${my-8}" width="44" height="14" rx="3" fill="#f1f5f9"/>`;
+      svg += `<text x="${mx}" y="${my+1}" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="9" fill="#64748b">${escapeXml(e.label)}</text>`;
+    }
+  });
+
+  // Boxes + labels (drawn on top)
+  graph.nodes.forEach(n => {
+    const p = pos[n.id];
+    if (!p) return;
+    const isUnk = n.type === 'unknown';
+    const c = NODE_COLORS[isUnk ? 'unknown' : (n.type || 'service')] || NODE_COLORS.service;
+    const dash = isUnk ? 'stroke-dasharray="6,3"' : '';
+    svg += `<rect x="${p.x}" y="${p.y}" width="${NW}" height="${NH}" rx="8" fill="${c.fill}" stroke="${c.stroke}" stroke-width="${isUnk?2.5:2}" ${dash}/>`;
+
+    const lines = (n.label || n.id).trim().split('\n');
+    const LH = 15, totalH = lines.length * LH;
+    const startY = p.y + (NH - totalH) / 2 + LH * 0.78;
+    lines.forEach((line, i) => {
+      svg += `<text x="${p.x+NW/2}" y="${startY+i*LH}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="${i===0?12:10}" font-weight="${i===0?600:400}" fill="${isUnk?c.stroke:'#1e293b'}">${escapeXml(line)}</text>`;
+    });
+  });
+
+  return svg + '</svg>';
+}
+
+function updateDiagram(graph) {
+  const root = $('diagram-root');
+  if (!root || !graph) return;
+  root.innerHTML = buildSVGDiagram(graph);
+}
+
+// ─────────────────────────────────────────────
+// JOURNEY LOGIC
+// ─────────────────────────────────────────────
+
+function startJourney(description) {
+  state.systemDescription = description;
+  state.plan = null;
+  state.currentStep = 0;
+  state.choices = [];
+  state.chosenPatterns = [];
+  state.allPatterns = [];
+
+  $('arch-system-name').textContent = description;
+  $('excalidraw-wrapper').classList.remove('visible');
+  $('diagram-legend').classList.remove('visible');
+  $('decisions-trail').classList.remove('visible');
   $('trail-list').innerHTML = '';
-  $('decisions-trail').style.display = 'none';
+  $('arch-loading').classList.add('visible');
+  $('decision-content').classList.remove('visible');
   $('complete-panel').classList.remove('visible');
-  $('decision-content').classList.remove('hidden');
 
   showPhase('active');
-  callAPI();
-}
-
-function showPhase(phase) {
-  phaseIdle.style.display   = phase === 'idle'   ? 'flex' : 'none';
-  phaseActive.style.display = phase === 'active' ? 'block' : 'none';
-  state.phase = phase;
-}
-
-// ── API call ──
-async function callAPI() {
   showLoading(true);
+  animateLoadingSteps();
 
-  let data;
-  try {
-    const res = await fetch('/.netlify/functions/design', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: state.messages }),
-    });
-    if (!res.ok) throw new Error(`Server error ${res.status}`);
-    data = await res.json();
-  } catch (err) {
+  fetchPlanData(description).then(plan => {
+    $('arch-loading').classList.remove('visible');
     showLoading(false);
-    showError('Could not reach the AI. Check your connection and try again.', err.message);
-    return;
-  }
 
-  // Store assistant reply in history
-  state.messages.push({ role: 'assistant', content: JSON.stringify(data) });
-  state.currentStep = data;
+    state.plan = plan;
 
-  // Track patterns used
-  if (data.patternRef && !state.usedPatterns.find(p => p.patternId === data.patternRef)) {
-    state.usedPatterns.push({ patternId: data.patternRef, patternName: data.options?.[0]?.patternName || '' });
-  }
+    // Collect all unique patterns across all steps
+    const seenIds = new Set();
+    plan.steps.forEach(step => {
+      (step.options || []).forEach(opt => {
+        if (opt.patternId && !seenIds.has(opt.patternId) && PATTERN_URLS[opt.patternId]) {
+          seenIds.add(opt.patternId);
+          state.allPatterns.push({ patternId: opt.patternId, patternName: opt.patternName });
+        }
+      });
+    });
 
-  showLoading(false);
-  renderStep(data);
+    $('arch-system-name').textContent = plan.systemName || description;
+    $('excalidraw-wrapper').classList.add('visible');
+    $('diagram-legend').classList.add('visible');
+    renderStep(0);
+  }).catch(err => {
+    $('arch-loading').classList.remove('visible');
+    showLoading(false);
+    showError('Could not generate plan.', err.message || 'Try again.');
+  });
 }
 
-// ── Render a decision step ──
-function renderStep(data) {
-  // Update diagram
-  const diagramBox = $('arch-diagram-box');
-  diagramBox.classList.add('updating');
-  setTimeout(() => {
-    diagramBox.textContent = data.archDiagram || '[Users] → ???';
-    diagramBox.classList.remove('updating');
-  }, 200);
+async function fetchPlanData(description) {
+  // Generate a unique job ID client-side
+  const jobId = crypto.randomUUID();
 
-  if (data.isComplete) {
-    renderComplete(data);
-    return;
+  // Trigger the background function (returns 202 immediately)
+  const triggerRes = await fetch('/.netlify/functions/design-background', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jobId, systemDescription: description }),
+  });
+  if (!triggerRes.ok && triggerRes.status !== 202) {
+    throw new Error(`Failed to start generation (${triggerRes.status})`);
   }
 
-  // Step dots
+  // Poll until done (up to 3 minutes)
+  const POLL_INTERVAL = 3000;
+  const MAX_WAIT = 180_000;
+  const started = Date.now();
+
+  while (Date.now() - started < MAX_WAIT) {
+    await new Promise(r => setTimeout(r, POLL_INTERVAL));
+
+    const pollRes = await fetch(`/.netlify/functions/design-poll?jobId=${jobId}`);
+    if (!pollRes.ok) continue;
+
+    const job = await pollRes.json();
+    if (job.status === 'done') {
+      if (!job.data?.steps || job.data.steps.length < 7) {
+        throw new Error('Incomplete plan returned. Please retry.');
+      }
+      return job.data;
+    }
+    if (job.status === 'error') {
+      throw new Error(job.error || 'Generation failed. Please retry.');
+    }
+    // status === 'pending' — keep polling
+  }
+
+  throw new Error('Generation timed out. Please retry.');
+}
+
+// ── Animate left-panel loading steps ──
+function animateLoadingSteps() {
+  const steps = [1,2,3,4,5,6].map(i => $(`ls-${i}`));
+  steps.forEach(s => { s.className = 'arch-loading-step'; });
+  let i = 0;
+  const tick = () => {
+    if (i > 0) steps[i-1].className = 'arch-loading-step done';
+    if (i < steps.length) {
+      steps[i].className = 'arch-loading-step active';
+      i++;
+      if (i < steps.length) setTimeout(tick, 12000); // ~72s total for 6 steps
+    }
+  };
+  setTimeout(tick, 500);
+}
+
+// ── Render a step from the pre-loaded plan ──
+function renderStep(idx) {
+  const step = state.plan.steps[idx];
+  if (!step) return;
+
+  // Update Excalidraw diagram
+  if (step.archGraph) {
+    $('excalidraw-wrapper').classList.add('fading');
+    setTimeout(() => {
+      updateDiagram(step.archGraph);
+      $('excalidraw-wrapper').classList.remove('fading');
+    }, 180);
+  }
+
+  // Step progress dots
+  const TOTAL = state.plan.steps.length;
   const dots = $('step-dots');
   dots.innerHTML = '';
-  for (let i = 1; i <= (data.totalSteps || 7); i++) {
+  for (let i = 0; i < TOTAL; i++) {
     const d = document.createElement('div');
-    d.className = 'step-dot' + (i < data.step ? ' done' : i === data.step ? ' active' : '');
+    d.className = 'step-dot' + (i < idx ? ' done' : i === idx ? ' active' : '');
     dots.appendChild(d);
   }
-  $('step-num').textContent = data.step;
-  $('total-steps').textContent = data.totalSteps || 7;
+  $('step-num').textContent = idx + 1;
+  $('total-steps').textContent = TOTAL;
 
-  // Acknowledgement
+  // Acknowledgement of previous choice
   const ack = $('acknowledgement-box');
-  if (data.acknowledgement && data.step > 1) {
-    ack.textContent = data.acknowledgement;
+  if (idx > 0 && state.choices.length >= idx) {
+    const prev = state.choices[idx - 1];
+    const note = prev.isRecommended ? '✓ matched recommendation' : `AI recommended ${state.plan.steps[idx-1].recommendedOption}`;
+    ack.textContent = `You chose ${prev.optionId}: ${escHtml(prev.optionLabel)} (${note})`;
     ack.classList.add('visible');
   } else {
     ack.classList.remove('visible');
   }
 
-  // Question & context
-  $('decision-question').textContent = data.question || '';
-  $('decision-context').textContent  = data.context  || '';
+  // Question + context
+  $('decision-question').textContent = step.question || '';
+  $('decision-context').textContent  = step.context  || '';
 
-  // Options
+  // Options (4 per step)
   const grid = $('options-grid');
   grid.innerHTML = '';
-  (data.options || []).forEach(opt => {
+  (step.options || []).forEach(opt => {
+    const isRec = opt.id === step.recommendedOption;
+    const patternUrl = PATTERN_URLS[opt.patternId];
     const card = document.createElement('div');
-    card.className = 'option-card';
+    card.className = 'option-card' + (isRec ? ' recommended-option' : '');
     card.innerHTML = `
-      <div class="option-id">${opt.id}</div>
-      <div class="option-label">${opt.label}</div>
-      <div class="option-desc">${opt.description}</div>
-      <span class="option-tradeoff">⚠ ${opt.tradeoff}</span>
-      ${opt.patternId ? `<div style="margin-top:.4rem"><a class="option-pattern" href="${PATTERN_URLS[opt.patternId] || '#'}" target="_blank">↗ Pattern ${opt.patternId}: ${opt.patternName}</a></div>` : ''}
+      <div class="option-header">
+        <span class="option-id">${opt.id}</span>
+        ${isRec ? '<span class="recommended-badge">★ Recommended</span>' : ''}
+      </div>
+      <div class="option-label">${escHtml(opt.label)}</div>
+      <div class="option-desc">${escHtml(opt.description)}</div>
+      <span class="option-tradeoff">⚠ ${escHtml(opt.tradeoff)}</span>
+      ${patternUrl ? `<a class="option-pattern" href="${patternUrl}" target="_blank">↗ Pattern ${opt.patternId}: ${escHtml(opt.patternName)}</a>` : ''}
     `;
-    card.addEventListener('click', () => selectOption(opt, card));
+    card.addEventListener('click', () => selectOption(step, opt, card));
     grid.appendChild(card);
   });
 
   // Role insights
   const ri = $('role-insights');
   ri.innerHTML = '';
-  (data.roleInsights || []).forEach(r => {
+  (step.roleInsights || []).forEach(r => {
     const div = document.createElement('div');
     div.className = 'role-insight';
-    div.innerHTML = `
-      <div class="role-dot ${r.role}"></div>
-      <span class="role-name">${r.role}</span>
-      <span class="role-text">${r.insight}</span>
-    `;
+    div.innerHTML = `<div class="role-dot ${r.role}"></div><span class="role-name">${r.role}</span><span class="role-text">${escHtml(r.insight)}</span>`;
     ri.appendChild(div);
   });
 
-  // Trail
-  if (data.decidedSoFar && data.decidedSoFar.length > 0) {
-    $('decisions-trail').style.display = 'block';
-    const list = $('trail-list');
-    list.innerHTML = '';
-    data.decidedSoFar.forEach((d, i) => {
-      const item = document.createElement('div');
-      item.className = 'trail-item';
-      item.innerHTML = `<div class="trail-num">${i + 1}</div><div class="trail-text">${d}</div>`;
-      list.appendChild(item);
-    });
-  }
+  updateTrail();
+  $('back-btn').style.display = idx > 0 ? 'inline-block' : 'none';
+  $('decision-content').classList.add('visible');
+  $('complete-panel').classList.remove('visible');
 }
 
-// ── Option selected ──
-function selectOption(opt, card) {
-  // Visual feedback
+// ── Option selected — navigate locally, zero API calls ──
+function selectOption(step, opt, card) {
   document.querySelectorAll('.option-card').forEach(c => c.classList.add('dimmed'));
   card.classList.remove('dimmed');
   card.classList.add('selected');
 
-  // Track this pattern
-  if (opt.patternId && !state.usedPatterns.find(p => p.patternId === opt.patternId)) {
-    state.usedPatterns.push({ patternId: opt.patternId, patternName: opt.patternName });
+  const isRec = opt.id === step.recommendedOption;
+  state.choices.push({ step: step.step, optionId: opt.id, optionLabel: opt.label, isRecommended: isRec, patternId: opt.patternId, patternName: opt.patternName });
+
+  if (opt.patternId && !state.chosenPatterns.find(p => p.patternId === opt.patternId)) {
+    state.chosenPatterns.push({ patternId: opt.patternId, patternName: opt.patternName });
   }
 
-  // Add user message with their choice
-  state.messages.push({
-    role: 'user',
-    content: `I choose option ${opt.id}: ${opt.label}. ${opt.description}`
-  });
+  const nextIdx = state.currentStep + 1;
+  state.currentStep = nextIdx;
 
-  // Brief delay then call API
-  setTimeout(callAPI, 400);
+  setTimeout(() => {
+    if (nextIdx >= state.plan.steps.length) renderComplete();
+    else renderStep(nextIdx);
+  }, 380);
 }
 
-// ── Render complete ──
-function renderComplete(data) {
-  // Update diagram with final
-  if (data.finalDiagram) {
-    state.finalDiagram = data.finalDiagram;
-    $('arch-diagram-box').textContent = data.finalDiagram;
+// ── Trail ──
+function updateTrail(activeStep) {
+  if (!state.choices.length) { $('decisions-trail').classList.remove('visible'); return; }
+  $('decisions-trail').classList.add('visible');
+  const list = $('trail-list');
+  list.innerHTML = '';
+  state.choices.forEach((c, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'trail-chip ' + (c.isRecommended ? 'match' : 'alt');
+    chip.innerHTML = `<span class="trail-num">${i+1}</span>${escHtml(c.optionLabel)}`;
+    chip.title = `Go back to Decision ${i+1}`;
+    chip.addEventListener('click', () => jumpToStep(i));
+    list.appendChild(chip);
+  });
+  const hint = $('trail-hint');
+  if (hint) hint.textContent = state.choices.length < (state.plan?.steps?.length || 7) ? 'Click any chip to revise that decision' : '';
+}
+
+// ── Back / Jump navigation (zero API calls — plan is fully loaded) ──
+function goBack() {
+  if (state.currentStep <= 0) return;
+  jumpToStep(state.currentStep - 1);
+}
+
+function jumpToStep(targetIdx) {
+  // Slice off all choices from targetIdx onwards
+  state.choices = state.choices.slice(0, targetIdx);
+  rebuildChosenPatterns();
+  state.currentStep = targetIdx;
+  // If coming from complete panel, restore Excalidraw view mode
+
+  $('complete-panel').classList.remove('visible');
+  renderStep(targetIdx);
+}
+
+function rebuildChosenPatterns() {
+  const seen = new Set();
+  state.chosenPatterns = [];
+  state.choices.forEach(c => {
+    if (c.patternId && !seen.has(c.patternId)) {
+      seen.add(c.patternId);
+      state.chosenPatterns.push({ patternId: c.patternId, patternName: c.patternName });
+    }
+  });
+}
+
+// ── Completion ──
+function renderComplete() {
+  const plan = state.plan;
+
+  // Final diagram
+  if (plan.finalGraph) {
+    $('excalidraw-wrapper').classList.add('fading');
+    setTimeout(() => {
+      updateDiagram(plan.finalGraph);
+      $('excalidraw-wrapper').classList.remove('fading');
+    }, 180);
   }
 
-  // Trail
-  if (data.decidedSoFar && data.decidedSoFar.length > 0) {
-    $('decisions-trail').style.display = 'block';
-    const list = $('trail-list');
-    list.innerHTML = '';
-    data.decidedSoFar.forEach((d, i) => {
-      const item = document.createElement('div');
-      item.className = 'trail-item';
-      item.innerHTML = `<div class="trail-num">${i + 1}</div><div class="trail-text">${d}</div>`;
-      list.appendChild(item);
-    });
-  }
+  updateTrail();
+  $('decision-content').classList.remove('visible');
+  $('complete-panel').classList.add('visible');
 
-  $('decision-content').classList.add('hidden');
-  const cp = $('complete-panel');
-  cp.classList.add('visible');
+  $('complete-heading').textContent = `${plan.systemName || state.systemDescription} — Designed.`;
+  $('complete-summary').textContent = plan.summary || '';
 
-  $('complete-heading').textContent = `${state.systemName} — Designed.`;
-  $('complete-summary').textContent = data.summary || '';
+  const matched = state.choices.filter(c => c.isRecommended).length;
+  const total   = state.choices.length;
+  $('path-score').innerHTML = `<strong>Your path:</strong> ${matched}/${total} decisions matched the AI recommendation.${matched === total ? ' Full alignment.' : matched >= 4 ? ' Mostly aligned — worth reviewing divergences.' : ' You explored alternative approaches.'}`;
 
-  // Key insights
   const il = $('insights-list');
   il.innerHTML = '';
-  (data.keyInsights || []).forEach(ins => {
+  (plan.keyInsights || []).forEach(ins => {
     const d = document.createElement('div');
     d.className = 'insight-item';
-    d.innerHTML = `<span class="insight-bullet">→</span><span>${ins}</span>`;
+    d.innerHTML = `<span class="insight-bullet">→</span><span>${escHtml(ins)}</span>`;
     il.appendChild(d);
   });
 
-  // Pattern links — deduplicated
+  // Pattern links: chosen first, then others
   const pl = $('pattern-links');
   pl.innerHTML = '';
-  const seen = new Set();
-  state.usedPatterns.forEach(p => {
-    if (seen.has(p.patternId)) return;
-    seen.add(p.patternId);
-    const url = PATTERN_URLS[p.patternId];
-    if (!url) return;
+  const shown = new Set();
+
+  state.chosenPatterns.forEach(p => {
+    if (shown.has(p.patternId)) return;
+    shown.add(p.patternId);
     const a = document.createElement('a');
     a.className = 'pattern-link';
-    a.href = url;
+    a.href = PATTERN_URLS[p.patternId] || '#';
     a.target = '_blank';
-    a.innerHTML = `<span class="pattern-link-num">${p.patternId}</span>${p.patternName}`;
+    a.innerHTML = `<span class="pattern-link-num">${p.patternId}</span>${escHtml(p.patternName)}<span class="pattern-chosen-tag">chosen</span>`;
+    pl.appendChild(a);
+  });
+
+  state.allPatterns.forEach(p => {
+    if (shown.has(p.patternId)) return;
+    shown.add(p.patternId);
+    const a = document.createElement('a');
+    a.className = 'pattern-link';
+    a.href = PATTERN_URLS[p.patternId] || '#';
+    a.target = '_blank';
+    a.innerHTML = `<span class="pattern-link-num">${p.patternId}</span>${escHtml(p.patternName)}`;
     pl.appendChild(a);
   });
 }
 
+// ── Back / Revise wiring ──
+$('back-btn').addEventListener('click', goBack);
+$('revise-btn').addEventListener('click', () => {
+  // Jump to the last decided step so user can change it
+  const lastIdx = Math.max(0, state.plan.steps.length - 1);
+  jumpToStep(lastIdx);
+});
+
 // ── Restart ──
-function restart() {
-  $('design-input').value = '';
-  state.messages = [];
-  showPhase('idle');
-}
+function restart() { $('design-input').value = ''; showPhase('idle'); }
 $('restart-btn').addEventListener('click', restart);
 $('restart-btn-2').addEventListener('click', restart);
 
-// ── Copy architecture ──
-$('copy-btn').addEventListener('click', async () => {
-  const text = state.finalDiagram || $('arch-diagram-box').textContent;
-  try {
-    await navigator.clipboard.writeText(`${state.systemName}\n\n${text}`);
-    $('copy-btn').textContent = 'Copied ✓';
-    setTimeout(() => { $('copy-btn').textContent = 'Copy Architecture'; }, 2000);
-  } catch {
-    $('copy-btn').textContent = 'Copy failed';
-  }
-});
+// ── Phase switch ──
+function showPhase(phase) {
+  $('phase-idle').style.display   = phase === 'idle'   ? 'flex'  : 'none';
+  $('phase-active').style.display = phase === 'active' ? 'block' : 'none';
+}
 
 // ── Loading ──
 function showLoading(on) {
   $('loading-state').classList.toggle('visible', on);
-  $('decision-content').classList.toggle('hidden', on);
 }
 
 // ── Error ──
 function showError(msg, detail) {
-  $('decision-content').classList.remove('hidden');
+  $('arch-loading').classList.remove('visible');
+  $('excalidraw-wrapper').classList.add('visible');
+  $('diagram-legend').classList.remove('visible');
+  showLoading(false);
+  $('decision-content').classList.add('visible');
   $('decision-question').textContent = msg;
   $('decision-context').textContent  = detail || '';
-  $('options-grid').innerHTML = `<button class="btn-restart" onclick="callAPI()" style="align-self:flex-start">Retry →</button>`;
+  $('options-grid').innerHTML = `<button class="btn-primary" onclick="startJourney(state.systemDescription)" style="border:none;cursor:pointer">Retry →</button>`;
   $('role-insights').innerHTML = '';
+}
+
+// ── HTML escape ──
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 </script>
 

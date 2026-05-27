@@ -1,77 +1,66 @@
-const SYSTEM_PROMPT = `You are a system design architect coach. You guide engineers through designing systems by presenting a sequence of architectural decisions — one critical choice at a time.
+const SYSTEM_PROMPT = `You are a senior system design architect. Generate a complete 7-step guided design session in ONE response. Be CONCISE — every text field must be ≤15 words. Total output must stay under 5000 tokens.
 
-You know 16 architectural patterns:
-01 Traffic Shaping & Load Distribution — load balancing, rate limiting, auto-scaling
-02 Caching & Latency Reduction — Redis, CDN, write strategies, cache invalidation
-03 Data Storage Selection — SQL vs NoSQL vs NewSQL, sharding, replication, indexing
-04 API & Communication Protocols — REST vs gRPC vs GraphQL, WebSockets, API gateway
-05 Async Processing & Message Passing — Kafka, SQS, pub/sub, saga, transactional outbox
-06 Reliability, Resilience & Fault Tolerance — circuit breaker, retry+jitter, bulkhead, SLO/SLI
-07 Distributed Consistency & Coordination — CAP theorem, SAGA, 2PC, Raft/Paxos, dist locks
-08 Data Processing Pipelines — Lambda/Kappa, ETL/ELT, CDC, batch vs stream
-09 Security & Access Control — OAuth 2.0, JWT, zero trust, secrets management, WAF
-10 Observability & SRE — metrics/logs/traces, SLOs, error budgets, alerting, on-call
-11 Migration & System Evolution — strangler fig, expand/contract, blue-green, canary
-12 Platform & Developer Infrastructure — Kubernetes, service mesh, CI/CD, GitOps, IaC
-13 ML/AI Systems Design — feature stores, model serving, RAG, vector DBs, drift detection
-14 Real-Time & Event-Driven Systems — WebSockets, event sourcing, CQRS, live analytics
-15 IoT & Edge Computing — MQTT, edge vs cloud, device management, OTA, telemetry
-16 Global Distribution & Multi-Region — anycast, CDN strategy, geo-routing, data sovereignty
+16 patterns (use patternId 01-16):
+01 Traffic Shaping  02 Caching  03 Data Storage  04 API & Protocols
+05 Async Messaging  06 Reliability  07 Consistency  08 Data Pipelines
+09 Security  10 Observability  11 Migration  12 Platform Infra
+13 ML/AI Systems  14 Real-Time/Event  15 IoT & Edge  16 Global Distribution
 
-You have 9 engineering roles whose perspectives matter at every decision:
-sre, backend, security, data, platform, ml, frontend, mobile, architect
+Roles: sre backend security data platform ml frontend mobile architect
 
-DECISION FLOW (adapt to the specific system, ~7 steps):
-Step 1 — Scale & constraints: clarify DAU, req/s, data volume, latency SLA (present options for scale tier, no arch yet)
-Step 2 — Entry point: How does user traffic arrive? (CDN/LB/API Gateway pattern)
-Step 3 — Core storage: Primary data store for the main entity
-Step 4 — Read path: How do we serve reads fast at scale?
-Step 5 — Write path / async: High-write scenarios, background processing
-Step 6 — Reliability: Failure modes and recovery
-Step 7 — Observability & completion: How do we know the system is healthy?
+Decision steps (adapt to the system):
+1 Scale & constraints  2 Entry point  3 Core storage  4 Read path
+5 Write/async path    6 Reliability  7 Observability
 
-RULES:
-- Present EXACTLY 3 options per decision step
-- Each option must clearly map to one of the 16 patterns
-- The ASCII diagram grows with each confirmed decision — start with just [Users → ???] and build outward
-- Diagram: monospace, max 55 chars wide, use box-drawing: →, ↓, │, ├, └, ┌, ┐, ┘, └
-- Include exactly 3 role insights per step — pick the 3 most relevant roles for that decision
-- After step 7 (or when the system is coherently designed), set isComplete: true
+ARCHITECTURE GRAPH (archGraph per step):
+Tiers: 0=Client 1=Gateway 2=Service 3=Data 4=Observability
+Types: client gateway service cache database queue ml monitoring unknown
+- Step 1: client node + 1 unknown node ("??? Scale ???")
+- Step N: all prior decided nodes + 1 unknown node for current decision
+- Step 7: all nodes named, no unknown
+- Add 1-3 new named nodes per step as the architecture grows
+- Use MULTIPLE service nodes at tier 2 for microservice systems; add service→service edges
+- Max 12 nodes total; 3-7 edges per step
+- Node labels: short name only, ≤4 words, NO newlines
 
-ALWAYS output valid JSON matching this schema exactly:
+OUTPUT RULES:
+- EXACTLY 4 options per step, each from a different patternId
+- recommendedOption choices must together form one coherent architecture
+- EXACTLY 3 roleInsights per step (most relevant roles)
+- VALID JSON only, no markdown
+
+JSON schema:
 {
-  "step": <integer 1-8>,
-  "totalSteps": 7,
-  "isComplete": false,
-  "acknowledgement": "<step > 1 only: one sentence validating the user's last choice and its implication>",
-  "question": "<the single forcing question for this decision>",
-  "context": "<1-2 sentences: why this decision matters now and what it constrains downstream>",
-  "options": [
+  "systemName": "<3 words>",
+  "systemDescription": "<1 sentence>",
+  "steps": [
     {
-      "id": "A",
-      "label": "<name, 2-4 words>",
-      "description": "<what it is and when it fits, 1-2 sentences>",
-      "tradeoff": "<the main cost or risk of this choice, 1 sentence>",
-      "patternId": "<01-16>",
-      "patternName": "<exact pattern name>"
-    },
-    { "id": "B", ... },
-    { "id": "C", ... }
+      "step": 1,
+      "question": "<≤12 words>",
+      "context": "<≤15 words>",
+      "options": [
+        { "id": "A", "label": "<2-3 words>", "description": "<≤15 words>", "tradeoff": "<≤12 words>", "patternId": "01", "patternName": "<name>" },
+        { "id": "B", ... }, { "id": "C", ... }, { "id": "D", ... }
+      ],
+      "recommendedOption": "A",
+      "archGraph": {
+        "nodes": [ { "id": "client", "label": "Browser", "tier": 0, "type": "client" } ],
+        "edges": [ { "from": "client", "to": "unknown-1" } ]
+      },
+      "roleInsights": [
+        { "role": "sre", "insight": "<≤15 words>" },
+        { "role": "backend", "insight": "<≤15 words>" },
+        { "role": "architect", "insight": "<≤15 words>" }
+      ]
+    }
   ],
-  "archDiagram": "<ASCII art — show confirmed components clearly, use [??? Decision Label] for the current unknown>",
-  "roleInsights": [
-    { "role": "<sre|backend|security|data|platform|ml|frontend|mobile|architect>", "insight": "<what this role most cares about at this decision point, 1 sentence>" }
-  ],
-  "patternRef": "<primary patternId for this decision, e.g. 03>",
-  "decidedSoFar": ["<one-line summary of each confirmed decision so far, in order>"]
-}
-
-When isComplete is true, ALSO include these additional fields (do not omit them):
-"finalDiagram": "<complete, well-labeled ASCII architecture diagram with all components>",
-"summary": "<3-sentence plain-English description of the system you designed together>",
-"keyInsights": ["<insight 1: key architectural insight>", "<insight 2>", "<insight 3>"]
-
-Be concrete. Name real technologies (Redis, Kafka, PostgreSQL, Nginx, etc.) in your options. Avoid vague terms like 'a database' or 'a cache'. Make every decision feel meaningful.`;
+  "finalGraph": {
+    "nodes": [ { "id": "...", "label": "...", "tier": 0, "type": "..." } ],
+    "edges": [ { "from": "...", "to": "...", "label": "optional short label" } ]
+  },
+  "summary": "<2 sentences>",
+  "keyInsights": ["<≤15 words>", "<≤15 words>", "<≤15 words>"]
+}`;
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
@@ -97,84 +86,137 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON body' }) };
   }
 
-  const { messages } = body;
-  if (!messages || !Array.isArray(messages)) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'messages array required' }) };
+  const { systemDescription } = body;
+  if (!systemDescription || typeof systemDescription !== 'string') {
+    return { statusCode: 400, body: JSON.stringify({ error: 'systemDescription string required' }) };
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'API key not configured' }) };
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const groqKey   = process.env.GROQ_API_KEY;
+
+  if (!geminiKey && !groqKey) {
+    return { statusCode: 500, body: JSON.stringify({ error: 'No API key configured' }) };
   }
 
-  let groqResponse;
-  try {
-    groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          ...messages,
-        ],
-        temperature: 0.65,
-        max_tokens: 2048,
-        response_format: { type: 'json_object' },
-      }),
-    });
-  } catch (err) {
-    return {
-      statusCode: 502,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: 'Failed to reach Groq API', detail: err.message }),
-    };
+  const CORS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
+  const userPrompt = `Design this system: ${systemDescription.slice(0, 500)}`;
+
+  function parseJSON(content) {
+    try { return JSON.parse(content); } catch {}
+    const m = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (m) try { return JSON.parse(m[1]); } catch {}
+    return null;
   }
 
-  if (!groqResponse.ok) {
-    const errText = await groqResponse.text();
-    return {
-      statusCode: groqResponse.status,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: 'Groq API error', detail: errText }),
-    };
-  }
-
-  const data = await groqResponse.json();
-  const content = data.choices?.[0]?.message?.content;
-
-  if (!content) {
-    return {
-      statusCode: 502,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: 'Empty response from model' }),
-    };
-  }
-
-  // Parse and re-serialize to validate JSON
-  let parsed;
-  try {
-    parsed = JSON.parse(content);
-  } catch {
-    // Try to extract JSON from markdown fences if model wrapped it
-    const match = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (match) {
-      try { parsed = JSON.parse(match[1]); }
-      catch { return { statusCode: 502, headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'Model returned invalid JSON' }) }; }
-    } else {
-      return { statusCode: 502, headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ error: 'Model returned invalid JSON' }) };
+  // ── 1. Gemini 1.5 Flash (primary — 1M TPD free) ──────────────────────────
+  if (geminiKey) {
+    let res, geminiErr;
+    try {
+      res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+            generationConfig: {
+              responseMimeType: 'application/json',
+              temperature: 0.65,
+              maxOutputTokens: 8192,
+              thinkingConfig: { thinkingBudget: 0 },
+            },
+          }),
+        }
+      );
+    } catch (err) {
+      geminiErr = err.message;
     }
+
+    if (res && res.ok) {
+      const data    = await res.json();
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (content) {
+        const parsed = parseJSON(content);
+        if (parsed) return { statusCode: 200, headers: CORS, body: JSON.stringify(parsed) };
+        return { statusCode: 502, headers: CORS, body: JSON.stringify({ error: 'Gemini returned invalid JSON' }) };
+      }
+      return { statusCode: 502, headers: CORS, body: JSON.stringify({ error: 'Empty response from Gemini' }) };
+    }
+
+    if (res && !res.ok) {
+      const errText = await res.text();
+      // Only fall through to Groq on rate limit; surface all other Gemini errors
+      if (res.status !== 429) {
+        return { statusCode: res.status, headers: CORS, body: JSON.stringify({ error: 'Gemini API error', detail: errText }) };
+      }
+    }
+
+    if (geminiErr) {
+      return { statusCode: 502, headers: CORS, body: JSON.stringify({ error: 'Could not reach Gemini', detail: geminiErr }) };
+    }
+    // Rate-limited — fall through to Groq
   }
+
+  // ── 2. Groq fallback (llama-3.3-70b only — 8b model can't fit our prompt) ──
+  if (!groqKey) {
+    return { statusCode: 503, headers: CORS, body: JSON.stringify({ error: 'AI service temporarily unavailable. Please try again shortly.' }) };
+  }
+
+  const GROQ_MODELS = [
+    { id: 'llama-3.3-70b-versatile', max_tokens: 6000 },
+  ];
+
+  let lastErrBody = '';
+
+  for (const model of GROQ_MODELS) {
+    let groqRes;
+    try {
+      groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
+        body: JSON.stringify({
+          model: model.id,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user',   content: userPrompt },
+          ],
+          temperature: 0.65,
+          max_tokens: model.max_tokens,
+          response_format: { type: 'json_object' },
+        }),
+      });
+    } catch (err) {
+      return { statusCode: 502, headers: CORS, body: JSON.stringify({ error: 'Failed to reach AI service', detail: err.message }) };
+    }
+
+    if (!groqRes.ok) {
+      lastErrBody = await groqRes.text();
+      if (groqRes.status === 429) continue; // try next model
+      return { statusCode: groqRes.status, headers: CORS, body: JSON.stringify({ error: 'AI service error', detail: lastErrBody }) };
+    }
+
+    const data    = await groqRes.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) return { statusCode: 502, headers: CORS, body: JSON.stringify({ error: 'Empty response from model' }) };
+
+    const parsed = parseJSON(content);
+    if (!parsed) return { statusCode: 502, headers: CORS, body: JSON.stringify({ error: 'Model returned invalid JSON' }) };
+
+    return { statusCode: 200, headers: CORS, body: JSON.stringify(parsed) };
+  }
+
+  // All providers exhausted
+  let retryIn = null;
+  try {
+    const obj = JSON.parse(lastErrBody);
+    const m = (obj?.error?.message || '').match(/try again in ([\dhms.]+)/i);
+    retryIn = m ? m[1] : null;
+  } catch {}
 
   return {
-    statusCode: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-    },
-    body: JSON.stringify(parsed),
+    statusCode: 429,
+    headers: CORS,
+    body: JSON.stringify({ error: retryIn ? `Daily limit reached. Try again in ${retryIn}.` : 'Rate limit reached. Please try again later.' }),
   };
 };

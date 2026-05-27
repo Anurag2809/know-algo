@@ -18,3 +18,12 @@
 
 # Old/superseded files (kept locally but excluded from deploy)
 # trie2.html
+
+# Local Netlify folder
+.netlify
+
+# Dependencies
+node_modules/
+
+# Lock files (optional — keep package-lock.json for reproducibility)
+# package-lock.json
