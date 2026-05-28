@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Architecture Guide – KnowAlgo</title>
-  <meta name="description" content="Design any system step-by-step. The AI maps all 7 architectural decisions upfront — navigate through them and watch an interactive Excalidraw diagram grow with each choice.">
+  <meta name="description" content="Design any system step-by-step. The AI maps all architectural decisions upfront — navigate through them and watch an interactive diagram grow with each choice.">
   <link rel="canonical" href="https://knowalgo.netlify.app/system-design-ai.html">
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2Z1EQCZBXH');</script>
@@ -211,21 +211,21 @@
 <body>
 
 <header class="site-header">
-  <a href="index.html" class="logo">Know<span>Algo</span></a>
+  <a href="system-design.html" class="logo">Know<span>Algo</span></a>
   <nav>
-    <a href="index.html">DSA</a>
+    <a href="index.html">Home</a>
     <a href="system-design.html">System Design</a>
-    <a href="system-design-ai.html" class="active">AI Guide</a>
-    <span class="nav-badge">✦ AI</span>
+    <a href="interview-prep.html">Interview Prep</a>
+    <a href="system-design-ai.html" class="active nav-badge">✦ AI Guide</a>
   </nav>
 </header>
 
 <!-- ═══════════════════ IDLE ═══════════════════ -->
 <div id="phase-idle">
   <div class="idle-inner">
-    <div class="idle-badge">✦ Excalidraw Diagrams · All 7 Decisions Upfront</div>
+    <div class="idle-badge">✦ Interactive Diagrams · Adaptive Decisions</div>
     <h1>Design any system,<br><span>watch the architecture grow</span></h1>
-    <p>Describe a system. The AI plans all 7 architectural decisions at once — 4 options each, 9 engineering perspectives. You navigate step by step while an Excalidraw diagram builds in real time. Edit, annotate, and export when you're done.</p>
+    <p>Describe a system. The AI plans all architectural decisions at once — 4 options each, 9 engineering perspectives. Navigate step by step while a live diagram builds with each choice.</p>
 
     <form class="design-form" id="design-form">
       <div class="design-input-wrap">
@@ -245,7 +245,7 @@
       <span class="example-chip" data-q="Design a safety-critical IoT sensor monitoring system for train wheel health — split-second decisions, no data loss">Train Health IoT</span>
     </div>
 
-    <p class="idle-hint">Powered by <strong>Llama 3.3 70B via Groq</strong> · Interactive Excalidraw diagrams · 16 patterns · 9 engineering roles</p>
+    <p class="idle-hint">Powered by <strong>Gemini 2.5 Flash</strong> · Interactive architecture diagrams · 16 patterns · 9 engineering roles</p>
   </div>
 </div>
 
@@ -257,7 +257,7 @@
     <div class="arch-panel" id="arch-panel">
       <div class="arch-top">
         <div>
-          <div class="arch-label">Architecture — Excalidraw</div>
+          <div class="arch-label">Architecture Diagram</div>
           <div class="arch-system-name" id="arch-system-name">–</div>
         </div>
         <button class="restart-btn" id="restart-btn">✕ Start Over</button>
@@ -266,8 +266,8 @@
       <div class="arch-loading" id="arch-loading">
         <div class="arch-loading-bar"><div class="arch-loading-bar-fill"></div></div>
         <div class="arch-loading-step" id="ls-1">Analyzing system requirements</div>
-        <div class="arch-loading-step" id="ls-2">Loading Excalidraw renderer</div>
-        <div class="arch-loading-step" id="ls-3">Planning 7 architectural decisions</div>
+        <div class="arch-loading-step" id="ls-2">Mapping architecture patterns</div>
+        <div class="arch-loading-step" id="ls-3">Planning architectural decisions</div>
         <div class="arch-loading-step" id="ls-4">Selecting 4 options per step</div>
         <div class="arch-loading-step" id="ls-5">Building diagram graph per step</div>
         <div class="arch-loading-step" id="ls-6">Finalizing complete architecture</div>
@@ -302,7 +302,7 @@
       <div class="loading-state" id="loading-state">
         <div class="spinner"></div>
         <div class="loading-main-text">Generating complete architecture plan<span class="loading-dots"></span></div>
-        <div class="loading-sub-text">The AI plans all 7 steps at once. Excalidraw loads in parallel.<br>Usually ready in 15–25 seconds.</div>
+        <div class="loading-sub-text">The AI plans all decisions at once — number of steps adapts to your system's complexity.<br>Usually ready in 30–60 seconds.</div>
       </div>
 
       <div class="decision-content" id="decision-content">
@@ -333,7 +333,7 @@
         <div class="complete-badge">✓ Architecture Complete</div>
         <div class="complete-heading" id="complete-heading">Your system is designed.</div>
         <div class="complete-summary" id="complete-summary"></div>
-        <div class="complete-excal-note">The diagram is now fully editable — drag components, add annotations, and use the toolbar to export as PNG or SVG for your notes.</div>
+        <div class="complete-excal-note">The final architecture diagram shows the complete data flow. Revisit any decision above to explore alternative paths.</div>
         <div class="path-score" id="path-score"></div>
         <div>
           <div class="role-section-label" style="margin-bottom:.55rem">Key architectural insights</div>
@@ -428,7 +428,7 @@ function escapeXml(s) {
 function buildSVGDiagram(graph) {
   if (!graph?.nodes?.length) return '';
 
-  const NW = 160, NH = 60, GAP_X = 210, GAP_Y = 120, PAD = 28;
+  const NW = 162, NH = 62, GAP_X = 210, GAP_Y = 130, PAD = 36;
 
   // Group nodes by tier
   const tierMap = {};
@@ -453,47 +453,83 @@ function buildSVGDiagram(graph) {
   const allX = Object.values(pos).map(p => p.x);
   const allY = Object.values(pos).map(p => p.y);
   const minX = Math.min(...allX), minY = Math.min(...allY);
-  const maxX = Math.max(...allX) + NW,  maxY = Math.max(...allY) + NH;
+  const maxX = Math.max(...allX) + NW, maxY = Math.max(...allY) + NH;
   Object.values(pos).forEach(p => { p.x += -minX + PAD; p.y += -minY + PAD; });
   const W = maxX - minX + PAD * 2, H = maxY - minY + PAD * 2;
 
-  let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;max-height:380px;display:block">`;
-  svg += `<defs><marker id="ah" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 Z" fill="#94a3b8"/></marker></defs>`;
+  // width:100%; height:auto — no max-height so tall diagrams aren't clipped
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">`;
+  svg += `<defs><marker id="ah" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 Z" fill="#64748b"/></marker></defs>`;
 
-  // Arrows (drawn first, behind boxes)
+  // Arrows — bezier curves (drawn behind boxes)
   (graph.edges || []).forEach(e => {
     const fp = pos[e.from], tp = pos[e.to];
     if (!fp || !tp) return;
     const ft = nodeTier[e.from] ?? 0, tt = nodeTier[e.to] ?? 0;
-    let x1, y1, x2, y2;
-    if (ft === tt) {
-      if (fp.x <= tp.x) { x1=fp.x+NW; y1=fp.y+NH/2; x2=tp.x-2;   y2=tp.y+NH/2; }
-      else               { x1=fp.x-2;  y1=fp.y+NH/2; x2=tp.x+NW;  y2=tp.y+NH/2; }
-    } else if (ft < tt)  { x1=fp.x+NW/2; y1=fp.y+NH+2; x2=tp.x+NW/2; y2=tp.y-2; }
-    else                 { x1=fp.x+NW/2; y1=fp.y-2;    x2=tp.x+NW/2; y2=tp.y+NH+2; }
 
-    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>`;
+    let d, lx, ly;
+    if (ft === tt) {
+      // Same tier — arc above to avoid crossing node boxes
+      const left = fp.x <= tp.x;
+      const x1 = left ? fp.x + NW : fp.x;
+      const y1 = fp.y + NH / 2;
+      const x2 = left ? tp.x : tp.x + NW;
+      const y2 = tp.y + NH / 2;
+      const mx = (x1 + x2) / 2, arc = Math.min(50, Math.abs(x2 - x1) * 0.25);
+      d = `M ${x1} ${y1} C ${mx} ${y1 - arc} ${mx} ${y2 - arc} ${x2} ${y2}`;
+      lx = mx; ly = y1 - arc - 10;
+    } else if (ft < tt) {
+      // Downward — S-curve
+      const x1 = fp.x + NW / 2, y1 = fp.y + NH;
+      const x2 = tp.x + NW / 2, y2 = tp.y;
+      const my = (y1 + y2) / 2;
+      d = `M ${x1} ${y1} C ${x1} ${my} ${x2} ${my} ${x2} ${y2}`;
+      lx = (x1 + x2) / 2; ly = my;
+    } else {
+      // Upward — S-curve
+      const x1 = fp.x + NW / 2, y1 = fp.y;
+      const x2 = tp.x + NW / 2, y2 = tp.y + NH;
+      const my = (y1 + y2) / 2;
+      d = `M ${x1} ${y1} C ${x1} ${my} ${x2} ${my} ${x2} ${y2}`;
+      lx = (x1 + x2) / 2; ly = my;
+    }
+
+    svg += `<path d="${d}" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>`;
+
     if (e.label) {
-      const mx=(x1+x2)/2, my=(y1+y2)/2;
-      svg += `<rect x="${mx-22}" y="${my-8}" width="44" height="14" rx="3" fill="#f1f5f9"/>`;
-      svg += `<text x="${mx}" y="${my+1}" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="9" fill="#64748b">${escapeXml(e.label)}</text>`;
+      const label = String(e.label).slice(0, 16);
+      const lw = label.length * 5.8 + 10;
+      svg += `<rect x="${lx - lw/2}" y="${ly - 8}" width="${lw}" height="14" rx="3" fill="rgba(248,250,252,0.93)" stroke="#e2e8f0" stroke-width="0.5"/>`;
+      svg += `<text x="${lx}" y="${ly + 1.5}" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="8.5" fill="#475569">${escapeXml(label)}</text>`;
     }
   });
 
-  // Boxes + labels (drawn on top)
+  // Node boxes + word-wrapped labels (drawn on top)
   graph.nodes.forEach(n => {
     const p = pos[n.id];
     if (!p) return;
     const isUnk = n.type === 'unknown';
     const c = NODE_COLORS[isUnk ? 'unknown' : (n.type || 'service')] || NODE_COLORS.service;
     const dash = isUnk ? 'stroke-dasharray="6,3"' : '';
-    svg += `<rect x="${p.x}" y="${p.y}" width="${NW}" height="${NH}" rx="8" fill="${c.fill}" stroke="${c.stroke}" stroke-width="${isUnk?2.5:2}" ${dash}/>`;
+    svg += `<rect x="${p.x}" y="${p.y}" width="${NW}" height="${NH}" rx="10" fill="${c.fill}" stroke="${c.stroke}" stroke-width="${isUnk ? 2.5 : 2}" ${dash}/>`;
 
-    const lines = (n.label || n.id).trim().split('\n');
+    // Word-wrap label to fit node width (~18 chars per line)
+    const raw = (n.label || n.id).trim();
+    const words = raw.split(/\s+/);
+    const lines = [];
+    let cur = '';
+    words.forEach(w => {
+      const candidate = cur ? cur + ' ' + w : w;
+      if (candidate.length <= 18) { cur = candidate; }
+      else { if (cur) lines.push(cur); cur = w; }
+    });
+    if (cur) lines.push(cur);
+
     const LH = 15, totalH = lines.length * LH;
-    const startY = p.y + (NH - totalH) / 2 + LH * 0.78;
+    const startY = p.y + (NH - totalH) / 2 + LH * 0.82;
+    const fs = lines.length > 2 ? 10 : 11.5;
     lines.forEach((line, i) => {
-      svg += `<text x="${p.x+NW/2}" y="${startY+i*LH}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="${i===0?12:10}" font-weight="${i===0?600:400}" fill="${isUnk?c.stroke:'#1e293b'}">${escapeXml(line)}</text>`;
+      svg += `<text x="${p.x + NW/2}" y="${startY + i * LH}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="${fs}" font-weight="600" fill="${isUnk ? c.stroke : '#1e293b'}">${escapeXml(line)}</text>`;
     });
   });
 
@@ -586,7 +622,7 @@ async function fetchPlanData(description) {
 
     const job = await pollRes.json();
     if (job.status === 'done') {
-      if (!job.data?.steps || job.data.steps.length < 7) {
+      if (!job.data?.steps || job.data.steps.length < 3) {
         throw new Error('Incomplete plan returned. Please retry.');
       }
       return job.data;

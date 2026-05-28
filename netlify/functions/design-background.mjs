@@ -1,6 +1,6 @@
 import { getStore } from '@netlify/blobs';
 
-const SYSTEM_PROMPT = `You are a senior system design architect. Given a system to design, generate a COMPLETE guided design session with ALL 7 decision steps in a SINGLE response.
+const SYSTEM_PROMPT = `You are a senior system design architect. Given a system to design, generate a COMPLETE guided design session in a SINGLE response.
 
 You know 16 architectural patterns:
 01 Traffic Shaping & Load Distribution — load balancing, rate limiting, auto-scaling
@@ -22,31 +22,39 @@ You know 16 architectural patterns:
 
 9 engineering roles: sre, backend, security, data, platform, ml, frontend, mobile, architect
 
-DECISION FLOW — adapt questions and tech choices to the specific system:
-Step 1 — Scale & constraints: DAU, req/s, data volume, latency SLA, deployment model
-Step 2 — Entry point: CDN, load balancer, API gateway, edge, service mesh
-Step 3 — Core storage: primary data store for the main entity
-Step 4 — Read path: fast reads via caching, search index, or read replicas
-Step 5 — Write path & async: high-write handling, queuing, consistency, background jobs
-Step 6 — Reliability: failure modes, circuit breaking, SLOs, multi-region failover
-Step 7 — Observability: metrics, distributed tracing, alerting, SRE practice
+DECISION FLOW — generate 5 to 12 steps based on the system's actual complexity. Not every system needs all patterns. Choose only patterns that genuinely matter for this system.
+- Always start with: Scale & constraints (step 1)
+- Always end with: Observability or a system-appropriate wrap-up step
+- Simple CRUD app or internal tool: 5-6 steps
+- Standard web platform at scale: 7-8 steps
+- Complex distributed / real-time / ML / IoT / global system: 9-12 steps
+- Each step must address a DIFFERENT patternId (01-16). No two steps share the same patternId.
+- Order steps by architectural dependency: decide entry points before storage, storage before read/write optimization, etc.
+
+Examples of when to add extra steps:
+- IoT system → add step for IoT & Edge (15) and possibly Data Pipelines (08)
+- ML platform → add step for ML/AI Systems (13)
+- Global product → add step for Global Distribution (16)
+- Payment / health system → add step for Security (09)
+- High-write system → add step for Distributed Consistency (07)
 
 ARCHITECTURE GRAPH — for each step generate an "archGraph" field:
 Tiers: 0=Client 1=Gateway 2=Service 3=Data 4=Observability
 Types: client gateway service cache database queue ml monitoring unknown
 - Step 1: client node + 1 unknown node ("??? Scale Decision ???")
 - Step N: all prior decided nodes + 1 unknown node for current decision
-- Step 7: all nodes named, no unknown
-- Add 1-3 new named nodes per step as architecture grows
-- Use MULTIPLE service nodes at tier 2 for microservice systems; add service→service edges
-- Max 15 nodes total; 4–9 edges per step
+- Last step: all nodes named, no unknown
+- Add 1-2 new named nodes per step as architecture grows
+- Use MULTIPLE service nodes at tier 2 for microservice systems
+- Max 14 nodes total; 3-5 edges per step (primary data flow only — omit obvious/redundant edges)
+- finalGraph: max 7 edges — show the main request path and key async flows only
 - Node labels: ≤4 words, NO newlines
-- Edge labels: REST, gRPC, events, reads, writes, HTTPS, async
+- Edge labels: REST, gRPC, events, reads, writes, HTTPS, async (omit label if edge direction is obvious)
 
 JSON format for archGraph:
 {"nodes":[{"id":"unique-id","label":"Short Name","tier":0,"type":"client"}],"edges":[{"from":"id","to":"id","label":"optional"}]}
 
-For finalGraph: same format, all nodes named (no unknown), complete data flow.
+For finalGraph: same format, all nodes named (no unknown), primary data flow only.
 
 OUTPUT RULES:
 - EXACTLY 4 options per step, each from a DIFFERENT patternId (01-16)
@@ -91,6 +99,17 @@ function parseJSON(content) {
   return null;
 }
 
+// FNV-1a 32-bit hash — cache key for identical/near-identical descriptions
+function hashDescription(s) {
+  const norm = s.trim().toLowerCase().replace(/\s+/g, ' ').slice(0, 300);
+  let h = 0x811c9dc5;
+  for (let i = 0; i < norm.length; i++) {
+    h ^= norm.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16);
+}
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type',
@@ -114,9 +133,20 @@ export default async (req) => {
   }
 
   const store = getStore('design-jobs');
+  const cache = getStore('design-cache');
   const userPrompt = `Design this system: ${systemDescription.slice(0, 500)}`;
   const geminiKey = process.env.GEMINI_API_KEY;
   const groqKey   = process.env.GROQ_API_KEY;
+
+  // Check cache first — same description returns instant result, saves AI budget
+  const cacheKey = `design_${hashDescription(systemDescription)}`;
+  try {
+    const cached = await cache.get(cacheKey, { type: 'json' });
+    if (cached?.status === 'done' && cached?.data?.steps?.length >= 3) {
+      await store.setJSON(jobId, cached, { ttl: 3600 });
+      return new Response(null, { status: 200, headers: CORS });
+    }
+  } catch { /* cache miss — proceed to AI */ }
 
   // Store pending so poll knows the job started
   await store.setJSON(jobId, { status: 'pending' }, { ttl: 3600 });
@@ -180,7 +210,10 @@ export default async (req) => {
     if (!parsed || !parsed.steps?.length) {
       await store.setJSON(jobId, { status: 'error', error: 'Could not generate plan. Please retry.' }, { ttl: 3600 });
     } else {
-      await store.setJSON(jobId, { status: 'done', data: parsed }, { ttl: 3600 });
+      const result = { status: 'done', data: parsed };
+      await store.setJSON(jobId, result, { ttl: 3600 });
+      // Cache for 7 days so identical descriptions skip AI entirely
+      await cache.setJSON(cacheKey, result, { ttl: 604800 });
     }
   } catch (err) {
     await store.setJSON(jobId, { status: 'error', error: err.message }, { ttl: 3600 });
