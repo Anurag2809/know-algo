@@ -56,6 +56,20 @@ JSON format for archGraph:
 
 For finalGraph: same format, all nodes named (no unknown), primary data flow only.
 
+SPECIFICITY MANDATE — the most important rule:
+Every output must be written FOR THIS SPECIFIC SYSTEM, not for a generic web app.
+
+1. archGraph node labels must name components native to this actual system
+   - BAD: "Service", "Database", "Queue"
+   - GOOD for Instagram: "Feed Ranking Engine", "Post CDN Edge", "Like Event Bus", "Story Expiry Worker"
+   - GOOD for Uber: "Driver Location Service", "Surge Pricing Engine", "Trip State Machine"
+2. Option descriptions must address this system's known challenges with real mechanisms and numbers
+   - BAD: "Use Kafka for async processing"
+   - GOOD: "For Instagram fan-out: pre-compute feeds at write time for accounts <10K followers; pull-on-read + CDN pre-warming for celebrities (>1M followers) when engagement velocity exceeds 500 events/second"
+3. roleInsights must name specific failure modes for this system's domain
+4. antiPatterns must be real failure modes teams building THIS type of system actually encounter
+5. deepDive must reference real companies, real incidents, and specific optimizations not covered in the decision steps
+
 OUTPUT RULES:
 - EXACTLY 4 options per step, each from a DIFFERENT patternId (01-16)
 - recommendedOption choices must together form one coherent architecture
@@ -73,7 +87,7 @@ JSON schema:
       "question": "<the forcing architectural question>",
       "context": "<1-2 sentences: why this matters>",
       "options": [
-        {"id":"A","label":"<2-4 words>","description":"<1-2 sentences>","tradeoff":"<1 sentence>","patternId":"01","patternName":"<name>"},
+        {"id":"A","label":"<2-4 words>","description":"<1-2 sentences, system-specific>","tradeoff":"<1 sentence>","patternId":"01","patternName":"<name>"},
         {"id":"B","label":"...","description":"...","tradeoff":"...","patternId":"...","patternName":"..."},
         {"id":"C","label":"...","description":"...","tradeoff":"...","patternId":"...","patternName":"..."},
         {"id":"D","label":"...","description":"...","tradeoff":"...","patternId":"...","patternName":"..."}
@@ -81,15 +95,23 @@ JSON schema:
       "recommendedOption": "A",
       "archGraph": {"nodes":[...],"edges":[...]},
       "roleInsights": [
-        {"role":"sre","insight":"<1 sentence>"},
-        {"role":"backend","insight":"<1 sentence>"},
-        {"role":"architect","insight":"<1 sentence>"}
+        {"role":"sre","insight":"<1 sentence, specific to this system>"},
+        {"role":"backend","insight":"<1 sentence, specific to this system>"},
+        {"role":"architect","insight":"<1 sentence, specific to this system>"}
       ]
     }
   ],
   "finalGraph": {"nodes":[...],"edges":[...]},
   "summary": "<3 sentences: what was built, scale, trade-off>",
-  "keyInsights": ["<insight 1>","<insight 2>","<insight 3>"]
+  "keyInsights": ["<deep insight 1 specific to this system>","<insight 2>","<insight 3>"],
+  "antiPatterns": [
+    {
+      "title": "<specific anti-pattern name for this system>",
+      "description": "<why this is bad specifically for THIS system — concrete impact>",
+      "remedy": "<specific fix adapted to this system>"
+    }
+  ],
+  "deepDive": "<3-4 paragraphs separated by double newlines. Must include: (1) the 2-3 core engineering challenges unique to this system, (2) how real companies solved similar problems (name them and cite specific techniques), (3) system-specific optimizations not covered in the decision steps, (4) important edge cases or failure modes to plan for. Write at the level of a senior engineer who deeply knows this domain.>"
 }`;
 
 function parseJSON(content) {
@@ -195,7 +217,7 @@ export default async (req) => {
               { role: 'user',   content: userPrompt },
             ],
             temperature: 0.65,
-            max_tokens: 6000,
+            max_tokens: 8000,
             response_format: { type: 'json_object' },
           }),
         });

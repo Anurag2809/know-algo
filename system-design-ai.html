@@ -196,6 +196,49 @@
     .btn-primary { background: var(--primary); color: #fff; border: none; font-size: .87rem; font-weight: 700; padding: .6rem 1.1rem; border-radius: 9px; cursor: pointer; transition: background .15s; }
     .btn-primary:hover { background: var(--primary-dark); }
 
+    /* ── Anti-patterns panel ── */
+    .antipatterns-panel { padding: 1.75rem; display: none; flex-direction: column; gap: 1rem; overflow-y: auto; }
+    .antipatterns-panel.visible { display: flex; }
+    .antipatterns-heading { font-size: 1.1rem; font-weight: 800; color: var(--text); }
+    .antipatterns-sub { font-size: .85rem; color: var(--text-muted); margin-top: .2rem; }
+    .antipattern-card { background: #fff5f5; border: 1.5px solid #fca5a5; border-radius: 10px; padding: .85rem 1rem; }
+    .antipattern-title { font-size: .9rem; font-weight: 700; color: #b91c1c; margin-bottom: .3rem; }
+    .antipattern-desc { font-size: .82rem; color: var(--text-muted); line-height: 1.55; margin-bottom: .4rem; }
+    .antipattern-remedy { font-size: .79rem; color: #059669; background: #f0fdf4; border-radius: 5px; padding: .18rem .5rem; display: inline-block; }
+
+    /* ── Deep dive ── */
+    .deepdive-toggle-btn { background: none; border: 1.5px solid var(--primary); border-radius: 9px; color: var(--primary); font-size: .87rem; font-weight: 600; padding: .65rem 1rem; cursor: pointer; width: 100%; text-align: left; transition: background .15s; display: flex; align-items: center; justify-content: space-between; }
+    .deepdive-toggle-btn:hover { background: rgba(37,99,235,.04); }
+    .deepdive-body { display: none; padding-top: .75rem; }
+    .deepdive-body.open { display: block; }
+    .deepdive-para { font-size: .87rem; color: var(--text); line-height: 1.85; margin-bottom: .85rem; }
+
+    /* ── Per-step notes ── */
+    .step-note-area { margin-top: .85rem; padding-top: .75rem; border-top: 1px solid var(--border); }
+    .note-label { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: .35rem; }
+    .note-textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: .55rem .75rem; font-size: .83rem; font-family: inherit; resize: vertical; min-height: 60px; outline: none; color: var(--text); background: var(--card); box-sizing: border-box; }
+    .note-textarea:focus { border-color: var(--primary); }
+    .note-textarea::placeholder { color: #94a3b8; }
+
+    /* ── Article mode ── */
+    #article-mode { position: fixed; inset: 0; z-index: 200; background: #fff; overflow-y: auto; display: none; }
+    .article-wrap { max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    .article-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .article-body h2 { font-size: 1.18rem; font-weight: 800; margin: 2rem 0 .65rem; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: .35rem; }
+    .article-body h1 { font-size: 2rem; font-weight: 900; margin-bottom: .4rem; }
+    .article-body p { font-size: .93rem; color: var(--text); line-height: 1.85; margin-bottom: 1rem; }
+    .article-decision { margin-bottom: 1.1rem; padding: .9rem 1rem; background: var(--bg); border-radius: 10px; border: 1px solid var(--border); }
+    .article-decision-label { font-size: .72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .25rem; }
+    .article-decision-choice { font-weight: 700; font-size: .92rem; color: var(--text); }
+    .article-note-box { margin-top: .5rem; padding: .42rem .65rem; background: #fefce8; border-radius: 6px; font-size: .81rem; color: #78350f; }
+    .article-antipattern { margin-bottom: .9rem; padding: .8rem 1rem; background: #fff5f5; border-left: 3px solid #ef4444; border-radius: 0 8px 8px 0; }
+    .article-antipattern-title { font-weight: 700; color: #b91c1c; margin-bottom: .22rem; font-size: .88rem; }
+    .article-antipattern-desc { font-size: .84rem; color: var(--text-muted); margin-bottom: .28rem; line-height: 1.5; }
+    .article-antipattern-remedy { font-size: .81rem; color: #059669; }
+    .article-user-note { margin-bottom: .7rem; padding: .7rem .9rem; background: #fefce8; border: 1px solid #fde047; border-radius: 8px; }
+    .article-user-note-label { font-size: .71rem; color: #92400e; margin-bottom: .2rem; font-weight: 600; }
+    .article-user-note-text { font-size: .86rem; color: var(--text); line-height: 1.6; }
+
     /* ── Responsive ── */
     @media (max-width: 960px) {
       .journey-layout { grid-template-columns: 1fr; }
@@ -327,6 +370,11 @@
           <div class="role-section-label" style="margin-bottom:.55rem">Engineering perspectives</div>
           <div class="role-insights" id="role-insights"></div>
         </div>
+
+        <div class="step-note-area" id="step-note-area">
+          <div class="note-label">Your notes for this step</div>
+          <textarea class="note-textarea" id="step-note-input" placeholder="Add your insights, alternative approaches, or specific optimizations for this system…"></textarea>
+        </div>
       </div>
 
       <div class="complete-panel" id="complete-panel">
@@ -339,17 +387,46 @@
           <div class="role-section-label" style="margin-bottom:.55rem">Key architectural insights</div>
           <div class="insights-list" id="insights-list"></div>
         </div>
+        <div id="deepdive-section" style="display:none">
+          <button class="deepdive-toggle-btn" id="deepdive-toggle">↓ Read full architecture deep-dive <span id="deepdive-arrow">↓</span></button>
+          <div class="deepdive-body" id="deepdive-body"></div>
+        </div>
         <div>
           <div class="patterns-label">Patterns referenced — go deeper</div>
           <div class="pattern-links" id="pattern-links"></div>
         </div>
         <div class="complete-actions">
           <button class="btn-secondary" id="revise-btn">← Revise a Decision</button>
+          <button class="btn-secondary" id="article-btn" style="display:none">📄 View as Article</button>
           <button class="btn-primary" id="restart-btn-2">Design Another →</button>
         </div>
       </div>
 
+      <!-- Anti-patterns panel -->
+      <div class="antipatterns-panel" id="antipatterns-panel">
+        <div>
+          <div class="antipatterns-heading">Design Anti-Patterns</div>
+          <div class="antipatterns-sub" id="antipatterns-sub">Common mistakes when building this system</div>
+        </div>
+        <div id="antipatterns-list"></div>
+        <div class="complete-actions">
+          <button class="btn-secondary" id="antipatterns-back-btn">← Back to Last Step</button>
+          <button class="btn-primary" id="antipatterns-continue-btn">View Architecture Summary →</button>
+        </div>
+      </div>
+
     </div>
+  </div>
+</div>
+
+<!-- ═══ Article mode full-screen overlay ═══ -->
+<div id="article-mode">
+  <div class="article-wrap">
+    <div class="article-toolbar">
+      <button class="back-btn" id="close-article-btn">← Back to Design</button>
+      <span style="font-size:.78rem;color:var(--text-muted)">KnowAlgo · Architecture Guide</span>
+    </div>
+    <div class="article-body" id="article-body"></div>
   </div>
 </div>
 
@@ -387,7 +464,24 @@ const state = {
   systemDescription: '',
   chosenPatterns: [],
   allPatterns: [],
+  notes: {},   // keyed by step index
 };
+
+// ── Notes persistence ──
+function noteKey(desc) {
+  let h = 0;
+  for (let i = 0; i < Math.min(desc.length, 120); i++) h = (h * 31 + desc.charCodeAt(i)) & 0xffffffff;
+  return `knowalgo_notes_${Math.abs(h).toString(36)}`;
+}
+function saveNotes() {
+  try { localStorage.setItem(noteKey(state.systemDescription), JSON.stringify(state.notes)); } catch {}
+}
+function loadNotes() {
+  try {
+    const s = localStorage.getItem(noteKey(state.systemDescription));
+    if (s) state.notes = JSON.parse(s);
+  } catch {}
+}
 
 // ── DOM refs ──
 const $ = id => document.getElementById(id);
@@ -553,6 +647,8 @@ function startJourney(description) {
   state.choices = [];
   state.chosenPatterns = [];
   state.allPatterns = [];
+  state.notes = {};
+  loadNotes();
 
   $('arch-system-name').textContent = description;
   $('excalidraw-wrapper').classList.remove('visible');
@@ -725,10 +821,16 @@ function renderStep(idx) {
     ri.appendChild(div);
   });
 
+  // Per-step note
+  const noteInput = $('step-note-input');
+  noteInput.value = state.notes[idx] || '';
+  noteInput.oninput = () => { state.notes[idx] = noteInput.value; saveNotes(); };
+
   updateTrail();
   $('back-btn').style.display = idx > 0 ? 'inline-block' : 'none';
   $('decision-content').classList.add('visible');
   $('complete-panel').classList.remove('visible');
+  $('antipatterns-panel').classList.remove('visible');
 }
 
 // ── Option selected — navigate locally, zero API calls ──
@@ -748,8 +850,12 @@ function selectOption(step, opt, card) {
   state.currentStep = nextIdx;
 
   setTimeout(() => {
-    if (nextIdx >= state.plan.steps.length) renderComplete();
-    else renderStep(nextIdx);
+    if (nextIdx >= state.plan.steps.length) {
+      if (state.plan.antiPatterns?.length) renderAntiPatterns();
+      else renderComplete();
+    } else {
+      renderStep(nextIdx);
+    }
   }, 380);
 }
 
@@ -799,6 +905,82 @@ function rebuildChosenPatterns() {
   });
 }
 
+// ── Anti-patterns slide ──
+function renderAntiPatterns() {
+  const plan = state.plan;
+  if (plan.finalGraph) {
+    $('excalidraw-wrapper').classList.add('fading');
+    setTimeout(() => { updateDiagram(plan.finalGraph); $('excalidraw-wrapper').classList.remove('fading'); }, 180);
+  }
+  updateTrail();
+  $('decision-content').classList.remove('visible');
+  $('complete-panel').classList.remove('visible');
+  $('antipatterns-panel').classList.add('visible');
+
+  $('antipatterns-sub').textContent = `Common mistakes when building ${plan.systemName || state.systemDescription}`;
+  const list = $('antipatterns-list');
+  list.innerHTML = '';
+  (plan.antiPatterns || []).forEach(ap => {
+    const card = document.createElement('div');
+    card.className = 'antipattern-card';
+    card.innerHTML = `<div class="antipattern-title">✕ ${escHtml(ap.title)}</div><div class="antipattern-desc">${escHtml(ap.description)}</div><div class="antipattern-remedy">→ ${escHtml(ap.remedy)}</div>`;
+    list.appendChild(card);
+  });
+}
+
+// ── Article mode ──
+function renderArticle() {
+  const plan = state.plan;
+  let html = '';
+
+  html += `<h1>${escHtml(plan.systemName)}</h1>`;
+  html += `<p style="color:var(--text-muted);font-size:.95rem;margin-bottom:1.5rem">${escHtml(plan.systemDescription)}</p>`;
+  html += `<h2>Architecture Overview</h2><p>${escHtml(plan.summary || '')}</p>`;
+
+  html += `<h2>Decision Log</h2>`;
+  state.choices.forEach((choice, i) => {
+    const step = plan.steps[i];
+    const chosen = step?.options?.find(o => o.id === choice.optionId);
+    html += `<div class="article-decision"><div class="article-decision-label">Decision ${i+1} — ${escHtml(step?.question || '')}</div><div class="article-decision-choice">${choice.isRecommended ? '★ ' : ''}${escHtml(choice.optionLabel)}</div>`;
+    if (chosen?.description) html += `<div style="font-size:.83rem;color:var(--text-muted);margin-top:.25rem;line-height:1.5">${escHtml(chosen.description)}</div>`;
+    if (state.notes[i]?.trim()) html += `<div class="article-note-box">📝 ${escHtml(state.notes[i])}</div>`;
+    html += `</div>`;
+  });
+
+  if (plan.antiPatterns?.length) {
+    html += `<h2>Anti-Patterns to Avoid</h2>`;
+    plan.antiPatterns.forEach(ap => {
+      html += `<div class="article-antipattern"><div class="article-antipattern-title">✕ ${escHtml(ap.title)}</div><div class="article-antipattern-desc">${escHtml(ap.description)}</div><div class="article-antipattern-remedy">→ ${escHtml(ap.remedy)}</div></div>`;
+    });
+  }
+
+  if (plan.deepDive) {
+    html += `<h2>Deep Dive</h2>`;
+    String(plan.deepDive).split(/\n\n+/).forEach(p => {
+      if (p.trim()) html += `<p>${escHtml(p.trim())}</p>`;
+    });
+  }
+
+  const noteEntries = Object.entries(state.notes).filter(([, v]) => v?.trim());
+  if (noteEntries.length) {
+    html += `<h2>Your Notes</h2>`;
+    noteEntries.forEach(([idx, note]) => {
+      const step = plan.steps[Number(idx)];
+      html += `<div class="article-user-note"><div class="article-user-note-label">Step ${Number(idx)+1}: ${escHtml(step?.question || '')}</div><div class="article-user-note-text">${escHtml(note)}</div></div>`;
+    });
+  }
+
+  html += `<h2>Patterns Referenced</h2>`;
+  state.chosenPatterns.forEach(p => {
+    const url = PATTERN_URLS[p.patternId];
+    html += `<div style="margin-bottom:.4rem;font-size:.88rem"><a href="${url||'#'}" target="_blank" style="color:var(--primary);font-weight:600">Pattern ${p.patternId}: ${escHtml(p.patternName)}</a></div>`;
+  });
+
+  $('article-body').innerHTML = html;
+  $('article-mode').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
 // ── Completion ──
 function renderComplete() {
   const plan = state.plan;
@@ -814,6 +996,7 @@ function renderComplete() {
 
   updateTrail();
   $('decision-content').classList.remove('visible');
+  $('antipatterns-panel').classList.remove('visible');
   $('complete-panel').classList.add('visible');
 
   $('complete-heading').textContent = `${plan.systemName || state.systemDescription} — Designed.`;
@@ -831,6 +1014,24 @@ function renderComplete() {
     d.innerHTML = `<span class="insight-bullet">→</span><span>${escHtml(ins)}</span>`;
     il.appendChild(d);
   });
+
+  // Deep dive section
+  const dd = plan.deepDive;
+  if (dd) {
+    $('deepdive-section').style.display = 'block';
+    const body = $('deepdive-body');
+    body.innerHTML = '';
+    String(dd).split(/\n\n+/).forEach(p => {
+      if (!p.trim()) return;
+      const el = document.createElement('p');
+      el.className = 'deepdive-para';
+      el.textContent = p.trim();
+      body.appendChild(el);
+    });
+  } else {
+    $('deepdive-section').style.display = 'none';
+  }
+  $('article-btn').style.display = 'inline-block';
 
   // Pattern links: chosen first, then others
   const pl = $('pattern-links');
@@ -863,9 +1064,20 @@ function renderComplete() {
 // ── Back / Revise wiring ──
 $('back-btn').addEventListener('click', goBack);
 $('revise-btn').addEventListener('click', () => {
-  // Jump to the last decided step so user can change it
   const lastIdx = Math.max(0, state.plan.steps.length - 1);
   jumpToStep(lastIdx);
+});
+$('antipatterns-back-btn').addEventListener('click', () => {
+  jumpToStep(state.plan.steps.length - 1);
+});
+$('antipatterns-continue-btn').addEventListener('click', renderComplete);
+$('article-btn').addEventListener('click', renderArticle);
+$('close-article-btn').addEventListener('click', () => { $('article-mode').style.display = 'none'; });
+$('deepdive-toggle').addEventListener('click', () => {
+  const body = $('deepdive-body');
+  const open = body.classList.toggle('open');
+  $('deepdive-arrow').textContent = open ? '↑' : '↓';
+  $('deepdive-toggle').firstChild.textContent = open ? '↑ Close deep-dive ' : '↓ Read full architecture deep-dive ';
 });
 
 // ── Restart ──
