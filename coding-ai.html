@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Coding Guide – KnowAlgo</title>
+  <meta name="description" content="Step-by-step DSA solutions. Describe any coding problem and get a complete walkthrough from brute force to optimal, with pattern recognition and traced examples.">
+  <link rel="canonical" href="https://knowalgo.netlify.app/coding-ai.html">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2Z1EQCZBXH"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2Z1EQCZBXH');</script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" crossorigin="anonymous">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --radius: 12px;
+      --code-bg: #0f172a;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; }
+
+    /* ── Header ── */
+    .site-header { background: #0f172a; height: 56px; display: flex; align-items: center; padding: 0 1.5rem; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .site-header a.logo { color: #f1f5f9; font-weight: 800; font-size: 1.1rem; text-decoration: none; }
+    .site-header a.logo span { color: #60a5fa; }
+    .site-header nav { display: flex; gap: 1.25rem; align-items: center; }
+    .site-header nav a { color: #94a3b8; text-decoration: none; font-size: .88rem; }
+    .site-header nav a:hover { color: #f1f5f9; }
+    .site-header nav a.active { color: #60a5fa; font-weight: 600; }
+    .nav-badge { background: linear-gradient(to right, #059669, #2563eb); color: #fff; font-size: .72rem; font-weight: 700; padding: .2rem .6rem; border-radius: 99px; }
+
+    /* ── Idle ── */
+    #phase-idle { min-height: calc(100vh - 56px); display: flex; align-items: center; justify-content: center; padding: 2rem 1.5rem; }
+    .idle-inner { max-width: 680px; width: 100%; text-align: center; }
+    .idle-badge { display: inline-flex; align-items: center; gap: .5rem; background: rgba(37,99,235,.1); border: 1px solid rgba(37,99,235,.2); color: var(--primary); padding: .3rem .9rem; border-radius: 99px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 1.5rem; }
+    .idle-inner h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; line-height: 1.15; margin-bottom: 1rem; letter-spacing: -.5px; }
+    .idle-inner h1 span { color: var(--primary); }
+    .idle-inner p { font-size: 1.05rem; color: var(--text-muted); max-width: 520px; margin: 0 auto 2rem; }
+    .design-form { display: flex; flex-direction: column; gap: .75rem; margin-bottom: 1.5rem; }
+    .design-input-wrap { display: flex; background: var(--card); border: 2px solid var(--border); border-radius: 14px; overflow: hidden; transition: border-color .2s; }
+    .design-input-wrap:focus-within { border-color: var(--primary); }
+    .design-input { flex: 1; border: none; outline: none; padding: .9rem 1.1rem; font-size: 1rem; color: var(--text); background: transparent; }
+    .design-input::placeholder { color: #94a3b8; }
+    .design-submit { background: var(--primary); border: none; color: #fff; font-size: .95rem; font-weight: 700; padding: .9rem 1.4rem; cursor: pointer; white-space: nowrap; transition: background .15s; }
+    .design-submit:hover { background: var(--primary-dark); }
+    .examples { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; }
+    .example-chip { background: var(--card); border: 1px solid var(--border); border-radius: 99px; padding: .35rem .85rem; font-size: .82rem; color: var(--text-muted); cursor: pointer; transition: border-color .15s, color .15s; }
+    .example-chip:hover { border-color: var(--primary); color: var(--primary); }
+    .idle-hint { margin-top: 2rem; font-size: .8rem; color: #94a3b8; }
+    .idle-hint strong { color: var(--text-muted); }
+
+    /* ── Active layout ── */
+    #phase-active { display: none; }
+    .coding-layout { display: grid; grid-template-columns: 1fr 420px; min-height: calc(100vh - 56px); }
+
+    /* ── Code panel (left, dark) ── */
+    .code-panel { background: var(--code-bg); display: flex; flex-direction: column; overflow: hidden; }
+    .code-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; padding: .85rem 1.25rem; border-bottom: 1px solid #1e293b; flex-shrink: 0; }
+    .code-label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #4ade80; margin-right: .5rem; }
+    .problem-name-display { font-size: .88rem; font-weight: 600; color: #f1f5f9; }
+    .code-actions { display: flex; gap: .5rem; align-items: center; }
+    .complexity-chip { font-size: .7rem; color: #94a3b8; background: #1e293b; padding: .2rem .55rem; border-radius: 6px; font-family: monospace; }
+    .copy-btn { background: transparent; border: 1px solid #334155; color: #64748b; font-size: .73rem; padding: .25rem .6rem; border-radius: 6px; cursor: pointer; transition: all .15s; }
+    .copy-btn:hover { border-color: #4ade80; color: #4ade80; }
+    .restart-btn-sm { background: transparent; border: 1px solid #334155; color: #64748b; font-size: .73rem; padding: .25rem .6rem; border-radius: 6px; cursor: pointer; transition: all .15s; }
+    .restart-btn-sm:hover { border-color: #ef4444; color: #ef4444; }
+
+    /* Loading in code panel */
+    .code-loading { padding: 1.5rem; display: none; flex-direction: column; gap: .55rem; }
+    .code-loading.visible { display: flex; }
+    .code-loading-bar { height: 2px; background: #1e293b; border-radius: 2px; overflow: hidden; margin-bottom: .5rem; }
+    .code-loading-fill { height: 100%; background: linear-gradient(to right, #059669, #2563eb); border-radius: 2px; animation: codeload 20s linear forwards; }
+    @keyframes codeload { 0%{width:0%} 80%{width:85%} 100%{width:90%} }
+    .cls { font-size: .74rem; color: #334155; display: flex; align-items: center; gap: .5rem; }
+    .cls::before { content: '○'; font-size: .58rem; color: #334155; }
+    .cls.active { color: #94a3b8; }
+    .cls.active::before { content: '◉'; color: #4ade80; }
+    .cls.done { color: #4ade80; }
+    .cls.done::before { content: '●'; color: #4ade80; }
+
+    /* Code display */
+    .code-display { flex: 1; overflow: auto; display: none; }
+    .code-display.visible { display: block; }
+    .code-display pre[class*="language-"] { margin: 0; border-radius: 0; background: transparent; padding: 1.25rem; font-size: .84rem; line-height: 1.75; }
+    .code-display code[class*="language-"] { font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Courier New', monospace; }
+
+    /* Step line numbers hint */
+    .code-step-label { padding: .4rem 1.25rem; background: #1e293b; font-size: .65rem; color: #475569; letter-spacing: .08em; text-transform: uppercase; flex-shrink: 0; }
+
+    /* ── Explanation panel (right) ── */
+    .explain-panel { background: var(--bg); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+
+    /* Loading state */
+    .loading-state { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 3rem 2rem; text-align: center; }
+    .loading-state.visible { display: flex; }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-main-text { color: var(--text); font-size: .95rem; font-weight: 600; }
+    .loading-sub-text { color: var(--text-muted); font-size: .82rem; line-height: 1.6; max-width: 280px; }
+    .loading-dots::after { content: ''; animation: dots 1.5s infinite; }
+    @keyframes dots { 0%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
+
+    /* Step content */
+    .step-content { flex: 1; padding: 1.75rem; display: none; flex-direction: column; gap: 1.1rem; }
+    .step-content.visible { display: flex; }
+    .step-nav-row { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+    .step-badge { display: flex; align-items: center; gap: .6rem; font-size: .72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; }
+    .step-dots { display: flex; gap: 4px; }
+    .step-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: background .3s; }
+    .step-dot.done { background: #4ade80; }
+    .step-dot.active { background: var(--primary); }
+    .back-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); font-size: .75rem; padding: .25rem .65rem; border-radius: 7px; cursor: pointer; transition: all .15s; }
+    .back-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* Pattern link pill */
+    .pattern-link-pill { display: inline-flex; align-items: center; gap: .35rem; background: rgba(37,99,235,.07); border: 1px solid rgba(37,99,235,.2); color: var(--primary); font-size: .78rem; font-weight: 600; padding: .28rem .75rem; border-radius: 99px; text-decoration: none; transition: background .15s; }
+    .pattern-link-pill:hover { background: rgba(37,99,235,.12); }
+
+    .step-title { font-size: 1.1rem; font-weight: 800; color: var(--text); line-height: 1.25; }
+    .step-explanation { font-size: .88rem; color: var(--text-muted); line-height: 1.85; }
+
+    /* Key insight box */
+    .key-insight-box { background: #eff6ff; border: 1px solid #bfdbfe; border-left: 3px solid var(--primary); border-radius: 8px; padding: .75rem 1rem; display: none; gap: .65rem; align-items: flex-start; }
+    .key-insight-box.visible { display: flex; }
+    .ki-label { font-size: .65rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--primary); flex-shrink: 0; margin-top: 2px; white-space: nowrap; }
+    .ki-text { font-size: .85rem; color: #1e40af; line-height: 1.6; }
+
+    /* Complexity */
+    .complexity-row { display: flex; gap: .45rem; flex-wrap: wrap; }
+    .cmx-tag { font-size: .76rem; font-weight: 600; padding: .22rem .6rem; border-radius: 6px; font-family: monospace; }
+    .cmx-tag.time { background: #fef3c7; color: #92400e; }
+    .cmx-tag.space { background: #dbeafe; color: #1e40af; }
+
+    .step-actions { margin-top: auto; padding-top: .75rem; }
+    .btn-primary { background: var(--primary); color: #fff; border: none; font-size: .88rem; font-weight: 700; padding: .65rem 1.2rem; border-radius: 9px; cursor: pointer; transition: background .15s; width: 100%; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: var(--card); border: 1px solid var(--border); color: var(--text); font-size: .87rem; font-weight: 600; padding: .6rem 1rem; border-radius: 9px; cursor: pointer; transition: all .15s; }
+    .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* Complete panel */
+    .complete-panel { padding: 1.75rem; display: none; flex-direction: column; gap: 1.25rem; }
+    .complete-panel.visible { display: flex; }
+    .complete-badge { display: inline-flex; align-items: center; gap: .5rem; background: #dcfce7; border: 1px solid #86efac; color: #166534; padding: .35rem .9rem; border-radius: 99px; font-size: .8rem; font-weight: 700; }
+    .complete-heading { font-size: 1.15rem; font-weight: 800; color: var(--text); }
+    .summary-text { font-size: .87rem; color: var(--text-muted); line-height: 1.8; }
+    .section-label { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); }
+
+    /* Test cases */
+    .test-case { background: var(--code-bg); border-radius: 9px; padding: .75rem 1rem; margin-bottom: .55rem; }
+    .tc-input { font-family: monospace; font-size: .8rem; color: #93c5fd; display: block; margin-bottom: .25rem; }
+    .tc-arrow { color: #4ade80; font-size: .8rem; }
+    .tc-output { font-family: monospace; font-size: .8rem; color: #86efac; }
+    .tc-note { font-size: .76rem; color: #475569; margin-top: .3rem; }
+
+    /* Mistakes */
+    .mistake-item { display: flex; gap: .55rem; font-size: .83rem; color: var(--text-muted); margin-bottom: .4rem; line-height: 1.5; }
+    .mistake-icon { color: #ef4444; flex-shrink: 0; font-weight: 700; }
+
+    /* Related problems */
+    .related-item { display: flex; align-items: center; gap: .55rem; font-size: .83rem; padding: .45rem 0; border-bottom: 1px solid var(--border); }
+    .related-item:last-child { border-bottom: none; }
+    .lc-num { font-family: monospace; font-size: .73rem; color: var(--text-muted); min-width: 36px; }
+    .related-name { flex: 1; color: var(--text); }
+
+    /* Difficulty badges */
+    .diff-easy   { background: #dcfce7; color: #166534; font-size: .68rem; font-weight: 700; padding: .1rem .42rem; border-radius: 99px; }
+    .diff-medium { background: #fef9c3; color: #854d0e; font-size: .68rem; font-weight: 700; padding: .1rem .42rem; border-radius: 99px; }
+    .diff-hard   { background: #fee2e2; color: #991b1b; font-size: .68rem; font-weight: 700; padding: .1rem .42rem; border-radius: 99px; }
+
+    .complete-actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: .5rem; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .coding-layout { grid-template-columns: 1fr; }
+      .code-panel { max-height: 50vh; }
+      .explain-panel { border-left: none; border-top: 1px solid var(--border); }
+    }
+    @media (max-width: 480px) {
+      .site-header nav a:not(.nav-badge) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="logo">Know<span>Algo</span></a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="system-design.html">System Design</a>
+    <a href="interview-prep.html">Interview Prep</a>
+    <a href="system-design-ai.html" class="nav-badge" style="background:linear-gradient(to right,#7c3aed,#2563eb)">✦ Design AI</a>
+    <a href="coding-ai.html" class="active nav-badge">✦ Coding AI</a>
+  </nav>
+</header>
+
+<!-- ═══ IDLE ═══ -->
+<div id="phase-idle">
+  <div class="idle-inner">
+    <div class="idle-badge">✦ Pattern Recognition · Step-by-Step · Traced Examples</div>
+    <h1>Solve any DSA problem,<br><span>understand the pattern</span></h1>
+    <p>Describe a coding problem or topic. The AI walks you through brute force → key insight → optimal solution, with every step traced on a concrete example.</p>
+
+    <form class="design-form" id="design-form">
+      <div class="design-input-wrap">
+        <input class="design-input" id="design-input" type="text"
+          placeholder="Find two numbers in an array that sum to a target…"
+          autocomplete="off" maxlength="300">
+        <button class="design-submit" type="submit">Explain →</button>
+      </div>
+    </form>
+
+    <div class="examples">
+      <span class="example-chip" data-q="Two Sum — find two indices that add up to a target value">Two Sum</span>
+      <span class="example-chip" data-q="Merge Intervals — merge all overlapping intervals in a list">Merge Intervals</span>
+      <span class="example-chip" data-q="LRU Cache — implement get and put in O(1) time">LRU Cache</span>
+      <span class="example-chip" data-q="Word Ladder — minimum transformation steps between two words">Word Ladder</span>
+      <span class="example-chip" data-q="Coin Change — minimum number of coins to make a target amount">Coin Change</span>
+      <span class="example-chip" data-q="Trapping Rain Water — calculate water trapped between bars">Rain Water</span>
+      <span class="example-chip" data-q="Serialize and Deserialize Binary Tree">Serialize Tree</span>
+      <span class="example-chip" data-q="Sliding Window Maximum — max in every window of size k">Sliding Window Max</span>
+    </div>
+
+    <p class="idle-hint">Powered by <strong>Gemini 2.5 Flash</strong> · 15 DSA patterns · Full Python solutions</p>
+  </div>
+</div>
+
+<!-- ═══ ACTIVE ═══ -->
+<div id="phase-active">
+  <div class="coding-layout">
+
+    <!-- Left: Code panel -->
+    <div class="code-panel">
+      <div class="code-header">
+        <div>
+          <span class="code-label">Python</span>
+          <span class="problem-name-display" id="problem-name-display">–</span>
+        </div>
+        <div class="code-actions">
+          <span class="complexity-chip" id="complexity-chip"></span>
+          <button class="copy-btn" id="copy-btn">Copy</button>
+          <button class="restart-btn-sm" id="restart-btn">✕ New Problem</button>
+        </div>
+      </div>
+
+      <div class="code-step-label" id="code-step-label">Step 1 of 6</div>
+
+      <div class="code-loading" id="code-loading">
+        <div class="code-loading-bar"><div class="code-loading-fill"></div></div>
+        <div class="cls" id="cls-1">Analyzing problem type</div>
+        <div class="cls" id="cls-2">Identifying DSA pattern</div>
+        <div class="cls" id="cls-3">Building brute force solution</div>
+        <div class="cls" id="cls-4">Deriving optimal approach</div>
+        <div class="cls" id="cls-5">Writing test cases &amp; examples</div>
+      </div>
+
+      <div class="code-display" id="code-display">
+        <pre><code class="language-python" id="code-content"></code></pre>
+      </div>
+    </div>
+
+    <!-- Right: Explanation panel -->
+    <div class="explain-panel">
+
+      <div class="loading-state" id="loading-state">
+        <div class="spinner"></div>
+        <div class="loading-main-text">Building solution guide<span class="loading-dots"></span></div>
+        <div class="loading-sub-text">Pattern recognition, brute force, optimal solution, traced example. Ready in ~20 seconds.</div>
+      </div>
+
+      <div class="step-content" id="step-content">
+        <div class="step-nav-row">
+          <button class="back-btn" id="back-btn" style="display:none">← Back</button>
+          <div class="step-badge">
+            Step <span id="step-num">1</span> of <span id="total-steps">6</span>
+            <div class="step-dots" id="step-dots"></div>
+          </div>
+        </div>
+
+        <div id="pattern-link-bar" style="display:none"></div>
+
+        <div class="step-title" id="step-title">–</div>
+        <div class="step-explanation" id="step-explanation"></div>
+
+        <div class="key-insight-box" id="key-insight-box">
+          <span class="ki-label">Key Insight</span>
+          <span class="ki-text" id="ki-text"></span>
+        </div>
+
+        <div class="complexity-row" id="complexity-row"></div>
+
+        <div class="step-actions">
+          <button class="btn-primary" id="next-btn">Next Step →</button>
+          <button class="btn-secondary" id="retry-btn" style="display:none;margin-top:.6rem;width:100%">Retry</button>
+        </div>
+      </div>
+
+      <div class="complete-panel" id="complete-panel">
+        <div class="complete-badge">✓ Solution Complete</div>
+        <div class="complete-heading" id="complete-heading"></div>
+        <div class="summary-text" id="summary-text"></div>
+
+        <div class="section-label" style="margin-bottom:.55rem">Test Cases</div>
+        <div id="test-cases-list"></div>
+
+        <div class="section-label" style="margin:.9rem 0 .55rem">Common Mistakes</div>
+        <div id="mistakes-list"></div>
+
+        <div class="section-label" style="margin:.9rem 0 .55rem">Related Problems</div>
+        <div id="related-list"></div>
+
+        <div class="complete-actions">
+          <button class="btn-secondary" id="revise-btn">← Review Steps</button>
+          <button class="btn-primary" id="restart-btn-2" style="flex:1">New Problem →</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js" crossorigin="anonymous"></script>
+<script>
+const PATTERN_URLS = {
+  'arrays-strings': 'arrays-strings.html',
+  'hash-map': 'hash-map.html',
+  'linked-list': 'linked-list.html',
+  'binary-tree': 'binary-tree.html',
+  'bst': 'bst.html',
+  'heap': 'heap.html',
+  'stack-queue': 'stack-queue.html',
+  'graph': 'graph.html',
+  'graph-algorithms': 'graph-algorithms.html',
+  'dp': 'dp.html',
+  'backtracking': 'backtracking.html',
+  'intervals': 'intervals.html',
+  'greedy': 'greedy.html',
+  'bit-manipulation': 'bit-manipulation.html',
+  'trie': 'trie.html',
+};
+
+const state = { plan: null, currentStep: 0 };
+const $ = id => document.getElementById(id);
+
+document.querySelectorAll('.example-chip').forEach(c => {
+  c.addEventListener('click', () => { $('design-input').value = c.dataset.q; $('design-input').focus(); });
+});
+$('design-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const q = $('design-input').value.trim();
+  if (q) startSession(q);
+});
+
+function startSession(description) {
+  state.plan = null;
+  state.currentStep = 0;
+
+  $('phase-idle').style.display = 'none';
+  $('phase-active').style.display = 'block';
+  $('code-loading').classList.add('visible');
+  $('code-display').classList.remove('visible');
+  $('loading-state').classList.add('visible');
+  $('step-content').classList.remove('visible');
+  $('complete-panel').classList.remove('visible');
+  $('retry-btn').style.display = 'none';
+  $('next-btn').style.display = 'inline-block';
+  animateLoadingSteps();
+
+  fetchPlan(description).then(plan => {
+    $('code-loading').classList.remove('visible');
+    $('code-display').classList.add('visible');
+    $('loading-state').classList.remove('visible');
+    state.plan = plan;
+
+    const diff = plan.difficulty || '';
+    $('problem-name-display').innerHTML =
+      escHtml(plan.problemName || description) +
+      (diff ? ` <span class="diff-${diff.toLowerCase()}">${diff}</span>` : '');
+    renderStep(0);
+  }).catch(err => {
+    $('code-loading').classList.remove('visible');
+    $('code-display').classList.add('visible');
+    $('loading-state').classList.remove('visible');
+    const msg = err.message || '';
+    const isTimeout = msg.includes('Timed out');
+    const isRateLimit = msg.includes('429') || msg.toLowerCase().includes('rate') || msg.toLowerCase().includes('quota');
+    $('step-title').textContent = (isTimeout || isRateLimit) ? 'Service is busy' : 'Generation failed';
+    $('step-explanation').textContent = (isTimeout || isRateLimit)
+      ? 'The AI service is at capacity right now. Come back in a few minutes and try again.'
+      : (msg || 'Something went wrong generating the solution.');
+    $('next-btn').style.display = 'none';
+    $('retry-btn').textContent = (isTimeout || isRateLimit) ? 'Try Again Later' : 'Retry →';
+    $('retry-btn').style.display = 'block';
+    $('step-content').classList.add('visible');
+    $('retry-btn').onclick = () => {
+      $('retry-btn').style.display = 'none';
+      startSession(description);
+    };
+  });
+}
+
+async function fetchPlan(description) {
+  const jobId = crypto.randomUUID();
+  const res = await fetch('/.netlify/functions/coding-background', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jobId, problemDescription: description }),
+  });
+  if (!res.ok && res.status !== 202) throw new Error(`Trigger failed (${res.status})`);
+
+  const started = Date.now();
+  while (Date.now() - started < 120_000) {
+    await new Promise(r => setTimeout(r, 3000));
+    const poll = await fetch(`/.netlify/functions/coding-poll?jobId=${jobId}`);
+    if (!poll.ok) continue;
+    const job = await poll.json();
+    if (job.status === 'done') {
+      if (!job.data?.steps?.length) throw new Error('Empty solution returned. Please retry.');
+      return job.data;
+    }
+    if (job.status === 'error') throw new Error(job.error || 'Generation failed. Please retry.');
+  }
+  throw new Error('Timed out. Please retry.');
+}
+
+function renderStep(idx) {
+  const step = state.plan.steps[idx];
+  if (!step) return;
+  state.currentStep = idx;
+
+  // Update code panel
+  $('code-content').textContent = step.code || '# No code for this step';
+  if (window.Prism) Prism.highlightElement($('code-content'));
+
+  const c = step.complexity;
+  $('complexity-chip').textContent = c ? `${c.time} · ${c.space}` : '';
+  $('code-step-label').textContent = `${step.title} — Step ${idx + 1} of ${state.plan.steps.length}`;
+
+  // Step dots
+  const TOTAL = state.plan.steps.length;
+  $('total-steps').textContent = TOTAL;
+  $('step-num').textContent = idx + 1;
+  const dots = $('step-dots');
+  dots.innerHTML = '';
+  for (let i = 0; i < TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'step-dot' + (i < idx ? ' done' : i === idx ? ' active' : '');
+    dots.appendChild(d);
+  }
+
+  // Pattern link (from step 2 onwards)
+  const pb = $('pattern-link-bar');
+  const pid = state.plan.patternId;
+  if (pid && PATTERN_URLS[pid] && idx >= 1) {
+    pb.innerHTML = `<a href="${PATTERN_URLS[pid]}" target="_blank" class="pattern-link-pill">↗ ${escHtml(state.plan.patternName || pid)} Guide</a>`;
+    pb.style.display = 'block';
+  } else {
+    pb.style.display = 'none';
+  }
+
+  $('step-title').textContent = step.title || '';
+  $('step-explanation').textContent = step.explanation || '';
+
+  const kiBox = $('key-insight-box');
+  if (step.keyInsight) {
+    $('ki-text').textContent = step.keyInsight;
+    kiBox.classList.add('visible');
+  } else {
+    kiBox.classList.remove('visible');
+  }
+
+  $('complexity-row').innerHTML = c
+    ? `<span class="cmx-tag time">⏱ ${escHtml(c.time)}</span><span class="cmx-tag space">💾 ${escHtml(c.space)}</span>`
+    : '';
+
+  $('back-btn').style.display = idx > 0 ? 'inline-block' : 'none';
+  $('next-btn').textContent = idx === TOTAL - 1 ? 'View Complete Solution →' : 'Next Step →';
+  $('next-btn').style.display = 'inline-block';
+
+  $('step-content').classList.add('visible');
+  $('complete-panel').classList.remove('visible');
+}
+
+function renderComplete() {
+  const plan = state.plan;
+
+  // Show final solution in code panel
+  $('code-content').textContent = plan.solution?.code || '';
+  if (window.Prism) Prism.highlightElement($('code-content'));
+  const sc = plan.solution?.complexity;
+  $('complexity-chip').textContent = sc ? `${sc.time} · ${sc.space}` : '';
+  $('code-step-label').textContent = 'Optimal Solution';
+
+  $('complete-heading').textContent = plan.problemName || '';
+  $('summary-text').textContent = plan.summary || '';
+
+  // Test cases
+  const tcl = $('test-cases-list');
+  tcl.innerHTML = '';
+  (plan.testCases || []).forEach(tc => {
+    const d = document.createElement('div');
+    d.className = 'test-case';
+    d.innerHTML = `<code class="tc-input">${escHtml(tc.input)}</code><span class="tc-arrow">→ </span><code class="tc-output">${escHtml(tc.output)}</code><div class="tc-note">${escHtml(tc.explanation)}</div>`;
+    tcl.appendChild(d);
+  });
+
+  // Mistakes
+  const ml = $('mistakes-list');
+  ml.innerHTML = '';
+  (plan.commonMistakes || []).forEach(m => {
+    const d = document.createElement('div');
+    d.className = 'mistake-item';
+    d.innerHTML = `<span class="mistake-icon">✕</span><span>${escHtml(m)}</span>`;
+    ml.appendChild(d);
+  });
+
+  // Related problems
+  const rl = $('related-list');
+  rl.innerHTML = '';
+  (plan.relatedProblems || []).forEach(p => {
+    const d = document.createElement('div');
+    d.className = 'related-item';
+    d.innerHTML = `<span class="lc-num">#${p.leetcode}</span><span class="related-name">${escHtml(p.name)}</span><span class="diff-${(p.difficulty||'medium').toLowerCase()}">${escHtml(p.difficulty)}</span>`;
+    rl.appendChild(d);
+  });
+
+  $('step-content').classList.remove('visible');
+  $('complete-panel').classList.add('visible');
+}
+
+$('back-btn').addEventListener('click', () => {
+  if (state.currentStep > 0) renderStep(state.currentStep - 1);
+});
+$('next-btn').addEventListener('click', () => {
+  const TOTAL = state.plan?.steps?.length || 0;
+  if (state.currentStep < TOTAL - 1) renderStep(state.currentStep + 1);
+  else renderComplete();
+});
+$('revise-btn').addEventListener('click', () => {
+  renderStep((state.plan?.steps?.length || 1) - 1);
+});
+$('restart-btn').addEventListener('click', restart);
+$('restart-btn-2').addEventListener('click', restart);
+$('copy-btn').addEventListener('click', () => {
+  navigator.clipboard.writeText($('code-content').textContent || '').then(() => {
+    $('copy-btn').textContent = 'Copied!';
+    setTimeout(() => $('copy-btn').textContent = 'Copy', 2000);
+  });
+});
+
+function restart() {
+  $('design-input').value = '';
+  $('phase-idle').style.display = 'flex';
+  $('phase-active').style.display = 'none';
+}
+
+function animateLoadingSteps() {
+  const steps = [1,2,3,4,5].map(i => $(`cls-${i}`));
+  steps.forEach(s => s.className = 'cls');
+  let i = 0;
+  const tick = () => {
+    if (i > 0) steps[i-1].className = 'cls done';
+    if (i < steps.length) { steps[i].className = 'cls active'; i++; if (i < steps.length) setTimeout(tick, 7000); }
+  };
+  setTimeout(tick, 400);
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

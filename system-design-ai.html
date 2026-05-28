@@ -259,7 +259,8 @@
     <a href="index.html">Home</a>
     <a href="system-design.html">System Design</a>
     <a href="interview-prep.html">Interview Prep</a>
-    <a href="system-design-ai.html" class="active nav-badge">✦ AI Guide</a>
+    <a href="system-design-ai.html" class="active nav-badge">✦ Design AI</a>
+    <a href="coding-ai.html" class="nav-badge" style="background:linear-gradient(to right,#059669,#2563eb)">✦ Coding AI</a>
   </nav>
 </header>
 
@@ -323,13 +324,25 @@
       <div class="diagram-legend" id="diagram-legend">
         <span class="leg-item"><span class="leg-dot" style="background:#dbeafe;border-color:#1e40af"></span>Client</span>
         <span class="leg-item"><span class="leg-dot" style="background:#cffafe;border-color:#0e7490"></span>Gateway</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#fef9c3;border-color:#a16207"></span>Lambda</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#e0f2fe;border-color:#0369a1"></span>Container</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#e0e7ff;border-color:#3730a3"></span>K8s</span>
         <span class="leg-item"><span class="leg-dot" style="background:#ede9fe;border-color:#5b21b6"></span>Service</span>
         <span class="leg-item"><span class="leg-dot" style="background:#fef3c7;border-color:#92400e"></span>Cache</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#f0f9ff;border-color:#0369a1"></span>Obj Store</span>
         <span class="leg-item"><span class="leg-dot" style="background:#d1fae5;border-color:#065f46"></span>Database</span>
         <span class="leg-item"><span class="leg-dot" style="background:#fce7f3;border-color:#9d174d"></span>Queue</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#ccfbf1;border-color:#0d9488"></span>Stream</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#dcfce7;border-color:#166534"></span>Analytics</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#faf5ff;border-color:#6b21a8"></span>Warehouse</span>
         <span class="leg-item"><span class="leg-dot" style="background:#f3e8ff;border-color:#6d28d9"></span>ML</span>
         <span class="leg-item"><span class="leg-dot" style="background:#f3f4f6;border-color:#374151"></span>Monitor</span>
         <span class="leg-item"><span class="leg-dot dashed" style="background:#ffedd5;border-color:#c2410c"></span>Decision</span>
+        <span style="width:1px;background:#1e293b;margin:0 .2rem;align-self:stretch"></span>
+        <span class="leg-item"><svg width="18" height="8" style="margin-right:2px"><line x1="0" y1="4" x2="14" y2="4" stroke="#94a3b8" stroke-width="1.5"/><polygon points="14,1 18,4 14,7" fill="#94a3b8"/></svg>Down</span>
+        <span class="leg-item"><svg width="18" height="8" style="margin-right:2px"><line x1="0" y1="4" x2="14" y2="4" stroke="#3b82f6" stroke-width="1.5"/><polygon points="14,1 18,4 14,7" fill="#3b82f6"/></svg>Lateral →</span>
+        <span class="leg-item"><svg width="18" height="8" style="margin-right:2px"><line x1="0" y1="4" x2="14" y2="4" stroke="#f59e0b" stroke-width="1.5"/><polygon points="14,1 18,4 14,7" fill="#f59e0b"/></svg>Lateral ←</span>
+        <span class="leg-item"><svg width="18" height="8" style="margin-right:2px"><line x1="0" y1="4" x2="14" y2="4" stroke="#f97316" stroke-width="1.5"/><polygon points="14,1 18,4 14,7" fill="#f97316"/></svg>Back-ref</span>
       </div>
 
       <div class="decisions-trail" id="decisions-trail">
@@ -443,17 +456,24 @@ const PATTERN_URLS = {
   '15':'system-design-iot.html','16':'system-design-global.html',
 };
 
-// ── Excalidraw node colors (light theme) ──
+// ── Node colors — tiers: 0=Client 1=Gateway 2=Service 3=Data 4=Analytics 5=Observability ──
 const NODE_COLORS = {
-  client:     { stroke: '#1e40af', fill: '#dbeafe' },
-  gateway:    { stroke: '#0e7490', fill: '#cffafe' },
-  service:    { stroke: '#5b21b6', fill: '#ede9fe' },
-  cache:      { stroke: '#92400e', fill: '#fef3c7' },
-  database:   { stroke: '#065f46', fill: '#d1fae5' },
-  queue:      { stroke: '#9d174d', fill: '#fce7f3' },
-  ml:         { stroke: '#6d28d9', fill: '#f3e8ff' },
-  monitoring: { stroke: '#374151', fill: '#f3f4f6' },
-  unknown:    { stroke: '#c2410c', fill: '#ffedd5' },
+  client:     { stroke: '#1e40af', fill: '#dbeafe' },   // blue
+  gateway:    { stroke: '#0e7490', fill: '#cffafe' },   // cyan
+  lambda:     { stroke: '#a16207', fill: '#fef9c3' },   // yellow — FaaS/Lambda
+  container:  { stroke: '#0369a1', fill: '#e0f2fe' },   // sky blue — ECS/Fargate
+  kubernetes: { stroke: '#3730a3', fill: '#e0e7ff' },   // indigo — EKS/K8s
+  service:    { stroke: '#5b21b6', fill: '#ede9fe' },   // violet — generic service
+  objectstore:{ stroke: '#0369a1', fill: '#f0f9ff' },   // sky blue — S3/GCS/Blob storage
+  cache:      { stroke: '#92400e', fill: '#fef3c7' },   // amber — Redis/Memcached
+  database:   { stroke: '#065f46', fill: '#d1fae5' },   // emerald — SQL/NoSQL
+  queue:      { stroke: '#9d174d', fill: '#fce7f3' },   // pink — Kafka/SQS
+  stream:     { stroke: '#0d9488', fill: '#ccfbf1' },   // teal — Kafka Streams/Flink
+  analytics:  { stroke: '#166534', fill: '#dcfce7' },   // dark green — analytics/BI
+  warehouse:  { stroke: '#6b21a8', fill: '#faf5ff' },   // deep purple — Redshift/BigQuery
+  ml:         { stroke: '#6d28d9', fill: '#f3e8ff' },   // purple — ML models
+  monitoring: { stroke: '#374151', fill: '#f3f4f6' },   // gray — observability
+  unknown:    { stroke: '#c2410c', fill: '#ffedd5' },   // orange — undecided
 };
 
 // ── State ──
@@ -522,7 +542,8 @@ function escapeXml(s) {
 function buildSVGDiagram(graph) {
   if (!graph?.nodes?.length) return '';
 
-  const NW = 162, NH = 62, GAP_X = 210, GAP_Y = 130, PAD = 36;
+  const NW = 162, NH = 62, GAP_X = 210, GAP_Y = 175, PAD = 48;
+  // GAP_Y=175 gives 113px between tiers — ample room for routing lanes + edge labels
 
   // Group nodes by tier
   const tierMap = {};
@@ -531,7 +552,7 @@ function buildSVGDiagram(graph) {
     (tierMap[t] = tierMap[t] || []).push(n);
   });
 
-  // Calculate positions centred per tier
+  // Compute positions (centred per tier)
   const pos = {};
   const nodeTier = {};
   Object.keys(tierMap).map(Number).sort((a,b)=>a-b).forEach(tier => {
@@ -543,52 +564,80 @@ function buildSVGDiagram(graph) {
     });
   });
 
-  // Compute bounding box and shift so min = 0 + PAD
+  // Bounding box before shift
   const allX = Object.values(pos).map(p => p.x);
   const allY = Object.values(pos).map(p => p.y);
   const minX = Math.min(...allX), minY = Math.min(...allY);
-  const maxX = Math.max(...allX) + NW, maxY = Math.max(...allY) + NH;
+  const rawW = Math.max(...allX) - minX + NW;
+  const rawH = Math.max(...allY) - minY + NH;
+
+  // Extra right lane for upward back-edges
+  const ROUTE_LANE = 52;
   Object.values(pos).forEach(p => { p.x += -minX + PAD; p.y += -minY + PAD; });
-  const W = maxX - minX + PAD * 2, H = maxY - minY + PAD * 2;
+  const W = rawW + PAD * 2 + ROUTE_LANE;
+  const H = rawH + PAD * 2 + 40;
+  // Right-margin lane x position (shifted coordinates)
+  const rightLane = rawW + PAD + ROUTE_LANE - 16;
 
-  // width:100%; height:auto — no max-height so tall diagrams aren't clipped
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">`;
-  svg += `<defs><marker id="ah" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 Z" fill="#64748b"/></marker></defs>`;
 
-  // Arrows — bezier curves (drawn behind boxes)
+  // Four arrowhead defs — one per flow direction
+  svg += `<defs>`;
+  [['gray','#94a3b8'],['blue','#3b82f6'],['amber','#f59e0b'],['orange','#f97316']].forEach(([id,fill]) => {
+    svg += `<marker id="ah-${id}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 Z" fill="${fill}"/></marker>`;
+  });
+  svg += `</defs>`;
+
+  // Draw edges behind nodes — orthogonal routing, color-coded by direction
+  const ROUT = 46; // routing gap above/below tier for same-tier lateral edges
+
   (graph.edges || []).forEach(e => {
     const fp = pos[e.from], tp = pos[e.to];
     if (!fp || !tp) return;
     const ft = nodeTier[e.from] ?? 0, tt = nodeTier[e.to] ?? 0;
 
-    let d, lx, ly;
-    if (ft === tt) {
-      // Same tier — arc above to avoid crossing node boxes
-      const left = fp.x <= tp.x;
-      const x1 = left ? fp.x + NW : fp.x;
-      const y1 = fp.y + NH / 2;
-      const x2 = left ? tp.x : tp.x + NW;
-      const y2 = tp.y + NH / 2;
-      const mx = (x1 + x2) / 2, arc = Math.min(50, Math.abs(x2 - x1) * 0.25);
-      d = `M ${x1} ${y1} C ${mx} ${y1 - arc} ${mx} ${y2 - arc} ${x2} ${y2}`;
-      lx = mx; ly = y1 - arc - 10;
-    } else if (ft < tt) {
-      // Downward — S-curve
-      const x1 = fp.x + NW / 2, y1 = fp.y + NH;
-      const x2 = tp.x + NW / 2, y2 = tp.y;
-      const my = (y1 + y2) / 2;
-      d = `M ${x1} ${y1} C ${x1} ${my} ${x2} ${my} ${x2} ${y2}`;
-      lx = (x1 + x2) / 2; ly = my;
+    let d, sc, mk, lx, ly;
+
+    if (ft < tt) {
+      // ── Downward (primary flow) — gray elbow ──
+      const x1 = fp.x + NW/2, y1 = fp.y + NH;
+      const x2 = tp.x + NW/2, y2 = tp.y;
+      const midy = (y1 + y2) / 2;
+      d = Math.abs(x1 - x2) < 4
+        ? `M ${x1} ${y1} L ${x2} ${y2}`
+        : `M ${x1} ${y1} L ${x1} ${midy} L ${x2} ${midy} L ${x2} ${y2}`;
+      sc = '#94a3b8'; mk = 'ah-gray';
+      lx = (x1 + x2) / 2; ly = midy;
+
+    } else if (ft === tt) {
+      if (fp.x <= tp.x) {
+        // ── Same-tier left→right — routes ABOVE the tier, blue ──
+        const x1 = fp.x + NW, y1 = fp.y + NH/2;
+        const x2 = tp.x,       y2 = tp.y + NH/2;
+        const ry = fp.y - ROUT;
+        d = `M ${x1} ${y1} L ${x1+10} ${y1} L ${x1+10} ${ry} L ${x2-10} ${ry} L ${x2-10} ${y2} L ${x2} ${y2}`;
+        sc = '#3b82f6'; mk = 'ah-blue';
+        lx = (x1 + x2) / 2; ly = ry - 6;
+      } else {
+        // ── Same-tier right→left — routes BELOW the tier, amber ──
+        const x1 = fp.x,       y1 = fp.y + NH/2;
+        const x2 = tp.x + NW,  y2 = tp.y + NH/2;
+        const ry = fp.y + NH + ROUT;
+        d = `M ${x1} ${y1} L ${x1-10} ${y1} L ${x1-10} ${ry} L ${x2+10} ${ry} L ${x2+10} ${y2} L ${x2} ${y2}`;
+        sc = '#f59e0b'; mk = 'ah-amber';
+        lx = (x1 + x2) / 2; ly = ry + 8;
+      }
+
     } else {
-      // Upward — S-curve
-      const x1 = fp.x + NW / 2, y1 = fp.y;
-      const x2 = tp.x + NW / 2, y2 = tp.y + NH;
-      const my = (y1 + y2) / 2;
-      d = `M ${x1} ${y1} C ${x1} ${my} ${x2} ${my} ${x2} ${y2}`;
-      lx = (x1 + x2) / 2; ly = my;
+      // ── Upward / back-reference — right margin lane, orange ──
+      const x1 = fp.x + NW/2, y1 = fp.y;
+      const x2 = tp.x + NW/2, y2 = tp.y + NH;
+      d = `M ${x1} ${y1} L ${x1} ${y1-12} L ${rightLane} ${y1-12} L ${rightLane} ${y2+12} L ${x2} ${y2+12} L ${x2} ${y2}`;
+      sc = '#f97316'; mk = 'ah-orange';
+      lx = rightLane + 4; ly = (y1 + y2) / 2;
     }
 
-    svg += `<path d="${d}" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>`;
+    svg += `<path d="${d}" stroke="${sc}" stroke-width="1.5" fill="none" stroke-linejoin="round" marker-end="url(#${mk})"/>`;
 
     if (e.label) {
       const label = String(e.label).slice(0, 16);
@@ -598,7 +647,7 @@ function buildSVGDiagram(graph) {
     }
   });
 
-  // Node boxes + word-wrapped labels (drawn on top)
+  // Draw nodes on top
   graph.nodes.forEach(n => {
     const p = pos[n.id];
     if (!p) return;
@@ -607,7 +656,6 @@ function buildSVGDiagram(graph) {
     const dash = isUnk ? 'stroke-dasharray="6,3"' : '';
     svg += `<rect x="${p.x}" y="${p.y}" width="${NW}" height="${NH}" rx="10" fill="${c.fill}" stroke="${c.stroke}" stroke-width="${isUnk ? 2.5 : 2}" ${dash}/>`;
 
-    // Word-wrap label to fit node width (~18 chars per line)
     const raw = (n.label || n.id).trim();
     const words = raw.split(/\s+/);
     const lines = [];
@@ -687,7 +735,15 @@ function startJourney(description) {
   }).catch(err => {
     $('arch-loading').classList.remove('visible');
     showLoading(false);
-    showError('Could not generate plan.', err.message || 'Try again.');
+    const msg = err.message || '';
+    const isBusy = msg.includes('timed out') || msg.includes('Timed out') ||
+                   msg.includes('429') || /rate|quota/i.test(msg);
+    showError(
+      isBusy ? 'Service is busy' : 'Could not generate plan.',
+      isBusy ? 'The AI service is at capacity right now. Come back in a few minutes and try again.'
+             : (msg || 'Something went wrong generating the plan.'),
+      isBusy
+    );
   });
 }
 
@@ -928,39 +984,125 @@ function renderAntiPatterns() {
   });
 }
 
-// ── Article mode ──
+// ── Article mode — reads as a technical blog post, not a decision log ──
 function renderArticle() {
   const plan = state.plan;
   let html = '';
 
+  // ── Title + byline ──
   html += `<h1>${escHtml(plan.systemName)}</h1>`;
-  html += `<p style="color:var(--text-muted);font-size:.95rem;margin-bottom:1.5rem">${escHtml(plan.systemDescription)}</p>`;
-  html += `<h2>Architecture Overview</h2><p>${escHtml(plan.summary || '')}</p>`;
+  html += `<p style="color:var(--text-muted);font-size:.95rem;margin-bottom:.5rem">${escHtml(plan.systemDescription)}</p>`;
+  const matched = state.choices.filter(c => c.isRecommended).length;
+  html += `<div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:2rem">`;
+  state.chosenPatterns.slice(0,6).forEach(p => {
+    html += `<span style="font-size:.73rem;background:rgba(37,99,235,.07);color:var(--primary);border:1px solid rgba(37,99,235,.2);padding:.18rem .55rem;border-radius:99px;font-weight:600">Pattern ${p.patternId}</span>`;
+  });
+  html += `<span style="font-size:.73rem;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:.18rem .55rem;border-radius:99px">${matched}/${state.choices.length} decisions aligned</span>`;
+  html += `</div>`;
 
-  html += `<h2>Decision Log</h2>`;
+  // ── Final architecture diagram ──
+  const diagramGraph = plan.finalGraph || state.plan.steps[state.plan.steps.length - 1]?.archGraph;
+  if (diagramGraph) {
+    html += `<h2>Architecture Diagram</h2>`;
+    html += `<div style="background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem;overflow-x:auto">`;
+    html += buildSVGDiagram(diagramGraph);
+    html += `</div>`;
+  }
+
+  // ── How the system works — deepDive as the opening narrative ──
+  if (plan.deepDive) {
+    html += `<h2>How This System Works</h2>`;
+    String(plan.deepDive).split(/\n\n+/).forEach(p => {
+      if (p.trim()) html += `<p>${escHtml(p.trim())}</p>`;
+    });
+  } else if (plan.summary) {
+    html += `<h2>Architecture Overview</h2><p>${escHtml(plan.summary)}</p>`;
+  }
+
+  // ── Architectural decisions — explained in context ──
+  html += `<h2>Architectural Decisions</h2>`;
   state.choices.forEach((choice, i) => {
     const step = plan.steps[i];
     const chosen = step?.options?.find(o => o.id === choice.optionId);
-    html += `<div class="article-decision"><div class="article-decision-label">Decision ${i+1} — ${escHtml(step?.question || '')}</div><div class="article-decision-choice">${choice.isRecommended ? '★ ' : ''}${escHtml(choice.optionLabel)}</div>`;
-    if (chosen?.description) html += `<div style="font-size:.83rem;color:var(--text-muted);margin-top:.25rem;line-height:1.5">${escHtml(chosen.description)}</div>`;
-    if (state.notes[i]?.trim()) html += `<div class="article-note-box">📝 ${escHtml(state.notes[i])}</div>`;
+
+    html += `<div style="margin-bottom:2rem;border:1px solid var(--border);border-radius:12px;overflow:hidden">`;
+
+    // Decision header
+    html += `<div style="padding:.75rem 1.25rem;background:${choice.isRecommended ? '#f0fdf4' : 'var(--bg)'};border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.75rem">`;
+    html += `<span style="font-size:.7rem;font-weight:700;background:var(--primary);color:#fff;padding:.15rem .45rem;border-radius:5px;flex-shrink:0">${i+1}</span>`;
+    html += `<span style="font-size:.93rem;font-weight:800;color:var(--text);flex:1">${escHtml(step?.question || '')}</span>`;
+    if (choice.isRecommended) html += `<span style="font-size:.65rem;background:#dcfce7;color:#166534;padding:.12rem .4rem;border-radius:99px;white-space:nowrap">★ Aligned</span>`;
+    html += `</div>`;
+
+    // Context
+    if (step?.context) {
+      html += `<div style="padding:.65rem 1.25rem;background:#fafafa;border-bottom:1px solid var(--border);font-size:.84rem;color:var(--text-muted);font-style:italic">${escHtml(step.context)}</div>`;
+    }
+
+    // Chosen approach — the explanation
+    if (chosen) {
+      html += `<div style="padding:1rem 1.25rem">`;
+      html += `<div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:.3rem">Chosen approach</div>`;
+      html += `<div style="font-size:.97rem;font-weight:700;color:var(--text);margin-bottom:.55rem">${escHtml(choice.optionLabel)}</div>`;
+      html += `<p style="font-size:.87rem;color:var(--text);line-height:1.8;margin-bottom:.65rem">${escHtml(chosen.description)}</p>`;
+      html += `<div style="font-size:.78rem;color:#92400e;background:#fef3c7;padding:.25rem .6rem;border-radius:5px;display:inline-block;margin-bottom:.8rem">Trade-off: ${escHtml(chosen.tradeoff)}</div>`;
+
+      // Engineering perspectives for this step
+      if (step.roleInsights?.length) {
+        html += `<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:.4rem;margin-top:.25rem">Engineering perspectives</div>`;
+        html += `<div style="display:flex;flex-direction:column;gap:.35rem">`;
+        step.roleInsights.forEach(r => {
+          html += `<div style="display:flex;gap:.6rem;font-size:.83rem;align-items:flex-start">`;
+          html += `<span style="font-weight:700;min-width:68px;color:var(--text);flex-shrink:0">${r.role}</span>`;
+          html += `<span style="color:var(--text-muted);line-height:1.55">${escHtml(r.insight)}</span>`;
+          html += `</div>`;
+        });
+        html += `</div>`;
+      }
+
+      html += `</div>`;
+    }
+
+    // User note
+    if (state.notes[i]?.trim()) {
+      html += `<div style="padding:.65rem 1.25rem;background:#fefce8;border-top:1px solid #fde047;font-size:.83rem;color:#78350f">📝 ${escHtml(state.notes[i])}</div>`;
+    }
     html += `</div>`;
   });
 
+  // ── Key API contracts ──
+  if (plan.deepDive) {
+    const apiMatch = String(plan.deepDive).match(/(?:GET|POST|PUT|DELETE|PATCH)\s+\/\S+/g);
+    if (apiMatch?.length) {
+      html += `<h2>Key API Contracts</h2>`;
+      html += `<div style="background:#0f172a;border-radius:10px;padding:1rem 1.25rem;overflow-x:auto;margin-bottom:1rem">`;
+      const seen = new Set();
+      apiMatch.filter(a => !seen.has(a) && seen.add(a)).forEach(api => {
+        const [method, ...rest] = api.split(' ');
+        const colors = {GET:'#4ade80',POST:'#60a5fa',PUT:'#fbbf24',DELETE:'#f87171',PATCH:'#c084fc'};
+        html += `<div style="font-family:monospace;font-size:.85rem;margin-bottom:.35rem">`;
+        html += `<span style="color:${colors[method]||'#94a3b8'};font-weight:700">${method}</span>`;
+        html += `<span style="color:#e2e8f0"> ${rest.join(' ')}</span>`;
+        html += `</div>`;
+      });
+      html += `</div>`;
+    }
+  }
+
+  // ── Anti-patterns ──
   if (plan.antiPatterns?.length) {
-    html += `<h2>Anti-Patterns to Avoid</h2>`;
+    html += `<h2>What to Avoid</h2>`;
     plan.antiPatterns.forEach(ap => {
       html += `<div class="article-antipattern"><div class="article-antipattern-title">✕ ${escHtml(ap.title)}</div><div class="article-antipattern-desc">${escHtml(ap.description)}</div><div class="article-antipattern-remedy">→ ${escHtml(ap.remedy)}</div></div>`;
     });
   }
 
-  if (plan.deepDive) {
-    html += `<h2>Deep Dive</h2>`;
-    String(plan.deepDive).split(/\n\n+/).forEach(p => {
-      if (p.trim()) html += `<p>${escHtml(p.trim())}</p>`;
-    });
+  // ── Summary ──
+  if (plan.summary) {
+    html += `<h2>Architecture Summary</h2><p style="font-size:.93rem;line-height:1.85;color:var(--text)">${escHtml(plan.summary)}</p>`;
   }
 
+  // ── User notes (separate section if they exist) ──
   const noteEntries = Object.entries(state.notes).filter(([, v]) => v?.trim());
   if (noteEntries.length) {
     html += `<h2>Your Notes</h2>`;
@@ -970,6 +1112,7 @@ function renderArticle() {
     });
   }
 
+  // ── Pattern references ──
   html += `<h2>Patterns Referenced</h2>`;
   state.chosenPatterns.forEach(p => {
     const url = PATTERN_URLS[p.patternId];
@@ -1097,7 +1240,7 @@ function showLoading(on) {
 }
 
 // ── Error ──
-function showError(msg, detail) {
+function showError(msg, detail, isBusy) {
   $('arch-loading').classList.remove('visible');
   $('excalidraw-wrapper').classList.add('visible');
   $('diagram-legend').classList.remove('visible');
@@ -1105,7 +1248,7 @@ function showError(msg, detail) {
   $('decision-content').classList.add('visible');
   $('decision-question').textContent = msg;
   $('decision-context').textContent  = detail || '';
-  $('options-grid').innerHTML = `<button class="btn-primary" onclick="startJourney(state.systemDescription)" style="border:none;cursor:pointer">Retry →</button>`;
+  $('options-grid').innerHTML = `<button class="btn-primary" onclick="startJourney(state.systemDescription)" style="border:none;cursor:pointer">${isBusy ? 'Try Again Later' : 'Retry →'}</button>`;
   $('role-insights').innerHTML = '';
 }
 
